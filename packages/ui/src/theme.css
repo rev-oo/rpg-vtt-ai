@@ -1,0 +1,49 @@
+/*
+ * Design tokens for the core UI as a Tailwind CSS 4 theme (ADR-012). Import after
+ * `tailwindcss`; utilities such as `bg-surface` or `text-danger` come from these variables.
+ * Colour pairs meet WCAG 2.1 AA contrast in both schemes (NFR-10).
+ */
+@theme {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+  --color-canvas: #f7f7f8;
+  --color-surface: #ffffff;
+  --color-fg: #1c1d21;
+  --color-muted: #5b5e68;
+  --color-line: #d4d6dc;
+  --color-primary: #4a3fb5;
+  --color-primary-hover: #3b3196;
+  --color-on-primary: #ffffff;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-info-soft: #ecebfa;
+}
+
+/* Dark scheme: same token names, so every utility switches with it. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-canvas: #141518;
+    --color-surface: #1e2025;
+    --color-fg: #ececf1;
+    --color-muted: #a3a6b1;
+    --color-line: #3a3d45;
+    --color-primary: #9d95f0;
+    --color-primary-hover: #b6b0f5;
+    --color-on-primary: #141518;
+    --color-danger: #f97066;
+    --color-danger-soft: #3a1714;
+    --color-info-soft: #26244a;
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+  body {
+    @apply bg-canvas font-sans text-fg antialiased;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+}
