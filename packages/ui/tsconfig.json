@@ -1,5 +1,5 @@
 {
-  "extends": "@vtt/config/tsconfig/react.json",
+  "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist"

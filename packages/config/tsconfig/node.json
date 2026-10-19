@@ -1,7 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "//": "Node runtime code: apps/server, plugin-cli, tooling.",
-  "extends": "../../../tsconfig.base.json",
+  "//": "Node runtime code: apps/server, plugin-cli, tooling. Combine with the root tsconfig.base.json via an extends array.",
   "compilerOptions": {
     "module": "NodeNext",
     "moduleResolution": "NodeNext",

@@ -1,7 +1,6 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
-  "//": "Browser/React code bundled by Vite: apps/web, ui, sheet-renderer.",
-  "extends": "../../../tsconfig.base.json",
+  "//": "Browser/React code bundled by Vite: apps/web, ui, sheet-renderer. Combine with the root tsconfig.base.json via an extends array.",
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "bundler",

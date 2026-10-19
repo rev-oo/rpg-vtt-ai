@@ -11,7 +11,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc -b"
+    "typecheck": "tsc -b",
+    "lint": "eslint . --max-warnings 0"
   },
   "devDependencies": {
     "@vtt/config": "workspace:*"

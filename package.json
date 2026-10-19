@@ -11,11 +11,15 @@
   "scripts": {
     "typecheck": "tsc -b",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "lint:root": "eslint --max-warnings 0 eslint.config.mjs",
+    "lint": "pnpm -r lint && pnpm lint:root"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "eslint": "^10.13.0",
     "prettier": "^3.9.10",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "@vtt/config": "workspace:*"
   }
 }

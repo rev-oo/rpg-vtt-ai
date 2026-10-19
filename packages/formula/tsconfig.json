@@ -1,5 +1,5 @@
 {
-  "extends": "@vtt/config/tsconfig/pure.json",
+  "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/pure.json"],
   "compilerOptions": {
     "rootDir": ".",
     "outDir": "dist"
