@@ -9,13 +9,16 @@
     "pnpm": ">=12.14.0"
   },
   "scripts": {
-    "typecheck": "tsc -b",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint lint:root",
+    "test": "turbo run test",
+    "test:all": "vitest run",
+    "e2e": "turbo run e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:root": "eslint --max-warnings 0 eslint.config.mjs lint-staged.config.mjs vitest.config.ts",
-    "lint": "pnpm -r lint && pnpm lint:root",
-    "prepare": "husky",
-    "test:all": "vitest run"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
@@ -24,6 +27,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
+    "turbo": "^2.11.9",
     "typescript": "~6.0.3",
     "vitest": "^5.0.5"
   }
