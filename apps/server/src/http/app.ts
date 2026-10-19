@@ -11,6 +11,7 @@ import { AppError } from '../errors.js';
 
 import { registerAuth } from './auth.js';
 import { authRoutes } from './routes/auth.js';
+import { inviteRoutes } from './routes/invites.js';
 import { memberRoutes } from './routes/members.js';
 import { setupRoutes } from './routes/setup.js';
 import { tableRoutes } from './routes/tables.js';
@@ -38,6 +39,8 @@ export interface AppContext {
   config: Config;
   sessions: SessionService;
   loginThrottle: LoginThrottle;
+  /** The application clock; routes use it instead of `new Date()` so tests can move time. */
+  now: () => Date;
 }
 
 /** Builds the Fastify application with every route registered. */
@@ -45,7 +48,7 @@ export async function buildApp({
   logger,
   db,
   config,
-  now,
+  now = () => new Date(),
   loginThrottle = new LoginThrottle(),
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
@@ -72,19 +75,16 @@ export async function buildApp({
   app.removeContentTypeParser('text/plain');
   await app.register(fastifyCookie);
 
-  const sessions = new SessionService({
-    db,
-    ttlSeconds: config.sessionTtlSeconds,
-    ...(now && { now }),
-  });
+  const sessions = new SessionService({ db, ttlSeconds: config.sessionTtlSeconds, now });
   registerAuth(app, sessions);
 
-  const context: AppContext = { app, db, config, sessions, loginThrottle };
+  const context: AppContext = { app, db, config, sessions, loginThrottle, now };
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
   tableRoutes(context);
   memberRoutes(context);
+  inviteRoutes(context);
 
   return app;
 }
