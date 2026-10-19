@@ -6,3 +6,5 @@ packages:
 allowBuilds:
   # Ships prebuilt binaries via optional deps; the postinstall is only a fallback.
   unrs-resolver: false
+  # Ships its binary via optional platform packages; the postinstall is only a check.
+  esbuild: false

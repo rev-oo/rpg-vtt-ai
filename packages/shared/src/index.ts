@@ -1,1 +1,2 @@
-export const packageName = '@vtt/shared';
+export * from './permissions/index.js';
+export * from './roles.js';

@@ -4,19 +4,31 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@vtt/shared": "workspace:*",
+    "@fastify/cookie": "^11.1.3",
+    "@node-rs/argon2": "^2.2.2",
     "@vtt/formula": "workspace:*",
-    "@vtt/plugin-schema": "workspace:*",
     "@vtt/plugin-engine": "workspace:*",
-    "@vtt/sdk": "workspace:*"
+    "@vtt/plugin-schema": "workspace:*",
+    "@vtt/sdk": "workspace:*",
+    "@vtt/shared": "workspace:*",
+    "better-sqlite3": "^13.0.3",
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.7",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
   },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "start": "node dist/src/main.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsc -b && node dist/src/cli/migrate.js"
   },
   "devDependencies": {
-    "@vtt/config": "workspace:*"
+    "@types/better-sqlite3": "^9.6.0",
+    "@vtt/config": "workspace:*",
+    "drizzle-kit": "^0.31.11"
   }
 }

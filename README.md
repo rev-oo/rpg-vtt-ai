@@ -11,13 +11,13 @@ Goals:
 
 The full product spec, roadmap and progress tracker are in [`specs.md`](specs.md).
 
-## Status
+## Roadmap
 
-Early development. Milestone **M0 (Foundation)** is complete: the monorepo, strict TypeScript, linting, formatting, git hooks, tests, the Turborepo task graph and CI. The apps and packages are still stubs, so there is nothing to run yet. Next up is **M1**: the server, authentication, tables and membership.
+Early development. Current status is tracked in the [Progress Tracker](specs.md#0-progress-tracker) in `specs.md`.
 
 | Milestone | Scope                                                   |
 | --------- | ------------------------------------------------------- |
-| M0        | Foundation ✅                                           |
+| M0        | Foundation                                              |
 | M1        | Core server: users, auth, tables, membership            |
 | M2        | Entities and realtime: actors, items, events, chat      |
 | M3        | Formula and dice engine                                 |
@@ -44,6 +44,24 @@ pnpm install          # also installs the git hooks
 pnpm build
 pnpm test
 ```
+
+### Running the server
+
+```bash
+pnpm db:migrate                       # creates data/vtt.sqlite (also runs on start)
+pnpm --filter @vtt/server start       # http://localhost:3000/api/v1
+```
+
+The server is configured with environment variables:
+
+| Variable      | Default                 | Meaning                                                                 |
+| ------------- | ----------------------- | ----------------------------------------------------------------------- |
+| `DATA_DIR`    | `./data`                | Folder holding the SQLite database; back up by copying it               |
+| `PORT`        | `3000`                  | HTTP port                                                               |
+| `PUBLIC_URL`  | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure |
+| `SESSION_TTL` | `604800` (7 days)       | Session lifetime in seconds                                             |
+| `LOG_LEVEL`   | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`          |
+| `TRUST_PROXY` | `false`                 | `true` or a hop count when running behind a reverse proxy               |
 
 ## Scripts
 
