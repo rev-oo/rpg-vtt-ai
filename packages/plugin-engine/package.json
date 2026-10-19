@@ -1,0 +1,17 @@
+{
+  "name": "@vtt/plugin-engine",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "dependencies": {
+    "@vtt/shared": "workspace:*",
+    "@vtt/formula": "workspace:*",
+    "@vtt/plugin-schema": "workspace:*"
+  }
+}

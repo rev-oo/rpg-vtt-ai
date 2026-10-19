@@ -1,0 +1,13 @@
+{
+  "name": "@vtt/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vtt/shared": "workspace:*",
+    "@vtt/formula": "workspace:*",
+    "@vtt/plugin-schema": "workspace:*",
+    "@vtt/plugin-engine": "workspace:*",
+    "@vtt/sdk": "workspace:*"
+  }
+}
