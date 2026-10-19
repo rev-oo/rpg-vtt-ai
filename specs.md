@@ -15,7 +15,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
-| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Not started | 0%       | —      |
+| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | In review   | 95%      | —      |
 | M1    | Core server: users, auth, tables, membership                  | Not started | 0%       | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
@@ -29,16 +29,17 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M0
-- **Next task:** `T-0001`
-- **Open blockers:** none
+- **Active milestone:** M0 (in review — awaiting confirmation)
+- **Next task:** `T-0101`
+- **Open blockers:** T-0009 needs a GitHub remote to verify CI on a real PR
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                           |
-| ---------- | -------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided. |
+| Date       | Change                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                |
+| 2026-10-19 | M0 implemented (T-0001…T-0010); T-0009 awaits a GitHub remote. ADR-008, ADR-009, ADR-010 added. |
 
 ---
 
@@ -858,52 +859,54 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M0 — Foundation
 
-- [ ] **T-0001 · Initialise pnpm monorepo**
+- [x] **T-0001 · Initialise pnpm monorepo**
   - **Deps:** none
   - **Do:** Create the directory layout in §5. Add `pnpm-workspace.yaml`, root `package.json` with `packageManager` and `engines`, `.nvmrc`, `.editorconfig`, `.gitignore` (including `data/`, `dist/`, `node_modules/`, `*.sqlite*`).
   - **Done when:** `pnpm install` succeeds on an empty workspace and `git status` shows only the expected files.
 
-- [ ] **T-0002 · Shared TypeScript configuration**
+- [x] **T-0002 · Shared TypeScript configuration**
   - **Deps:** T-0001
   - **Do:** Create `tsconfig.base.json` with the flags in §6.1. Create `packages/config` exporting the base configs. Add a `tsconfig.json` to every package and app with project references.
   - **Done when:** `pnpm typecheck` runs `tsc -b` over all packages and apps with zero errors on empty sources.
 
-- [ ] **T-0003 · Prettier configuration**
+- [x] **T-0003 · Prettier configuration**
   - **Deps:** T-0001
   - **Do:** Add `.prettierrc.json`, `.prettierignore` (exclude `data/`, `dist/`, lockfile, generated schemas), and scripts `format` and `format:check`.
   - **Done when:** `pnpm format:check` passes; a deliberately mis-formatted file fails the check.
 
-- [ ] **T-0004 · ESLint flat config with typescript-eslint**
+- [x] **T-0004 · ESLint flat config with typescript-eslint**
   - **Deps:** T-0002, T-0003
-  - **Do:** Create `eslint.config.mjs` at root and per-package configs extending `packages/config`. Enable `strictTypeChecked` and `stylisticTypeChecked`. Add `eslint-config-prettier`. Add `lint` script with `--max-warnings 0`.
+  - **Do:** Create `eslint.config.mjs` at root and per-package configs extending `packages/config`. _(Superseded by ADR-010: one root config with per-package rules generated in `packages/config`.)_ Enable `strictTypeChecked` and `stylisticTypeChecked`. Add `eslint-config-prettier`. Add `lint` script with `--max-warnings 0`.
   - **Done when:** `pnpm lint` passes on the skeleton; a planted `any` and a planted `!` each fail lint.
 
-- [ ] **T-0005 · Layer boundary rules**
+- [x] **T-0005 · Layer boundary rules**
   - **Deps:** T-0004
   - **Do:** Configure `eslint-plugin-boundaries` with the rules in §6.2. Add a test file per rule that is expected to fail, verified in a separate lint run.
   - **Done when:** an illegal import (for example `packages/formula` importing `react`) fails `pnpm lint`.
 
-- [ ] **T-0006 · Git hooks**
+- [x] **T-0006 · Git hooks**
   - **Deps:** T-0003, T-0004
   - **Do:** Install husky and lint-staged. Pre-commit runs Prettier and ESLint on staged files.
   - **Done when:** a commit with a formatting error is rejected.
+  - **Note:** per §6.3 lint-staged runs `prettier --write`, so formatting problems are fixed in the commit rather than rejected; lint errors (e.g. a planted `any`) reject the commit.
 
-- [ ] **T-0007 · Test tooling**
+- [x] **T-0007 · Test tooling**
   - **Deps:** T-0002
   - **Do:** Add Vitest with a workspace config and coverage thresholds (80% for `formula`, `plugin-engine`, permission logic). Add one passing example test per package.
   - **Done when:** `pnpm test` runs all packages and reports coverage.
 
-- [ ] **T-0008 · Turborepo task graph**
+- [x] **T-0008 · Turborepo task graph**
   - **Deps:** T-0002, T-0004, T-0007
   - **Do:** Add `turbo.json` with pipelines for `build`, `typecheck`, `lint`, `test`, with caching.
   - **Done when:** a second `pnpm build` with no changes is served from cache.
 
-- [ ] **T-0009 · CI pipeline**
+- [~] **T-0009 · CI pipeline**
   - **Deps:** T-0003, T-0004, T-0007, T-0008
   - **Do:** GitHub Actions workflow running the steps in §6.4 on push and PR.
   - **Done when:** a PR with a lint error fails CI; a clean PR passes.
+  - **Note:** workflow written and validated with `actionlint`; every step passes in a clean local clone and `pnpm lint` fails on a planted error. Not yet run on GitHub (no remote).
 
-- [ ] **T-0010 · Editor setup**
+- [x] **T-0010 · Editor setup**
   - **Deps:** T-0004, T-0003
   - **Do:** Add `.vscode/extensions.json` and `.vscode/settings.json` (format on save, ESLint working directories).
   - **Done when:** opening the repo in VS Code shows no false ESLint or Prettier errors.
@@ -1270,7 +1273,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | Configurable, default 30                         |
 | Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
 | Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
-| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | Latest LTS, pinned in `.nvmrc`                   |
+| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
 
 ---
 
@@ -1291,15 +1294,18 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 
 ## 16. Decision Log (ADR index)
 
-| ADR     | Decision                                                                      | Status   |
-| ------- | ----------------------------------------------------------------------------- | -------- |
-| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)     | Accepted |
-| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events | Accepted |
-| ADR-003 | SQLite + Drizzle, single data directory                                       | Accepted |
-| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                      | Accepted |
-| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier           | Accepted |
-| ADR-006 | Id-keyed maps for collections in CRDT documents                               | Accepted |
-| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                           | Accepted |
+| ADR     | Decision                                                                                                         | Status   |
+| ------- | ---------------------------------------------------------------------------------------------------------------- | -------- |
+| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                        | Accepted |
+| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                    | Accepted |
+| ADR-003 | SQLite + Drizzle, single data directory                                                                          | Accepted |
+| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                         | Accepted |
+| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                              | Accepted |
+| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                  | Accepted |
+| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                              | Accepted |
+| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)               | Accepted |
+| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md) | Accepted |
+| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)           | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
