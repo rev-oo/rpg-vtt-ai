@@ -111,7 +111,7 @@ export function userRoutes({ app, db, sessions }: AppContext): void {
     const user = findUser(id);
     if (user.id === session.user.id) throw notOnYourself();
     // Sessions and memberships cascade; tables and invites they created keep a null creator.
-    // Chat messages (M5) keep their author name snapshot.
+    // Chat messages (T-0205) keep their author name snapshot.
     db.delete(users).where(eq(users.id, id)).run();
     return reply.code(204).send();
   });

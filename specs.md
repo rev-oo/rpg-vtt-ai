@@ -16,7 +16,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
-| M1    | Core server: users, auth, tables, membership                  | Not started | 0%       | —      |
+| M1    | Core server: users, auth, tables, membership                  | In progress | 90%      | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
@@ -30,18 +30,19 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M1
-- **Next task:** `T-0101`
+- **Next task:** `T-0111`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                             |
-| ---------- | -------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                   |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                   |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off. |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                 |
+| Date       | Change                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                    |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                    |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                  |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                  |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added. |
 
 ---
 
@@ -915,52 +916,54 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M1 — Core server: users, auth, tables
 
-- [ ] **T-0101 · Config and logger**
+- [x] **T-0101 · Config and logger**
   - **Deps:** T-0002
-  - **Do:** `apps/server/src/config` parses env vars with Zod (`DATA_DIR`, `PORT`, `SESSION_TTL`, `PUBLIC_URL`). Structured logger with request IDs.
+  - **Do:** `apps/server/src/config` parses env vars with Zod (`DATA_DIR`, `PORT`, `SESSION_TTL`, `PUBLIC_URL`; also `LOG_LEVEL` and `TRUST_PROXY`, see ADR-011). Structured logger with request IDs.
   - **Done when:** invalid env values fail startup with a readable message; a unit test covers the schema.
 
-- [ ] **T-0102 · Database schema and migrations**
+- [x] **T-0102 · Database schema and migrations**
   - **Deps:** T-0101
   - **Do:** Drizzle schema for `users`, `sessions`, `game_tables`, `members`, `invites`, `instance_settings`. Enable WAL mode. Generate initial migration.
   - **Done when:** `pnpm db:migrate` creates `vtt.sqlite` from scratch; migrations run on server start.
 
-- [ ] **T-0103 · Password hashing and sessions**
+- [x] **T-0103 · Password hashing and sessions**
   - **Deps:** T-0102
   - **Do:** Argon2id hashing. Session creation, validation, rotation on login, expiry. Cookie settings per FR-AUTH-04.
   - **Done when:** unit tests cover hash/verify, expired session rejection, and cookie flags.
 
-- [ ] **T-0104 · Setup flow and first admin**
+- [x] **T-0104 · Setup flow and first admin**
   - **Deps:** T-0103
   - **Do:** `GET /api/v1/setup/status` and `POST /api/v1/setup/admin`, which are only valid while no users exist.
   - **Done when:** FR-AUTH-01 tested: second call returns 409.
 
-- [ ] **T-0105 · Login, logout, me, password change**
+- [x] **T-0105 · Login, logout, me, password change**
   - **Deps:** T-0103
   - **Do:** Auth routes per §10.1 with rate limiting (FR-AUTH-07) and CSRF header check.
   - **Done when:** integration tests cover success, wrong password, rate limit, and missing CSRF.
 
-- [ ] **T-0106 · User administration**
+- [x] **T-0106 · User administration**
   - **Deps:** T-0105
   - **Do:** Admin routes to create users (generated password), disable, and delete (FR-AUTH-02, 06).
   - **Done when:** tests confirm non-admins get 403 and deleted users' messages keep author snapshot (once chat exists; stub test now).
+  - **Note:** the author-snapshot check is an `it.todo` in `apps/server/test/users.test.ts`; implement it with T-0205.
 
-- [ ] **T-0107 · Table creation and listing**
+- [x] **T-0107 · Table creation and listing**
   - **Deps:** T-0105
   - **Do:** `POST /tables` requires an enabled plugin id; records `systemVersion` (FR-TABLE-01, 02). `GET /tables` lists the user's tables.
   - **Done when:** creating a table with a disabled plugin returns 422; the creator is GM.
 
-- [ ] **T-0108 · Membership and roles**
+- [x] **T-0108 · Membership and roles**
   - **Deps:** T-0107
   - **Do:** Member routes, role changes, removal, default character setting (FR-TABLE-04, 05, 07).
   - **Done when:** only GM can change roles; removing a member leaves their actors unowned.
+  - **Note:** actors arrive in M2. The unowned-actors check is an `it.todo` in `apps/server/test/members.test.ts`; implement it with T-0201.
 
-- [ ] **T-0109 · Invites**
+- [x] **T-0109 · Invites**
   - **Deps:** T-0108
   - **Do:** Create, expire, revoke, and accept invite links with role (FR-TABLE-03).
   - **Done when:** an expired or revoked token returns 410; accepting adds membership once.
 
-- [ ] **T-0110 · Permission service**
+- [x] **T-0110 · Permission service**
   - **Deps:** T-0108
   - **Do:** `packages/shared/permissions` pure functions: `canViewActor`, `canEditActor`, `canViewJournal`, `canSeeAudience`, etc., from roles and ownership. Used by server and by UI hints.
   - **Done when:** exhaustive table-driven unit tests cover every role × ownership combination (coverage ≥ 80%).
@@ -1268,9 +1271,9 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | #   | Question                                                                            | Blocks                | Proposed default                                 |
 | --- | ----------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
 | Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                 |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | No (fixed)                                       |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it      |
 | Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
-| Q4  | Email-based invites, or link-only?                                                  | T-0109                | Link-only (no SMTP dependency)                   |
+| Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)      |
 | Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
 | Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | Configurable, default 30                         |
 | Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
@@ -1296,18 +1299,19 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 
 ## 16. Decision Log (ADR index)
 
-| ADR     | Decision                                                                                                         | Status   |
-| ------- | ---------------------------------------------------------------------------------------------------------------- | -------- |
-| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                        | Accepted |
-| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                    | Accepted |
-| ADR-003 | SQLite + Drizzle, single data directory                                                                          | Accepted |
-| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                         | Accepted |
-| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                              | Accepted |
-| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                  | Accepted |
-| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                              | Accepted |
-| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)               | Accepted |
-| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md) | Accepted |
-| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)           | Accepted |
+| ADR     | Decision                                                                                                                 | Status   |
+| ------- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
+| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                                | Accepted |
+| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                            | Accepted |
+| ADR-003 | SQLite + Drizzle, single data directory                                                                                  | Accepted |
+| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                                 | Accepted |
+| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                                      | Accepted |
+| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                          | Accepted |
+| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                                      | Accepted |
+| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)                       | Accepted |
+| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md)         | Accepted |
+| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                   | Accepted |
+| ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md) | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

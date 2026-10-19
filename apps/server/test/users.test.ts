@@ -204,6 +204,6 @@ describe('user administration (FR-AUTH-02, FR-AUTH-06)', () => {
     expect(db.select().from(gameTables).get()?.createdBy).toBeNull();
   });
 
-  // FR-AUTH-06: needs the chat tables from M5 (T-0501).
+  // FR-AUTH-06: needs the chat_messages table (T-0205).
   it.todo("keeps a deleted user's chat messages with the author name snapshot");
 });
