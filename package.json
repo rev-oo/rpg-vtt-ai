@@ -18,7 +18,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:root": "eslint --max-warnings 0 eslint.config.mjs lint-staged.config.mjs vitest.config.ts",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:migrate": "pnpm --filter @vtt/server db:migrate"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",

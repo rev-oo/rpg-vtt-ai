@@ -1,4 +1,5 @@
 import { ConfigError, loadConfig, type Config } from './config/index.js';
+import { openDatabase, runMigrations } from './db/client.js';
 import { buildApp } from './http/app.js';
 import { createLogger } from './logger/index.js';
 
@@ -17,12 +18,17 @@ function readConfig(): Config {
 
 const config = readConfig();
 const logger = createLogger(config.logLevel);
+const db = openDatabase({ dataDir: config.dataDir });
+runMigrations(db);
 const app = buildApp({ logger });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {
     logger.info({ signal }, 'shutting down');
-    void app.close().then(() => process.exit(0));
+    void app.close().then(() => {
+      db.$client.close();
+      process.exit(0);
+    });
   });
 }
 
