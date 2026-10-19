@@ -1,0 +1,14 @@
+{
+  "extends": "@vtt/config/tsconfig/react.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "src/__lint-fixtures__"
+  ]
+}

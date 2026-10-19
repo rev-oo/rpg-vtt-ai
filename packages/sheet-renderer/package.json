@@ -15,5 +15,12 @@
     "@vtt/plugin-schema": "workspace:*",
     "@vtt/plugin-engine": "workspace:*",
     "@vtt/ui": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@vtt/config": "workspace:*"
   }
 }

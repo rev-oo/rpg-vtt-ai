@@ -164,7 +164,14 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@types/node':
+        specifier: ^24.19.2
+        version: 24.19.2
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
 
   apps/server:
     dependencies:
@@ -183,6 +190,10 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../../packages/config
 
   apps/web:
     dependencies:
@@ -207,6 +218,10 @@ importers:
       '@vtt/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../../packages/config
 
   packages/config: {}
 
@@ -215,6 +230,10 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/plugin-cli:
     dependencies:
@@ -230,6 +249,10 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/plugin-engine:
     dependencies:
@@ -242,6 +265,10 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/plugin-schema:
     dependencies:
@@ -251,6 +278,10 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/sdk:
     dependencies:
@@ -266,8 +297,16 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
-  packages/shared: {}
+  packages/shared:
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
   packages/sheet-renderer:
     dependencies:
@@ -286,5 +325,36 @@ importers:
       '@vtt/ui':
         specifier: workspace:*
         version: link:../ui
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
 
-  packages/ui: {}
+  packages/ui:
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
+
+packages:
+
+  '@types/node@24.19.2':
+    resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
+
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+
+  undici-types@7.24.6:
+    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
+
+snapshots:
+
+  '@types/node@24.19.2':
+    dependencies:
+      undici-types: 7.24.6
+
+  typescript@6.0.3: {}
+
+  undici-types@7.24.6: {}

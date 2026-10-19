@@ -1,0 +1,37 @@
+{
+  "extends": "@vtt/config/tsconfig/react.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "src/__lint-fixtures__"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/formula"
+    },
+    {
+      "path": "../../packages/plugin-schema"
+    },
+    {
+      "path": "../../packages/plugin-engine"
+    },
+    {
+      "path": "../../packages/ui"
+    },
+    {
+      "path": "../../packages/sheet-renderer"
+    },
+    {
+      "path": "../../packages/sdk"
+    }
+  ]
+}

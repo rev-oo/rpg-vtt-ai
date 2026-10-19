@@ -1,0 +1,25 @@
+{
+  "extends": "@vtt/config/tsconfig/pure.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "src/__lint-fixtures__"
+  ],
+  "references": [
+    {
+      "path": "../shared"
+    },
+    {
+      "path": "../formula"
+    },
+    {
+      "path": "../plugin-schema"
+    }
+  ]
+}

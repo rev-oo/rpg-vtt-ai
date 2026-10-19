@@ -12,5 +12,12 @@
   "dependencies": {
     "@vtt/shared": "workspace:*",
     "@vtt/formula": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@vtt/config": "workspace:*"
   }
 }
