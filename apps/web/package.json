@@ -1,0 +1,24 @@
+{
+  "name": "@vtt/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@vtt/shared": "workspace:*",
+    "@vtt/formula": "workspace:*",
+    "@vtt/plugin-schema": "workspace:*",
+    "@vtt/plugin-engine": "workspace:*",
+    "@vtt/ui": "workspace:*",
+    "@vtt/sheet-renderer": "workspace:*",
+    "@vtt/sdk": "workspace:*"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@vtt/config": "workspace:*"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Pure packages (no DOM, no Node globals): shared, formula, plugin-schema, plugin-engine, sdk. Combine with the root tsconfig.base.json via an extends array.",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "types": []
+  }
+}

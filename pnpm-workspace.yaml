@@ -1,0 +1,8 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Dependency install scripts are denied unless listed as true.
+allowBuilds:
+  # Ships prebuilt binaries via optional deps; the postinstall is only a fallback.
+  unrs-resolver: false

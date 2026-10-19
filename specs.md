@@ -13,32 +13,35 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.1 Milestone overview
 
-| ID | Milestone | Status | Progress | Target |
-|----|-----------|--------|----------|--------|
-| M0 | Foundation (monorepo, TypeScript, lint, format, CI) | Not started | 0% | — |
-| M1 | Core server: users, auth, tables, membership | Not started | 0% | — |
-| M2 | Entities & realtime: actors, items, events socket, chat | Not started | 0% | — |
-| M3 | Formula & dice engine | Not started | 0% | — |
-| M4 | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0% | — |
-| M5 | Live sheets (CRDT): Yjs sync, presence, observer mode | Not started | 0% | — |
-| M6 | Journal, members, table settings, plugin admin | Not started | 0% | — |
-| M7 | Reference plugins & hardening (e2e, Docker, docs) | Not started | 0% | — |
-| MVP | **Release 0.1.0 (self-hosted)** | Not started | 0% | — |
-| V1 | Combat tracker, compendium, plugin code hooks polish | Not started | 0% | — |
-| LATER | Maps, tokens, fog of war, assets, migrations, export/import | Not started | 0% | — |
+| ID    | Milestone                                                     | Status      | Progress | Target |
+| ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
+| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
+| M1    | Core server: users, auth, tables, membership                  | Not started | 0%       | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
+| M3    | Formula & dice engine                                         | Not started | 0%       | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
+| M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
+| M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
+| MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
+| V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
+| LATER | Maps, tokens, fog of war, assets, migrations, export/import   | Not started | 0%       | —      |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M0
-- **Next task:** `T-0001`
+- **Active milestone:** M1
+- **Next task:** `T-0101`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date | Change |
-|------|--------|
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided. |
+| Date       | Change                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                   |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                   |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off. |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                 |
 
 ---
 
@@ -70,39 +73,39 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 
 ## 2. Personas
 
-| Persona | Description | Key needs |
-|---------|-------------|-----------|
-| **Game Master (GM)** | Runs the table. Creates NPCs, items, journal entries, and manages members. | Hidden information, whispers, full control over actors and permissions |
-| **Player** | Owns one or more characters. Rolls dice, chats, and edits their sheet. | Fast sheet editing on phone and desktop, clear roll results |
-| **Assistant GM** | Trusted player with partial GM powers. | Can edit NPCs and see GM-only data, but cannot change table settings or members |
-| **Spectator** | Read-only observer. | Sees public chat and rolls; no edits |
-| **Plugin Author** | Developer who writes system plugins. | Clear file format, schema validation, CLI tooling, live preview |
-| **Self-Hoster** | Person who deploys and maintains the instance. | Simple Docker deployment, backups by copying one folder, clear upgrade path |
+| Persona              | Description                                                                | Key needs                                                                       |
+| -------------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **Game Master (GM)** | Runs the table. Creates NPCs, items, journal entries, and manages members. | Hidden information, whispers, full control over actors and permissions          |
+| **Player**           | Owns one or more characters. Rolls dice, chats, and edits their sheet.     | Fast sheet editing on phone and desktop, clear roll results                     |
+| **Assistant GM**     | Trusted player with partial GM powers.                                     | Can edit NPCs and see GM-only data, but cannot change table settings or members |
+| **Spectator**        | Read-only observer.                                                        | Sees public chat and rolls; no edits                                            |
+| **Plugin Author**    | Developer who writes system plugins.                                       | Clear file format, schema validation, CLI tooling, live preview                 |
+| **Self-Hoster**      | Person who deploys and maintains the instance.                             | Simple Docker deployment, backups by copying one folder, clear upgrade path     |
 
 ---
 
 ## 3. Glossary
 
-| Term | Definition |
-|------|------------|
-| **Instance** | One running deployment of the server, with its own database and plugins folder. |
-| **User** | An account on the instance. Users can be members of many tables. |
-| **Table** (`game_table`) | A game session. Has exactly one system plugin, fixed at creation, and a set of members. |
-| **Member** | A user's membership in a table, with a role. |
-| **Role** | One of `gm`, `assistant`, `player`, `spectator`. |
-| **Actor** | Any entity that acts or is described: characters, NPCs, creatures. The `type` is plugin-defined. |
-| **Item** | A thing an actor owns or that exists in the library: weapons, spells, equipment. Type is plugin-defined. |
-| **Owned item** | An item copied into an actor's sheet document. Keeps a `sourceId` back to the library item. |
-| **Sheet** | The UI for one actor type, described by a layout JSON file. |
-| **System plugin** | A folder that defines one game system: types, sheets, rolls, dice, combat, settings, language, styles, and optional code. |
-| **Formula** | A string in the plugin formula language, evaluated on the server (rolls) or in both places (derived values). |
-| **Roll recipe** | A named, server-side roll definition that sheets trigger with arguments. |
-| **Card** | A structured chat message rendered by a plugin-defined template. |
-| **Journal entry** | A rich-text document for lore, notes, and handouts. |
-| **Yjs doc** | The CRDT document that holds the live state of a sheet or journal entry. |
-| **Projection** | A JSON snapshot of an actor's data kept in SQL for listing and queries. |
-| **Layer** | A part of an actor's CRDT doc with its own access level (`main`, `secret`). |
-| **Core API version** | The version of the host contract a plugin targets (`coreApi`). |
+| Term                     | Definition                                                                                                                |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| **Instance**             | One running deployment of the server, with its own database and plugins folder.                                           |
+| **User**                 | An account on the instance. Users can be members of many tables.                                                          |
+| **Table** (`game_table`) | A game session. Has exactly one system plugin, fixed at creation, and a set of members.                                   |
+| **Member**               | A user's membership in a table, with a role.                                                                              |
+| **Role**                 | One of `gm`, `assistant`, `player`, `spectator`.                                                                          |
+| **Actor**                | Any entity that acts or is described: characters, NPCs, creatures. The `type` is plugin-defined.                          |
+| **Item**                 | A thing an actor owns or that exists in the library: weapons, spells, equipment. Type is plugin-defined.                  |
+| **Owned item**           | An item copied into an actor's sheet document. Keeps a `sourceId` back to the library item.                               |
+| **Sheet**                | The UI for one actor type, described by a layout JSON file.                                                               |
+| **System plugin**        | A folder that defines one game system: types, sheets, rolls, dice, combat, settings, language, styles, and optional code. |
+| **Formula**              | A string in the plugin formula language, evaluated on the server (rolls) or in both places (derived values).              |
+| **Roll recipe**          | A named, server-side roll definition that sheets trigger with arguments.                                                  |
+| **Card**                 | A structured chat message rendered by a plugin-defined template.                                                          |
+| **Journal entry**        | A rich-text document for lore, notes, and handouts.                                                                       |
+| **Yjs doc**              | The CRDT document that holds the live state of a sheet or journal entry.                                                  |
+| **Projection**           | A JSON snapshot of an actor's data kept in SQL for listing and queries.                                                   |
+| **Layer**                | A part of an actor's CRDT doc with its own access level (`main`, `secret`).                                               |
+| **Core API version**     | The version of the host contract a plugin targets (`coreApi`).                                                            |
 
 ---
 
@@ -110,24 +113,24 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 
 ### 4.1 Stack decisions
 
-| Concern | Decision | Rationale |
-|---------|----------|-----------|
-| Language | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere | Type safety across client, server, and shared packages |
-| Monorepo | **pnpm workspaces** + Turborepo for task caching | Fast installs, strict dependency isolation |
-| Frontend | **React 18+ with Vite**, SPA | Plugins are loaded at runtime; SSR is not needed behind login |
-| Frontend routing | React Router | Simple, well understood |
-| Client state | **Zustand** for UI state; **Yjs** for document state | Minimal boilerplate; CRDT handles collaborative data |
-| Backend | **Node.js LTS + Fastify** | Lightweight, good plugin model, native TypeScript support |
-| Realtime (events) | **WebSocket** (`ws`) at `/ws/events` | Chat, rolls, entity change notifications, presence |
-| Realtime (documents) | **Hocuspocus** (Yjs WebSocket server) at `/ws/collab` | Mature Yjs backend with auth and persistence hooks |
-| Database | **SQLite** via **Drizzle ORM** (`better-sqlite3`) | No external service; backup is copying one file |
-| Schema validation | **Zod** in TypeScript, emitted to **JSON Schema** at build | Single source of truth for types and plugin file schemas |
-| Formula/dice | Custom parser in `packages/formula`, no `eval` | Safe, testable, same code on both sides |
-| Scoped CSS | PostCSS (or lightningcss) in the plugin loader | Predictable, server-side scoping |
-| Testing | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests | Standard, fast, multi-browser |
-| Lint | **ESLint flat config** + `typescript-eslint` + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering |
-| Format | **Prettier** | Consistent style, enforced in CI and pre-commit |
-| Packaging | One **Docker** image (multi-stage), one `/data` volume | Self-hosting goal G5 |
+| Concern              | Decision                                                                                   | Rationale                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Language             | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere                      | Type safety across client, server, and shared packages        |
+| Monorepo             | **pnpm workspaces** + Turborepo for task caching                                           | Fast installs, strict dependency isolation                    |
+| Frontend             | **React 18+ with Vite**, SPA                                                               | Plugins are loaded at runtime; SSR is not needed behind login |
+| Frontend routing     | React Router                                                                               | Simple, well understood                                       |
+| Client state         | **Zustand** for UI state; **Yjs** for document state                                       | Minimal boilerplate; CRDT handles collaborative data          |
+| Backend              | **Node.js LTS + Fastify**                                                                  | Lightweight, good plugin model, native TypeScript support     |
+| Realtime (events)    | **WebSocket** (`ws`) at `/ws/events`                                                       | Chat, rolls, entity change notifications, presence            |
+| Realtime (documents) | **Hocuspocus** (Yjs WebSocket server) at `/ws/collab`                                      | Mature Yjs backend with auth and persistence hooks            |
+| Database             | **SQLite** via **Drizzle ORM** (`better-sqlite3`)                                          | No external service; backup is copying one file               |
+| Schema validation    | **Zod** in TypeScript, emitted to **JSON Schema** at build                                 | Single source of truth for types and plugin file schemas      |
+| Formula/dice         | Custom parser in `packages/formula`, no `eval`                                             | Safe, testable, same code on both sides                       |
+| Scoped CSS           | PostCSS (or lightningcss) in the plugin loader                                             | Predictable, server-side scoping                              |
+| Testing              | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests       | Standard, fast, multi-browser                                 |
+| Lint                 | **ESLint flat config** + `typescript-eslint` + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering                |
+| Format               | **Prettier**                                                                               | Consistent style, enforced in CI and pre-commit               |
+| Packaging            | One **Docker** image (multi-stage), one `/data` volume                                     | Self-hosting goal G5                                          |
 
 ### 4.2 Process topology
 
@@ -278,124 +281,124 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.1 Accounts and access (`FR-AUTH`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-AUTH-01 | The first user to start a fresh instance is created via a setup screen and becomes instance admin. | MVP |
-| FR-AUTH-02 | Admins create users with a username and a generated one-time password, or send an invite link. | MVP |
-| FR-AUTH-03 | Users log in with username and password. Passwords are hashed with Argon2id. | MVP |
-| FR-AUTH-04 | Sessions use secure, HTTP-only, SameSite=Lax cookies with server-side session records and expiry. | MVP |
-| FR-AUTH-05 | Users can change their password and display name. | MVP |
-| FR-AUTH-06 | Admins can disable or delete users. Deleting a user keeps their chat messages with the author name snapshot. | MVP |
-| FR-AUTH-07 | Login attempts are rate-limited per IP and per username. | MVP |
-| FR-AUTH-08 | Instance admin is distinct from table GM. Admins cannot read a table's secret data unless they are a member with GM role. | MVP |
+| ID         | Requirement                                                                                                               | Priority |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-AUTH-01 | The first user to start a fresh instance is created via a setup screen and becomes instance admin.                        | MVP      |
+| FR-AUTH-02 | Admins create users with a username and a generated one-time password, or send an invite link.                            | MVP      |
+| FR-AUTH-03 | Users log in with username and password. Passwords are hashed with Argon2id.                                              | MVP      |
+| FR-AUTH-04 | Sessions use secure, HTTP-only, SameSite=Lax cookies with server-side session records and expiry.                         | MVP      |
+| FR-AUTH-05 | Users can change their password and display name.                                                                         | MVP      |
+| FR-AUTH-06 | Admins can disable or delete users. Deleting a user keeps their chat messages with the author name snapshot.              | MVP      |
+| FR-AUTH-07 | Login attempts are rate-limited per IP and per username.                                                                  | MVP      |
+| FR-AUTH-08 | Instance admin is distinct from table GM. Admins cannot read a table's secret data unless they are a member with GM role. | MVP      |
 
 ### 7.2 Tables and membership (`FR-TABLE`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-TABLE-01 | Any user can create a table and becomes its GM. Creation requires selecting an installed system plugin. | MVP |
-| FR-TABLE-02 | A table's system plugin and its `systemVersion` are fixed at creation. | MVP |
-| FR-TABLE-03 | GMs invite users by generating a table invite link with a role (`player`, `spectator`, `assistant`). Links can expire and be revoked. | MVP |
-| FR-TABLE-04 | GMs change member roles and remove members. Removing a member keeps their characters, which become unowned. | MVP |
-| FR-TABLE-05 | A user may belong to multiple tables and set a default character per table. | MVP |
-| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future). | v1 |
-| FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options. | MVP |
+| ID          | Requirement                                                                                                                           | Priority |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-TABLE-01 | Any user can create a table and becomes its GM. Creation requires selecting an installed system plugin.                               | MVP      |
+| FR-TABLE-02 | A table's system plugin and its `systemVersion` are fixed at creation.                                                                | MVP      |
+| FR-TABLE-03 | GMs invite users by generating a table invite link with a role (`player`, `spectator`, `assistant`). Links can expire and be revoked. | MVP      |
+| FR-TABLE-04 | GMs change member roles and remove members. Removing a member keeps their characters, which become unowned.                           | MVP      |
+| FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                           | MVP      |
+| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                   | v1       |
+| FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                         | MVP      |
 
 ### 7.3 Actors and items (`FR-ENT`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-ENT-01 | GMs and players can create actors of any type declared by the table's plugin. Players may create only types with `controlledBy: "player"` unless the GM allows otherwise. | MVP |
-| FR-ENT-02 | Actors have a name, image URL, and ownership (default level plus per-user levels). | MVP |
-| FR-ENT-03 | Ownership levels: `none`, `observer` (read), `owner` (read and edit). GMs are implicit owners of all actors. | MVP |
-| FR-ENT-04 | Actors can be duplicated, deleted (soft delete with restore for 30 days), and listed with search and type filters. | MVP |
-| FR-ENT-05 | Items exist in a table-level library. Items can be copied into an actor, creating an owned item with a `sourceId`. | MVP |
-| FR-ENT-06 | Items have a name, image URL, and plugin-defined data, edited on an item sheet. | MVP |
-| FR-ENT-07 | Entity changes emit events so other clients refresh lists and sheet headers. | MVP |
-| FR-ENT-08 | An actor's data is stored as a CRDT document (see §9). Its SQL projection is updated on persist. | MVP |
-| FR-ENT-09 | Deleting an actor removes its live document from active sessions and retains a snapshot for the restore window. | MVP |
+| ID        | Requirement                                                                                                                                                               | Priority |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-ENT-01 | GMs and players can create actors of any type declared by the table's plugin. Players may create only types with `controlledBy: "player"` unless the GM allows otherwise. | MVP      |
+| FR-ENT-02 | Actors have a name, image URL, and ownership (default level plus per-user levels).                                                                                        | MVP      |
+| FR-ENT-03 | Ownership levels: `none`, `observer` (read), `owner` (read and edit). GMs are implicit owners of all actors.                                                              | MVP      |
+| FR-ENT-04 | Actors can be duplicated, deleted (soft delete with restore for 30 days), and listed with search and type filters.                                                        | MVP      |
+| FR-ENT-05 | Items exist in a table-level library. Items can be copied into an actor, creating an owned item with a `sourceId`.                                                        | MVP      |
+| FR-ENT-06 | Items have a name, image URL, and plugin-defined data, edited on an item sheet.                                                                                           | MVP      |
+| FR-ENT-07 | Entity changes emit events so other clients refresh lists and sheet headers.                                                                                              | MVP      |
+| FR-ENT-08 | An actor's data is stored as a CRDT document (see §9). Its SQL projection is updated on persist.                                                                          | MVP      |
+| FR-ENT-09 | Deleting an actor removes its live document from active sessions and retains a snapshot for the restore window.                                                           | MVP      |
 
 ### 7.4 Live sheets (`FR-SHEET`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-SHEET-01 | Opening a sheet connects to a Yjs document; all users with access see changes within 500 ms on a LAN. | MVP |
-| FR-SHEET-02 | Each field shows the presence of other users editing it (colored outline and name badge). | MVP |
-| FR-SHEET-03 | Users with `observer` access see the sheet read-only; the UI shows a banner. | MVP |
-| FR-SHEET-04 | Secret layer fields (declared in the plugin with `"x-layer": "secret"`) are only sent to GMs and assistants. The server omits them from observer and player sessions, not just from the UI. | MVP |
-| FR-SHEET-05 | Derived values update live for all viewers without being stored. | MVP |
-| FR-SHEET-06 | Collections (lists) support add, remove, and reorder; reorder must not duplicate or lose rows under concurrent edits. | MVP |
-| FR-SHEET-07 | Long text fields (notes, biography) support collaborative editing. | MVP |
-| FR-SHEET-08 | Counter fields support server-applied deltas (`adjust`) so concurrent "−3 HP" actions are not overwritten. | MVP |
-| FR-SHEET-09 | Field-level validation runs on input and again on the server before persist. Invalid values are rejected or clamped per the field's rule and reported to the editor. | MVP |
-| FR-SHEET-10 | Sheets render on phone-width viewports (≥ 360 px) with no horizontal page scroll. | MVP |
-| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery. | v1 |
+| ID          | Requirement                                                                                                                                                                                 | Priority |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-SHEET-01 | Opening a sheet connects to a Yjs document; all users with access see changes within 500 ms on a LAN.                                                                                       | MVP      |
+| FR-SHEET-02 | Each field shows the presence of other users editing it (colored outline and name badge).                                                                                                   | MVP      |
+| FR-SHEET-03 | Users with `observer` access see the sheet read-only; the UI shows a banner.                                                                                                                | MVP      |
+| FR-SHEET-04 | Secret layer fields (declared in the plugin with `"x-layer": "secret"`) are only sent to GMs and assistants. The server omits them from observer and player sessions, not just from the UI. | MVP      |
+| FR-SHEET-05 | Derived values update live for all viewers without being stored.                                                                                                                            | MVP      |
+| FR-SHEET-06 | Collections (lists) support add, remove, and reorder; reorder must not duplicate or lose rows under concurrent edits.                                                                       | MVP      |
+| FR-SHEET-07 | Long text fields (notes, biography) support collaborative editing.                                                                                                                          | MVP      |
+| FR-SHEET-08 | Counter fields support server-applied deltas (`adjust`) so concurrent "−3 HP" actions are not overwritten.                                                                                  | MVP      |
+| FR-SHEET-09 | Field-level validation runs on input and again on the server before persist. Invalid values are rejected or clamped per the field's rule and reported to the editor.                        | MVP      |
+| FR-SHEET-10 | Sheets render on phone-width viewports (≥ 360 px) with no horizontal page scroll.                                                                                                           | MVP      |
+| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery.                                                                                                                   | v1       |
 
 ### 7.5 Chat and rolls (`FR-CHAT`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-CHAT-01 | Table chat supports text messages with speaker selection (user, or one of their actors). | MVP |
-| FR-CHAT-02 | Messages have `audience`: `public`, `whisper` (selected recipients), or `gm` (GM and assistants only). Audience is enforced by the server on delivery and history. | MVP |
-| FR-CHAT-03 | Roll messages are created only by the server from a roll recipe or a formula typed by a user. | MVP |
-| FR-CHAT-04 | Rolls are computed with a cryptographically secure RNG and the full die results are stored in the message. | MVP |
-| FR-CHAT-05 | Secret rolls (`audience: gm`) hide results from players; the sender still sees their own result. | MVP |
-| FR-CHAT-06 | Card messages render through a plugin-defined template. If the template is missing (plugin disabled), the message falls back to plain text. | MVP |
-| FR-CHAT-07 | Chat history loads in pages of 50 with infinite scroll. | MVP |
-| FR-CHAT-08 | Users can type dice formulas directly (`/r 2d6+3`, `/gmr 1d20`). Supported only for system-agnostic dice grammar; plugin commands are v1. | MVP |
-| FR-CHAT-09 | Messages can be edited or deleted by their author within 5 minutes; GMs can delete any message. | v1 |
+| ID         | Requirement                                                                                                                                                        | Priority |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| FR-CHAT-01 | Table chat supports text messages with speaker selection (user, or one of their actors).                                                                           | MVP      |
+| FR-CHAT-02 | Messages have `audience`: `public`, `whisper` (selected recipients), or `gm` (GM and assistants only). Audience is enforced by the server on delivery and history. | MVP      |
+| FR-CHAT-03 | Roll messages are created only by the server from a roll recipe or a formula typed by a user.                                                                      | MVP      |
+| FR-CHAT-04 | Rolls are computed with a cryptographically secure RNG and the full die results are stored in the message.                                                         | MVP      |
+| FR-CHAT-05 | Secret rolls (`audience: gm`) hide results from players; the sender still sees their own result.                                                                   | MVP      |
+| FR-CHAT-06 | Card messages render through a plugin-defined template. If the template is missing (plugin disabled), the message falls back to plain text.                        | MVP      |
+| FR-CHAT-07 | Chat history loads in pages of 50 with infinite scroll.                                                                                                            | MVP      |
+| FR-CHAT-08 | Users can type dice formulas directly (`/r 2d6+3`, `/gmr 1d20`). Supported only for system-agnostic dice grammar; plugin commands are v1.                          | MVP      |
+| FR-CHAT-09 | Messages can be edited or deleted by their author within 5 minutes; GMs can delete any message.                                                                    | v1       |
 
 ### 7.6 Journal (`FR-JOURNAL`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative). | MVP |
-| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players. | MVP |
-| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players. | MVP |
-| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs. | MVP |
+| ID            | Requirement                                                                                  | Priority |
+| ------------- | -------------------------------------------------------------------------------------------- | -------- |
+| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative). | MVP      |
+| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.               | MVP      |
+| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players.    | MVP      |
+| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.        | MVP      |
 
 ### 7.7 Dice engine (`FR-DICE`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-DICE-01 | The core grammar supports: `NdS`, `+`, `-`, `*`, `/`, parentheses, `kh`/`kl`/`dh`/`dl` (keep/drop), `!` (explode), `r` (reroll), and `cs`/`cf` success counting. | MVP |
-| FR-DICE-02 | Dice expressions support `@` references to actor data, evaluated by the server. | MVP |
-| FR-DICE-03 | Plugins can declare custom dice by faces, labels, and optional result mapping (for example Fate `dF`). | MVP |
-| FR-DICE-04 | Roll results list every die and the final total. Results include the expression and the resolved references. | MVP |
-| FR-DICE-05 | The engine is deterministic when given a seeded RNG (for tests and replay). | MVP |
+| ID         | Requirement                                                                                                                                                      | Priority |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-DICE-01 | The core grammar supports: `NdS`, `+`, `-`, `*`, `/`, parentheses, `kh`/`kl`/`dh`/`dl` (keep/drop), `!` (explode), `r` (reroll), and `cs`/`cf` success counting. | MVP      |
+| FR-DICE-02 | Dice expressions support `@` references to actor data, evaluated by the server.                                                                                  | MVP      |
+| FR-DICE-03 | Plugins can declare custom dice by faces, labels, and optional result mapping (for example Fate `dF`).                                                           | MVP      |
+| FR-DICE-04 | Roll results list every die and the final total. Results include the expression and the resolved references.                                                     | MVP      |
+| FR-DICE-05 | The engine is deterministic when given a seeded RNG (for tests and replay).                                                                                      | MVP      |
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed. | MVP |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path. | MVP |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason. | MVP |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6). | MVP |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English. | MVP |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly. | MVP |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only. | MVP |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1. | MVP |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library. | v1 |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`. | v1 |
+| ID           | Requirement                                                                                                                | Priority |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed. | MVP      |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path. | MVP      |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                  | MVP      |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                             | MVP      |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                    | MVP      |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.    | MVP      |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.             | MVP      |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                       | MVP      |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                           | v1       |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-COMBAT-01 | GM creates an encounter, adds combatants (actors or free-form entries), and runs initiative. | v1 |
-| FR-COMBAT-02 | Initiative is rolled using the plugin's `combat.json` formula, with ordering rule `desc`, `asc`, or `sideBased`, or a code hook. | v1 |
-| FR-COMBAT-03 | Turn advance and round counter are broadcast to all members. | v1 |
-| FR-COMBAT-04 | Combatant visibility respects actor ownership and hidden status. | v1 |
+| ID           | Requirement                                                                                                                      | Priority |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-COMBAT-01 | GM creates an encounter, adds combatants (actors or free-form entries), and runs initiative.                                     | v1       |
+| FR-COMBAT-02 | Initiative is rolled using the plugin's `combat.json` formula, with ordering rule `desc`, `asc`, or `sideBased`, or a code hook. | v1       |
+| FR-COMBAT-03 | Turn advance and round counter are broadcast to all members.                                                                     | v1       |
+| FR-COMBAT-04 | Combatant visibility respects actor ownership and hidden status.                                                                 | v1       |
 
 ### 7.10 Settings and administration (`FR-ADMIN`)
 
-| ID | Requirement | Priority |
-|----|-------------|----------|
-| FR-ADMIN-01 | Instance settings: site name, registration policy (closed, invite-only), session lifetime, upload limits. | MVP |
-| FR-ADMIN-02 | Plugin admin page: list, enable, disable, rescan, view validation errors. | MVP |
-| FR-ADMIN-03 | Health endpoint `/api/health` reports DB status and plugin load status. | MVP |
-| FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`. | MVP |
+| ID          | Requirement                                                                                                                       | Priority                   |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------- |
+| FR-ADMIN-01 | Instance settings: site name, registration policy (closed, invite-only), session lifetime, upload limits.                         | MVP                        |
+| FR-ADMIN-02 | Plugin admin page: list, enable, disable, rescan, view validation errors.                                                         | MVP                        |
+| FR-ADMIN-03 | Health endpoint `/api/health` reports DB status and plugin load status.                                                           | MVP                        |
+| FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`.                                     | MVP                        |
 | FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) |
 
 ### 7.11 Maps and assets — LATER
@@ -518,21 +521,21 @@ Rules for the schema subset:
 
 A sheet is a tree of nodes. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
 
-| Node | Props | Notes |
-|------|-------|-------|
-| `row` | `children`, `gap`, `wrap` | Horizontal flex |
-| `column` | `children`, `gap` | Vertical flex |
-| `grid` | `children`, `columns` | CSS grid with `columns` count |
-| `tabs` | `tabs: [{ label, children }]` | Label is a lang key |
-| `section` | `title`, `children`, `collapsible` | Titled group |
-| `field` | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation |
-| `longText` | `path`, `label` | Collaborative rich text editor for `x-kind: longText` |
-| `list` | `path`, `item` (child layout), `addLabel` | Renders a collection with add, remove, reorder |
-| `rollButton` | `roll`, `args`, `label` | Triggers a roll recipe on the server |
-| `derived` | `key`, `format` | Displays a derived value |
-| `image` | `path`, `size` | Shows portrait/image |
-| `text` | `text` (lang key or literal) | Static text |
-| `custom:<name>` | `props` | Calls a custom node from `code/client.tsx` |
+| Node            | Props                                                                        | Notes                                                 |
+| --------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                       |
+| `column`        | `children`, `gap`                                                            | Vertical flex                                         |
+| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                         |
+| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                   |
+| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                          |
+| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation             |
+| `longText`      | `path`, `label`                                                              | Collaborative rich text editor for `x-kind: longText` |
+| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder        |
+| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                  |
+| `derived`       | `key`, `format`                                                              | Displays a derived value                              |
+| `image`         | `path`, `size`                                                               | Shows portrait/image                                  |
+| `text`          | `text` (lang key or literal)                                                 | Static text                                           |
+| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`            |
 
 Field `path` uses dot notation for objects. Inside `list`, `path` is relative to the row, and `@row.id` is available in `args`.
 
@@ -552,9 +555,16 @@ Processed by the plugin loader using PostCSS at load time (and cached on disk):
 
 ```css
 /* styles/sheet.css */
-:root { --vtt-accent: #8a2be2; }
-.vitals { display: flex; gap: 0.5rem; }
-.vitals [data-field="hp.value"] input { font-size: 1.5rem; }
+:root {
+  --vtt-accent: #8a2be2;
+}
+.vitals {
+  display: flex;
+  gap: 0.5rem;
+}
+.vitals [data-field='hp.value'] input {
+  font-size: 1.5rem;
+}
 ```
 
 ### 8.7 Rolls
@@ -642,7 +652,9 @@ export default defineServer({
     },
   },
   hooks: {
-    onTurnStart: async ({ ctx, combatant }) => { /* … */ },
+    onTurnStart: async ({ ctx, combatant }) => {
+      /* … */
+    },
   },
 });
 ```
@@ -731,12 +743,12 @@ actor:<id>:main
 
 ### 9.3 Access rules (server-enforced)
 
-| Document | none | observer | owner | assistant | gm |
-|----------|------|----------|-------|-----------|----|
-| `actor:*:main` | reject | read-only | read/write | read/write | read/write |
-| `actor:*:secret` | reject | reject | reject | read/write | read/write |
+| Document                   | none   | observer  | owner      | assistant  | gm         |
+| -------------------------- | ------ | --------- | ---------- | ---------- | ---------- |
+| `actor:*:main`             | reject | read-only | read/write | read/write | read/write |
+| `actor:*:secret`           | reject | reject    | reject     | read/write | read/write |
 | `journal:*:main` (visible) | reject | read-only | read/write | read/write | read/write |
-| `journal:*:main` (hidden) | reject | reject | reject | read/write | read/write |
+| `journal:*:main` (hidden)  | reject | reject    | reject     | read/write | read/write |
 
 Notes:
 
@@ -781,21 +793,21 @@ Notes:
 
 Key resource groups:
 
-| Group | Endpoints (illustrative) |
-|-------|--------------------------|
-| Auth | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password` |
-| Setup | `GET /setup/status`, `POST /setup/admin` |
-| Users (admin) | `GET /users`, `POST /users`, `PATCH /users/:id` |
-| Tables | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id` |
-| Members | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …` |
-| Invites | `POST /tables/:id/invites`, `POST /invites/:token/accept` |
-| Actors | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate` |
-| Items | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `POST /actors/:id/items` |
-| Journal | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id` |
-| Chat | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages` |
-| Rolls | `POST /tables/:id/rolls` (roll recipe or formula) |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan` |
-| Health | `GET /api/health` |
+| Group           | Endpoints (illustrative)                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                          |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                         |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                  |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                            |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                       |
+| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                        |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate` |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `POST /actors/:id/items`       |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                             |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                 |
+| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                               |
+| Health          | `GET /api/health`                                                                                |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
@@ -816,23 +828,23 @@ Key resource groups:
 
 ## 11. Non-Functional Requirements
 
-| ID | Category | Requirement |
-|----|----------|-------------|
-| NFR-01 | Self-hosting | A fresh instance starts with one `docker run` or `docker compose up`, with a single volume. |
-| NFR-02 | Backup | A consistent backup can be taken while the server runs, using the documented SQLite backup command. |
-| NFR-03 | Performance | Event round-trip on LAN < 150 ms p95. Sheet edit propagation < 500 ms p95. |
-| NFR-04 | Scale | Supports 20 concurrent tables, 10 users per table, and 200 open sheets on a 1 vCPU / 1 GB instance. |
-| NFR-05 | Security | Argon2id passwords, CSRF protection, rate-limited login, secure cookies, CSP headers, no secrets in client bundles. |
-| NFR-06 | Security | Dice are generated on the server with `crypto.randomInt` or an equivalent CSPRNG. |
-| NFR-07 | Security | Plugin JSON, CSS, and formulas are validated; formulas are never evaluated as code. |
-| NFR-08 | Privacy | Secret layer and GM-only chat never leave the server for unauthorised users, verified by e2e tests on the wire. |
-| NFR-09 | Reliability | Document state is persisted at most 10 s after the last change; a crash loses at most that window. |
-| NFR-10 | Accessibility | WCAG 2.1 AA for core UI: keyboard navigation of sheets, labelled inputs, sufficient contrast, reduced-motion respected. |
-| NFR-11 | i18n | All core UI strings come from message catalogues. Default `en`; `pt-BR` provided. Plugin strings merged with fallback. |
-| NFR-12 | Observability | Structured JSON logs; health endpoint; request IDs propagated to logs. |
-| NFR-13 | Browser support | Latest two versions of Chrome, Firefox, Safari, and Edge; iOS Safari 16+; Android Chrome. |
-| NFR-14 | Code quality | TypeScript strict; zero lint warnings; test coverage ≥ 80% on `formula`, `plugin-engine`, and permission logic. |
-| NFR-15 | Licensing | Dependencies must be compatible with the project licence; a `THIRD_PARTY.md` is generated in CI. |
+| ID     | Category        | Requirement                                                                                                             |
+| ------ | --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| NFR-01 | Self-hosting    | A fresh instance starts with one `docker run` or `docker compose up`, with a single volume.                             |
+| NFR-02 | Backup          | A consistent backup can be taken while the server runs, using the documented SQLite backup command.                     |
+| NFR-03 | Performance     | Event round-trip on LAN < 150 ms p95. Sheet edit propagation < 500 ms p95.                                              |
+| NFR-04 | Scale           | Supports 20 concurrent tables, 10 users per table, and 200 open sheets on a 1 vCPU / 1 GB instance.                     |
+| NFR-05 | Security        | Argon2id passwords, CSRF protection, rate-limited login, secure cookies, CSP headers, no secrets in client bundles.     |
+| NFR-06 | Security        | Dice are generated on the server with `crypto.randomInt` or an equivalent CSPRNG.                                       |
+| NFR-07 | Security        | Plugin JSON, CSS, and formulas are validated; formulas are never evaluated as code.                                     |
+| NFR-08 | Privacy         | Secret layer and GM-only chat never leave the server for unauthorised users, verified by e2e tests on the wire.         |
+| NFR-09 | Reliability     | Document state is persisted at most 10 s after the last change; a crash loses at most that window.                      |
+| NFR-10 | Accessibility   | WCAG 2.1 AA for core UI: keyboard navigation of sheets, labelled inputs, sufficient contrast, reduced-motion respected. |
+| NFR-11 | i18n            | All core UI strings come from message catalogues. Default `en`; `pt-BR` provided. Plugin strings merged with fallback.  |
+| NFR-12 | Observability   | Structured JSON logs; health endpoint; request IDs propagated to logs.                                                  |
+| NFR-13 | Browser support | Latest two versions of Chrome, Firefox, Safari, and Edge; iOS Safari 16+; Android Chrome.                               |
+| NFR-14 | Code quality    | TypeScript strict; zero lint warnings; test coverage ≥ 80% on `formula`, `plugin-engine`, and permission logic.         |
+| NFR-15 | Licensing       | Dependencies must be compatible with the project licence; a `THIRD_PARTY.md` is generated in CI.                        |
 
 ---
 
@@ -849,52 +861,54 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M0 — Foundation
 
-- [ ] **T-0001 · Initialise pnpm monorepo**
+- [x] **T-0001 · Initialise pnpm monorepo**
   - **Deps:** none
   - **Do:** Create the directory layout in §5. Add `pnpm-workspace.yaml`, root `package.json` with `packageManager` and `engines`, `.nvmrc`, `.editorconfig`, `.gitignore` (including `data/`, `dist/`, `node_modules/`, `*.sqlite*`).
   - **Done when:** `pnpm install` succeeds on an empty workspace and `git status` shows only the expected files.
 
-- [ ] **T-0002 · Shared TypeScript configuration**
+- [x] **T-0002 · Shared TypeScript configuration**
   - **Deps:** T-0001
   - **Do:** Create `tsconfig.base.json` with the flags in §6.1. Create `packages/config` exporting the base configs. Add a `tsconfig.json` to every package and app with project references.
   - **Done when:** `pnpm typecheck` runs `tsc -b` over all packages and apps with zero errors on empty sources.
 
-- [ ] **T-0003 · Prettier configuration**
+- [x] **T-0003 · Prettier configuration**
   - **Deps:** T-0001
   - **Do:** Add `.prettierrc.json`, `.prettierignore` (exclude `data/`, `dist/`, lockfile, generated schemas), and scripts `format` and `format:check`.
   - **Done when:** `pnpm format:check` passes; a deliberately mis-formatted file fails the check.
 
-- [ ] **T-0004 · ESLint flat config with typescript-eslint**
+- [x] **T-0004 · ESLint flat config with typescript-eslint**
   - **Deps:** T-0002, T-0003
-  - **Do:** Create `eslint.config.mjs` at root and per-package configs extending `packages/config`. Enable `strictTypeChecked` and `stylisticTypeChecked`. Add `eslint-config-prettier`. Add `lint` script with `--max-warnings 0`.
+  - **Do:** Create `eslint.config.mjs` at root and per-package configs extending `packages/config`. _(Superseded by ADR-010: one root config with per-package rules generated in `packages/config`.)_ Enable `strictTypeChecked` and `stylisticTypeChecked`. Add `eslint-config-prettier`. Add `lint` script with `--max-warnings 0`.
   - **Done when:** `pnpm lint` passes on the skeleton; a planted `any` and a planted `!` each fail lint.
 
-- [ ] **T-0005 · Layer boundary rules**
+- [x] **T-0005 · Layer boundary rules**
   - **Deps:** T-0004
   - **Do:** Configure `eslint-plugin-boundaries` with the rules in §6.2. Add a test file per rule that is expected to fail, verified in a separate lint run.
   - **Done when:** an illegal import (for example `packages/formula` importing `react`) fails `pnpm lint`.
 
-- [ ] **T-0006 · Git hooks**
+- [x] **T-0006 · Git hooks**
   - **Deps:** T-0003, T-0004
   - **Do:** Install husky and lint-staged. Pre-commit runs Prettier and ESLint on staged files.
   - **Done when:** a commit with a formatting error is rejected.
+  - **Note:** per §6.3 lint-staged runs `prettier --write`, so formatting problems are fixed in the commit rather than rejected; lint errors (e.g. a planted `any`) reject the commit.
 
-- [ ] **T-0007 · Test tooling**
+- [x] **T-0007 · Test tooling**
   - **Deps:** T-0002
   - **Do:** Add Vitest with a workspace config and coverage thresholds (80% for `formula`, `plugin-engine`, permission logic). Add one passing example test per package.
   - **Done when:** `pnpm test` runs all packages and reports coverage.
 
-- [ ] **T-0008 · Turborepo task graph**
+- [x] **T-0008 · Turborepo task graph**
   - **Deps:** T-0002, T-0004, T-0007
   - **Do:** Add `turbo.json` with pipelines for `build`, `typecheck`, `lint`, `test`, with caching.
   - **Done when:** a second `pnpm build` with no changes is served from cache.
 
-- [ ] **T-0009 · CI pipeline**
+- [x] **T-0009 · CI pipeline**
   - **Deps:** T-0003, T-0004, T-0007, T-0008
   - **Do:** GitHub Actions workflow running the steps in §6.4 on push and PR.
   - **Done when:** a PR with a lint error fails CI; a clean PR passes.
+  - **Note:** workflow written and validated with `actionlint`; every step passes in a clean local clone and `pnpm lint` fails on a planted error. Verified on GitHub: PR #1 passes; PR #2 with a planted `any` fails at the Lint step.
 
-- [ ] **T-0010 · Editor setup**
+- [x] **T-0010 · Editor setup**
   - **Deps:** T-0004, T-0003
   - **Do:** Add `.vscode/extensions.json` and `.vscode/settings.json` (format on save, ESLint working directories).
   - **Done when:** opening the repo in VS Code shows no false ESLint or Prettier errors.
@@ -1233,15 +1247,15 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ## 13. Testing Strategy
 
-| Level | Tool | Scope | Gate |
-|-------|------|-------|------|
-| Unit | Vitest | `formula`, `plugin-engine`, `shared` permissions, dice distributions | ≥ 80% coverage on listed packages |
-| Property | fast-check | Formula evaluator safety, collection reorder under concurrency, CSS scoper | Runs in CI |
-| Integration | Vitest + Fastify `inject` | REST auth, ownership, audience filtering, plugin registry | Every endpoint has ≥ 1 allow and ≥ 1 deny test |
-| Wire-level | Vitest + ws client | Secret and whisper leakage on `/ws/events` and `/ws/collab` | Required for NFR-08 |
-| Component | Vitest + Testing Library | Sheet renderer nodes, plugin host | Snapshot + behaviour |
-| E2E | Playwright | Multi-user flows (§12 M7) | Green on Chrome, Firefox, WebKit |
-| Plugin | `vtt-plugin validate` | Every plugin in `plugins/` | Blocking in CI |
+| Level       | Tool                      | Scope                                                                      | Gate                                           |
+| ----------- | ------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
+| Unit        | Vitest                    | `formula`, `plugin-engine`, `shared` permissions, dice distributions       | ≥ 80% coverage on listed packages              |
+| Property    | fast-check                | Formula evaluator safety, collection reorder under concurrency, CSS scoper | Runs in CI                                     |
+| Integration | Vitest + Fastify `inject` | REST auth, ownership, audience filtering, plugin registry                  | Every endpoint has ≥ 1 allow and ≥ 1 deny test |
+| Wire-level  | Vitest + ws client        | Secret and whisper leakage on `/ws/events` and `/ws/collab`                | Required for NFR-08                            |
+| Component   | Vitest + Testing Library  | Sheet renderer nodes, plugin host                                          | Snapshot + behaviour                           |
+| E2E         | Playwright                | Multi-user flows (§12 M7)                                                  | Green on Chrome, Firefox, WebKit               |
+| Plugin      | `vtt-plugin validate`     | Every plugin in `plugins/`                                                 | Blocking in CI                                 |
 
 Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins are the canonical fixtures for `plugin-engine` and e2e.
 
@@ -1251,46 +1265,49 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
 
-| # | Question | Blocks | Proposed default |
-|---|----------|--------|------------------|
-| Q1 | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation |
-| Q2 | Should GMs be allowed to change a table's plugin after creation? | FR-TABLE-02 | No (fixed) |
-| Q3 | TipTap for rich text, or a lighter editor? | T-0510 | TipTap (Collaboration extension) |
-| Q4 | Email-based invites, or link-only? | T-0109 | Link-only (no SMTP dependency) |
-| Q5 | Is `tiny-pool` required for v0.1.0 or can it move to v1? | T-0412, T-0702 | Required, to validate the API |
-| Q6 | Soft-delete retention window: 30 days fixed, or configurable? | FR-ENT-04 | Configurable, default 30 |
-| Q7 | Does Hocuspocus need its own port in development? | T-0501 | No, same port via upgrade path |
-| Q8 | Formula parser: hand-written Pratt or Peggy/Chevrotain? | T-0301 | Hand-written Pratt (fewer deps, easier to audit) |
-| Q9 | Required Node version: current LTS at the time of M0? | T-0001 | Latest LTS, pinned in `.nvmrc` |
+| #   | Question                                                                            | Blocks                | Proposed default                                 |
+| --- | ----------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                 |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | No (fixed)                                       |
+| Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
+| Q4  | Email-based invites, or link-only?                                                  | T-0109                | Link-only (no SMTP dependency)                   |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | Configurable, default 30                         |
+| Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
+| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
 
 ---
 
 ## 15. Risks
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Layout JSON becomes too limited for a real system | Medium | High | Build two reference systems in M4 before freezing the node set; `custom:` nodes as escape hatch |
-| CRDT + permissions bugs leak secret data | Medium | High | Wire-level tests (NFR-08), server-side checks on every update, secret docs separate from main |
-| Trusted plugin code is a security hole | High (if untrusted installs) | High | Admin confirmation, documented trust model, sandboxing planned in LATER |
-| SQLite write contention under many active tables | Low | Medium | WAL mode, batched projection writes, single writer; revisit at scale |
-| Formula language scope creep | High | Medium | Fixed function whitelist, change requires an ADR |
-| Type drift between Zod, JSON Schema, and TypeScript | Medium | Medium | Single Zod source, emitted schemas snapshot-tested |
-| Mobile sheet UX is cramped | Medium | Medium | Dedicated full-screen route under 768 px (T-0511), early phone testing |
-| Yjs document growth over long campaigns | Low | Medium | Periodic compaction on store; sheet history limited |
+| Risk                                                | Likelihood                   | Impact | Mitigation                                                                                      |
+| --------------------------------------------------- | ---------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| Layout JSON becomes too limited for a real system   | Medium                       | High   | Build two reference systems in M4 before freezing the node set; `custom:` nodes as escape hatch |
+| CRDT + permissions bugs leak secret data            | Medium                       | High   | Wire-level tests (NFR-08), server-side checks on every update, secret docs separate from main   |
+| Trusted plugin code is a security hole              | High (if untrusted installs) | High   | Admin confirmation, documented trust model, sandboxing planned in LATER                         |
+| SQLite write contention under many active tables    | Low                          | Medium | WAL mode, batched projection writes, single writer; revisit at scale                            |
+| Formula language scope creep                        | High                         | Medium | Fixed function whitelist, change requires an ADR                                                |
+| Type drift between Zod, JSON Schema, and TypeScript | Medium                       | Medium | Single Zod source, emitted schemas snapshot-tested                                              |
+| Mobile sheet UX is cramped                          | Medium                       | Medium | Dedicated full-screen route under 768 px (T-0511), early phone testing                          |
+| Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                             |
 
 ---
 
 ## 16. Decision Log (ADR index)
 
-| ADR | Decision | Status |
-|-----|----------|--------|
-| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading) | Accepted |
-| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events | Accepted |
-| ADR-003 | SQLite + Drizzle, single data directory | Accepted |
-| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1 | Accepted |
-| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier | Accepted |
-| ADR-006 | Id-keyed maps for collections in CRDT documents | Accepted |
-| ADR-007 | Server-authoritative rolls; formulas never `eval`'d | Accepted |
+| ADR     | Decision                                                                                                         | Status   |
+| ------- | ---------------------------------------------------------------------------------------------------------------- | -------- |
+| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                        | Accepted |
+| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                    | Accepted |
+| ADR-003 | SQLite + Drizzle, single data directory                                                                          | Accepted |
+| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                         | Accepted |
+| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                              | Accepted |
+| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                  | Accepted |
+| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                              | Accepted |
+| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)               | Accepted |
+| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md) | Accepted |
+| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)           | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

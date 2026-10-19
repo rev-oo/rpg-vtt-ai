@@ -1,0 +1,7 @@
+data/
+dist/
+coverage/
+.turbo/
+node_modules/
+pnpm-lock.yaml
+packages/plugin-schema/schemas/
