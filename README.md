@@ -28,7 +28,7 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 
 ## Tech stack
 
-TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (SPA) · Node.js + Fastify · WebSocket events + Hocuspocus/Yjs · SQLite via Drizzle · Zod · Vitest + Playwright · ESLint + Prettier.
+TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (SPA) · Tailwind CSS 4 · Node.js + Fastify · WebSocket events + Hocuspocus/Yjs · SQLite via Drizzle · Zod · Vitest + Playwright · ESLint + Prettier.
 
 ## Getting started
 
@@ -63,22 +63,34 @@ The server is configured with environment variables:
 | `LOG_LEVEL`   | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`          |
 | `TRUST_PROXY` | `false`                 | `true` or a hop count when running behind a reverse proxy               |
 
+### Running the web app
+
+With the server running, start the Vite dev server; it proxies `/api` to `VTT_API_URL` (default `http://localhost:3000`):
+
+```bash
+pnpm --filter @vtt/web dev            # http://localhost:5173
+```
+
+On a fresh instance the app opens the setup screen. Creating a table needs an enabled system plugin; until the plugin scanner lands (M4), the e2e start script in `e2e/scripts/` shows how one is seeded.
+
 ## Scripts
 
 Run these from the repository root. Turborepo runs the build, typecheck, lint and test scripts per package and caches the results.
 
-| Command             | What it does                                              |
-| ------------------- | --------------------------------------------------------- |
-| `pnpm build`        | Builds every package                                      |
-| `pnpm typecheck`    | Type-checks every package (`tsc -b`)                      |
-| `pnpm lint`         | ESLint with zero warnings allowed                         |
-| `pnpm test`         | Vitest per package, with coverage                         |
-| `pnpm test:all`     | All Vitest projects in one run (handy in the editor)      |
-| `pnpm format`       | Formats the repository with Prettier                      |
-| `pnpm format:check` | Checks formatting (used by CI)                            |
-| `pnpm e2e`          | End-to-end tests (Playwright; added in a later milestone) |
+| Command             | What it does                                             |
+| ------------------- | -------------------------------------------------------- |
+| `pnpm build`        | Builds every package                                     |
+| `pnpm typecheck`    | Type-checks every package (`tsc -b`)                     |
+| `pnpm lint`         | ESLint with zero warnings allowed                        |
+| `pnpm test`         | Vitest per package, with coverage                        |
+| `pnpm test:all`     | All Vitest projects in one run (handy in the editor)     |
+| `pnpm format`       | Formats the repository with Prettier                     |
+| `pnpm format:check` | Checks formatting (used by CI)                           |
+| `pnpm e2e`          | Builds the apps and runs the Playwright suites in `e2e/` |
 
 To run a task for one package, filter it: `pnpm turbo run test --filter @vtt/formula`.
+
+Before the first `pnpm e2e`, install the browser once: `pnpm --filter @vtt/e2e exec playwright install chromium`.
 
 ## Repository layout
 
