@@ -4,13 +4,8 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": [
-    "src",
-    "test"
-  ],
-  "exclude": [
-    "src/__lint-fixtures__"
-  ],
+  "include": ["src", "test"],
+  "exclude": ["src/__lint-fixtures__"],
   "references": [
     {
       "path": "../shared"
