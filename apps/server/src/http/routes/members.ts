@@ -1,4 +1,4 @@
-import { and, asc, count, eq } from 'drizzle-orm';
+import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageMembers, TABLE_ROLES } from '@vtt/shared';
@@ -33,6 +33,9 @@ function countGms(db: DbOrTx, tableId: string): number {
   );
 }
 
+/** GM first, then assistants, players and spectators. */
+const roleRank = sql`case ${members.role} when 'gm' then 0 when 'assistant' then 1 when 'player' then 2 else 3 end`;
+
 const lastGm = () => conflict('last_gm', 'A table needs a GM. Make someone else GM first.');
 
 /** Members, roles and default characters (FR-TABLE-04, 05, 07). */
@@ -58,7 +61,7 @@ export function memberRoutes({ app, db }: AppContext): void {
       .from(members)
       .innerJoin(users, eq(users.id, members.userId))
       .where(eq(members.tableId, id))
-      .orderBy(asc(members.joinedAt), asc(users.username))
+      .orderBy(asc(roleRank), asc(users.displayName), asc(users.username))
       .all();
     return { members: rows.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() })) };
   });

@@ -63,8 +63,12 @@ const roleOf = (t: Awaited<ReturnType<typeof setup>>, userId: string) =>
     .find((m) => m.userId === userId)?.role;
 
 describe('member list', () => {
-  it('shows every member to any member', async () => {
-    const { app, bob, table } = await setup();
+  it('shows every member to any member, GM first, then by role and name', async () => {
+    const { app, admin, bob, table, join } = await setup();
+    const zed = await createUserClient(app, admin, 'zed');
+    join(zed.userId, 'assistant');
+    const amy = await createUserClient(app, admin, 'amy');
+    join(amy.userId, 'spectator');
     const res = await app.inject({
       method: 'GET',
       url: `/api/v1/tables/${table.id}/members`,
@@ -74,8 +78,10 @@ describe('member list', () => {
     const list = res.json<{ members: { username: string; role: string }[] }>().members;
     expect(list.map((m) => [m.username, m.role])).toEqual([
       ['gamemaster', 'gm'],
+      ['zed', 'assistant'],
       ['bob', 'player'],
       ['carol', 'player'],
+      ['amy', 'spectator'],
     ]);
   });
 
