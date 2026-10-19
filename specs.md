@@ -15,7 +15,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
-| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | In review   | 95%      | —      |
+| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | In review   | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Not started | 0%       | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
@@ -31,15 +31,16 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 - **Active milestone:** M0 (in review — awaiting confirmation)
 - **Next task:** `T-0101`
-- **Open blockers:** T-0009 needs a GitHub remote to verify CI on a real PR
+- **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                          |
-| ---------- | ----------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                |
-| 2026-10-19 | M0 implemented (T-0001…T-0010); T-0009 awaits a GitHub remote. ADR-008, ADR-009, ADR-010 added. |
+| Date       | Change                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                   |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                   |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off. |
 
 ---
 
@@ -900,11 +901,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Do:** Add `turbo.json` with pipelines for `build`, `typecheck`, `lint`, `test`, with caching.
   - **Done when:** a second `pnpm build` with no changes is served from cache.
 
-- [~] **T-0009 · CI pipeline**
+- [x] **T-0009 · CI pipeline**
   - **Deps:** T-0003, T-0004, T-0007, T-0008
   - **Do:** GitHub Actions workflow running the steps in §6.4 on push and PR.
   - **Done when:** a PR with a lint error fails CI; a clean PR passes.
-  - **Note:** workflow written and validated with `actionlint`; every step passes in a clean local clone and `pnpm lint` fails on a planted error. Not yet run on GitHub (no remote).
+  - **Note:** workflow written and validated with `actionlint`; every step passes in a clean local clone and `pnpm lint` fails on a planted error. Verified on GitHub: PR #1 passes; PR #2 with a planted `any` fails at the Lint step.
 
 - [x] **T-0010 · Editor setup**
   - **Deps:** T-0004, T-0003
