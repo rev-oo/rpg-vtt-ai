@@ -7,8 +7,13 @@ dist/
 .turbo/
 coverage/
 
-# Runtime data (dev)
+# Runtime data (dev, e2e)
 data/
+e2e/.data/
+
+# Playwright
+e2e/test-results/
+e2e/playwright-report/
 *.sqlite
 *.sqlite-*
 

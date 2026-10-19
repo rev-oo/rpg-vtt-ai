@@ -21,6 +21,8 @@ export const workspacePackages = {
   'packages/plugin-cli': { type: 'plugin-cli', kind: 'node' },
   'apps/server': { type: 'server', kind: 'node' },
   'apps/web': { type: 'web', kind: 'web' },
+  // Playwright suites drive the built apps over HTTP; they import no workspace code.
+  e2e: { type: 'e2e', kind: 'node' },
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
@@ -54,6 +56,7 @@ const allowedImports = {
   // §6.2: the server may not import React packages.
   server: ALL_PACKAGES.filter((t) => !['ui', 'sheet-renderer', 'sdk-client'].includes(t)),
   web: ALL_PACKAGES,
+  e2e: [],
 };
 
 export const boundaryPolicies = [
