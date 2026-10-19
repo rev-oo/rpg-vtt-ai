@@ -12,6 +12,7 @@ import { AppError } from '../errors.js';
 import { registerAuth } from './auth.js';
 import { authRoutes } from './routes/auth.js';
 import { setupRoutes } from './routes/setup.js';
+import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
@@ -81,6 +82,7 @@ export async function buildApp({
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
+  tableRoutes(context);
 
   return app;
 }

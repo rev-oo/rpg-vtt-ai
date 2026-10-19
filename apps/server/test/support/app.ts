@@ -88,3 +88,28 @@ export async function createUserClient(
   const client = clientFrom(await login(app, { username, password: oneTimePassword }));
   return { client, userId: user.id, password: oneTimePassword };
 }
+
+export interface TableView {
+  id: string;
+  name: string;
+  description: string;
+  systemId: string;
+  systemVersion: string;
+  settings: Record<string, unknown>;
+  role: string;
+}
+
+export async function createTable(
+  app: FastifyInstance,
+  client: Client,
+  payload: Record<string, unknown> = {},
+): Promise<TableView> {
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/v1/tables',
+    headers: authHeaders(client),
+    payload: { name: 'Test Table', systemId: 'test-system', ...payload },
+  });
+  if (res.statusCode !== 201) throw new Error(`create table failed: ${res.body}`);
+  return res.json<{ table: TableView }>().table;
+}
