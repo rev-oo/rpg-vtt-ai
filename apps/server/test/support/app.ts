@@ -2,6 +2,7 @@ import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
 
 import { loadConfig, type Config } from '../../src/config/index.js';
 import type { Db } from '../../src/db/client.js';
+import type { LoginThrottle } from '../../src/domain/auth/login-throttle.js';
 import { buildApp } from '../../src/http/app.js';
 import { CSRF_HEADER } from '../../src/http/auth.js';
 import { SESSION_COOKIE } from '../../src/http/cookies.js';
@@ -18,7 +19,7 @@ export interface TestApp {
 }
 
 export async function createTestApp(
-  options: { env?: Record<string, string>; now?: () => Date } = {},
+  options: { env?: Record<string, string>; now?: () => Date; loginThrottle?: LoginThrottle } = {},
 ): Promise<TestApp> {
   const db = createTestDb();
   const config = loadConfig(options.env ?? {});
@@ -28,6 +29,7 @@ export async function createTestApp(
     db,
     config,
     ...(options.now && { now: options.now }),
+    ...(options.loginThrottle && { loginThrottle: options.loginThrottle }),
   });
   return { app, db, config, logs };
 }
@@ -52,6 +54,14 @@ export function authHeaders(client: Client, { csrf = true } = {}): Record<string
 }
 
 export const ADMIN = { username: 'admin', displayName: 'Admin', password: 'admin-password-1' };
+
+export async function login(
+  app: FastifyInstance,
+  credentials: { username: string; password: string },
+  headers: Record<string, string> = {},
+): Promise<LightMyRequestResponse> {
+  return app.inject({ method: 'POST', url: '/api/v1/auth/login', payload: credentials, headers });
+}
 
 /** Runs first-run setup and returns the admin's client. */
 export async function setupAdmin(app: FastifyInstance): Promise<Client> {

@@ -13,6 +13,7 @@ describe('loadConfig', () => {
       sessionTtlSeconds: 604_800,
       publicUrl: new URL('http://localhost:3000'),
       logLevel: 'info',
+      trustProxy: false,
     });
   });
 
@@ -23,6 +24,7 @@ describe('loadConfig', () => {
       SESSION_TTL: '3600',
       PUBLIC_URL: 'https://vtt.example.com',
       LOG_LEVEL: 'debug',
+      TRUST_PROXY: 'true',
     });
     expect(config).toEqual({
       dataDir: '/srv/vtt',
@@ -30,11 +32,16 @@ describe('loadConfig', () => {
       sessionTtlSeconds: 3600,
       publicUrl: new URL('https://vtt.example.com'),
       logLevel: 'debug',
+      trustProxy: true,
     });
   });
 
   it('treats empty variables as unset', () => {
     expect(loadConfig({ PORT: '', PUBLIC_URL: '' }).port).toBe(3000);
+  });
+
+  it('accepts a proxy hop count for TRUST_PROXY', () => {
+    expect(loadConfig({ TRUST_PROXY: '2' }).trustProxy).toBe(2);
   });
 
   it('derives PUBLIC_URL from PORT when unset', () => {
@@ -50,6 +57,7 @@ describe('loadConfig', () => {
     ['PUBLIC_URL', 'not a url'],
     ['PUBLIC_URL', 'ftp://example.com'],
     ['LOG_LEVEL', 'verbose'],
+    ['TRUST_PROXY', 'yes'],
   ])('rejects %s=%s with a message naming the variable', (name, value) => {
     expect(() => loadConfig({ [name]: value })).toThrow(ConfigError);
     expect(() => loadConfig({ [name]: value })).toThrow(new RegExp(`→ at ${name}`));

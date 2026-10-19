@@ -24,6 +24,18 @@ const envSchema = z.object({
   /** Externally visible base URL, used for invite links and cookie security. */
   PUBLIC_URL: unsetIfEmpty(z.url({ protocol: /^https?$/ }).optional()),
   LOG_LEVEL: unsetIfEmpty(z.enum(LOG_LEVELS).default('info')),
+  /**
+   * Set when running behind a reverse proxy (specs §4.2) so client IPs come from
+   * X-Forwarded-For: `true`, or the number of proxy hops to trust. Default: false.
+   */
+  TRUST_PROXY: unsetIfEmpty(
+    z
+      .union([
+        z.enum(['true', 'false']).transform((v) => v === 'true'),
+        z.coerce.number().int().min(1),
+      ])
+      .default(false),
+  ),
 });
 
 export interface Config {
@@ -33,6 +45,7 @@ export interface Config {
   sessionTtlSeconds: number;
   publicUrl: URL;
   logLevel: LogLevel;
+  trustProxy: boolean | number;
 }
 
 export class ConfigError extends Error {
@@ -52,5 +65,6 @@ export function loadConfig(env: Readonly<Record<string, string | undefined>>): C
     sessionTtlSeconds: parsed.SESSION_TTL,
     publicUrl: new URL(parsed.PUBLIC_URL ?? `http://localhost:${String(parsed.PORT)}`),
     logLevel: parsed.LOG_LEVEL,
+    trustProxy: parsed.TRUST_PROXY,
   };
 }

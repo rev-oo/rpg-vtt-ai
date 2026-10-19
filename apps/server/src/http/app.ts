@@ -5,10 +5,12 @@ import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 
 import type { Config } from '../config/index.js';
 import type { Db } from '../db/client.js';
+import { LoginThrottle } from '../domain/auth/login-throttle.js';
 import { SessionService } from '../domain/auth/sessions.js';
 import { AppError } from '../errors.js';
 
 import { registerAuth } from './auth.js';
+import { authRoutes } from './routes/auth.js';
 import { setupRoutes } from './routes/setup.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
@@ -22,6 +24,8 @@ export interface AppOptions {
   config: Config;
   /** Clock override for tests. */
   now?: () => Date;
+  /** Login rate limiter override for tests. */
+  loginThrottle?: LoginThrottle;
 }
 
 /** Everything a route module needs. */
@@ -30,12 +34,20 @@ export interface AppContext {
   db: Db;
   config: Config;
   sessions: SessionService;
+  loginThrottle: LoginThrottle;
 }
 
 /** Builds the Fastify application with every route registered. */
-export async function buildApp({ logger, db, config, now }: AppOptions): Promise<FastifyInstance> {
+export async function buildApp({
+  logger,
+  db,
+  config,
+  now,
+  loginThrottle = new LoginThrottle(),
+}: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: logger,
+    trustProxy: toTrustProxyOption(config.trustProxy),
     requestIdHeader: false,
     requestIdLogLabel: 'requestId',
     genReqId: (req) => {
@@ -64,10 +76,19 @@ export async function buildApp({ logger, db, config, now }: AppOptions): Promise
   });
   registerAuth(app, sessions);
 
-  const context: AppContext = { app, db, config, sessions };
+  const context: AppContext = { app, db, config, sessions, loginThrottle };
   setupRoutes(context);
+  authRoutes(context);
 
   return app;
+}
+
+/** Fastify's types omit the numeric "trust N hops" form, so express it as a function. */
+function toTrustProxyOption(
+  trustProxy: boolean | number,
+): boolean | ((address: string, hop: number) => boolean) {
+  if (typeof trustProxy === 'boolean') return trustProxy;
+  return (_address, hop) => hop < trustProxy;
 }
 
 /** Renders every error as `{ error: { code, message, details? } }` (specs §10.1). */
