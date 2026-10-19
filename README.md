@@ -11,13 +11,13 @@ Goals:
 
 The full product spec, roadmap and progress tracker are in [`specs.md`](specs.md).
 
-## Status
+## Roadmap
 
-Early development. Milestone **M0 (Foundation)** is complete: the monorepo, strict TypeScript, linting, formatting, git hooks, tests, the Turborepo task graph and CI. **M1** is in progress: the server API for setup, login, user administration, tables, membership and invites is in place; the web app screens come next.
+Early development. Current status is tracked in the [Progress Tracker](specs.md#0-progress-tracker) in `specs.md`.
 
 | Milestone | Scope                                                   |
 | --------- | ------------------------------------------------------- |
-| M0        | Foundation ✅                                           |
+| M0        | Foundation                                              |
 | M1        | Core server: users, auth, tables, membership            |
 | M2        | Entities and realtime: actors, items, events, chat      |
 | M3        | Formula and dice engine                                 |
