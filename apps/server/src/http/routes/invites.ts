@@ -1,7 +1,7 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { INVITE_ROLES } from '@vtt/shared';
+import { canManageInvites, INVITE_ROLES } from '@vtt/shared';
 
 import { gameTables, invites, members } from '../../db/schema.js';
 import { generateId, generateToken, hashToken } from '../../domain/auth/tokens.js';
@@ -66,7 +66,7 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
 
   app.get('/api/v1/tables/:id/invites', (request) => {
     const { id } = parseInput(tableParams, request.params);
-    requireMember(db, request, id, ['gm']);
+    requireMember(db, request, id, canManageInvites);
     const rows = db
       .select()
       .from(invites)
@@ -79,7 +79,7 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
 
   app.post('/api/v1/tables/:id/invites', (request, reply) => {
     const { id } = parseInput(tableParams, request.params);
-    const { membership } = requireMember(db, request, id, ['gm']);
+    const { membership } = requireMember(db, request, id, canManageInvites);
     const { role, expiresInSeconds } = parseInput(createInviteBody, request.body);
 
     const token = generateToken();
@@ -108,7 +108,7 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
 
   app.delete('/api/v1/tables/:id/invites/:inviteId', (request, reply) => {
     const { id, inviteId } = parseInput(inviteParams, request.params);
-    requireMember(db, request, id, ['gm']);
+    requireMember(db, request, id, canManageInvites);
     const revoked = db
       .update(invites)
       .set({ revokedAt: now() })

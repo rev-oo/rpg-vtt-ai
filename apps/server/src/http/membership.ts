@@ -21,12 +21,13 @@ export function requireMember(
   db: Db,
   request: FastifyRequest,
   tableId: string,
-  allowedRoles?: readonly TableRole[],
+  /** A `@vtt/shared` permission check, e.g. `canManageTable`; 403 if it fails. */
+  isAllowed?: (role: TableRole) => boolean,
 ): TableAccess {
   const session = requireSession(request);
   const membership = findMembership(db, tableId, session.user.id);
   const table = membership && findTable(db, tableId);
   if (!membership || !table) throw notFound('Table not found.');
-  if (allowedRoles && !allowedRoles.includes(membership.role)) throw forbidden();
+  if (isAllowed && !isAllowed(membership.role)) throw forbidden();
   return { table, membership };
 }

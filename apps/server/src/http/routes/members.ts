@@ -1,7 +1,7 @@
 import { and, asc, count, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { TABLE_ROLES } from '@vtt/shared';
+import { canManageMembers, TABLE_ROLES } from '@vtt/shared';
 
 import type { DbOrTx } from '../../db/client.js';
 import { members, users } from '../../db/schema.js';
@@ -71,7 +71,7 @@ export function memberRoutes({ app, db }: AppContext): void {
     const isSelf = target.userId === membership.userId;
 
     // Only the GM changes roles (FR-TABLE-07); each member picks their own default character.
-    if (body.role !== undefined && membership.role !== 'gm') throw forbidden();
+    if (body.role !== undefined && !canManageMembers(membership.role)) throw forbidden();
     if (body.defaultCharacterId !== undefined && !isSelf) {
       throw badRequest('not_own_member', 'You can only set your own default character.');
     }
@@ -101,7 +101,9 @@ export function memberRoutes({ app, db }: AppContext): void {
     const { membership } = requireMember(db, request, id);
     const target = findTarget(id, userId);
     // The GM removes members; anyone may leave.
-    if (membership.role !== 'gm' && target.userId !== membership.userId) throw forbidden();
+    if (!canManageMembers(membership.role) && target.userId !== membership.userId) {
+      throw forbidden();
+    }
 
     db.transaction((tx) => {
       if (target.role === 'gm' && countGms(tx, id) <= 1) throw lastGm();

@@ -1,6 +1,8 @@
 import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { canManageTable } from '@vtt/shared';
+
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
 import { toTableView } from '../../domain/tables.js';
@@ -84,7 +86,7 @@ export function tableRoutes({ app, db }: AppContext): void {
 
   app.patch('/api/v1/tables/:id', (request) => {
     const { id } = parseInput(tableIdParams, request.params);
-    const { membership } = requireMember(db, request, id, ['gm']);
+    const { membership } = requireMember(db, request, id, canManageTable);
     const body = parseInput(updateTableBody, request.body);
     const updated = db.update(gameTables).set(body).where(eq(gameTables.id, id)).returning().get();
     return { table: toTableView(updated, membership.role) };
