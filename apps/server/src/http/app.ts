@@ -12,6 +12,7 @@ import { AppError } from '../errors.js';
 import { registerAuth } from './auth.js';
 import { authRoutes } from './routes/auth.js';
 import { setupRoutes } from './routes/setup.js';
+import { userRoutes } from './routes/users.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
 
@@ -79,6 +80,7 @@ export async function buildApp({
   const context: AppContext = { app, db, config, sessions, loginThrottle };
   setupRoutes(context);
   authRoutes(context);
+  userRoutes(context);
 
   return app;
 }

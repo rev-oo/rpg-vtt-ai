@@ -69,3 +69,22 @@ export async function setupAdmin(app: FastifyInstance): Promise<Client> {
   if (res.statusCode !== 201) throw new Error(`setup failed: ${res.body}`);
   return clientFrom(res);
 }
+
+/** Has the admin create a user, then logs that user in with the one-time password. */
+export async function createUserClient(
+  app: FastifyInstance,
+  admin: Client,
+  username: string,
+  extra: { isAdmin?: boolean } = {},
+): Promise<{ client: Client; userId: string; password: string }> {
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/v1/users',
+    headers: authHeaders(admin),
+    payload: { username, displayName: username, ...extra },
+  });
+  if (res.statusCode !== 201) throw new Error(`create user failed: ${res.body}`);
+  const { user, oneTimePassword } = res.json<{ user: { id: string }; oneTimePassword: string }>();
+  const client = clientFrom(await login(app, { username, password: oneTimePassword }));
+  return { client, userId: user.id, password: oneTimePassword };
+}
