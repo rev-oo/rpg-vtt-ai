@@ -12,14 +12,17 @@
     "typecheck": "tsc -b",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:root": "eslint --max-warnings 0 eslint.config.mjs",
-    "lint": "pnpm -r lint && pnpm lint:root"
+    "lint:root": "eslint --max-warnings 0 eslint.config.mjs lint-staged.config.mjs",
+    "lint": "pnpm -r lint && pnpm lint:root",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
+    "@vtt/config": "workspace:*",
     "eslint": "^10.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.6.0",
     "prettier": "^3.9.10",
-    "typescript": "~6.0.3",
-    "@vtt/config": "workspace:*"
+    "typescript": "~6.0.3"
   }
 }
