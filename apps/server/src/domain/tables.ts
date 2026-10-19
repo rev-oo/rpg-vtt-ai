@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import type { TableRole } from '@vtt/shared';
 
 import type { DbOrTx } from '../db/client.js';
-import { gameTables, members } from '../db/schema.js';
+import { gameTables, members, plugins } from '../db/schema.js';
 
 export type GameTable = typeof gameTables.$inferSelect;
 export type Member = typeof members.$inferSelect;
@@ -26,18 +26,26 @@ export interface TableView {
   name: string;
   description: string;
   systemId: string;
+  /** The plugin's display name, or its id if the plugin is no longer installed. */
+  systemName: string;
   systemVersion: string;
   settings: Record<string, unknown>;
   createdAt: string;
   role: TableRole;
 }
 
-export function toTableView(table: GameTable, role: TableRole): TableView {
+export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): TableView {
+  const plugin = db
+    .select({ name: plugins.name })
+    .from(plugins)
+    .where(eq(plugins.id, table.systemId))
+    .get();
   return {
     id: table.id,
     name: table.name,
     description: table.description,
     systemId: table.systemId,
+    systemName: plugin?.name ?? table.systemId,
     systemVersion: table.systemVersion,
     settings: table.settings,
     createdAt: table.createdAt.toISOString(),

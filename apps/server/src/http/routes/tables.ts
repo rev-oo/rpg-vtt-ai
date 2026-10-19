@@ -42,7 +42,7 @@ export function tableRoutes({ app, db }: AppContext): void {
       .where(eq(members.userId, session.user.id))
       .orderBy(asc(gameTables.name), asc(gameTables.createdAt))
       .all();
-    return { tables: rows.map(({ table, role }) => toTableView(table, role)) };
+    return { tables: rows.map(({ table, role }) => toTableView(db, table, role)) };
   });
 
   app.post('/api/v1/tables', (request, reply) => {
@@ -75,13 +75,13 @@ export function tableRoutes({ app, db }: AppContext): void {
       return created;
     });
 
-    return reply.code(201).send({ table: toTableView(table, 'gm') });
+    return reply.code(201).send({ table: toTableView(db, table, 'gm') });
   });
 
   app.get('/api/v1/tables/:id', (request) => {
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id);
-    return { table: toTableView(table, membership.role) };
+    return { table: toTableView(db, table, membership.role) };
   });
 
   app.patch('/api/v1/tables/:id', (request) => {
@@ -89,6 +89,6 @@ export function tableRoutes({ app, db }: AppContext): void {
     const { membership } = requireMember(db, request, id, canManageTable);
     const body = parseInput(updateTableBody, request.body);
     const updated = db.update(gameTables).set(body).where(eq(gameTables.id, id)).returning().get();
-    return { table: toTableView(updated, membership.role) };
+    return { table: toTableView(db, updated, membership.role) };
   });
 }

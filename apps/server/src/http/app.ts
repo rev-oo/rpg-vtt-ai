@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 import fastifyCookie from '@fastify/cookie';
-import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify';
+import Fastify, { LogController, type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 
 import type { Config } from '../config/index.js';
 import type { Db } from '../db/client.js';
@@ -14,6 +14,7 @@ import { authRoutes } from './routes/auth.js';
 import { inviteRoutes } from './routes/invites.js';
 import { memberRoutes } from './routes/members.js';
 import { setupRoutes } from './routes/setup.js';
+import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
 
@@ -55,7 +56,7 @@ export async function buildApp({
     loggerInstance: logger,
     trustProxy: toTrustProxyOption(config.trustProxy),
     requestIdHeader: false,
-    requestIdLogLabel: 'requestId',
+    logController: new LogController({ requestIdLogLabel: 'requestId' }),
     genReqId: (req) => {
       const incoming = req.headers[REQUEST_ID_HEADER];
       return typeof incoming === 'string' && SAFE_REQUEST_ID.test(incoming)
@@ -82,6 +83,7 @@ export async function buildApp({
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
+  systemRoutes(context);
   tableRoutes(context);
   memberRoutes(context);
   inviteRoutes(context);

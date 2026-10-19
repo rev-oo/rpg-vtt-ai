@@ -149,7 +149,7 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
       const table = tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).get();
       if (!table) throw notFound('Invite not found.');
       return {
-        table: toTableView(table, existing?.role ?? invite.role),
+        table: toTableView(tx, table, existing?.role ?? invite.role),
         joined: !existing,
       };
     });

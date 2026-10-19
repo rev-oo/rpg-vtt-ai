@@ -94,6 +94,7 @@ export interface TableView {
   name: string;
   description: string;
   systemId: string;
+  systemName: string;
   systemVersion: string;
   settings: Record<string, unknown>;
   role: string;
