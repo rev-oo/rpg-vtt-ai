@@ -11,6 +11,7 @@ import { AppError } from '../errors.js';
 
 import { registerAuth } from './auth.js';
 import { authRoutes } from './routes/auth.js';
+import { memberRoutes } from './routes/members.js';
 import { setupRoutes } from './routes/setup.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
@@ -83,6 +84,7 @@ export async function buildApp({
   authRoutes(context);
   userRoutes(context);
   tableRoutes(context);
+  memberRoutes(context);
 
   return app;
 }
