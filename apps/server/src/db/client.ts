@@ -10,6 +10,10 @@ import * as schema from './schema.js';
 
 export type Db = BetterSQLite3Database<typeof schema> & { $client: Database.Database };
 
+/** A transaction handle; helpers that run inside or outside a transaction accept `DbOrTx`. */
+export type Tx = Parameters<Parameters<Db['transaction']>[0]>[0];
+export type DbOrTx = Db | Tx;
+
 export const DATABASE_FILENAME = 'vtt.sqlite';
 
 /** Locates `apps/server` whether running from `src/` (tests) or `dist/src/` (built). */

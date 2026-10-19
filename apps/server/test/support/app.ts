@@ -1,0 +1,61 @@
+import type { FastifyInstance, LightMyRequestResponse } from 'fastify';
+
+import { loadConfig, type Config } from '../../src/config/index.js';
+import type { Db } from '../../src/db/client.js';
+import { buildApp } from '../../src/http/app.js';
+import { CSRF_HEADER } from '../../src/http/auth.js';
+import { SESSION_COOKIE } from '../../src/http/cookies.js';
+import { createLogger } from '../../src/logger/index.js';
+
+import { createTestDb } from './db.js';
+import { captureLogs } from './log-capture.js';
+
+export interface TestApp {
+  app: FastifyInstance;
+  db: Db;
+  config: Config;
+  logs: ReturnType<typeof captureLogs>;
+}
+
+export async function createTestApp(
+  options: { env?: Record<string, string>; now?: () => Date } = {},
+): Promise<TestApp> {
+  const db = createTestDb();
+  const config = loadConfig(options.env ?? {});
+  const logs = captureLogs();
+  const app = await buildApp({
+    logger: createLogger('info', logs),
+    db,
+    config,
+    ...(options.now && { now: options.now }),
+  });
+  return { app, db, config, logs };
+}
+
+/** Credentials of a logged-in test client. */
+export interface Client {
+  cookie: string;
+  csrfToken: string;
+}
+
+/** Extracts the session cookie and CSRF token from a login or setup response. */
+export function clientFrom(res: LightMyRequestResponse): Client {
+  const setCookie = res.cookies.find((c) => c.name === SESSION_COOKIE);
+  if (!setCookie) throw new Error(`No session cookie in response (${String(res.statusCode)})`);
+  const body = res.json<{ csrfToken: string }>();
+  return { cookie: `${SESSION_COOKIE}=${setCookie.value}`, csrfToken: body.csrfToken };
+}
+
+/** Headers for an authenticated request; pass `csrf: false` to omit the CSRF token. */
+export function authHeaders(client: Client, { csrf = true } = {}): Record<string, string> {
+  return { cookie: client.cookie, ...(csrf && { [CSRF_HEADER]: client.csrfToken }) };
+}
+
+export const ADMIN = { username: 'admin', displayName: 'Admin', password: 'admin-password-1' };
+
+/** Runs first-run setup and returns the admin's client. */
+export async function setupAdmin(app: FastifyInstance): Promise<Client> {
+  const res = await app.inject({ method: 'POST', url: '/api/v1/setup/admin', payload: ADMIN });
+  if (res.statusCode !== 201) throw new Error(`setup failed: ${res.body}`);
+  return clientFrom(res);
+}

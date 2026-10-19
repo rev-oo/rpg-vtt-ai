@@ -20,7 +20,7 @@ const config = readConfig();
 const logger = createLogger(config.logLevel);
 const db = openDatabase({ dataDir: config.dataDir });
 runMigrations(db);
-const app = buildApp({ logger });
+const app = await buildApp({ logger, db, config });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {

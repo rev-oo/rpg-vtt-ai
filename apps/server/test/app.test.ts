@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildApp, REQUEST_ID_HEADER } from '../src/http/app.js';
+import { REQUEST_ID_HEADER } from '../src/http/app.js';
 import { createLogger } from '../src/logger/index.js';
 
+import { createTestApp } from './support/app.js';
 import { captureLogs } from './support/log-capture.js';
 
-function setup() {
-  const logs = captureLogs();
-  const app = buildApp({ logger: createLogger('info', logs) });
+async function setup() {
+  const { app, logs } = await createTestApp();
   app.get('/ping', () => ({ ok: true }));
   return { app, logs };
 }
@@ -16,7 +16,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 describe('request ids', () => {
   it('generates a request id, returns it and logs it', async () => {
-    const { app, logs } = setup();
+    const { app, logs } = await setup();
     const res = await app.inject({ method: 'GET', url: '/ping' });
 
     const id = res.headers[REQUEST_ID_HEADER];
@@ -26,7 +26,7 @@ describe('request ids', () => {
   });
 
   it('reuses a safe incoming request id', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({
       method: 'GET',
       url: '/ping',
@@ -38,7 +38,7 @@ describe('request ids', () => {
   it.each(['has spaces', 'x'.repeat(129), 'quote"inject'])(
     'replaces an unsafe incoming request id (%s)',
     async (incoming) => {
-      const { app } = setup();
+      const { app } = await setup();
       const res = await app.inject({
         method: 'GET',
         url: '/ping',
@@ -49,10 +49,11 @@ describe('request ids', () => {
   );
 
   it('sets the request id on 404 responses too', async () => {
-    const { app } = setup();
+    const { app } = await setup();
     const res = await app.inject({ method: 'GET', url: '/missing' });
     expect(res.statusCode).toBe(404);
     expect(res.headers[REQUEST_ID_HEADER]).toMatch(UUID);
+    expect(res.json()).toEqual({ error: { code: 'not_found', message: 'Not found.' } });
   });
 });
 
