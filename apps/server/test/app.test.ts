@@ -1,0 +1,75 @@
+import { describe, expect, it } from 'vitest';
+
+import { buildApp, REQUEST_ID_HEADER } from '../src/http/app.js';
+import { createLogger } from '../src/logger/index.js';
+
+import { captureLogs } from './support/log-capture.js';
+
+function setup() {
+  const logs = captureLogs();
+  const app = buildApp({ logger: createLogger('info', logs) });
+  app.get('/ping', () => ({ ok: true }));
+  return { app, logs };
+}
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+describe('request ids', () => {
+  it('generates a request id, returns it and logs it', async () => {
+    const { app, logs } = setup();
+    const res = await app.inject({ method: 'GET', url: '/ping' });
+
+    const id = res.headers[REQUEST_ID_HEADER];
+    expect(id).toMatch(UUID);
+    const requestLogs = logs.lines.filter((line) => line.requestId === id);
+    expect(requestLogs.map((line) => line.msg)).toEqual(['incoming request', 'request completed']);
+  });
+
+  it('reuses a safe incoming request id', async () => {
+    const { app } = setup();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/ping',
+      headers: { [REQUEST_ID_HEADER]: 'proxy-abc.123' },
+    });
+    expect(res.headers[REQUEST_ID_HEADER]).toBe('proxy-abc.123');
+  });
+
+  it.each(['has spaces', 'x'.repeat(129), 'quote"inject'])(
+    'replaces an unsafe incoming request id (%s)',
+    async (incoming) => {
+      const { app } = setup();
+      const res = await app.inject({
+        method: 'GET',
+        url: '/ping',
+        headers: { [REQUEST_ID_HEADER]: incoming },
+      });
+      expect(res.headers[REQUEST_ID_HEADER]).toMatch(UUID);
+    },
+  );
+
+  it('sets the request id on 404 responses too', async () => {
+    const { app } = setup();
+    const res = await app.inject({ method: 'GET', url: '/missing' });
+    expect(res.statusCode).toBe(404);
+    expect(res.headers[REQUEST_ID_HEADER]).toMatch(UUID);
+  });
+});
+
+describe('logger', () => {
+  it('writes structured JSON and redacts credentials', () => {
+    const logs = captureLogs();
+    createLogger('info', logs).info(
+      { req: { headers: { cookie: 'sid=secret', authorization: 'Bearer x' } } },
+      'hi',
+    );
+
+    const line = logs.lines.find((l) => l.msg === 'hi');
+    expect(line).toMatchObject({
+      level: 30,
+      service: 'vtt-server',
+      req: { headers: { cookie: '[redacted]', authorization: '[redacted]' } },
+    });
+    expect(typeof line?.time).toBe('string');
+  });
+});

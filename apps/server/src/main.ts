@@ -1,1 +1,29 @@
-export const packageName = '@vtt/server';
+import { ConfigError, loadConfig, type Config } from './config/index.js';
+import { buildApp } from './http/app.js';
+import { createLogger } from './logger/index.js';
+
+function readConfig(): Config {
+  try {
+    return loadConfig(process.env);
+  } catch (error) {
+    if (error instanceof ConfigError) {
+      // The logger is not configured yet; report straight to stderr.
+      process.stderr.write(`${error.message}\n`);
+      process.exit(1);
+    }
+    throw error;
+  }
+}
+
+const config = readConfig();
+const logger = createLogger(config.logLevel);
+const app = buildApp({ logger });
+
+for (const signal of ['SIGINT', 'SIGTERM'] as const) {
+  process.once(signal, () => {
+    logger.info({ signal }, 'shutting down');
+    void app.close().then(() => process.exit(0));
+  });
+}
+
+await app.listen({ port: config.port, host: '0.0.0.0' });

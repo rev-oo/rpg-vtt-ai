@@ -4,17 +4,21 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@vtt/shared": "workspace:*",
     "@vtt/formula": "workspace:*",
-    "@vtt/plugin-schema": "workspace:*",
     "@vtt/plugin-engine": "workspace:*",
-    "@vtt/sdk": "workspace:*"
+    "@vtt/plugin-schema": "workspace:*",
+    "@vtt/sdk": "workspace:*",
+    "@vtt/shared": "workspace:*",
+    "fastify": "^5.12.7",
+    "pino": "^10.4.0",
+    "zod": "^4.6.7"
   },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
-    "test": "vitest run --coverage"
+    "test": "vitest run --coverage",
+    "start": "node dist/src/main.js"
   },
   "devDependencies": {
     "@vtt/config": "workspace:*"
