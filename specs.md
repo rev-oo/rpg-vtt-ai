@@ -15,7 +15,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
-| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | In review   | 100%     | —      |
+| M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Not started | 0%       | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M0 (in review — awaiting confirmation)
+- **Active milestone:** M1
 - **Next task:** `T-0101`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
@@ -41,6 +41,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                   |
 | 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                   |
 | 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off. |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                 |
 
 ---
 
