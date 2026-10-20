@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { z } from 'zod';
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
 const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
 export type LogLevel = (typeof LOG_LEVELS)[number];
@@ -24,6 +26,8 @@ const envSchema = z.object({
   /** Externally visible base URL, used for invite links and cookie security. */
   PUBLIC_URL: unsetIfEmpty(z.url({ protocol: /^https?$/ }).optional()),
   LOG_LEVEL: unsetIfEmpty(z.enum(LOG_LEVELS).default('info')),
+  /** Days a deleted actor, item or journal entry can be restored (FR-ENT-04, Q6). Default: 30. */
+  SOFT_DELETE_RETENTION_DAYS: unsetIfEmpty(z.coerce.number().int().min(1).max(3650).default(30)),
   /**
    * Set when running behind a reverse proxy (specs §4.2) so client IPs come from
    * X-Forwarded-For: `true`, or the number of proxy hops to trust. Default: false.
@@ -46,6 +50,8 @@ export interface Config {
   publicUrl: URL;
   logLevel: LogLevel;
   trustProxy: boolean | number;
+  /** How long soft-deleted entities stay restorable, in milliseconds. */
+  softDeleteRetentionMs: number;
 }
 
 export class ConfigError extends Error {
@@ -66,5 +72,6 @@ export function loadConfig(env: Readonly<Record<string, string | undefined>>): C
     publicUrl: new URL(parsed.PUBLIC_URL ?? `http://localhost:${String(parsed.PORT)}`),
     logLevel: parsed.LOG_LEVEL,
     trustProxy: parsed.TRUST_PROXY,
+    softDeleteRetentionMs: parsed.SOFT_DELETE_RETENTION_DAYS * DAY_MS,
   };
 }

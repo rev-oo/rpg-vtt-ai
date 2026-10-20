@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
 import { TABLE_ROLES } from '../roles.js';
 
 // Response bodies of the HTTP API. The server builds them with these types; the web validates
@@ -31,6 +32,7 @@ export const tableSchema = z.object({
   systemName: z.string(),
   systemVersion: z.string(),
   settings: z.record(z.string(), z.unknown()),
+  playersMayCreateAnyActorType: z.boolean(),
   createdAt: z.string(),
   role: z.enum(TABLE_ROLES),
 });
@@ -42,6 +44,56 @@ export const tableResponseSchema = z.object({ table: tableSchema });
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
 export const systemsResponseSchema = z.object({ systems: z.array(systemSchema) });
+
+const ownershipView = z.object({
+  default: z.enum(OWNERSHIP_LEVELS),
+  users: z.record(z.string(), z.enum(OWNERSHIP_LEVELS)),
+});
+
+/** What the caller may do with an entity: read it, or read and edit it (FR-ENT-03). */
+export const ENTITY_ACCESS = ['observer', 'owner'] as const;
+
+const entityTimestamps = {
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  /** Set while the entity is in the trash (FR-ENT-04). */
+  deletedAt: z.string().nullable(),
+};
+
+/** An actor's listing projection; its live data comes from the collab document (M5). */
+export const actorSchema = z.object({
+  id: z.string(),
+  tableId: z.string(),
+  type: z.string(),
+  name: z.string(),
+  imageUrl: z.string().nullable(),
+  ownership: ownershipView,
+  system: z.record(z.string(), z.unknown()),
+  dataVersion: z.string(),
+  ...entityTimestamps,
+  access: z.enum(ENTITY_ACCESS),
+});
+export type ActorView = z.infer<typeof actorSchema>;
+export const actorsResponseSchema = z.object({ actors: z.array(actorSchema) });
+export const actorResponseSchema = z.object({ actor: actorSchema });
+
+/** A library item (`actorId` null) or an item owned by an actor (FR-ENT-05). */
+export const itemSchema = z.object({
+  id: z.string(),
+  tableId: z.string(),
+  actorId: z.string().nullable(),
+  sourceId: z.string().nullable(),
+  type: z.string(),
+  name: z.string(),
+  imageUrl: z.string().nullable(),
+  system: z.record(z.string(), z.unknown()),
+  dataVersion: z.string(),
+  ...entityTimestamps,
+  access: z.enum(ENTITY_ACCESS),
+});
+export type ItemView = z.infer<typeof itemSchema>;
+export const itemsResponseSchema = z.object({ items: z.array(itemSchema) });
+export const itemResponseSchema = z.object({ item: itemSchema });
 
 /** Every error is rendered as this envelope (specs §10.1). */
 export const errorResponseSchema = z.object({

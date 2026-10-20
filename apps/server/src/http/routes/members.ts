@@ -5,7 +5,9 @@ import { canManageMembers } from '@vtt/shared';
 import { updateMemberBody } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../../db/client.js';
+import { findActor, removeEntityOwner } from '../../db/repositories/index.js';
 import { members, users } from '../../db/schema.js';
+import { actorAccess } from '../../domain/entities.js';
 import { findMembership, type Member } from '../../domain/tables.js';
 import { badRequest, conflict, forbidden, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -32,6 +34,15 @@ const lastGm = () => conflict('last_gm', 'A table needs a GM. Make someone else 
 
 /** Members, roles and default characters (FR-TABLE-04, 05, 07). */
 export function memberRoutes({ app, db }: AppContext): void {
+  /** A default character must be a live actor of this table that the member owns. */
+  const requireOwnCharacter = (tableId: string, member: Member, actorId: string): void => {
+    const actor = findActor(db, actorId);
+    const subject = { userId: member.userId, role: member.role };
+    if (actor?.tableId !== tableId || actorAccess(subject, actor) !== 'owner') {
+      throw badRequest('invalid_character', 'Pick one of your own characters on this table.');
+    }
+  };
+
   const findTarget = (tableId: string, userId: string): Member => {
     const target = findMembership(db, tableId, userId);
     if (!target) throw notFound('Member not found.');
@@ -70,6 +81,7 @@ export function memberRoutes({ app, db }: AppContext): void {
     if (body.defaultCharacterId !== undefined && !isSelf) {
       throw badRequest('not_own_member', 'You can only set your own default character.');
     }
+    if (body.defaultCharacterId) requireOwnCharacter(id, membership, body.defaultCharacterId);
 
     const updated = db.transaction((tx) => {
       if (target.role === 'gm' && body.role !== undefined && body.role !== 'gm') {
@@ -105,7 +117,8 @@ export function memberRoutes({ app, db }: AppContext): void {
       tx.delete(members)
         .where(and(eq(members.tableId, id), eq(members.userId, userId)))
         .run();
-      // Their actors stay on the table and become unowned (FR-TABLE-04) once actors exist (M2).
+      // Their actors and journal entries stay on the table, without their level (FR-TABLE-04).
+      removeEntityOwner(tx, id, userId);
     });
     return reply.code(204).send();
   });

@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { TableRole } from '@vtt/shared';
 
+import {
+  createActor,
+  createJournalEntry,
+  findActor,
+  findJournalEntry,
+} from '../src/db/repositories/index.js';
 import { members } from '../src/db/schema.js';
 
 import {
@@ -146,17 +152,46 @@ describe('role changes (FR-TABLE-04, FR-TABLE-07)', () => {
 });
 
 describe('default character (FR-TABLE-05)', () => {
+  const character = (t: Awaited<ReturnType<typeof setup>>, ownerId: string) =>
+    createActor(
+      t.db,
+      {
+        tableId: t.table.id,
+        type: 'character',
+        name: 'Hero',
+        dataVersion: '1.2.0',
+        ownership: { default: 'observer', users: { [ownerId]: 'owner' } },
+      },
+      new Date(),
+    );
+
   it('lets a member set and clear their own default character', async () => {
     const t = await setup();
+    const hero = character(t, t.bob.userId);
     const set = await patchMember(t.app, t.bob.client, t.table.id, t.bob.userId, {
-      defaultCharacterId: CHARACTER_ID,
+      defaultCharacterId: hero.id,
     });
-    expect(set.json()).toMatchObject({ member: { defaultCharacterId: CHARACTER_ID } });
+    expect(set.json()).toMatchObject({ member: { defaultCharacterId: hero.id } });
 
     const cleared = await patchMember(t.app, t.bob.client, t.table.id, t.bob.userId, {
       defaultCharacterId: null,
     });
     expect(cleared.json()).toMatchObject({ member: { defaultCharacterId: null } });
+  });
+
+  it.each([
+    ['an unknown actor', () => CHARACTER_ID],
+    [
+      "another player's character",
+      (t: Awaited<ReturnType<typeof setup>>) => character(t, t.carol.userId).id,
+    ],
+  ])('rejects %s as the default', async (_label, pick) => {
+    const t = await setup();
+    const res = await patchMember(t.app, t.bob.client, t.table.id, t.bob.userId, {
+      defaultCharacterId: pick(t),
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: { code: 'invalid_character' } });
   });
 
   it("does not let anyone, even the GM, set another member's default", async () => {
@@ -192,6 +227,39 @@ describe('removal (FR-TABLE-04)', () => {
     expect(res.statusCode).toBe(409);
   });
 
-  // FR-TABLE-04: needs actors (M2, T-0201).
-  it.todo("leaves a removed member's actors on the table, unowned");
+  it("leaves a removed member's actors and journal entries on the table, without their level", async () => {
+    const t = await setup();
+    const now = new Date();
+    const actor = createActor(
+      t.db,
+      {
+        tableId: t.table.id,
+        type: 'character',
+        name: 'Bob the Brave',
+        dataVersion: '1.2.0',
+        ownership: {
+          default: 'observer',
+          users: { [t.bob.userId]: 'owner', [t.carol.userId]: 'owner' },
+        },
+      },
+      now,
+    );
+    const entry = createJournalEntry(
+      t.db,
+      {
+        tableId: t.table.id,
+        title: 'Notes',
+        ownership: { default: 'observer', users: { [t.bob.userId]: 'owner' } },
+      },
+      now,
+    );
+
+    expect((await removeMember(t.app, t.gm.client, t.table.id, t.bob.userId)).statusCode).toBe(204);
+
+    expect(findActor(t.db, actor.id)?.ownership).toEqual({
+      default: 'observer',
+      users: { [t.carol.userId]: 'owner' },
+    });
+    expect(findJournalEntry(t.db, entry.id)?.ownership).toEqual({ default: 'observer', users: {} });
+  });
 });

@@ -16,8 +16,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
-| M1    | Core server: users, auth, tables, membership                  | In review   | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
+| M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 50%      | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -29,23 +29,27 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M1
-- **Next task:** `T-0201` (after M1 sign-off)
+- **Active milestone:** M2
+- **Next task:** `T-0207`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                           |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                           |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                         |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                         |
-| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.        |
-| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off. |
-| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
-| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
+| Date       | Change                                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                  |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                  |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.               |
+| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.        |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                       |
+| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                  |
+| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                              |
+| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                    |
+| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                |
+| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added. |
 
 ---
 
@@ -801,28 +805,29 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------ |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                          |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                         |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                  |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                            |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                       |
-| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                        |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate` |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `POST /actors/:id/items`       |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                             |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                 |
-| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                               |
-| Health          | `GET /api/health`                                                                                |
+| Group           | Endpoints (illustrative)                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                      |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                     |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                              |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                                                        |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                   |
+| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                    |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore` |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`    |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
+| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                                            |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                                                           |
+| Health          | `GET /api/health`                                                                                                            |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `error`.
+- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
 - Heartbeat every 25 s; clients reconnect with exponential backoff and resubscribe. Missed events are recovered by fetching history from REST.
@@ -952,7 +957,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0105
   - **Do:** Admin routes to create users (generated password), disable, and delete (FR-AUTH-02, 06).
   - **Done when:** tests confirm non-admins get 403 and deleted users' messages keep author snapshot (once chat exists; stub test now).
-  - **Note:** the author-snapshot check is an `it.todo` in `apps/server/test/users.test.ts`; implement it with T-0205.
+  - **Note:** the author-snapshot check in `apps/server/test/users.test.ts` was implemented with T-0205.
 
 - [x] **T-0107 · Table creation and listing**
   - **Deps:** T-0105
@@ -963,7 +968,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0107
   - **Do:** Member routes, role changes, removal, default character setting (FR-TABLE-04, 05, 07).
   - **Done when:** only GM can change roles; removing a member leaves their actors unowned.
-  - **Note:** actors arrive in M2. The unowned-actors check is an `it.todo` in `apps/server/test/members.test.ts`; implement it with T-0201.
+  - **Note:** actors arrived in M2; the unowned-actors check in `apps/server/test/members.test.ts` was implemented with T-0201.
 
 - [x] **T-0109 · Invites**
   - **Deps:** T-0108
@@ -983,35 +988,41 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M2 — Entities and realtime
 
-- [ ] **T-0201 · Entity persistence (SQL)**
+- [x] **T-0201 · Entity persistence (SQL)**
   - **Deps:** T-0102, T-0110
   - **Do:** Tables for `actors`, `items`, `journal_entries` (metadata only), `ownership` JSON, `soft_deleted_at`. Repositories in `apps/server/src/db`.
   - **Done when:** repository tests cover create, list with filters, soft delete, and restore within 30 days (FR-ENT-04).
+  - **Note:** repositories in `apps/server/src/db/repositories/`, tests in `apps/server/test/repositories.test.ts`. Retention is `SOFT_DELETE_RETENTION_DAYS` (ADR-014). The FR-TABLE-04 check from T-0108 is implemented. Scheduling `purgeDeletedEntities()` came with T-0202.
 
-- [ ] **T-0202 · Actor and item REST API**
+- [x] **T-0202 · Actor and item REST API**
   - **Deps:** T-0201
   - **Do:** CRUD, duplicate, ownership updates, item copy into actor (FR-ENT-01..06). Returns projections only; live data is via collab (M5).
   - **Done when:** integration tests enforce ownership rules on every endpoint.
+  - **Note:** `apps/server/test/actors.test.ts` and `items.test.ts`. Actor and item types are read from new `plugins` columns that tests seed until T-0403; restore endpoints, the `playersMayCreateAnyActorType` table option and the trash purge schedule were added (ADR-015).
 
-- [ ] **T-0203 · Events WebSocket**
+- [x] **T-0203 · Events WebSocket**
   - **Deps:** T-0105, T-0110
   - **Do:** `/ws/events` with session auth on upgrade, envelope validation (Zod), subscribe/unsubscribe, heartbeat, and per-table fan-out (§10.2).
   - **Done when:** a test client receives `entity.changed` only for tables it belongs to.
+  - **Note:** `apps/server/test/events.test.ts`. The protocol lives in `@vtt/shared/api` (`events.ts`). Upgrades also check the `Origin`; sessions are re-checked on every message and heartbeat (ADR-016).
 
 - [ ] **T-0204 · Entity change notifications**
   - **Deps:** T-0202, T-0203
   - **Do:** Emit `entity.changed` on create/update/delete/restore (FR-ENT-07).
   - **Done when:** two browser sessions see the list update without refresh (tested in e2e).
+  - **Note:** server side done: every actor and item mutation publishes `entity.changed` to the members who can see the entity, verified on the wire in `events.test.ts`. The two-browser e2e needs the actor list UI and lands with T-0208.
 
-- [ ] **T-0205 · Chat storage and REST history**
+- [x] **T-0205 · Chat storage and REST history**
   - **Deps:** T-0201
   - **Do:** `chat_messages` table with `audience`, `recipients`, `kind`, `text`, `rolls`, `card`, `speaker` snapshot. Paginated history with audience filtering in the query (FR-CHAT-01, 02, 07).
   - **Done when:** a whisper is absent from history for a non-recipient (repository and API tests).
+  - **Note:** `apps/server/test/chat.test.ts`. History is paged on an autoincrement `seq` with an opaque cursor; `POST /tables/:id/messages` shares the `chat.send` code (ADR-016).
 
-- [ ] **T-0206 · Chat over events socket**
+- [x] **T-0206 · Chat over events socket**
   - **Deps:** T-0203, T-0205
   - **Do:** `chat.send` handling, audience-filtered fan-out, speaker validation (user owns actor or is GM).
   - **Done when:** whispers and GM messages reach only permitted sockets (integration tests on the wire).
+  - **Note:** `chat.test.ts` › "chat on the wire" checks every frame each socket received, including that a hidden message's id never appears.
 
 - [ ] **T-0207 · Chat UI**
   - **Deps:** T-0206, T-0111
@@ -1066,6 +1077,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0402, T-0102
   - **Do:** Scan `DATA_DIR/plugins`, validate, check `coreApi`, persist registry rows, expose enable/disable (FR-PLUGIN-01, 03, 07). Rescan endpoint.
   - **Done when:** adding a folder and calling rescan makes it appear without restart.
+  - **Note:** also fill `plugins.actor_types` (`{ <type>: { controlledBy } }`) and `plugins.item_types` from `actors/` and `items/`; the entity API reads them (ADR-015).
 
 - [ ] **T-0404 · Scoped CSS processor**
   - **Deps:** T-0403
@@ -1283,7 +1295,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
 | Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)      |
 | Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | Configurable, default 30                         |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)  |
 | Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
 | Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
 | Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
@@ -1322,6 +1334,9 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md)                        | Accepted |
 | ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted |
 | ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
+| ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
+| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
+| ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

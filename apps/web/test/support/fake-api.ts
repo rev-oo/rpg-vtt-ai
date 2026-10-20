@@ -69,6 +69,7 @@ export const TABLE = {
   systemName: 'Tiny d20',
   systemVersion: '1.0.0',
   settings: {},
+  playersMayCreateAnyActorType: false,
   role: 'gm',
   createdAt: '2026-10-19T00:00:00.000Z',
 };

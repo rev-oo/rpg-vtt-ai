@@ -9,10 +9,12 @@ import {
   canEditActor,
   canEditJournal,
   canManageInvites,
+  canManageItemLibrary,
   canManageMembers,
   canManageTable,
   canSeeAudience,
   canSeeGmContent,
+  canSetOwnership,
   canViewActor,
   canViewJournal,
   DEFAULT_JOURNAL_OWNERSHIP,
@@ -203,5 +205,8 @@ describe('table-level permissions', () => {
     expect(canManageInvites(role)).toBe(manage);
     expect(canArchiveTable(role)).toBe(archive);
     expect(canSeeGmContent(role)).toBe(gmContent);
+    // GM-like roles curate the item library and set ownership (FR-ENT-02, 05).
+    expect(canManageItemLibrary(role)).toBe(gmContent);
+    expect(canSetOwnership(role)).toBe(gmContent);
   });
 });

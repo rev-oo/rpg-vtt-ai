@@ -32,6 +32,8 @@ export function insertPlugin(
       name: 'Test System',
       version: '1.2.0',
       enabled: true,
+      actorTypes: { character: { controlledBy: 'player' }, npc: { controlledBy: 'gm' } },
+      itemTypes: ['weapon', 'consumable'],
       ...overrides,
     })
     .returning()

@@ -8,15 +8,21 @@ import type { Db } from '../db/client.js';
 import { LoginThrottle } from '../domain/auth/login-throttle.js';
 import { SessionService } from '../domain/auth/sessions.js';
 import { AppError } from '../errors.js';
+import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
+import type { EventHub } from '../realtime/hub.js';
 
 import { registerAuth } from './auth.js';
+import { actorRoutes } from './routes/actors.js';
 import { authRoutes } from './routes/auth.js';
+import { chatRoutes } from './routes/chat.js';
 import { inviteRoutes } from './routes/invites.js';
+import { itemRoutes } from './routes/items.js';
 import { memberRoutes } from './routes/members.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
+import { scheduleTrashPurge } from './trash-purge.js';
 import { installValidationMessages } from './validation.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
@@ -41,6 +47,8 @@ export interface AppContext {
   config: Config;
   sessions: SessionService;
   loginThrottle: LoginThrottle;
+  /** Event socket fan-out (specs §10.2). */
+  events: EventHub;
   /** The application clock; routes use it instead of `new Date()` so tests can move time. */
   now: () => Date;
 }
@@ -80,8 +88,9 @@ export async function buildApp({
 
   const sessions = new SessionService({ db, ttlSeconds: config.sessionTtlSeconds, now });
   registerAuth(app, sessions);
+  const events = await registerEvents(app, { db, sessions });
 
-  const context: AppContext = { app, db, config, sessions, loginThrottle, now };
+  const context: AppContext = { app, db, config, sessions, loginThrottle, events, now };
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
@@ -89,6 +98,12 @@ export async function buildApp({
   tableRoutes(context);
   memberRoutes(context);
   inviteRoutes(context);
+  actorRoutes(context);
+  itemRoutes(context);
+  chatRoutes(context);
+  eventsSocket(context);
+
+  scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
 
   return app;
 }

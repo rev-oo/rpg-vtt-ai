@@ -36,9 +36,12 @@ describe('database', () => {
   it('creates every core table', () => {
     expect(tableNames(createTestDb())).toEqual(
       expect.arrayContaining([
+        'actors',
         'game_tables',
         'instance_settings',
         'invites',
+        'items',
+        'journal_entries',
         'members',
         'plugins',
         'sessions',

@@ -2,6 +2,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  type AnySQLiteColumn,
   integer,
   primaryKey,
   sqliteTable,
@@ -9,13 +10,31 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
-import { INVITE_ROLES, TABLE_ROLES } from '@vtt/shared';
+import {
+  AUDIENCES,
+  INVITE_ROLES,
+  TABLE_ROLES,
+  type ControlledBy,
+  type Ownership,
+} from '@vtt/shared';
+import { MESSAGE_KINDS, type Speaker } from '@vtt/shared/api';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
   timestamp('created_at')
     .notNull()
     .$defaultFn(() => new Date());
+const updatedAt = () =>
+  timestamp('updated_at')
+    .notNull()
+    .$defaultFn(() => new Date());
+/** Set when an entity is in the trash; it can be restored within the retention window (FR-ENT-04). */
+const softDeletedAt = () => timestamp('soft_deleted_at');
+const ownership = (fallback: Ownership) =>
+  text('ownership', { mode: 'json' }).$type<Ownership>().notNull().default(fallback);
+/** SQL projection of the entity's plugin data (specs §9.6); the live data is the CRDT doc (M5). */
+const systemData = () =>
+  text('system', { mode: 'json' }).$type<Record<string, unknown>>().notNull().default({});
 
 export const users = sqliteTable(
   'users',
@@ -68,6 +87,13 @@ export const plugins = sqliteTable('plugins', {
   version: text('version').notNull(),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
   hasCode: integer('has_code', { mode: 'boolean' }).notNull().default(false),
+  /** Actor types the plugin declares (§8.4), keyed by type id. */
+  actorTypes: text('actor_types', { mode: 'json' })
+    .$type<Record<string, { controlledBy: ControlledBy }>>()
+    .notNull()
+    .default({}),
+  /** Item type ids the plugin declares. */
+  itemTypes: text('item_types', { mode: 'json' }).$type<string[]>().notNull().default([]),
   updatedAt: timestamp('updated_at')
     .notNull()
     .$defaultFn(() => new Date()),
@@ -88,6 +114,10 @@ export const gameTables = sqliteTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default({}),
+    /** Lets players create actor types meant for the GM (FR-ENT-01). */
+    playersMayCreateAnyActorType: integer('players_may_create_any_actor_type', { mode: 'boolean' })
+      .notNull()
+      .default(false),
     createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },
@@ -132,4 +162,107 @@ export const invites = sqliteTable(
     revokedAt: timestamp('revoked_at'),
   },
   (t) => [index('invites_table_id_idx').on(t.tableId)],
+);
+
+/** Actors (FR-ENT-01..04). Players see an actor according to its ownership (FR-ENT-03). */
+export const actors = sqliteTable(
+  'actors',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    /** Actor type declared by the table's system plugin (§8.4). */
+    type: text('type').notNull(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    ownership: ownership({ default: 'none', users: {} }),
+    system: systemData(),
+    /** Plugin version the data was written with (§9.7). */
+    dataVersion: text('data_version').notNull(),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [index('actors_table_id_idx').on(t.tableId, t.softDeletedAt)],
+);
+
+/**
+ * Items (FR-ENT-05, 06). Library items have no `actorId`; copying one into an actor creates an
+ * owned item with `actorId` and `sourceId` set. Owned items follow their actor's ownership.
+ */
+export const items = sqliteTable(
+  'items',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    sourceId: text('source_id').references((): AnySQLiteColumn => items.id, {
+      onDelete: 'set null',
+    }),
+    type: text('type').notNull(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    system: systemData(),
+    dataVersion: text('data_version').notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [
+    index('items_table_id_idx').on(t.tableId, t.softDeletedAt),
+    index('items_actor_id_idx').on(t.actorId),
+  ],
+);
+
+/**
+ * Journal entry metadata (FR-JOURNAL-01..03); the body is a CRDT doc (M5). Players observe
+ * entries by default (FR-JOURNAL-02); hidden entries reach only GMs and assistants (§9.3).
+ */
+export const journalEntries = sqliteTable(
+  'journal_entries',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    ownership: ownership({ default: 'observer', users: {} }),
+    hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [index('journal_entries_table_id_idx').on(t.tableId, t.softDeletedAt)],
+);
+
+export const chatMessages = sqliteTable(
+  'chat_messages',
+  {
+    /** Send order; history pages on it, since several messages can share a millisecond. */
+    seq: integer('seq').primaryKey({ autoIncrement: true }),
+    id: text('id').notNull().unique(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    /** Kept as `null` when the account is deleted; `speaker` keeps the name (FR-AUTH-06). */
+    senderId: text('sender_id').references(() => users.id, { onDelete: 'set null' }),
+    /** Who spoke, as it was when the message was sent (FR-CHAT-01). */
+    speaker: text('speaker', { mode: 'json' }).$type<Speaker>().notNull(),
+    audience: text('audience', { enum: AUDIENCES }).notNull(),
+    /** Whisper recipients' user ids; empty for other audiences (FR-CHAT-02). */
+    recipients: text('recipients', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    kind: text('kind', { enum: MESSAGE_KINDS }).notNull(),
+    text: text('text').notNull(),
+    /** Full die results of roll messages (FR-CHAT-04, M3). */
+    rolls: text('rolls', { mode: 'json' }).$type<unknown[]>().notNull().default([]),
+    /** Plugin card data (FR-CHAT-06, M3). */
+    card: text('card', { mode: 'json' }).$type<unknown>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('chat_messages_history_idx').on(t.tableId, t.seq)],
 );
