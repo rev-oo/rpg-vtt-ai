@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { CONTROLLED_BY } from '../permissions/entities.js';
 import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
 import { TABLE_ROLES } from '../roles.js';
 
@@ -56,6 +57,13 @@ export const membersResponseSchema = z.object({ members: z.array(memberSchema) }
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
 export const systemsResponseSchema = z.object({ systems: z.array(systemSchema) });
+
+/** The actor and item types the table's system declares (§8.4), for creation forms. */
+export const tableTypesSchema = z.object({
+  actorTypes: z.array(z.object({ type: z.string(), controlledBy: z.enum(CONTROLLED_BY) })),
+  itemTypes: z.array(z.string()),
+});
+export type TableTypes = z.infer<typeof tableTypesSchema>;
 
 const ownershipView = z.object({
   default: z.enum(OWNERSHIP_LEVELS),

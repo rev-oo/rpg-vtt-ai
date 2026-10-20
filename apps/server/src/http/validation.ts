@@ -27,6 +27,8 @@ function englishMessage(issue: IssueDescription): string {
       return `Must be at most ${String(issue.max)} characters.`;
     case 'username':
       return '3–32 characters: letters, digits, "_", "." or "-".';
+    case 'url':
+      return 'Must be an http or https URL.';
   }
 }
 

@@ -301,3 +301,18 @@ describe('duplicating actors (FR-ENT-04)', () => {
     );
   });
 });
+
+describe('system types (§8.4)', () => {
+  it('lists the actor and item types to every member', async () => {
+    const t = await setupTable();
+    const res = await t.call(t.dave.client, 'GET', `/tables/${t.table.id}/types`);
+    expect(res.json()).toEqual({
+      actorTypes: [
+        { type: 'character', controlledBy: 'player' },
+        { type: 'npc', controlledBy: 'gm' },
+      ],
+      itemTypes: ['weapon', 'consumable'],
+    });
+    expect((await t.call(t.eve.client, 'GET', `/tables/${t.table.id}/types`)).statusCode).toBe(404);
+  });
+});

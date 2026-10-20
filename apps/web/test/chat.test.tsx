@@ -10,39 +10,13 @@ import { closeEventsClient } from '../src/realtime/events-client.js';
 import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
 import { fakeWebSocket, serverEvent, type FakeSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
+import { BOB, HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 
 afterEach(() => {
   closeEventsClient();
   vi.unstubAllGlobals();
   setCsrfToken(null);
 });
-
-const BOB = { userId: 'u2', username: 'bob', displayName: 'Bob', role: 'player' };
-const MEMBERS = [
-  {
-    userId: USER.id,
-    username: USER.username,
-    displayName: USER.displayName,
-    role: 'gm',
-    defaultCharacterId: null,
-    joinedAt: '2026-10-19T00:00:00.000Z',
-  },
-  { ...BOB, defaultCharacterId: null, joinedAt: '2026-10-19T00:00:00.000Z' },
-];
-const HERO = {
-  id: 'a1',
-  tableId: TABLE.id,
-  type: 'npc',
-  name: 'Goblin King',
-  imageUrl: null,
-  ownership: { default: 'none', users: {} },
-  system: {},
-  dataVersion: '1.0.0',
-  createdAt: '2026-10-19T00:00:00.000Z',
-  updatedAt: '2026-10-19T00:00:00.000Z',
-  deletedAt: null,
-  access: 'owner',
-};
 
 let seq = 0;
 function message(text: string, extra: Partial<ChatMessage> = {}): ChatMessage {
@@ -86,6 +60,8 @@ function openTable({
       body: { members: MEMBERS.map((m) => (m.userId === USER.id ? { ...m, role } : m)) },
     },
     'GET /tables/t1/actors': { body: { actors: [HERO] } },
+    'GET /tables/t1/actors?trash=live': { body: { actors: [HERO] } },
+    'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': history,
     ...handlers,
   });

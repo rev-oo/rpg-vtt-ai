@@ -206,7 +206,7 @@ function MessageItem({
   });
   const recipients = message.recipientIds.map((id) => names.get(id) ?? t('chat.formerMember'));
   return (
-    <li className="rounded-lg bg-bg px-2 py-1">
+    <li className="rounded-lg bg-canvas px-2 py-1">
       <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
         <span className="font-semibold">{message.speaker.name}</span>
         <time className="text-muted" dateTime={message.createdAt}>

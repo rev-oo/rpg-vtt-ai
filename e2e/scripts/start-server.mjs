@@ -1,6 +1,6 @@
 // @ts-check
 // Starts the built API server on a fresh data directory with one enabled system plugin.
-// Until the plugin scanner exists (T-0403), the plugin row is seeded directly.
+// Until the plugin scanner exists (T-0403), the plugin row and its types are seeded directly.
 import { spawn, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';
@@ -25,8 +25,16 @@ if (migrate.status !== 0) process.exit(migrate.status ?? 1);
 
 const db = new Database(path.join(dataDir, 'vtt.sqlite'));
 db.prepare(
-  'insert into plugins (id, name, version, enabled, has_code, updated_at) values (?, ?, ?, 1, 0, ?)',
-).run('e2e-system', 'E2E System', '1.0.0', Date.now());
+  `insert into plugins (id, name, version, enabled, has_code, actor_types, item_types, updated_at)
+   values (?, ?, ?, 1, 0, ?, ?, ?)`,
+).run(
+  'e2e-system',
+  'E2E System',
+  '1.0.0',
+  JSON.stringify({ character: { controlledBy: 'player' }, npc: { controlledBy: 'gm' } }),
+  JSON.stringify(['weapon', 'consumable']),
+  Date.now(),
+);
 db.close();
 
 const server = spawn('node', ['dist/src/main.js'], { cwd: serverDir, env, stdio: 'inherit' });

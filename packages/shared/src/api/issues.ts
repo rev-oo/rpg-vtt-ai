@@ -3,10 +3,10 @@ import type { z } from 'zod';
 import { USERNAME_PATTERN } from './constants.js';
 
 /** Message ids for the validation rules the API schemas use. */
-export type IssueKey = 'required' | 'tooShort' | 'tooLong' | 'username';
+export type IssueKey = 'required' | 'tooShort' | 'tooLong' | 'username' | 'url';
 
 export type IssueDescription =
-  | { key: 'required' | 'username' }
+  | { key: 'required' | 'username' | 'url' }
   | { key: 'tooShort'; min: number }
   | { key: 'tooLong'; max: number };
 
@@ -25,6 +25,7 @@ export function describeIssue(issue: z.core.$ZodRawIssue): IssueDescription | un
     case 'too_big':
       return issue.origin === 'string' ? { key: 'tooLong', max: Number(issue.maximum) } : undefined;
     case 'invalid_format':
+      if (issue.format === 'url') return { key: 'url' };
       return issue.format === 'regex' && issue.pattern === USERNAME_PATTERN.toString()
         ? { key: 'username' }
         : undefined;

@@ -5,7 +5,10 @@ export default [
   route('login', 'routes/login.tsx'),
   layout('routes/app-layout.tsx', [
     index('routes/tables.tsx'),
-    route('tables/:tableId', 'routes/table.tsx'),
+    route('tables/:tableId', 'routes/table.tsx', [
+      index('routes/table-actors.tsx'),
+      route('items', 'routes/table-items.tsx'),
+    ]),
     route('account', 'routes/account.tsx'),
   ]),
   route('*', 'routes/catch-all.tsx'),
