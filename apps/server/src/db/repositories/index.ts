@@ -6,6 +6,7 @@ import { purgeDeletedJournalEntries, removeJournalOwner } from './journal.js';
 import type { Retention } from './soft-delete.js';
 
 export * from './actors.js';
+export * from './chat.js';
 export * from './items.js';
 export * from './journal.js';
 export type { RestoreResult, Retention, Trash } from './soft-delete.js';

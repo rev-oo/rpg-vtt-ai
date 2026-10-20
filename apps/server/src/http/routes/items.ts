@@ -14,6 +14,7 @@ import {
 } from '../../db/repositories/index.js';
 import { requireItemType, systemTypes, toItemView } from '../../domain/entities.js';
 import { conflict, gone, notFound, unprocessable } from '../../errors.js';
+import { publishItemChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireActor, requireItem } from '../entities.js';
 import { requireMember } from '../membership.js';
@@ -22,7 +23,7 @@ import { parseInput } from '../validation.js';
 const idParams = z.object({ id: z.uuid() });
 
 /** The table's item library and owned items (FR-ENT-05, 06). Live item data is collab (M5). */
-export function itemRoutes({ app, db, config, now }: AppContext): void {
+export function itemRoutes({ app, db, config, events, now }: AppContext): void {
   const retention = (): Retention => ({ now: now(), retentionMs: config.softDeleteRetentionMs });
 
   app.get('/api/v1/tables/:id/items', (request) => {
@@ -43,6 +44,7 @@ export function itemRoutes({ app, db, config, now }: AppContext): void {
     requireItemType(systemTypes(db, table), body.type);
 
     const item = createItem(db, { tableId: id, ...body, dataVersion: table.systemVersion }, now());
+    publishItemChanged(events, 'created', item, undefined);
     return reply.code(201).send({ item: toItemView(item, 'owner') });
   });
 
@@ -71,6 +73,7 @@ export function itemRoutes({ app, db, config, now }: AppContext): void {
       },
       now(),
     );
+    publishItemChanged(events, 'created', copy, actor);
     return reply.code(201).send({ item: toItemView(copy, 'owner') });
   });
 
@@ -82,23 +85,25 @@ export function itemRoutes({ app, db, config, now }: AppContext): void {
 
   app.patch('/api/v1/items/:id', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access } = requireItem(db, request, id, { edit: true });
+    const { access, actor } = requireItem(db, request, id, { edit: true });
     const body = parseInput(updateItemBody, request.body);
     const updated = updateItem(db, id, body, now());
     if (!updated) throw notFound('Item not found.');
+    publishItemChanged(events, 'updated', updated, actor);
     return { item: toItemView(updated, access) };
   });
 
   app.delete('/api/v1/items/:id', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
-    requireItem(db, request, id, { edit: true });
+    const { item, actor } = requireItem(db, request, id, { edit: true });
     softDeleteItem(db, id, now());
+    publishItemChanged(events, 'deleted', item, actor);
     return reply.code(204).send();
   });
 
   app.post('/api/v1/items/:id/restore', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access } = requireItem(db, request, id, { includeDeleted: true, edit: true });
+    const { access, actor } = requireItem(db, request, id, { includeDeleted: true, edit: true });
     const result = restoreItem(db, id, retention());
     if (result === 'not_deleted') throw conflict('not_deleted', 'The item is not deleted.');
     if (result === 'expired') {
@@ -106,6 +111,7 @@ export function itemRoutes({ app, db, config, now }: AppContext): void {
     }
     const restored = findItem(db, id);
     if (!restored) throw notFound('Item not found.');
+    publishItemChanged(events, 'restored', restored, actor);
     return { item: toItemView(restored, access) };
   });
 }

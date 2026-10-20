@@ -27,6 +27,7 @@ import {
   toItemView,
 } from '../../domain/entities.js';
 import { conflict, forbidden, gone, notFound } from '../../errors.js';
+import { publishActorChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireActor } from '../entities.js';
 import { requireMember } from '../membership.js';
@@ -41,7 +42,7 @@ const ownedBy = (userId: string): Ownership => ({ default: 'none', users: { [use
 const copyName = (name: string) => `${name} (copy)`.slice(0, MAX_ENTITY_NAME);
 
 /** Actor CRUD, trash and duplication (FR-ENT-01..04). Live sheet data is collab (M5). */
-export function actorRoutes({ app, db, config, now }: AppContext): void {
+export function actorRoutes({ app, db, config, events, now }: AppContext): void {
   const retention = (): Retention => ({ now: now(), retentionMs: config.softDeleteRetentionMs });
 
   app.get('/api/v1/tables/:id/actors', (request) => {
@@ -84,6 +85,7 @@ export function actorRoutes({ app, db, config, now }: AppContext): void {
       },
       now(),
     );
+    publishActorChanged(events, 'created', actor);
     return reply.code(201).send({ actor: toActorView(actor, 'owner') });
   });
 
@@ -103,14 +105,16 @@ export function actorRoutes({ app, db, config, now }: AppContext): void {
 
     const updated = updateActor(db, actor.id, body, now());
     if (!updated) throw notFound('Actor not found.');
+    publishActorChanged(events, 'updated', updated, actor.ownership);
     // Only GMs change ownership, and they are implicit owners (FR-ENT-03), so the editor keeps access.
     return { actor: toActorView(updated, actorAccess(subject, updated) ?? 'owner') };
   });
 
   app.delete('/api/v1/actors/:id', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
-    requireActor(db, request, id, { edit: true });
+    const { actor } = requireActor(db, request, id, { edit: true });
     softDeleteActor(db, id, now());
+    publishActorChanged(events, 'deleted', actor);
     return reply.code(204).send();
   });
 
@@ -124,6 +128,7 @@ export function actorRoutes({ app, db, config, now }: AppContext): void {
     }
     const restored = findActor(db, id);
     if (!restored) throw notFound('Actor not found.');
+    publishActorChanged(events, 'restored', restored);
     return { actor: toActorView(restored, access) };
   });
 
@@ -172,6 +177,7 @@ export function actorRoutes({ app, db, config, now }: AppContext): void {
       }
       return created;
     });
+    publishActorChanged(events, 'created', copy);
     return reply.code(201).send({ actor: toActorView(copy, 'owner') });
   });
 

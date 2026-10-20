@@ -13,3 +13,8 @@ export const MAX_ENTITY_NAME = 100;
 export const MAX_ENTITY_TYPE = 64;
 export const MAX_IMAGE_URL = 2048;
 export const MAX_SEARCH = 100;
+export const MAX_CHAT_TEXT = 2000;
+export const MAX_WHISPER_RECIPIENTS = 20;
+/** Chat history page size (FR-CHAT-07). */
+export const CHAT_PAGE_SIZE = 50;
+export const MAX_CHAT_PAGE_SIZE = 100;

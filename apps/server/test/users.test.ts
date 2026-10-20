@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { describe, expect, it } from 'vitest';
 
-import { gameTables, members, plugins, sessions, users } from '../src/db/schema.js';
+import { createChatMessage } from '../src/db/repositories/index.js';
+import { chatMessages, gameTables, members, plugins, sessions, users } from '../src/db/schema.js';
 
 import {
   authHeaders,
@@ -204,6 +205,31 @@ describe('user administration (FR-AUTH-02, FR-AUTH-06)', () => {
     expect(db.select().from(gameTables).get()?.createdBy).toBeNull();
   });
 
-  // FR-AUTH-06: needs the chat_messages table (T-0205).
-  it.todo("keeps a deleted user's chat messages with the author name snapshot");
+  it("keeps a deleted user's chat messages with the author name snapshot (FR-AUTH-06)", async () => {
+    const { app, db, admin } = await setup();
+    const alice = await createUserClient(app, admin, 'alice');
+    db.insert(plugins).values({ id: 'sys', name: 'Sys', version: '1.0.0', enabled: true }).run();
+    db.insert(gameTables)
+      .values({ id: 't1', name: 'T', systemId: 'sys', systemVersion: '1.0.0' })
+      .run();
+    db.insert(members).values({ tableId: 't1', userId: alice.userId, role: 'player' }).run();
+    const speaker = { name: 'alice', actorId: null, imageUrl: null };
+    createChatMessage(
+      db,
+      {
+        tableId: 't1',
+        senderId: alice.userId,
+        speaker,
+        audience: 'public',
+        kind: 'text',
+        text: 'bye',
+      },
+      new Date(),
+    );
+
+    expect((await deleteUser(app, admin, alice.userId)).statusCode).toBe(204);
+    expect(db.select().from(chatMessages).all()).toMatchObject([
+      { senderId: null, speaker, text: 'bye' },
+    ]);
+  });
 });

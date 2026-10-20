@@ -1,8 +1,15 @@
+import type { TableRole } from '../roles.js';
+
 import { isGmLike, type Subject } from './ownership.js';
 
 /** Message audiences (FR-CHAT-02). */
 export const AUDIENCES = ['public', 'whisper', 'gm'] as const;
 export type Audience = (typeof AUDIENCES)[number];
+
+/** Spectators read chat but never post (§2). */
+export function canSendChat(role: TableRole): boolean {
+  return role !== 'spectator';
+}
 
 export interface MessageAudience {
   audience: Audience;

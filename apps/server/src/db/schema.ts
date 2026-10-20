@@ -10,7 +10,14 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
-import { INVITE_ROLES, TABLE_ROLES, type ControlledBy, type Ownership } from '@vtt/shared';
+import {
+  AUDIENCES,
+  INVITE_ROLES,
+  TABLE_ROLES,
+  type ControlledBy,
+  type Ownership,
+} from '@vtt/shared';
+import { MESSAGE_KINDS, type Speaker } from '@vtt/shared/api';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
@@ -231,4 +238,31 @@ export const journalEntries = sqliteTable(
     softDeletedAt: softDeletedAt(),
   },
   (t) => [index('journal_entries_table_id_idx').on(t.tableId, t.softDeletedAt)],
+);
+
+export const chatMessages = sqliteTable(
+  'chat_messages',
+  {
+    /** Send order; history pages on it, since several messages can share a millisecond. */
+    seq: integer('seq').primaryKey({ autoIncrement: true }),
+    id: text('id').notNull().unique(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    /** Kept as `null` when the account is deleted; `speaker` keeps the name (FR-AUTH-06). */
+    senderId: text('sender_id').references(() => users.id, { onDelete: 'set null' }),
+    /** Who spoke, as it was when the message was sent (FR-CHAT-01). */
+    speaker: text('speaker', { mode: 'json' }).$type<Speaker>().notNull(),
+    audience: text('audience', { enum: AUDIENCES }).notNull(),
+    /** Whisper recipients' user ids; empty for other audiences (FR-CHAT-02). */
+    recipients: text('recipients', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    kind: text('kind', { enum: MESSAGE_KINDS }).notNull(),
+    text: text('text').notNull(),
+    /** Full die results of roll messages (FR-CHAT-04, M3). */
+    rolls: text('rolls', { mode: 'json' }).$type<unknown[]>().notNull().default([]),
+    /** Plugin card data (FR-CHAT-06, M3). */
+    card: text('card', { mode: 'json' }).$type<unknown>(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('chat_messages_history_idx').on(t.tableId, t.seq)],
 );
