@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 13%      | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M2
-- **Next task:** `T-0201`
+- **Next task:** `T-0202`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -47,6 +47,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
 | 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
 | 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                       |
+| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                             |
 
 ---
 
@@ -964,7 +965,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0107
   - **Do:** Member routes, role changes, removal, default character setting (FR-TABLE-04, 05, 07).
   - **Done when:** only GM can change roles; removing a member leaves their actors unowned.
-  - **Note:** actors arrive in M2. The unowned-actors check is an `it.todo` in `apps/server/test/members.test.ts`; implement it with T-0201.
+  - **Note:** actors arrived in M2; the unowned-actors check in `apps/server/test/members.test.ts` was implemented with T-0201.
 
 - [x] **T-0109 · Invites**
   - **Deps:** T-0108
@@ -984,10 +985,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M2 — Entities and realtime
 
-- [ ] **T-0201 · Entity persistence (SQL)**
+- [x] **T-0201 · Entity persistence (SQL)**
   - **Deps:** T-0102, T-0110
   - **Do:** Tables for `actors`, `items`, `journal_entries` (metadata only), `ownership` JSON, `soft_deleted_at`. Repositories in `apps/server/src/db`.
   - **Done when:** repository tests cover create, list with filters, soft delete, and restore within 30 days (FR-ENT-04).
+  - **Note:** repositories in `apps/server/src/db/repositories/`, tests in `apps/server/test/repositories.test.ts`. Retention is `SOFT_DELETE_RETENTION_DAYS` (ADR-014). The FR-TABLE-04 check from T-0108 is implemented. Scheduling `purgeDeletedEntities()` is left to T-0202.
 
 - [ ] **T-0202 · Actor and item REST API**
   - **Deps:** T-0201
@@ -1284,7 +1286,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
 | Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)      |
 | Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | Configurable, default 30                         |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)  |
 | Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
 | Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
 | Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
@@ -1323,6 +1325,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md)                        | Accepted |
 | ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted |
 | ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
+| ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
