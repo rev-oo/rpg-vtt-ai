@@ -16,7 +16,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
-| M1    | Core server: users, auth, tables, membership                  | In review   | 100%     | —      |
+| M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M1
-- **Next task:** `T-0201` (after M1 sign-off)
+- **Active milestone:** M2
+- **Next task:** `T-0201`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -46,6 +46,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off. |
 | 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
 | 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
+| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                       |
 
 ---
 
