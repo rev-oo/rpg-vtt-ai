@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 50%      | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 63%      | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M2
-- **Next task:** `T-0207`
+- **Next task:** `T-0208`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -50,6 +50,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                    |
 | 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                |
 | 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added. |
+| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                    |
 
 ---
 
@@ -1024,10 +1025,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** whispers and GM messages reach only permitted sockets (integration tests on the wire).
   - **Note:** `chat.test.ts` › "chat on the wire" checks every frame each socket received, including that a hidden message's id never appears.
 
-- [ ] **T-0207 · Chat UI**
+- [x] **T-0207 · Chat UI**
   - **Deps:** T-0206, T-0111
   - **Do:** Chat panel with speaker select, audience select, infinite scroll, plain-text message rendering, `/r` and `/gmr` command parsing.
   - **Done when:** Playwright test sends public, whisper, and GM messages and verifies visibility for two users.
+  - **Note:** `e2e/tests/chat.spec.ts` checks a GM and two players, live and after a reload. The panel lives on the new table page (`/tables/:tableId`). Messages are posted over REST and arrive over the socket; `/r` and `/gmr` are parsed, but rolling waits for M3 (ADR-016).
 
 - [ ] **T-0208 · Actor and item list UI**
   - **Deps:** T-0204, T-0111

@@ -36,8 +36,15 @@ M2 adds the `/ws/events` socket (§10.2), entity change notifications (FR-ENT-07
    - The speaker's name and image are snapshotted. On account deletion, `sender_id` becomes `null` and the snapshot keeps the name (FR-AUTH-06).
 8. **Limits.** Frames are capped at 16 KiB and chat text at 2,000 characters. There is no per-socket rate limit yet.
 
+## Web client (T-0207)
+
+- One `/ws/events` connection per page. It subscribes per table and reconnects with exponential backoff and jitter, capped at 30 s.
+- After a reconnection, the chat reloads the newest history page and merges it by message id, so messages missed while offline appear.
+- Messages are posted with `POST /tables/:id/messages`, which returns the stored message or a REST error code. The copy that arrives over the socket is dropped as a duplicate. `chat.send` stays available to other clients.
+- `/r` and `/gmr` are parsed, but nothing is rolled until the dice engine (M3). `//` sends a message that starts with `/`.
+
 ## Consequences
 
 - The web client (T-0207, T-0208) can show sent messages from the `ack` and the fan-out, without echoing them locally.
-- The dev server must proxy `/ws` with WebSocket support (`ws: true`) when the chat UI lands.
+- The dev and preview servers proxy `/ws` with WebSocket support (`ws: true`), keeping the Host header the origin check compares against.
 - A per-socket rate limit is still to come, once rolls (M3) make messages more expensive.
