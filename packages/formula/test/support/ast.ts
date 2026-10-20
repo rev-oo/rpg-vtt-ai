@@ -56,78 +56,91 @@ const modifiers: fc.Arbitrary<DiceModifier[]> = fc
     ),
   );
 
+export interface TreeOptions {
+  /** Names of references and fields; random words by default. */
+  names?: fc.Arbitrary<string>;
+  /** Names of called functions; random words by default. */
+  functions?: fc.Arbitrary<string>;
+}
+
 /** Random formula ASTs, with every node kind and dice modifier. */
-export const expression: fc.Arbitrary<Expression> = fc.letrec<{
-  expression: Expression;
-  segment: PathSegment;
-}>((tie) => ({
-  expression: fc.oneof(
-    { depthSize: 'small', withCrossShrink: true },
-    numberNode(numberRaw),
-    fc.string({ maxLength: 8 }).map((value) => ({ kind: 'string', value, span })),
-    fc.boolean().map((value) => ({ kind: 'boolean', value, span })),
-    fc.record({
-      kind: fc.constant('reference'),
-      name: word,
-      path: fc.array(tie('segment'), { maxLength: 3 }),
-      span: fc.constant(span),
-    }),
-    fc.record({
-      kind: fc.constant('unary'),
-      operator: fc.constantFrom('-', 'not' as const),
-      operand: tie('expression'),
-      span: fc.constant(span),
-    }),
-    fc.record({
-      kind: fc.constant('binary'),
-      operator: fc.constantFrom(
-        '+',
-        '-',
-        '*',
-        '/',
-        '%',
-        '<',
-        '<=',
-        '>',
-        '>=',
-        '==',
-        '!=',
-        'and',
-        'or' as const,
-      ),
-      left: tie('expression'),
-      right: tie('expression'),
-      span: fc.constant(span),
-    }),
-    fc.record({
-      kind: fc.constant('conditional'),
-      test: tie('expression'),
-      then: tie('expression'),
-      otherwise: tie('expression'),
-      span: fc.constant(span),
-    }),
-    fc.record({
-      kind: fc.constant('call'),
-      name: functionName,
-      args: fc.array(tie('expression'), { maxLength: 3 }),
-      span: fc.constant(span),
-    }),
-    fc.record({
-      kind: fc.constant('dice'),
-      count: fc.oneof(fc.constant(null), numberNode(integerRaw), tie('expression')),
-      die: fc.oneof(
-        fc.integer({ min: 1, max: 1000 }).map((sides) => ({ kind: 'standard' as const, sides })),
-        fc
-          .stringMatching(/^d[A-Z][A-Z0-9]{0,3}$/)
-          .map((name) => ({ kind: 'custom' as const, name })),
-      ),
-      modifiers,
-      span: fc.constant(span),
-    }),
-  ) as fc.Arbitrary<Expression>,
-  segment: fc.oneof(
-    word.map((name) => ({ kind: 'field' as const, name })),
-    tie('expression').map((index) => ({ kind: 'index' as const, index })),
-    fc.constant({ kind: 'all' as const }),
-  ),
-})).expression;
+export const formulaTree = ({
+  names = word,
+  functions = functionName,
+}: TreeOptions = {}): fc.Arbitrary<Expression> =>
+  fc.letrec<{
+    expression: Expression;
+    segment: PathSegment;
+  }>((tie) => ({
+    expression: fc.oneof(
+      { depthSize: 'small', withCrossShrink: true },
+      numberNode(numberRaw),
+      fc.string({ maxLength: 8 }).map((value) => ({ kind: 'string', value, span })),
+      fc.boolean().map((value) => ({ kind: 'boolean', value, span })),
+      fc.record({
+        kind: fc.constant('reference'),
+        name: names,
+        path: fc.array(tie('segment'), { maxLength: 3 }),
+        span: fc.constant(span),
+      }),
+      fc.record({
+        kind: fc.constant('unary'),
+        operator: fc.constantFrom('-', 'not' as const),
+        operand: tie('expression'),
+        span: fc.constant(span),
+      }),
+      fc.record({
+        kind: fc.constant('binary'),
+        operator: fc.constantFrom(
+          '+',
+          '-',
+          '*',
+          '/',
+          '%',
+          '<',
+          '<=',
+          '>',
+          '>=',
+          '==',
+          '!=',
+          'and',
+          'or' as const,
+        ),
+        left: tie('expression'),
+        right: tie('expression'),
+        span: fc.constant(span),
+      }),
+      fc.record({
+        kind: fc.constant('conditional'),
+        test: tie('expression'),
+        then: tie('expression'),
+        otherwise: tie('expression'),
+        span: fc.constant(span),
+      }),
+      fc.record({
+        kind: fc.constant('call'),
+        name: functions,
+        args: fc.array(tie('expression'), { maxLength: 3 }),
+        span: fc.constant(span),
+      }),
+      fc.record({
+        kind: fc.constant('dice'),
+        count: fc.oneof(fc.constant(null), numberNode(integerRaw), tie('expression')),
+        die: fc.oneof(
+          fc.integer({ min: 1, max: 1000 }).map((sides) => ({ kind: 'standard' as const, sides })),
+          fc
+            .stringMatching(/^d[A-Z][A-Z0-9]{0,3}$/)
+            .map((name) => ({ kind: 'custom' as const, name })),
+        ),
+        modifiers,
+        span: fc.constant(span),
+      }),
+    ) as fc.Arbitrary<Expression>,
+    segment: fc.oneof(
+      names.map((name) => ({ kind: 'field' as const, name })),
+      tie('expression').map((index) => ({ kind: 'index' as const, index })),
+      fc.constant({ kind: 'all' as const }),
+    ),
+  })).expression;
+
+export const expression = formulaTree();

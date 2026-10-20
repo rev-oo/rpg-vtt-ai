@@ -10,7 +10,18 @@ export type FormulaErrorCode =
   | 'unknown_name'
   | 'chained_comparison'
   | 'duplicate_modifier'
-  | 'too_deep';
+  | 'too_deep'
+  // Evaluation (T-0302)
+  | 'unknown_reference'
+  | 'unknown_function'
+  | 'invalid_arguments'
+  | 'invalid_value'
+  | 'type_error'
+  | 'division_by_zero'
+  | 'not_finite'
+  | 'function_failed'
+  | 'dice_not_allowed'
+  | 'step_limit';
 
 /** A 1-based line and column in the formula source. */
 export interface SourcePosition {

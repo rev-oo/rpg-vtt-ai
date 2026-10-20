@@ -1,7 +1,7 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 
-import { FormulaError, MAX_NESTING, parse, positionAt, print } from '../src/index.js';
+import { FormulaError, MAX_DEPTH, parse, positionAt, print } from '../src/index.js';
 
 import { expression, withoutSpans } from './support/ast.js';
 
@@ -193,13 +193,15 @@ describe('syntax errors give a line and column', () => {
     expect(() => parse('2d6r1r2')).toThrow('The modifier "r" appears twice');
   });
 
-  it(`refuses nesting deeper than ${String(MAX_NESTING)}`, () => {
+  it(`refuses formulas deeper than ${String(MAX_DEPTH)}`, () => {
     const nested = (depth: number) => `${'('.repeat(depth)}1${')'.repeat(depth)}`;
-    expect(canonical(nested(MAX_NESTING - 1))).toBe('1');
-    expect(() => parse(nested(MAX_NESTING + 1))).toThrow(
-      expect.objectContaining({ code: 'too_deep' }),
-    );
-    expect(() => parse(`${'-'.repeat(10_000)}1`)).toThrow(FormulaError);
+    const chain = (terms: number) => Array.from({ length: terms }, () => '1').join(' + ');
+    expect(canonical(nested(MAX_DEPTH - 1))).toBe('1');
+    expect(parse(chain(MAX_DEPTH)).kind).toBe('binary');
+    for (const source of [nested(MAX_DEPTH + 1), chain(MAX_DEPTH + 2), `${'-'.repeat(10_000)}1`]) {
+      expect(() => parse(source)).toThrow('The formula is too long or nested too deeply');
+      expect(() => parse(source)).toThrow(expect.objectContaining({ code: 'too_deep' }));
+    }
   });
 
   it('locates offsets', () => {

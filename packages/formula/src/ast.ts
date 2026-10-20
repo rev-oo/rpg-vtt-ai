@@ -114,3 +114,23 @@ export type Expression =
   | Conditional
   | Call
   | Dice;
+
+/** The direct sub-expressions of a node, in source order. */
+export function childrenOf(node: Expression): Expression[] {
+  switch (node.kind) {
+    case 'reference':
+      return node.path.flatMap((segment) => (segment.kind === 'index' ? [segment.index] : []));
+    case 'unary':
+      return [node.operand];
+    case 'binary':
+      return [node.left, node.right];
+    case 'conditional':
+      return [node.test, node.then, node.otherwise];
+    case 'call':
+      return node.args;
+    case 'dice':
+      return node.count ? [node.count] : [];
+    default:
+      return [];
+  }
+}

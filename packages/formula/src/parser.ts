@@ -1,4 +1,5 @@
 import {
+  childrenOf,
   COMPARISON_OPERATORS,
   type BinaryOperator,
   type ComparisonOperator,
@@ -11,8 +12,11 @@ import { FormulaError } from './errors.js';
 import { tokenize, type DiceToken, type Punctuation, type Token } from './lexer.js';
 import { binaryPrecedence, PRECEDENCE } from './precedence.js';
 
-/** Deeper nesting than this is refused, so a hostile formula cannot exhaust the stack. */
-export const MAX_NESTING = 100;
+/**
+ * Formulas nested deeper than this, or whose tree is deeper (a chain of 300 `+`), are refused,
+ * so neither parsing nor evaluation can exhaust the stack.
+ */
+export const MAX_DEPTH = 200;
 
 const KEYWORDS = new Set(['and', 'or', 'not', 'true', 'false']);
 
@@ -58,7 +62,22 @@ class Parser {
     const expression = this.expression();
     const rest = this.peek();
     if (rest.kind !== 'end') throw this.unexpected(rest);
+    this.checkDepth(expression);
     return expression;
+  }
+
+  private tooDeep(span: Span): FormulaError {
+    return this.error('too_deep', 'The formula is too long or nested too deeply', span);
+  }
+
+  /** Walks the tree without recursion, so the check itself cannot run out of stack. */
+  private checkDepth(root: Expression): void {
+    const pending: [Expression, number][] = [[root, 1]];
+    for (let entry = pending.pop(); entry; entry = pending.pop()) {
+      const [node, depth] = entry;
+      if (depth > MAX_DEPTH) throw this.tooDeep(node.span);
+      for (const child of childrenOf(node)) pending.push([child, depth + 1]);
+    }
   }
 
   private peek(): Token {
@@ -107,9 +126,7 @@ class Parser {
   /** Pratt loop: a prefix, then every infix operator that binds at least `min`. */
   private expression(min: number = PRECEDENCE.conditional): Expression {
     this.depth += 1;
-    if (this.depth > MAX_NESTING) {
-      throw this.error('too_deep', 'The formula is nested too deeply', this.peek().span);
-    }
+    if (this.depth > MAX_DEPTH) throw this.tooDeep(this.peek().span);
     let left = this.prefix();
     for (;;) {
       const token = this.peek();
