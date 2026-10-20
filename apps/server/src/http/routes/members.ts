@@ -5,6 +5,7 @@ import { canManageMembers } from '@vtt/shared';
 import { updateMemberBody } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../../db/client.js';
+import { removeEntityOwner } from '../../db/repositories/index.js';
 import { members, users } from '../../db/schema.js';
 import { findMembership, type Member } from '../../domain/tables.js';
 import { badRequest, conflict, forbidden, notFound } from '../../errors.js';
@@ -105,7 +106,8 @@ export function memberRoutes({ app, db }: AppContext): void {
       tx.delete(members)
         .where(and(eq(members.tableId, id), eq(members.userId, userId)))
         .run();
-      // Their actors stay on the table and become unowned (FR-TABLE-04) once actors exist (M2).
+      // Their actors and journal entries stay on the table, without their level (FR-TABLE-04).
+      removeEntityOwner(tx, id, userId);
     });
     return reply.code(204).send();
   });

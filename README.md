@@ -54,14 +54,15 @@ pnpm --filter @vtt/server start       # http://localhost:3000/api/v1
 
 The server is configured with environment variables:
 
-| Variable      | Default                 | Meaning                                                                 |
-| ------------- | ----------------------- | ----------------------------------------------------------------------- |
-| `DATA_DIR`    | `./data`                | Folder holding the SQLite database; back up by copying it               |
-| `PORT`        | `3000`                  | HTTP port                                                               |
-| `PUBLIC_URL`  | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure |
-| `SESSION_TTL` | `604800` (7 days)       | Session lifetime in seconds                                             |
-| `LOG_LEVEL`   | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`          |
-| `TRUST_PROXY` | `false`                 | `true` or a hop count when running behind a reverse proxy               |
+| Variable                     | Default                 | Meaning                                                                 |
+| ---------------------------- | ----------------------- | ----------------------------------------------------------------------- |
+| `DATA_DIR`                   | `./data`                | Folder holding the SQLite database; back up by copying it               |
+| `PORT`                       | `3000`                  | HTTP port                                                               |
+| `PUBLIC_URL`                 | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure |
+| `SESSION_TTL`                | `604800` (7 days)       | Session lifetime in seconds                                             |
+| `LOG_LEVEL`                  | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`          |
+| `TRUST_PROXY`                | `false`                 | `true` or a hop count when running behind a reverse proxy               |
+| `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored       |
 
 ### Running the web app
 

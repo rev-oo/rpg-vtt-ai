@@ -3,6 +3,12 @@ import { describe, expect, it } from 'vitest';
 
 import type { TableRole } from '@vtt/shared';
 
+import {
+  createActor,
+  createJournalEntry,
+  findActor,
+  findJournalEntry,
+} from '../src/db/repositories/index.js';
 import { members } from '../src/db/schema.js';
 
 import {
@@ -192,6 +198,39 @@ describe('removal (FR-TABLE-04)', () => {
     expect(res.statusCode).toBe(409);
   });
 
-  // FR-TABLE-04: needs actors (M2, T-0201).
-  it.todo("leaves a removed member's actors on the table, unowned");
+  it("leaves a removed member's actors and journal entries on the table, without their level", async () => {
+    const t = await setup();
+    const now = new Date();
+    const actor = createActor(
+      t.db,
+      {
+        tableId: t.table.id,
+        type: 'character',
+        name: 'Bob the Brave',
+        dataVersion: '1.2.0',
+        ownership: {
+          default: 'observer',
+          users: { [t.bob.userId]: 'owner', [t.carol.userId]: 'owner' },
+        },
+      },
+      now,
+    );
+    const entry = createJournalEntry(
+      t.db,
+      {
+        tableId: t.table.id,
+        title: 'Notes',
+        ownership: { default: 'observer', users: { [t.bob.userId]: 'owner' } },
+      },
+      now,
+    );
+
+    expect((await removeMember(t.app, t.gm.client, t.table.id, t.bob.userId)).statusCode).toBe(204);
+
+    expect(findActor(t.db, actor.id)?.ownership).toEqual({
+      default: 'observer',
+      users: { [t.carol.userId]: 'owner' },
+    });
+    expect(findJournalEntry(t.db, entry.id)?.ownership).toEqual({ default: 'observer', users: {} });
+  });
 });

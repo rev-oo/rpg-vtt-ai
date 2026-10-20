@@ -2,6 +2,7 @@
 import { sql } from 'drizzle-orm';
 import {
   index,
+  type AnySQLiteColumn,
   integer,
   primaryKey,
   sqliteTable,
@@ -9,13 +10,24 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
-import { INVITE_ROLES, TABLE_ROLES } from '@vtt/shared';
+import { INVITE_ROLES, TABLE_ROLES, type Ownership } from '@vtt/shared';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
   timestamp('created_at')
     .notNull()
     .$defaultFn(() => new Date());
+const updatedAt = () =>
+  timestamp('updated_at')
+    .notNull()
+    .$defaultFn(() => new Date());
+/** Set when an entity is in the trash; it can be restored within the retention window (FR-ENT-04). */
+const softDeletedAt = () => timestamp('soft_deleted_at');
+const ownership = (fallback: Ownership) =>
+  text('ownership', { mode: 'json' }).$type<Ownership>().notNull().default(fallback);
+/** SQL projection of the entity's plugin data (specs §9.6); the live data is the CRDT doc (M5). */
+const systemData = () =>
+  text('system', { mode: 'json' }).$type<Record<string, unknown>>().notNull().default({});
 
 export const users = sqliteTable(
   'users',
@@ -132,4 +144,80 @@ export const invites = sqliteTable(
     revokedAt: timestamp('revoked_at'),
   },
   (t) => [index('invites_table_id_idx').on(t.tableId)],
+);
+
+/** Actors (FR-ENT-01..04). Players see an actor according to its ownership (FR-ENT-03). */
+export const actors = sqliteTable(
+  'actors',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    /** Actor type declared by the table's system plugin (§8.4). */
+    type: text('type').notNull(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    ownership: ownership({ default: 'none', users: {} }),
+    system: systemData(),
+    /** Plugin version the data was written with (§9.7). */
+    dataVersion: text('data_version').notNull(),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [index('actors_table_id_idx').on(t.tableId, t.softDeletedAt)],
+);
+
+/**
+ * Items (FR-ENT-05, 06). Library items have no `actorId`; copying one into an actor creates an
+ * owned item with `actorId` and `sourceId` set. Owned items follow their actor's ownership.
+ */
+export const items = sqliteTable(
+  'items',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    sourceId: text('source_id').references((): AnySQLiteColumn => items.id, {
+      onDelete: 'set null',
+    }),
+    type: text('type').notNull(),
+    name: text('name').notNull(),
+    imageUrl: text('image_url'),
+    system: systemData(),
+    dataVersion: text('data_version').notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [
+    index('items_table_id_idx').on(t.tableId, t.softDeletedAt),
+    index('items_actor_id_idx').on(t.actorId),
+  ],
+);
+
+/**
+ * Journal entry metadata (FR-JOURNAL-01..03); the body is a CRDT doc (M5). Players observe
+ * entries by default (FR-JOURNAL-02); hidden entries reach only GMs and assistants (§9.3).
+ */
+export const journalEntries = sqliteTable(
+  'journal_entries',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    title: text('title').notNull(),
+    ownership: ownership({ default: 'observer', users: {} }),
+    hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+    createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+    softDeletedAt: softDeletedAt(),
+  },
+  (t) => [index('journal_entries_table_id_idx').on(t.tableId, t.softDeletedAt)],
 );

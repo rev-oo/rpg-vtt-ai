@@ -14,6 +14,7 @@ describe('loadConfig', () => {
       publicUrl: new URL('http://localhost:3000'),
       logLevel: 'info',
       trustProxy: false,
+      softDeleteRetentionMs: 30 * 86_400_000,
     });
   });
 
@@ -25,6 +26,7 @@ describe('loadConfig', () => {
       PUBLIC_URL: 'https://vtt.example.com',
       LOG_LEVEL: 'debug',
       TRUST_PROXY: 'true',
+      SOFT_DELETE_RETENTION_DAYS: '7',
     });
     expect(config).toEqual({
       dataDir: '/srv/vtt',
@@ -33,6 +35,7 @@ describe('loadConfig', () => {
       publicUrl: new URL('https://vtt.example.com'),
       logLevel: 'debug',
       trustProxy: true,
+      softDeleteRetentionMs: 7 * 86_400_000,
     });
   });
 
@@ -58,6 +61,7 @@ describe('loadConfig', () => {
     ['PUBLIC_URL', 'ftp://example.com'],
     ['LOG_LEVEL', 'verbose'],
     ['TRUST_PROXY', 'yes'],
+    ['SOFT_DELETE_RETENTION_DAYS', '0'],
   ])('rejects %s=%s with a message naming the variable', (name, value) => {
     expect(() => loadConfig({ [name]: value })).toThrow(ConfigError);
     expect(() => loadConfig({ [name]: value })).toThrow(new RegExp(`→ at ${name}`));
