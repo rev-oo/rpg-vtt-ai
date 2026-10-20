@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 25%      | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 50%      | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -30,25 +30,26 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M2
-- **Next task:** `T-0203`
+- **Next task:** `T-0207`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                           |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                           |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                         |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                         |
-| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.        |
-| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off. |
-| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
-| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
-| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                       |
-| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                             |
-| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                         |
+| Date       | Change                                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                  |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                  |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.               |
+| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.        |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                       |
+| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                  |
+| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                              |
+| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                    |
+| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                |
+| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added. |
 
 ---
 
@@ -825,7 +826,8 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `error`.
+- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
 - Heartbeat every 25 s; clients reconnect with exponential backoff and resubscribe. Missed events are recovered by fetching history from REST.
@@ -955,7 +957,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0105
   - **Do:** Admin routes to create users (generated password), disable, and delete (FR-AUTH-02, 06).
   - **Done when:** tests confirm non-admins get 403 and deleted users' messages keep author snapshot (once chat exists; stub test now).
-  - **Note:** the author-snapshot check is an `it.todo` in `apps/server/test/users.test.ts`; implement it with T-0205.
+  - **Note:** the author-snapshot check in `apps/server/test/users.test.ts` was implemented with T-0205.
 
 - [x] **T-0107 · Table creation and listing**
   - **Deps:** T-0105
@@ -998,25 +1000,29 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** integration tests enforce ownership rules on every endpoint.
   - **Note:** `apps/server/test/actors.test.ts` and `items.test.ts`. Actor and item types are read from new `plugins` columns that tests seed until T-0403; restore endpoints, the `playersMayCreateAnyActorType` table option and the trash purge schedule were added (ADR-015).
 
-- [ ] **T-0203 · Events WebSocket**
+- [x] **T-0203 · Events WebSocket**
   - **Deps:** T-0105, T-0110
   - **Do:** `/ws/events` with session auth on upgrade, envelope validation (Zod), subscribe/unsubscribe, heartbeat, and per-table fan-out (§10.2).
   - **Done when:** a test client receives `entity.changed` only for tables it belongs to.
+  - **Note:** `apps/server/test/events.test.ts`. The protocol lives in `@vtt/shared/api` (`events.ts`). Upgrades also check the `Origin`; sessions are re-checked on every message and heartbeat (ADR-016).
 
 - [ ] **T-0204 · Entity change notifications**
   - **Deps:** T-0202, T-0203
   - **Do:** Emit `entity.changed` on create/update/delete/restore (FR-ENT-07).
   - **Done when:** two browser sessions see the list update without refresh (tested in e2e).
+  - **Note:** server side done: every actor and item mutation publishes `entity.changed` to the members who can see the entity, verified on the wire in `events.test.ts`. The two-browser e2e needs the actor list UI and lands with T-0208.
 
-- [ ] **T-0205 · Chat storage and REST history**
+- [x] **T-0205 · Chat storage and REST history**
   - **Deps:** T-0201
   - **Do:** `chat_messages` table with `audience`, `recipients`, `kind`, `text`, `rolls`, `card`, `speaker` snapshot. Paginated history with audience filtering in the query (FR-CHAT-01, 02, 07).
   - **Done when:** a whisper is absent from history for a non-recipient (repository and API tests).
+  - **Note:** `apps/server/test/chat.test.ts`. History is paged on an autoincrement `seq` with an opaque cursor; `POST /tables/:id/messages` shares the `chat.send` code (ADR-016).
 
-- [ ] **T-0206 · Chat over events socket**
+- [x] **T-0206 · Chat over events socket**
   - **Deps:** T-0203, T-0205
   - **Do:** `chat.send` handling, audience-filtered fan-out, speaker validation (user owns actor or is GM).
   - **Done when:** whispers and GM messages reach only permitted sockets (integration tests on the wire).
+  - **Note:** `chat.test.ts` › "chat on the wire" checks every frame each socket received, including that a hidden message's id never appears.
 
 - [ ] **T-0207 · Chat UI**
   - **Deps:** T-0206, T-0111
@@ -1330,6 +1336,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
 | ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
+| ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
