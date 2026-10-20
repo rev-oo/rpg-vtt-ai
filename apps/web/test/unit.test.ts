@@ -4,7 +4,9 @@ import { ApiError, request, requestNoContent, setCsrfToken } from '../src/api/cl
 import { errorMessage } from '../src/api/errors.js';
 import { setupStatusSchema } from '../src/api/schemas.js';
 import { t } from '../src/i18n/index.js';
+import { guestRedirect, setupRedirect, userRedirect } from '../src/shell/access.js';
 import { safeNext } from '../src/shell/next.js';
+import type { SessionState } from '../src/shell/session.js';
 
 import { fakeApi } from './support/fake-api.js';
 
@@ -30,6 +32,41 @@ describe('safeNext', () => {
     ['/\\evil.example', '/'],
   ])('%s → %s', (input, expected) => {
     expect(safeNext(input)).toBe(expected);
+  });
+});
+
+describe('route access', () => {
+  const user = { id: 'u1', username: 'alice', displayName: 'Alice', isAdmin: false };
+  const fresh: SessionState = { needsSetup: true, user: null };
+  const anonymous: SessionState = { needsSetup: false, user: null };
+  const signedIn: SessionState = {
+    needsSetup: false,
+    user: { ...user, mustChangePassword: false },
+  };
+  const mustChange: SessionState = {
+    needsSetup: false,
+    user: { ...user, mustChangePassword: true },
+  };
+  const url = (path: string) => new URL(path, 'http://vtt.test');
+
+  it('allows setup only on a fresh instance', () => {
+    expect(setupRedirect(fresh)).toBeNull();
+    expect(setupRedirect(anonymous)).toBe('/');
+  });
+
+  it('sends signed-in visitors from login to ?next', () => {
+    expect(guestRedirect(fresh, url('/login'))).toBe('/setup');
+    expect(guestRedirect(anonymous, url('/login'))).toBeNull();
+    expect(guestRedirect(signedIn, url('/login?next=%2Faccount'))).toBe('/account');
+    expect(guestRedirect(signedIn, url('/login?next=//evil.example'))).toBe('/');
+  });
+
+  it('requires a user and a permanent password for the app', () => {
+    expect(userRedirect(fresh, url('/'))).toBe('/setup');
+    expect(userRedirect(anonymous, url('/account?tab=1'))).toBe('/login?next=%2Faccount%3Ftab%3D1');
+    expect(userRedirect(mustChange, url('/'))).toBe('/account');
+    expect(userRedirect(mustChange, url('/account'))).toBeNull();
+    expect(userRedirect(signedIn, url('/'))).toBeNull();
   });
 });
 

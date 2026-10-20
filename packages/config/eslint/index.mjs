@@ -82,6 +82,30 @@ function packageConfigs(dir, { type, kind }) {
   if (kind === 'web') {
     configs.push({ ...reactRefresh.configs.vite, files });
   }
+  if (kind === 'web') {
+    // React Router route modules export these alongside the component (framework mode).
+    configs.push({
+      files: [`${dir}/src/root.tsx`, `${dir}/src/routes/**`],
+      rules: {
+        'react-refresh/only-export-components': [
+          'error',
+          {
+            allowExportNames: [
+              'clientLoader',
+              'clientAction',
+              'shouldRevalidate',
+              'meta',
+              'links',
+              'handle',
+              'Layout',
+              'HydrateFallback',
+              'ErrorBoundary',
+            ],
+          },
+        ],
+      },
+    });
+  }
   if (type === 'server') {
     // §6.2: the server logs through its logger module only.
     configs.push(
@@ -99,6 +123,8 @@ export function defineVttConfig() {
       '**/dist/',
       '**/coverage/',
       '**/.turbo/',
+      '**/build/',
+      '**/.react-router/',
       'packages/plugin-schema/schemas/',
       ...LINT_FIXTURES,
     ]),

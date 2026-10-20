@@ -56,6 +56,8 @@ export const en = {
 
   'validation.required': 'Required.',
   'validation.tooShort': 'Must be at least {min} characters.',
+  'validation.tooLong': 'Must be at most {max} characters.',
+  'validation.username': 'Not a valid username.',
 } as const;
 
 export type MessageKey = keyof typeof en;

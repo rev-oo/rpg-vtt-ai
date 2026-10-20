@@ -1,30 +1,32 @@
-import { useCallback, useEffect, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
+import { useRevalidator } from 'react-router';
 
 import { Alert, Button, Card } from '@vtt/ui';
 
-import { api } from '../../api/endpoints.js';
-import { errorMessage } from '../../api/errors.js';
-import type { GameTable } from '../../api/schemas.js';
-import { t } from '../../i18n/index.js';
+import { api } from '../api/endpoints.js';
+import { errorMessage } from '../api/errors.js';
+import type { GameTable } from '../api/schemas.js';
+import { CreateTableDialog } from '../features/tables/CreateTableDialog.js';
+import { t } from '../i18n/index.js';
 
-import { CreateTableDialog } from './CreateTableDialog.js';
+import type { Route } from './+types/tables';
+
+type TablesData = { tables: GameTable[]; error: null } | { tables: null; error: string };
+
+/** A failed list shows inline, so the header and "New table" stay usable. */
+export async function clientLoader(): Promise<TablesData> {
+  try {
+    return { tables: await api.listTables(), error: null };
+  } catch (error) {
+    return { tables: null, error: errorMessage(error) };
+  }
+}
 
 /** The tables the user belongs to, with their role in each. */
-export function TablesPage(): ReactElement {
-  const [tables, setTables] = useState<GameTable[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export default function TablesRoute({ loaderData }: Route.ComponentProps): ReactElement {
+  const { tables, error } = loaderData;
+  const revalidator = useRevalidator();
   const [creating, setCreating] = useState(false);
-
-  const load = useCallback(() => {
-    api
-      .listTables()
-      .then(setTables)
-      .catch((caught: unknown) => {
-        setError(errorMessage(caught));
-      });
-  }, []);
-
-  useEffect(load, [load]);
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
@@ -70,7 +72,7 @@ export function TablesPage(): ReactElement {
         }}
         onCreated={() => {
           setCreating(false);
-          load();
+          void revalidator.revalidate();
         }}
       />
     </div>

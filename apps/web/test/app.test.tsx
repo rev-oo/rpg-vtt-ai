@@ -41,6 +41,21 @@ describe('first-run setup (FR-AUTH-01)', () => {
     expect(screen.getByText('Signed in as Alice')).toBeInTheDocument();
   });
 
+  it('validates fields in the browser before calling the API', async () => {
+    const { calls } = fakeApi({ 'GET /setup/status': { body: { needsSetup: true } } });
+    renderApp('/setup');
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Username'), 'al');
+    await user.type(screen.getByLabelText('Password'), 'short');
+    await user.click(screen.getByRole('button', { name: 'Create administrator' }));
+
+    expect(await screen.findByText('Must be at least 8 characters.')).toBeInTheDocument();
+    expect(screen.getByText('Required.')).toBeInTheDocument();
+    expect(screen.getByText('Not a valid username.')).toBeInTheDocument();
+    expect(screen.getByLabelText('Username')).toHaveAttribute('aria-invalid', 'true');
+    expect(calls.some((c) => c.path === '/setup/admin')).toBe(false);
+  });
+
   it('hides setup once the instance has users', async () => {
     fakeApi({ 'GET /setup/status': { body: { needsSetup: false } }, 'GET /me': UNAUTHENTICATED });
     renderApp('/setup');
@@ -198,6 +213,28 @@ describe('tables (FR-TABLE-01)', () => {
       description: '',
       systemId: 'tiny-d20',
     });
+  });
+
+  it('requires a table name', async () => {
+    const { calls } = fakeApi({
+      'GET /setup/status': { body: { needsSetup: false } },
+      'GET /me': { body: SESSION },
+      'GET /tables': { body: { tables: [] } },
+      'GET /systems': {
+        body: { systems: [{ id: 'tiny-d20', name: 'Tiny d20', version: '1.0.0' }] },
+      },
+    });
+    renderApp('/');
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'New table' }));
+    const dialog = await screen.findByRole('dialog', { name: 'New table' });
+    await waitFor(() => {
+      expect(within(dialog).getByLabelText('Game system')).toHaveValue('tiny-d20');
+    });
+    await user.click(within(dialog).getByRole('button', { name: 'Create table' }));
+
+    expect(await within(dialog).findByText('Required.')).toBeInTheDocument();
+    expect(calls.some((c) => c.method === 'POST')).toBe(false);
   });
 
   it('explains when no system is enabled', async () => {

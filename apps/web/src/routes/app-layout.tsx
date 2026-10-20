@@ -1,21 +1,34 @@
 import { useState, type ReactElement } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { NavLink, Outlet, redirect, useNavigate } from 'react-router';
 
 import { Button } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { t } from '../i18n/index.js';
+import { userRedirect } from '../shell/access.js';
+import { clearSession, loadSession } from '../shell/session.js';
+import { useSession } from '../shell/use-session.js';
 
-import { useSession } from './session-store.js';
+import type { Route } from './+types/app-layout';
+
+/** Signed-in area: everyone else goes to setup or login first. */
+export async function clientLoader({ request }: Route.ClientLoaderArgs): Promise<Response | null> {
+  const to = userRedirect(await loadSession(), new URL(request.url));
+  return to ? redirect(to) : null;
+}
+
+// Re-check access on every navigation (e.g. after the forced password change).
+export function shouldRevalidate(): boolean {
+  return true;
+}
 
 const navLinkClass = ({ isActive }: { isActive: boolean }): string =>
   isActive
     ? 'rounded-lg bg-info-soft px-2 py-1 text-fg no-underline'
     : 'rounded-lg px-2 py-1 text-muted no-underline hover:text-fg';
 
-export function AppLayout(): ReactElement {
-  const user = useSession((s) => s.user);
-  const signedOut = useSession((s) => s.signedOut);
+export default function AppLayout(): ReactElement {
+  const { user } = useSession();
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
 
@@ -25,8 +38,8 @@ export function AppLayout(): ReactElement {
       await api.logout();
     } finally {
       // Sign out locally even if the session was already gone on the server.
-      signedOut();
-      void navigate('/login', { replace: true });
+      clearSession();
+      await navigate('/login', { replace: true });
     }
   };
 
