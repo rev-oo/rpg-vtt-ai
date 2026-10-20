@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | Not started | 0%       | —      |
+| M3    | Formula & dice engine                                         | In progress | 20%      | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M3
-- **Next task:** `T-0301`
+- **Next task:** `T-0302`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -53,6 +53,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                    |
 | 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                               |
 | 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                  |
+| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                   |
 
 ---
 
@@ -1041,10 +1042,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M3 — Formula and dice engine
 
-- [ ] **T-0301 · Formula lexer and parser**
+- [x] **T-0301 · Formula lexer and parser**
   - **Deps:** T-0002, T-0007
   - **Do:** `packages/formula` parser for the grammar in §8.9 with source positions. Use a parser generator or a hand-written Pratt parser; no `eval`.
   - **Done when:** round-trip tests and error-position tests pass; invalid input produces a message with line and column.
+  - **Note:** grammar details (precedence, dice counts in parentheses, custom dice names like `dF`) are in ADR-017.
 
 - [ ] **T-0302 · Formula evaluator (pure mode)**
   - **Deps:** T-0301
@@ -1293,17 +1295,17 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
 
-| #   | Question                                                                            | Blocks                | Proposed default                                 |
-| --- | ----------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
-| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                 |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it      |
-| Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
-| Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)      |
-| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)  |
-| Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
-| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
-| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
+| #   | Question                                                                            | Blocks                | Proposed default                                |
+| --- | ----------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------- |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it     |
+| Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                |
+| Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)     |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                   |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014) |
+| Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                  |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | **Decided:** Hand-written Pratt (ADR-017)       |
+| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`    |
 
 ---
 
@@ -1342,6 +1344,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
 | ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
 | ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
+| ADR-017 | [Formula language details: precedence, dice terms, custom dice names, errors](docs/adr/ADR-017-formula-language.md)                             | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
