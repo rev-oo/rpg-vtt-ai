@@ -2,7 +2,7 @@ import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageMembers } from '@vtt/shared';
-import { updateMemberBody } from '@vtt/shared/api';
+import { updateMemberBody, type MemberView } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../../db/client.js';
 import { findActor, removeEntityOwner } from '../../db/repositories/index.js';
@@ -66,7 +66,8 @@ export function memberRoutes({ app, db }: AppContext): void {
       .where(eq(members.tableId, id))
       .orderBy(asc(roleRank), asc(users.displayName), asc(users.username))
       .all();
-    return { members: rows.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() })) };
+    const list: MemberView[] = rows.map((m) => ({ ...m, joinedAt: m.joinedAt.toISOString() }));
+    return { members: list };
   });
 
   app.patch('/api/v1/tables/:id/members/:userId', (request) => {

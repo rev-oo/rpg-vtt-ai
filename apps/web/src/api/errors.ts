@@ -7,6 +7,8 @@ const MESSAGES: Partial<Record<string, MessageKey>> = {
   account_disabled: 'login.disabled',
   wrong_password: 'account.wrongPassword',
   system_unavailable: 'createTable.systemUnavailable',
+  invalid_speaker: 'chat.invalidSpeaker',
+  invalid_recipient: 'chat.invalidRecipient',
 };
 
 /** A user-facing message for a failed request. */

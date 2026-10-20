@@ -1,14 +1,22 @@
 import {
+  actorsResponseSchema,
+  chatHistoryResponseSchema,
+  chatMessageResponseSchema,
+  membersResponseSchema,
   sessionSchema,
   setupStatusSchema,
   systemsResponseSchema,
   tableResponseSchema,
   tablesResponseSchema,
   userResponseSchema,
+  type ActorView,
   type ChangePasswordInput,
+  type ChatMessage,
+  type ChatSendInput,
   type CreateTableInput,
   type GameSystem,
   type LoginInput,
+  type MemberView,
   type PublicUser,
   type Session,
   type SetupAdminInput,
@@ -46,4 +54,28 @@ export const api = {
 
   listSystems: async (): Promise<GameSystem[]> =>
     (await request('GET', '/systems', systemsResponseSchema)).systems,
+
+  getTable: async (tableId: string): Promise<TableView> =>
+    (await request('GET', `/tables/${tableId}`, tableResponseSchema)).table,
+
+  listMembers: async (tableId: string): Promise<MemberView[]> =>
+    (await request('GET', `/tables/${tableId}/members`, membersResponseSchema)).members,
+
+  listActors: async (tableId: string): Promise<ActorView[]> =>
+    (await request('GET', `/tables/${tableId}/actors`, actorsResponseSchema)).actors,
+
+  /** One page of chat, newest first; pass `before` (a previous `nextCursor`) for older ones. */
+  chatHistory: (
+    tableId: string,
+    before?: string,
+  ): Promise<{ messages: ChatMessage[]; nextCursor: string | null }> =>
+    request(
+      'GET',
+      `/tables/${tableId}/messages${before ? `?before=${encodeURIComponent(before)}` : ''}`,
+      chatHistoryResponseSchema,
+    ),
+
+  sendChat: async (tableId: string, input: ChatSendInput): Promise<ChatMessage> =>
+    (await request('POST', `/tables/${tableId}/messages`, chatMessageResponseSchema, input))
+      .message,
 };

@@ -41,6 +41,18 @@ export type TableView = z.infer<typeof tableSchema>;
 export const tablesResponseSchema = z.object({ tables: z.array(tableSchema) });
 export const tableResponseSchema = z.object({ table: tableSchema });
 
+/** A member of a table, as every member sees the list (FR-TABLE-04, 05). */
+export const memberSchema = z.object({
+  userId: z.string(),
+  username: z.string(),
+  displayName: z.string(),
+  role: z.enum(TABLE_ROLES),
+  defaultCharacterId: z.string().nullable(),
+  joinedAt: z.string(),
+});
+export type MemberView = z.infer<typeof memberSchema>;
+export const membersResponseSchema = z.object({ members: z.array(memberSchema) });
+
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
 export const systemsResponseSchema = z.object({ systems: z.array(systemSchema) });

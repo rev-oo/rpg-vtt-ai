@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-const ADMIN = { username: 'admin', displayName: 'Game Admin', password: 'e2e-password-1' };
+import { ADMIN } from './support/api.js';
 
 // T-0111: set up the admin, log in, create a table.
 test('first-run setup, login and table creation', async ({ page }) => {

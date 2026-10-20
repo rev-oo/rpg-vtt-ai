@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { useRevalidator } from 'react-router';
+import { Link, useRevalidator } from 'react-router';
 
 import type { TableView } from '@vtt/shared/api';
 import { Alert, Button, Card } from '@vtt/ui';
@@ -49,7 +49,9 @@ export default function TablesRoute({ loaderData }: Route.ComponentProps): React
           {tables.map((table) => (
             <li key={table.id}>
               <Card className="flex h-full flex-col gap-2">
-                <h2 className="text-lg font-semibold">{table.name}</h2>
+                <h2 className="text-lg font-semibold">
+                  <Link to={`/tables/${table.id}`}>{table.name}</Link>
+                </h2>
                 {table.description && <p>{table.description}</p>}
                 <p className="flex flex-wrap items-center gap-2 text-sm text-muted">
                   <span className="rounded-full bg-info-soft px-2 font-semibold text-fg">

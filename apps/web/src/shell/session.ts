@@ -2,6 +2,7 @@ import type { PublicUser, Session } from '@vtt/shared/api';
 
 import { ApiError, setCsrfToken } from '../api/client.js';
 import { api } from '../api/endpoints.js';
+import { closeEventsClient } from '../realtime/events-client.js';
 
 export interface SessionState {
   /** True until the first user exists (FR-AUTH-01). */
@@ -42,6 +43,7 @@ export function storeUser(user: PublicUser): void {
 /** After logout. */
 export function clearSession(): void {
   setCsrfToken(null);
+  closeEventsClient();
   cached = Promise.resolve({ needsSetup: false, user: null });
 }
 

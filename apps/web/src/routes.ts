@@ -5,6 +5,7 @@ export default [
   route('login', 'routes/login.tsx'),
   layout('routes/app-layout.tsx', [
     index('routes/tables.tsx'),
+    route('tables/:tableId', 'routes/table.tsx'),
     route('account', 'routes/account.tsx'),
   ]),
   route('*', 'routes/catch-all.tsx'),

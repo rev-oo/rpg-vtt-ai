@@ -16,8 +16,17 @@ export default defineConfig({
     baseURL: `http://127.0.0.1:${String(WEB_PORT)}`,
     trace: 'retain-on-failure',
   },
-  // Chromium for the smoke suite; Firefox and WebKit join with the full suite (T-0702).
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  // Chromium for now; Firefox and WebKit join with the full suite (T-0702). The first-run
+  // test creates the admin every other test signs in as, so it runs first.
+  projects: [
+    { name: 'first-run', testMatch: 'smoke.spec.ts', use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      testIgnore: 'smoke.spec.ts',
+      dependencies: ['first-run'],
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
   webServer: [
     {
       command: 'node scripts/start-server.mjs',
