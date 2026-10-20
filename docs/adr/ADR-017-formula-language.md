@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-20
-- **Tasks:** T-0301, T-0302
+- **Tasks:** T-0301, T-0302, T-0303
 - **Amends:** §8.8 (custom dice names), §8.9 (grammar details), §14 Q8
 
 ## Context
@@ -65,6 +65,31 @@
 7. **Step limit.** Each node, and each element `[*]` visits, is a step; the default limit is 10,000.
 8. **Dice.** In pure mode a die is a `dice_not_allowed` error; rolling mode (T-0303) supplies the dice.
 9. **Testing.** Property tests evaluate random trees against data and functions whose prototypes trap every inherited read and every non-whitelisted call. None is reached, and no run exceeds its step limit.
+
+## Dice (T-0303)
+
+1. **Rolling mode.** `roll(formula, { rng, customDice, maxDice })` evaluates with dice allowed. It returns the total, which must be a number, and every term's dice.
+2. **RNG.** The caller injects an `Rng` (`nextInt(n)` in `[0, n)`): the server passes a cryptographically secure one (FR-CHAT-04).
+   - `seededRng(seed)` (mulberry32, rejection-sampled) is deterministic for tests and replays (FR-DICE-05).
+   - A replay test pins its output, because stored rolls depend on it.
+   - An RNG that answers out of range is a bug and throws `RangeError`.
+3. **Modifier order.** Modifiers apply in a fixed order, whatever order they are written in:
+   1. **Reroll** (`r`) rerolls a matching die once. The first result stays in the list, marked `rerolled`.
+   2. **Explode** (`!`): a die showing its highest value adds another die. That die can be rerolled and explode again.
+   3. **Keep or drop** sorts the remaining dice and marks the rest `dropped`. Ties keep their rolling order.
+   4. **Success counting** (`cs`, `cf`): with either present, the term is worth successes minus failures; otherwise it is the sum of its active dice.
+4. **Custom dice** are lists of faces, each with a `label` and a numeric `value` (Fate: `-`, ` `, `+` as −1, 0, 1). The plugin engine (M4) builds them from `dice.json`.
+   - Comparisons, explosions and totals use the value; the label is kept for display.
+   - Unknown names are `unknown_die` errors that list the system's dice.
+5. **Limits.**
+   - Sides go from 1 to 1,000,000.
+   - Counts are whole numbers of 0 or more.
+   - A roll uses at most 1,000 dice, explosions and rerolls included (`too_many_dice`), which also stops `d1!`.
+6. **Results** (FR-DICE-04). Each term records:
+   - its formula, with the count resolved (`(@pool)d6` → `3d6`)
+   - the count and the die
+   - every die, with its value, its label, whether it counts (`active`) and the `rerolled`, `exploded`, `dropped`, `success` and `failure` flags
+   - its total
 
 ## Consequences
 
