@@ -16,7 +16,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                     | Status      | Progress | Target |
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
-| M1    | Core server: users, auth, tables, membership                  | In progress | 90%      | —      |
+| M1    | Core server: users, auth, tables, membership                  | In review   | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Not started | 0%       | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
@@ -30,19 +30,22 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M1
-- **Next task:** `T-0111`
+- **Next task:** `T-0201` (after M1 sign-off)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                                              |
-| ---------- | ------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                    |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                    |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                  |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                  |
-| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added. |
+| Date       | Change                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                           |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                           |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                         |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                         |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.        |
+| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off. |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
+| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
 
 ---
 
@@ -119,7 +122,7 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 | Language             | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere                      | Type safety across client, server, and shared packages        |
 | Monorepo             | **pnpm workspaces** + Turborepo for task caching                                           | Fast installs, strict dependency isolation                    |
 | Frontend             | **React 18+ with Vite**, SPA                                                               | Plugins are loaded at runtime; SSR is not needed behind login |
-| Frontend routing     | React Router                                                                               | Simple, well understood                                       |
+| Frontend routing     | React Router, **framework mode as an SPA** (`ssr: false`) (ADR-013)                        | Typed routes, loaders for guards and data; no SSR server      |
 | Client state         | **Zustand** for UI state; **Yjs** for document state                                       | Minimal boilerplate; CRDT handles collaborative data          |
 | Backend              | **Node.js LTS + Fastify**                                                                  | Lightweight, good plugin model, native TypeScript support     |
 | Realtime (events)    | **WebSocket** (`ws`) at `/ws/events`                                                       | Chat, rolls, entity change notifications, presence            |
@@ -128,6 +131,8 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 | Schema validation    | **Zod** in TypeScript, emitted to **JSON Schema** at build                                 | Single source of truth for types and plugin file schemas      |
 | Formula/dice         | Custom parser in `packages/formula`, no `eval`                                             | Safe, testable, same code on both sides                       |
 | Scoped CSS           | PostCSS (or lightningcss) in the plugin loader                                             | Predictable, server-side scoping                              |
+| Styling (core UI)    | **Tailwind CSS 4**; tokens as a `@theme` in `packages/ui` (ADR-012)                        | Fast iteration, one token file, both colour schemes           |
+| Forms                | **TanStack Form**; the shared API schemas (`@vtt/shared/api`) are the validators (ADR-013) | Typed field state; client and server run the same rules       |
 | Testing              | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests       | Standard, fast, multi-browser                                 |
 | Lint                 | **ESLint flat config** + `typescript-eslint` + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering                |
 | Format               | **Prettier**                                                                               | Consistent style, enforced in CI and pre-commit               |
@@ -173,11 +178,13 @@ vtt/
 ├─ apps/
 │  ├─ web/                        Vite + React SPA
 │  │  └─ src/
-│  │     ├─ shell/                layout, routing, sidebar tabs, sheet windows
+│  │     ├─ routes/               route modules (React Router framework mode)
+│  │     ├─ shell/                layout, session, access rules, sidebar tabs, sheet windows
 │  │     ├─ features/             chat · actors · items · journal · combat · tables · members
 │  │     ├─ collab/               Yjs providers, sheet store, awareness
 │  │     ├─ plugin-host/          loads plugin manifests, mounts sheets, injects scoped CSS, import map
-│  │     └─ main.tsx
+│  │     ├─ root.tsx              root route: HTML shell, error boundary
+│  │     └─ routes.ts             route config
 │  └─ server/
 │     └─ src/
 │        ├─ http/                 Fastify routes (auth, tables, entities, chat, plugins)
@@ -188,7 +195,7 @@ vtt/
 │        ├─ config/               env parsing (zod)
 │        └─ main.ts
 ├─ packages/
-│  ├─ shared/                     entity types, ids, permission rules, event protocol
+│  ├─ shared/                     entity types, ids, permission rules, event protocol, API contract (Zod)
 │  ├─ formula/                    formula parser, evaluator, dice engine (pure)
 │  ├─ plugin-schema/              Zod schemas for every plugin file + JSON Schema emitter
 │  ├─ plugin-engine/              defaults, derived data, roll recipes, schema→Yjs mapping, outcome logic
@@ -968,10 +975,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Do:** `packages/shared/permissions` pure functions: `canViewActor`, `canEditActor`, `canViewJournal`, `canSeeAudience`, etc., from roles and ownership. Used by server and by UI hints.
   - **Done when:** exhaustive table-driven unit tests cover every role × ownership combination (coverage ≥ 80%).
 
-- [ ] **T-0111 · Web app shell and auth screens**
+- [x] **T-0111 · Web app shell and auth screens**
   - **Deps:** T-0105, T-0010
   - **Do:** Vite app, router, login, setup, account page, table list, create-table dialog. Uses `packages/ui` primitives.
   - **Done when:** Playwright smoke test: set up admin, log in, create a table.
+  - **Note:** `e2e/tests/smoke.spec.ts` runs on Chromium against the built apps (`pnpm e2e`); Firefox and WebKit join with T-0702. The test plugin is seeded into a fresh data dir until the scanner exists (T-0403).
 
 ### M2 — Entities and realtime
 
@@ -1299,19 +1307,21 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 
 ## 16. Decision Log (ADR index)
 
-| ADR     | Decision                                                                                                                 | Status   |
-| ------- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
-| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                                | Accepted |
-| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                            | Accepted |
-| ADR-003 | SQLite + Drizzle, single data directory                                                                                  | Accepted |
-| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                                 | Accepted |
-| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                                      | Accepted |
-| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                          | Accepted |
-| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                                      | Accepted |
-| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)                       | Accepted |
-| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md)         | Accepted |
-| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                   | Accepted |
-| ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md) | Accepted |
+| ADR     | Decision                                                                                                                                        | Status   |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                                                       | Accepted |
+| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                                                   | Accepted |
+| ADR-003 | SQLite + Drizzle, single data directory                                                                                                         | Accepted |
+| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                                                        | Accepted |
+| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                                                             | Accepted |
+| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                                                 | Accepted |
+| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                                                             | Accepted |
+| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)                                              | Accepted |
+| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md)                                | Accepted |
+| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                                          | Accepted |
+| ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md)                        | Accepted |
+| ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted |
+| ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

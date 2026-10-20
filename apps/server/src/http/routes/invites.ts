@@ -1,7 +1,8 @@
 import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { canManageInvites, INVITE_ROLES } from '@vtt/shared';
+import { canManageInvites } from '@vtt/shared';
+import { createInviteBody } from '@vtt/shared/api';
 
 import { gameTables, invites, members } from '../../db/schema.js';
 import { generateId, generateToken, hashToken } from '../../domain/auth/tokens.js';
@@ -12,23 +13,9 @@ import { requireSession } from '../auth.js';
 import { requireMember } from '../membership.js';
 import { parseInput } from '../validation.js';
 
-const DAY_SECONDS = 24 * 60 * 60;
-
 const tableParams = z.object({ id: z.uuid() });
 const inviteParams = z.object({ id: z.uuid(), inviteId: z.uuid() });
 const tokenParams = z.object({ token: z.string().regex(/^[\w-]{43}$/) });
-
-const createInviteBody = z.object({
-  role: z.enum(INVITE_ROLES),
-  /** Lifetime in seconds; `null` never expires. Default: 7 days. */
-  expiresInSeconds: z
-    .number()
-    .int()
-    .min(60)
-    .max(90 * DAY_SECONDS)
-    .nullable()
-    .default(7 * DAY_SECONDS),
-});
 
 type Invite = typeof invites.$inferSelect;
 
@@ -149,7 +136,7 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
       const table = tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).get();
       if (!table) throw notFound('Invite not found.');
       return {
-        table: toTableView(table, existing?.role ?? invite.role),
+        table: toTableView(tx, table, existing?.role ?? invite.role),
         joined: !existing,
       };
     });

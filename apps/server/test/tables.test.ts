@@ -55,6 +55,7 @@ describe('table creation (FR-TABLE-01, FR-TABLE-02)', () => {
       name: 'Curse of the Crimson Throne',
       description: 'Weekly',
       systemId: 'test-system',
+      systemName: 'Test System',
       systemVersion: '1.2.0',
       settings: {},
       role: 'gm',

@@ -84,6 +84,21 @@ describe('setup flow (FR-AUTH-01)', () => {
     expect(body.error.details.map((d) => d.path)).toContain(field);
   });
 
+  it('words validation errors in English', async () => {
+    const { app } = await createTestApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/v1/setup/admin',
+      payload: { username: 'a!', displayName: ' ', password: 'short' },
+    });
+    const body = res.json<{ error: { details: { path: string; message: string }[] } }>();
+    expect(body.error.details).toEqual([
+      { path: 'username', message: '3–32 characters: letters, digits, "_", "." or "-".' },
+      { path: 'displayName', message: 'Required.' },
+      { path: 'password', message: 'Must be at least 8 characters.' },
+    ]);
+  });
+
   it('rejects non-JSON bodies, which a cross-site form could send', async () => {
     const { app } = await createTestApp();
     const res = await app.inject({

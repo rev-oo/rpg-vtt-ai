@@ -2,6 +2,7 @@ import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageTable } from '@vtt/shared';
+import { createTableBody, updateTableBody } from '@vtt/shared/api';
 
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
@@ -14,23 +15,6 @@ import { parseInput } from '../validation.js';
 
 export const tableIdParams = z.object({ id: z.uuid() });
 
-const tableName = z.string().trim().min(1).max(100);
-const tableDescription = z.string().trim().max(2000);
-const tableSettings = z.record(z.string(), z.unknown());
-
-const createTableBody = z.object({
-  name: tableName,
-  description: tableDescription.default(''),
-  systemId: z.string().min(1).max(100),
-  settings: tableSettings.default({}),
-});
-
-// Strict: the system plugin and version are fixed at creation (FR-TABLE-02).
-const updateTableBody = z
-  .strictObject({ name: tableName, description: tableDescription, settings: tableSettings })
-  .partial()
-  .refine((body) => Object.keys(body).length > 0, 'Provide at least one field.');
-
 /** Table creation, listing and settings (FR-TABLE-01, 02, 07). */
 export function tableRoutes({ app, db }: AppContext): void {
   app.get('/api/v1/tables', (request) => {
@@ -42,7 +26,7 @@ export function tableRoutes({ app, db }: AppContext): void {
       .where(eq(members.userId, session.user.id))
       .orderBy(asc(gameTables.name), asc(gameTables.createdAt))
       .all();
-    return { tables: rows.map(({ table, role }) => toTableView(table, role)) };
+    return { tables: rows.map(({ table, role }) => toTableView(db, table, role)) };
   });
 
   app.post('/api/v1/tables', (request, reply) => {
@@ -75,13 +59,13 @@ export function tableRoutes({ app, db }: AppContext): void {
       return created;
     });
 
-    return reply.code(201).send({ table: toTableView(table, 'gm') });
+    return reply.code(201).send({ table: toTableView(db, table, 'gm') });
   });
 
   app.get('/api/v1/tables/:id', (request) => {
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id);
-    return { table: toTableView(table, membership.role) };
+    return { table: toTableView(db, table, membership.role) };
   });
 
   app.patch('/api/v1/tables/:id', (request) => {
@@ -89,6 +73,6 @@ export function tableRoutes({ app, db }: AppContext): void {
     const { membership } = requireMember(db, request, id, canManageTable);
     const body = parseInput(updateTableBody, request.body);
     const updated = db.update(gameTables).set(body).where(eq(gameTables.id, id)).returning().get();
-    return { table: toTableView(updated, membership.role) };
+    return { table: toTableView(db, updated, membership.role) };
   });
 }

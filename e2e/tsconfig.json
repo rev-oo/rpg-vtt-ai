@@ -1,0 +1,8 @@
+{
+  "extends": ["../tsconfig.base.json", "@vtt/config/tsconfig/node.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["tests"]
+}

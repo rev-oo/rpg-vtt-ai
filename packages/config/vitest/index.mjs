@@ -9,7 +9,12 @@ import { defineConfig } from 'vitest/config';
  */
 
 /**
- * @param {{ coverageGate?: CoverageGate }} [options]
+ * @param {{
+ *   coverageGate?: CoverageGate,
+ *   environment?: 'node' | 'jsdom',
+ *   setupFiles?: string[],
+ * }} [options]
+ *   `environment: 'jsdom'` is for React component tests; `setupFiles` run before each test file.
  */
 export function defineVttVitestConfig(options = {}) {
   const gate = options.coverageGate;
@@ -24,6 +29,8 @@ export function defineVttVitestConfig(options = {}) {
   return defineConfig({
     test: {
       include: ['test/**/*.test.{ts,tsx}'],
+      environment: options.environment ?? 'node',
+      ...(options.setupFiles && { setupFiles: options.setupFiles }),
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,tsx}'],

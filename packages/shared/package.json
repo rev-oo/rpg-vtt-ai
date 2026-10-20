@@ -7,6 +7,10 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
+    },
+    "./api": {
+      "types": "./dist/src/api/index.d.ts",
+      "default": "./dist/src/api/index.js"
     }
   },
   "scripts": {
@@ -14,6 +18,9 @@
     "typecheck": "tsc -b",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --coverage"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@vtt/config": "workspace:*"

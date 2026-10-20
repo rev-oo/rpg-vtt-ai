@@ -2,9 +2,11 @@
   "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
   "compilerOptions": {
     "rootDir": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["vite/client"],
+    "rootDirs": [".", "./.react-router/types"]
   },
-  "include": ["src", "test"],
+  "include": ["src", "test", "react-router.config.ts", ".react-router/types/**/*"],
   "exclude": ["src/__lint-fixtures__"],
   "references": [
     {

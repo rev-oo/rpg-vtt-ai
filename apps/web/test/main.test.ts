@@ -1,9 +1,0 @@
-import { describe, expect, it } from 'vitest';
-
-import { packageName } from '../src/main.js';
-
-describe('@vtt/web', () => {
-  it('exposes its package name', () => {
-    expect(packageName).toBe('@vtt/web');
-  });
-});

@@ -1,7 +1,8 @@
 import { and, asc, count, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { canManageMembers, TABLE_ROLES } from '@vtt/shared';
+import { canManageMembers } from '@vtt/shared';
+import { updateMemberBody } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../../db/client.js';
 import { members, users } from '../../db/schema.js';
@@ -13,15 +14,6 @@ import { parseInput } from '../validation.js';
 
 const memberParams = z.object({ id: z.uuid(), userId: z.uuid() });
 const tableParams = z.object({ id: z.uuid() });
-
-const updateMemberBody = z
-  .strictObject({
-    role: z.enum(TABLE_ROLES),
-    /** Validated against the table's actors once they exist (M2). */
-    defaultCharacterId: z.uuid().nullable(),
-  })
-  .partial()
-  .refine((body) => Object.keys(body).length > 0, 'Provide at least one field.');
 
 function countGms(db: DbOrTx, tableId: string): number {
   return (

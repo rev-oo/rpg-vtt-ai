@@ -4,7 +4,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**", "build/**"]
     },
     "typecheck": {
       "dependsOn": ["^typecheck"],
@@ -18,7 +18,7 @@
       "outputs": ["coverage/**"]
     },
     "e2e": {
-      "dependsOn": ["build"],
+      "dependsOn": ["^build"],
       "cache": false
     },
     "//#lint:root": {}

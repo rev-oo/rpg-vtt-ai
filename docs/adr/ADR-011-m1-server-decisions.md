@@ -23,6 +23,8 @@ M1 needed a few decisions the PRD does not spell out or that change a task's lis
    - Hidden journal entries are visible only to GMs and assistants (§9.3).
 6. **Non-members get 404 for a table**, instance admins included (FR-AUTH-08), so table ids cannot be probed.
 
+7. **`GET /api/v1/systems` (added in T-0111).** The create-table dialog must list the enabled system plugins, and any user may create a table (FR-TABLE-01). The admin-only `GET /plugins` (§10.1) cannot serve them, so `GET /systems` returns `id`, `name` and `version` of enabled plugins to any signed-in user. Table responses also include `systemName`.
+
 ## Consequences
 
 - The M4 scanner (T-0403) writes to the existing `plugins` table instead of creating it.

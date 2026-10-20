@@ -1,0 +1,5 @@
+@import 'tailwindcss';
+@import '@vtt/ui/theme.css';
+
+/* Tailwind only scans this app by default; the primitives live in packages/ui. */
+@source '../../../packages/ui/src';

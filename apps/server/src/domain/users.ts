@@ -1,5 +1,7 @@
 import { count, eq, sql } from 'drizzle-orm';
 
+import type { PublicUser } from '@vtt/shared/api';
+
 import type { DbOrTx } from '../db/client.js';
 import { users } from '../db/schema.js';
 import { conflict } from '../errors.js';
@@ -11,8 +13,6 @@ import { generateId } from './auth/tokens.js';
 export type User = typeof users.$inferSelect;
 
 /** The user fields that may leave the server. */
-export type PublicUser = SessionUser;
-
 export function toPublicUser(user: SessionUser): PublicUser {
   return {
     id: user.id,
