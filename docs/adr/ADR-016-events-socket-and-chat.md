@@ -16,7 +16,7 @@ M2 adds the `/ws/events` socket (§10.2), entity change notifications (FR-ENT-07
    - No session: `401`.
    - A browser `Origin` other than `PUBLIC_URL` or the request's own host: `403`. Cookies are sent on cross-site WebSocket upgrades too (cross-site WebSocket hijacking), and the CSRF header cannot be set on an upgrade.
 3. **Replies.** A client message that carries an `id` gets `ack` (`{ replyTo }`) or `error` (`{ code, message, replyTo }`) back.
-   - Codes: `invalid_message`, `unsupported_version` (with `supportedVersions`), `not_found`, `forbidden`, the REST codes of `chat.send`, and `not_implemented` for `roll.request` until M3.
+   - Codes: `invalid_message`, `unsupported_version` (with `supportedVersions`), `not_found`, `forbidden`, the REST codes of `chat.send`, and `not_implemented` for `roll.request` until M3 (rolls since ADR-018).
    - `presence.ping` is only acknowledged until presence is built.
 4. **Session and membership checks.**
    - The session is checked on every client message and on each 25 s heartbeat. A socket whose session ended is closed with code `4401`.

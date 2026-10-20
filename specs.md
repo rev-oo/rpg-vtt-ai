@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | In progress | 80%      | —      |
+| M3    | Formula & dice engine                                         | In progress | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M3
-- **Next task:** `T-0305`
+- **Next task:** M3 sign-off, then `T-0401`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -57,6 +57,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                       |
 | 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                      |
 | 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                    |
+| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.           |
 
 ---
 
@@ -824,7 +825,7 @@ Key resource groups:
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`    |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
-| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                                            |
+| Rolls           | `POST /tables/:id/rolls` (formula; roll recipes with T-0407, ADR-018)                                                        |
 | Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                                                           |
 | Health          | `GET /api/health`                                                                                                            |
 
@@ -833,7 +834,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -1068,10 +1069,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Do:** Resolve `@` references against actor state, record resolved expressions in the result (FR-DICE-02, 04).
   - **Done when:** the result object includes expression, resolved expression, dice, and total.
 
-- [ ] **T-0305 · Roll endpoint and chat integration**
+- [x] **T-0305 · Roll endpoint and chat integration**
   - **Deps:** T-0304, T-0206
   - **Do:** `POST /tables/:id/rolls` and `roll.request` over events; server posts roll messages with audience rules (FR-CHAT-03, 04, 05).
   - **Done when:** secret roll results are invisible to players on the wire (integration test).
+  - **Note:** `apps/server/test/rolls.test.ts` checks the wire and history; `e2e/tests/rolls.spec.ts` checks three browser sessions. Roll messages arrive as `chat.message`; recipes join the endpoint with T-0407 (ADR-018).
 
 ### M4 — Plugin system
 
@@ -1350,6 +1352,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
 | ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
 | ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted |
+| ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
