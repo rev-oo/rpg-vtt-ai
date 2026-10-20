@@ -3,7 +3,9 @@ import type { TableRole } from '../roles.js';
 import { effectiveOwnership, isGmLike, type Ownership, type Subject } from './ownership.js';
 
 /** Who an actor type is meant for, as declared by the system plugin. */
-export type ControlledBy = 'player' | 'gm';
+/** Who normally creates and plays an actor type (§8.4). */
+export const CONTROLLED_BY = ['player', 'gm'] as const;
+export type ControlledBy = (typeof CONTROLLED_BY)[number];
 
 export const ACTOR_LAYERS = ['main', 'secret'] as const;
 export type ActorLayer = (typeof ACTOR_LAYERS)[number];

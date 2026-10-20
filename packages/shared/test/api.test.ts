@@ -193,6 +193,9 @@ describe('describeIssue', () => {
     expect(describeFirst(setupAdminBody, { ...admin, username: 'a!' })).toEqual({
       key: 'username',
     });
+    expect(describeFirst(createActorBody, { type: 'npc', name: 'x', imageUrl: 'ftp://x' })).toEqual(
+      { key: 'url' },
+    );
   });
 
   it('leaves other issues to Zod', () => {

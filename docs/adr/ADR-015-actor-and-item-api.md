@@ -33,6 +33,16 @@ T-0202 exposes actors and items over REST with ownership enforced on every endpo
 9. **No pagination on entity lists yet.** A table's actors and items are bounded by what one group plays with, and permission filtering happens after the query. Cursor pagination (§10.1) is added if lists grow; chat history (T-0205) has it from the start.
 10. **A default character must be the member's own live actor on the table** (`400 invalid_character`).
 
+## Web client (T-0208)
+
+- `GET /tables/:id/types` lists the system's actor and item types for the creation forms. If the plugin is missing it answers `422 system_unavailable`; the page then opens without creation.
+- The table page is a parent route with two tabs, actors (`/tables/:id`) and items (`/tables/:id/items`).
+  - The filters live in the URL (`?q=…&type=…&trash=1`), and each tab's loader fetches its list.
+  - Every `entity.changed` event, and every reconnection, revalidates the lists. Changing a tab or a filter reloads only the tab, not the table, members or chat.
+- Edit controls follow `access` and the shared permission checks (`canCreateActor`, `canSetOwnership`, `canManageItemLibrary`). The server still enforces them.
+- The ownership dialog lists only players and spectators, because GMs and assistants own every actor anyway.
+- An actor's own items are listed on demand. Copying a library item into an actor uses the "Give" control on the items tab.
+
 ## Consequences
 
 - T-0403 must write `actor_types` and `item_types`.

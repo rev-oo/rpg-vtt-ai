@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 50%      | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M2
-- **Next task:** `T-0207`
+- **Active milestone:** M3
+- **Next task:** `T-0301`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -50,6 +50,9 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                    |
 | 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                |
 | 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added. |
+| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                    |
+| 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                               |
+| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                  |
 
 ---
 
@@ -810,7 +813,7 @@ Key resource groups:
 | Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                      |
 | Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                     |
 | Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                              |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                                                        |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                               |
 | Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                   |
 | Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                    |
 | Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore` |
@@ -1006,11 +1009,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** a test client receives `entity.changed` only for tables it belongs to.
   - **Note:** `apps/server/test/events.test.ts`. The protocol lives in `@vtt/shared/api` (`events.ts`). Upgrades also check the `Origin`; sessions are re-checked on every message and heartbeat (ADR-016).
 
-- [ ] **T-0204 · Entity change notifications**
+- [x] **T-0204 · Entity change notifications**
   - **Deps:** T-0202, T-0203
   - **Do:** Emit `entity.changed` on create/update/delete/restore (FR-ENT-07).
   - **Done when:** two browser sessions see the list update without refresh (tested in e2e).
-  - **Note:** server side done: every actor and item mutation publishes `entity.changed` to the members who can see the entity, verified on the wire in `events.test.ts`. The two-browser e2e needs the actor list UI and lands with T-0208.
+  - **Note:** every actor and item mutation publishes `entity.changed` to the members who can see the entity, verified on the wire in `events.test.ts`. The two-browser e2e is `e2e/tests/entities.spec.ts` (T-0208).
 
 - [x] **T-0205 · Chat storage and REST history**
   - **Deps:** T-0201
@@ -1024,15 +1027,17 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** whispers and GM messages reach only permitted sockets (integration tests on the wire).
   - **Note:** `chat.test.ts` › "chat on the wire" checks every frame each socket received, including that a hidden message's id never appears.
 
-- [ ] **T-0207 · Chat UI**
+- [x] **T-0207 · Chat UI**
   - **Deps:** T-0206, T-0111
   - **Do:** Chat panel with speaker select, audience select, infinite scroll, plain-text message rendering, `/r` and `/gmr` command parsing.
   - **Done when:** Playwright test sends public, whisper, and GM messages and verifies visibility for two users.
+  - **Note:** `e2e/tests/chat.spec.ts` checks a GM and two players, live and after a reload. The panel lives on the new table page (`/tables/:tableId`). Messages are posted over REST and arrive over the socket; `/r` and `/gmr` are parsed, but rolling waits for M3 (ADR-016).
 
-- [ ] **T-0208 · Actor and item list UI**
+- [x] **T-0208 · Actor and item list UI**
   - **Deps:** T-0204, T-0111
   - **Do:** Sidebar tabs for actors and items with search, type filter, create, duplicate, delete, and ownership dialog.
   - **Done when:** all FR-ENT requirements have a passing e2e or integration test.
+  - **Note:** FR-ENT-01..07 are covered by `e2e/tests/entities.spec.ts`, `apps/web/test/entities.test.tsx` and the server's `actors`, `items` and `events` tests. FR-ENT-08 and 09 (CRDT documents) are built and tested with M5 (T-0501, T-0502). `GET /tables/:id/types` was added for the creation forms (ADR-015).
 
 ### M3 — Formula and dice engine
 

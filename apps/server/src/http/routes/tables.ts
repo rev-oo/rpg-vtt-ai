@@ -2,10 +2,11 @@ import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageTable } from '@vtt/shared';
-import { createTableBody, updateTableBody } from '@vtt/shared/api';
+import { createTableBody, updateTableBody, type TableTypes } from '@vtt/shared/api';
 
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
+import { systemTypes } from '../../domain/entities.js';
 import { toTableView } from '../../domain/tables.js';
 import { unprocessable } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -60,6 +61,20 @@ export function tableRoutes({ app, db }: AppContext): void {
     });
 
     return reply.code(201).send({ table: toTableView(db, table, 'gm') });
+  });
+
+  app.get('/api/v1/tables/:id/types', (request) => {
+    const { id } = parseInput(tableIdParams, request.params);
+    const { table } = requireMember(db, request, id);
+    const types = systemTypes(db, table);
+    const result: TableTypes = {
+      actorTypes: Object.entries(types.actorTypes).map(([type, { controlledBy }]) => ({
+        type,
+        controlledBy,
+      })),
+      itemTypes: [...types.itemTypes],
+    };
+    return result;
   });
 
   app.get('/api/v1/tables/:id', (request) => {
