@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-20
-- **Tasks:** T-0301
+- **Tasks:** T-0301, T-0302
 - **Amends:** §8.8 (custom dice names), §8.9 (grammar details), §14 Q8
 
 ## Context
@@ -39,7 +39,32 @@
    - Function names are checked by the evaluator, so plugins' `shared` functions need no parser change.
 6. **Strings** use single quotes; only `\'` and `\\` are escapes.
 7. **Errors** are `FormulaError`s with a `code`, the `span`, a 1-based `line` and `column`, and an English message ending in `(line L, column C)`. Callers can word them differently from the code.
-8. **Limits.** Nesting deeper than 100 is refused, so a formula cannot exhaust the stack.
+8. **Limits.** Nesting deeper than 200, or a tree deeper than 200 (a chain of 200 `+`), is refused, so neither parsing nor evaluation can exhaust the stack.
+
+## Evaluation (T-0302)
+
+1. **Values** are numbers, text and true/false. `[*]` gives a list, which only functions take: `sum`, `min`, `max`, `count`.
+2. **Strict types.** Nothing is converted silently:
+   - `+` adds two numbers or joins two texts; `- * / %` need numbers.
+   - `<`, `<=`, `>` and `>=` compare two numbers or two texts; `==` and `!=` compare values of the same type.
+   - `and`, `or`, `not`, `?:` and `if()` need true/false.
+   - Anything else is a `type_error` at the operator or operand.
+3. **Numbers stay finite.**
+   - Dividing by zero is a `division_by_zero` error.
+   - Overflow and `NaN` (from data or from a function) are errors too.
+4. **Short circuits.** `and`, `or`, `?:` and `if()` evaluate only the branch they need, so `@hp > 0 and @hp.max` works where a branch would fail.
+5. **References.**
+   - Only own properties of `data` are read, so `@constructor`, `@__proto__` or anything inherited is `unknown_reference`.
+   - Lists are indexed only by an integer `[n]`.
+   - Collections (id-keyed maps) are indexed by id `['id']`, and `[*]` iterates their values.
+   - `count(@skills[*])` counts entries even though they are groups of fields.
+6. **Functions.**
+   - The whitelist is §8.9's list plus the functions the caller passes (a plugin's `shared` functions).
+   - A plugin function cannot replace a built-in.
+   - A plugin function's result must be a finite number, text or true/false, and its exceptions become `function_failed`.
+7. **Step limit.** Each node, and each element `[*]` visits, is a step; the default limit is 10,000.
+8. **Dice.** In pure mode a die is a `dice_not_allowed` error; rolling mode (T-0303) supplies the dice.
+9. **Testing.** Property tests evaluate random trees against data and functions whose prototypes trap every inherited read and every non-whitelisted call. None is reached, and no run exceeds its step limit.
 
 ## Consequences
 

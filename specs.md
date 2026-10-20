@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | In progress | 20%      | —      |
+| M3    | Formula & dice engine                                         | In progress | 40%      | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M3
-- **Next task:** `T-0302`
+- **Next task:** `T-0303`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -54,6 +54,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                               |
 | 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                  |
 | 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                   |
+| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                       |
 
 ---
 
@@ -1048,10 +1049,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** round-trip tests and error-position tests pass; invalid input produces a message with line and column.
   - **Note:** grammar details (precedence, dice counts in parentheses, custom dice names like `dF`) are in ADR-017.
 
-- [ ] **T-0302 · Formula evaluator (pure mode)**
+- [x] **T-0302 · Formula evaluator (pure mode)**
   - **Deps:** T-0301
   - **Do:** Evaluate references against an injected data context; whitelist functions; step limit; type errors.
   - **Done when:** property tests show no evaluation outside the whitelist; step limit enforced.
+  - **Note:** typing, reference and function rules are in ADR-017.
 
 - [ ] **T-0303 · Dice engine**
   - **Deps:** T-0302
@@ -1344,7 +1346,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
 | ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
 | ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
-| ADR-017 | [Formula language details: precedence, dice terms, custom dice names, errors](docs/adr/ADR-017-formula-language.md)                             | Accepted |
+| ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
