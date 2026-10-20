@@ -1,9 +1,14 @@
 import { z } from 'zod';
 
+import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
 import { INVITE_ROLES, TABLE_ROLES } from '../roles.js';
 
 import {
   MAX_DISPLAY_NAME,
+  MAX_ENTITY_NAME,
+  MAX_ENTITY_TYPE,
+  MAX_IMAGE_URL,
+  MAX_SEARCH,
   MAX_PASSWORD_LENGTH,
   MAX_SYSTEM_ID,
   MAX_TABLE_DESCRIPTION,
@@ -83,7 +88,13 @@ export type CreateTableInput = z.input<typeof createTableBody>;
 
 // Strict: the system plugin and version are fixed at creation (FR-TABLE-02).
 export const updateTableBody = z
-  .strictObject({ name: tableName, description: tableDescription, settings: tableSettings })
+  .strictObject({
+    name: tableName,
+    description: tableDescription,
+    settings: tableSettings,
+    /** Lets players create actor types meant for the GM (FR-ENT-01). */
+    playersMayCreateAnyActorType: z.boolean(),
+  })
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
 
@@ -111,3 +122,66 @@ export const createInviteBody = z.object({
     .nullable()
     .default(7 * DAY_SECONDS),
 });
+
+// Actors and items (FR-ENT-01..06). Plugin data (`system`) is not written over REST: it is
+// edited live on the sheet (M5).
+
+const entityName = z.string().trim().min(1).max(MAX_ENTITY_NAME);
+const entityType = z.string().min(1).max(MAX_ENTITY_TYPE);
+const imageUrl = z
+  .url({ protocol: /^https?$/ })
+  .max(MAX_IMAGE_URL)
+  .nullable();
+
+export const ownershipSchema = z.object({
+  default: z.enum(OWNERSHIP_LEVELS),
+  /** Per-user levels, keyed by user id; they override the default (FR-ENT-02). */
+  users: z.record(z.uuid(), z.enum(OWNERSHIP_LEVELS)),
+});
+
+/** `GET /tables/:id/actors` and `/items`. */
+export const entityListQuery = z.object({
+  /** Case-insensitive substring of the name. */
+  search: z.string().trim().max(MAX_SEARCH).optional(),
+  type: entityType.optional(),
+  /** `restorable`: the trash, within the retention window (FR-ENT-04). */
+  trash: z.enum(['live', 'restorable']).default('live'),
+});
+export type EntityListQuery = z.input<typeof entityListQuery>;
+
+export const createActorBody = z.object({
+  type: entityType,
+  name: entityName,
+  imageUrl: imageUrl.default(null),
+  /** GMs and assistants only; players' actors are owned by their creator. */
+  ownership: ownershipSchema.optional(),
+});
+export type CreateActorInput = z.input<typeof createActorBody>;
+
+export const updateActorBody = z
+  .strictObject({
+    name: entityName,
+    imageUrl,
+    /** GMs and assistants only. */
+    ownership: ownershipSchema,
+  })
+  .partial()
+  .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateActorInput = z.input<typeof updateActorBody>;
+
+export const createItemBody = z.object({
+  type: entityType,
+  name: entityName,
+  imageUrl: imageUrl.default(null),
+});
+export type CreateItemInput = z.input<typeof createItemBody>;
+
+export const updateItemBody = z
+  .strictObject({ name: entityName, imageUrl })
+  .partial()
+  .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateItemInput = z.input<typeof updateItemBody>;
+
+/** `POST /actors/:id/items`: copies a library item into the actor (FR-ENT-05). */
+export const copyItemBody = z.object({ itemId: z.uuid() });
+export type CopyItemInput = z.input<typeof copyItemBody>;

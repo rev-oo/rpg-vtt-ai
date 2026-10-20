@@ -24,14 +24,17 @@ export type NewActor = Pick<
 > &
   Partial<Pick<typeof actors.$inferInsert, 'imageUrl' | 'ownership' | 'system' | 'createdBy'>>;
 
-export type ActorPatch = Partial<Pick<Actor, 'name' | 'imageUrl' | 'ownership' | 'system'>>;
+/** Fields to change; `undefined` leaves a field as it is. */
+export type ActorPatch = {
+  [K in 'name' | 'imageUrl' | 'ownership' | 'system']?: Actor[K] | undefined;
+};
 
 export interface ActorFilter {
   /** Case-insensitive substring of the name. */
-  search?: string;
-  type?: string;
+  search?: string | undefined;
+  type?: string | undefined;
   /** Default: live actors. */
-  trash?: Trash;
+  trash?: Trash | undefined;
 }
 
 export function createActor(db: DbOrTx, input: NewActor, now: Date): Actor {
@@ -42,12 +45,16 @@ export function createActor(db: DbOrTx, input: NewActor, now: Date): Actor {
     .get();
 }
 
-/** A live actor; deleted actors are only reachable through the trash. */
-export function findActor(db: DbOrTx, id: string): Actor | undefined {
+/** A live entity; pass `includeDeleted` to also find it in the trash. */
+export function findActor(
+  db: DbOrTx,
+  id: string,
+  { includeDeleted = false }: { includeDeleted?: boolean } = {},
+): Actor | undefined {
   return db
     .select()
     .from(actors)
-    .where(and(eq(actors.id, id), isLive(actors.softDeletedAt)))
+    .where(and(eq(actors.id, id), includeDeleted ? undefined : isLive(actors.softDeletedAt)))
     .get();
 }
 

@@ -20,16 +20,17 @@ export type Item = typeof items.$inferSelect;
 export type NewItem = Pick<typeof items.$inferInsert, 'tableId' | 'type' | 'name' | 'dataVersion'> &
   Partial<Pick<typeof items.$inferInsert, 'actorId' | 'sourceId' | 'imageUrl' | 'system'>>;
 
-export type ItemPatch = Partial<Pick<Item, 'name' | 'imageUrl' | 'system'>>;
+/** Fields to change; `undefined` leaves a field as it is. */
+export type ItemPatch = { [K in 'name' | 'imageUrl' | 'system']?: Item[K] | undefined };
 
 export interface ItemFilter {
   /** `null`: the table's library (FR-ENT-05); an id: the items owned by that actor. */
   actorId: string | null;
   /** Case-insensitive substring of the name. */
-  search?: string;
-  type?: string;
+  search?: string | undefined;
+  type?: string | undefined;
   /** Default: live items. */
-  trash?: Trash;
+  trash?: Trash | undefined;
 }
 
 export function createItem(db: DbOrTx, input: NewItem, now: Date): Item {
@@ -40,12 +41,16 @@ export function createItem(db: DbOrTx, input: NewItem, now: Date): Item {
     .get();
 }
 
-/** A live item; deleted items are only reachable through the trash. */
-export function findItem(db: DbOrTx, id: string): Item | undefined {
+/** A live entity; pass `includeDeleted` to also find it in the trash. */
+export function findItem(
+  db: DbOrTx,
+  id: string,
+  { includeDeleted = false }: { includeDeleted?: boolean } = {},
+): Item | undefined {
   return db
     .select()
     .from(items)
-    .where(and(eq(items.id, id), isLive(items.softDeletedAt)))
+    .where(and(eq(items.id, id), includeDeleted ? undefined : isLive(items.softDeletedAt)))
     .get();
 }
 

@@ -10,7 +10,7 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/sqlite-core';
 
-import { INVITE_ROLES, TABLE_ROLES, type Ownership } from '@vtt/shared';
+import { INVITE_ROLES, TABLE_ROLES, type ControlledBy, type Ownership } from '@vtt/shared';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
@@ -80,6 +80,13 @@ export const plugins = sqliteTable('plugins', {
   version: text('version').notNull(),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
   hasCode: integer('has_code', { mode: 'boolean' }).notNull().default(false),
+  /** Actor types the plugin declares (§8.4), keyed by type id. */
+  actorTypes: text('actor_types', { mode: 'json' })
+    .$type<Record<string, { controlledBy: ControlledBy }>>()
+    .notNull()
+    .default({}),
+  /** Item type ids the plugin declares. */
+  itemTypes: text('item_types', { mode: 'json' }).$type<string[]>().notNull().default([]),
   updatedAt: timestamp('updated_at')
     .notNull()
     .$defaultFn(() => new Date()),
@@ -100,6 +107,10 @@ export const gameTables = sqliteTable(
       .$type<Record<string, unknown>>()
       .notNull()
       .default({}),
+    /** Lets players create actor types meant for the GM (FR-ENT-01). */
+    playersMayCreateAnyActorType: integer('players_may_create_any_actor_type', { mode: 'boolean' })
+      .notNull()
+      .default(false),
     createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
   },

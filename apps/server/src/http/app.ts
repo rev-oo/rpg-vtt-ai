@@ -10,13 +10,16 @@ import { SessionService } from '../domain/auth/sessions.js';
 import { AppError } from '../errors.js';
 
 import { registerAuth } from './auth.js';
+import { actorRoutes } from './routes/actors.js';
 import { authRoutes } from './routes/auth.js';
 import { inviteRoutes } from './routes/invites.js';
+import { itemRoutes } from './routes/items.js';
 import { memberRoutes } from './routes/members.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
+import { scheduleTrashPurge } from './trash-purge.js';
 import { installValidationMessages } from './validation.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
@@ -89,6 +92,10 @@ export async function buildApp({
   tableRoutes(context);
   memberRoutes(context);
   inviteRoutes(context);
+  actorRoutes(context);
+  itemRoutes(context);
+
+  scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
 
   return app;
 }

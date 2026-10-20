@@ -35,6 +35,7 @@ export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): Tabl
     systemName: plugin?.name ?? table.systemId,
     systemVersion: table.systemVersion,
     settings: table.settings,
+    playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
     createdAt: table.createdAt.toISOString(),
     role,
   };

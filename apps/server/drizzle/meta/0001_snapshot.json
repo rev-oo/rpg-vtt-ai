@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "481e10e8-1fbd-4e8d-99f7-4c339fc969f2",
+  "id": "4193b964-0254-4e0b-ad11-3b64fe45a075",
   "prevId": "2b76840a-31fd-4442-8b14-f74a219bb0d1",
   "tables": {
     "actors": {
@@ -182,6 +182,14 @@
           "notNull": true,
           "autoincrement": false,
           "default": "'{}'"
+        },
+        "players_may_create_any_actor_type": {
+          "name": "players_may_create_any_actor_type",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
         },
         "created_by": {
           "name": "created_by",
@@ -760,6 +768,22 @@
           "notNull": true,
           "autoincrement": false,
           "default": false
+        },
+        "actor_types": {
+          "name": "actor_types",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'{}'"
+        },
+        "item_types": {
+          "name": "item_types",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'[]'"
         },
         "updated_at": {
           "name": "updated_at",

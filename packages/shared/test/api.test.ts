@@ -3,6 +3,13 @@ import { z } from 'zod';
 
 import {
   changePasswordBody,
+  copyItemBody,
+  createActorBody,
+  createItemBody,
+  entityListQuery,
+  ownershipSchema,
+  updateActorBody,
+  updateItemBody,
   createInviteBody,
   createTableBody,
   createUserBody,
@@ -101,6 +108,58 @@ describe('request bodies', () => {
   });
 });
 
+describe('actor and item bodies (FR-ENT-01..06)', () => {
+  const userId = '11111111-1111-4111-8111-111111111111';
+
+  it('defaults image and ownership on creation', () => {
+    expect(createActorBody.parse({ type: 'character', name: ' Hero ' })).toEqual({
+      type: 'character',
+      name: 'Hero',
+      imageUrl: null,
+    });
+    expect(createItemBody.parse({ type: 'weapon', name: 'Sword' }).imageUrl).toBeNull();
+  });
+
+  it('accepts only http(s) image URLs', () => {
+    const base = { type: 'character', name: 'Hero' };
+    expect(
+      createActorBody.safeParse({ ...base, imageUrl: 'https://img.example.com/a.png' }).success,
+    ).toBe(true);
+    expect(createActorBody.safeParse({ ...base, imageUrl: 'javascript:alert(1)' }).success).toBe(
+      false,
+    );
+    expect(updateItemBody.safeParse({ imageUrl: null }).success).toBe(true);
+  });
+
+  it('validates ownership levels and user ids', () => {
+    expect(
+      ownershipSchema.safeParse({ default: 'observer', users: { [userId]: 'owner' } }).success,
+    ).toBe(true);
+    expect(ownershipSchema.safeParse({ default: 'admin', users: {} }).success).toBe(false);
+    expect(ownershipSchema.safeParse({ default: 'none', users: { bob: 'owner' } }).success).toBe(
+      false,
+    );
+  });
+
+  it('keeps plugin data out of REST updates', () => {
+    expect(updateActorBody.safeParse({ system: { hp: 1 } }).success).toBe(false);
+    expect(updateActorBody.safeParse({}).success).toBe(false);
+    expect(updateItemBody.safeParse({ name: 'Axe' }).success).toBe(true);
+  });
+
+  it('parses list queries and copy requests', () => {
+    expect(entityListQuery.parse({})).toEqual({ trash: 'live' });
+    expect(entityListQuery.parse({ search: ' gob ', type: 'npc', trash: 'restorable' })).toEqual({
+      search: 'gob',
+      type: 'npc',
+      trash: 'restorable',
+    });
+    expect(entityListQuery.safeParse({ trash: 'all' }).success).toBe(false);
+    expect(copyItemBody.safeParse({ itemId: userId }).success).toBe(true);
+    expect(copyItemBody.safeParse({ itemId: 'x' }).success).toBe(false);
+  });
+});
+
 describe('responses', () => {
   it('validates a table view', () => {
     const table = {
@@ -111,6 +170,7 @@ describe('responses', () => {
       systemName: 'S',
       systemVersion: '1.0.0',
       settings: {},
+      playersMayCreateAnyActorType: false,
       createdAt: '2026-10-20T00:00:00.000Z',
       role: 'gm',
     };

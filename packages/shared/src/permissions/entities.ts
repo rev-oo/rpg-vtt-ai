@@ -32,6 +32,16 @@ export function canCreateActor(
   return false;
 }
 
+/** The table's item library (FR-ENT-05) is curated by GMs and assistants; every member reads it. */
+export function canManageItemLibrary(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
+/** Ownership levels are set by GMs and assistants only (FR-ENT-02). */
+export function canSetOwnership(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
 /** Access to an actor's CRDT layer (specs §9.3). The secret layer is GM and assistant only. */
 export function actorLayerAccess(
   subject: Subject,

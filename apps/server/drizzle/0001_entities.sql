@@ -50,4 +50,7 @@ CREATE TABLE `journal_entries` (
 	FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
-CREATE INDEX `journal_entries_table_id_idx` ON `journal_entries` (`table_id`,`soft_deleted_at`);
+CREATE INDEX `journal_entries_table_id_idx` ON `journal_entries` (`table_id`,`soft_deleted_at`);--> statement-breakpoint
+ALTER TABLE `game_tables` ADD `players_may_create_any_actor_type` integer DEFAULT false NOT NULL;--> statement-breakpoint
+ALTER TABLE `plugins` ADD `actor_types` text DEFAULT '{}' NOT NULL;--> statement-breakpoint
+ALTER TABLE `plugins` ADD `item_types` text DEFAULT '[]' NOT NULL;

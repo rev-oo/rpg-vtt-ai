@@ -22,15 +22,18 @@ export type JournalEntry = typeof journalEntries.$inferSelect;
 export type NewJournalEntry = Pick<typeof journalEntries.$inferInsert, 'tableId' | 'title'> &
   Partial<Pick<typeof journalEntries.$inferInsert, 'ownership' | 'hidden' | 'createdBy'>>;
 
-export type JournalEntryPatch = Partial<Pick<JournalEntry, 'title' | 'ownership' | 'hidden'>>;
+/** Fields to change; `undefined` leaves a field as it is. */
+export type JournalEntryPatch = {
+  [K in 'title' | 'ownership' | 'hidden']?: JournalEntry[K] | undefined;
+};
 
 export interface JournalFilter {
   /** Case-insensitive substring of the title. */
-  search?: string;
+  search?: string | undefined;
   /** False leaves hidden entries out, for players (FR-JOURNAL-03). Default: true. */
-  includeHidden?: boolean;
+  includeHidden?: boolean | undefined;
   /** Default: live entries. */
-  trash?: Trash;
+  trash?: Trash | undefined;
 }
 
 export function createJournalEntry(db: DbOrTx, input: NewJournalEntry, now: Date): JournalEntry {
@@ -41,12 +44,21 @@ export function createJournalEntry(db: DbOrTx, input: NewJournalEntry, now: Date
     .get();
 }
 
-/** A live entry; deleted entries are only reachable through the trash. */
-export function findJournalEntry(db: DbOrTx, id: string): JournalEntry | undefined {
+/** A live entity; pass `includeDeleted` to also find it in the trash. */
+export function findJournalEntry(
+  db: DbOrTx,
+  id: string,
+  { includeDeleted = false }: { includeDeleted?: boolean } = {},
+): JournalEntry | undefined {
   return db
     .select()
     .from(journalEntries)
-    .where(and(eq(journalEntries.id, id), isLive(journalEntries.softDeletedAt)))
+    .where(
+      and(
+        eq(journalEntries.id, id),
+        includeDeleted ? undefined : isLive(journalEntries.softDeletedAt),
+      ),
+    )
     .get();
 }
 

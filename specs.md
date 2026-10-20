@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 13%      | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 25%      | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M2
-- **Next task:** `T-0202`
+- **Next task:** `T-0203`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -48,6 +48,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                           |
 | 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                       |
 | 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                             |
+| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                         |
 
 ---
 
@@ -803,21 +804,21 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                         |
-| --------------- | ------------------------------------------------------------------------------------------------ |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                          |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                         |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                  |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                            |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                       |
-| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                        |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate` |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `POST /actors/:id/items`       |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                             |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                 |
-| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                               |
-| Health          | `GET /api/health`                                                                                |
+| Group           | Endpoints (illustrative)                                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                      |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                     |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                              |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`                                                        |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                   |
+| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                    |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore` |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`    |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
+| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                                            |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                                                           |
+| Health          | `GET /api/health`                                                                                                            |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
@@ -989,12 +990,13 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0102, T-0110
   - **Do:** Tables for `actors`, `items`, `journal_entries` (metadata only), `ownership` JSON, `soft_deleted_at`. Repositories in `apps/server/src/db`.
   - **Done when:** repository tests cover create, list with filters, soft delete, and restore within 30 days (FR-ENT-04).
-  - **Note:** repositories in `apps/server/src/db/repositories/`, tests in `apps/server/test/repositories.test.ts`. Retention is `SOFT_DELETE_RETENTION_DAYS` (ADR-014). The FR-TABLE-04 check from T-0108 is implemented. Scheduling `purgeDeletedEntities()` is left to T-0202.
+  - **Note:** repositories in `apps/server/src/db/repositories/`, tests in `apps/server/test/repositories.test.ts`. Retention is `SOFT_DELETE_RETENTION_DAYS` (ADR-014). The FR-TABLE-04 check from T-0108 is implemented. Scheduling `purgeDeletedEntities()` came with T-0202.
 
-- [ ] **T-0202 · Actor and item REST API**
+- [x] **T-0202 · Actor and item REST API**
   - **Deps:** T-0201
   - **Do:** CRUD, duplicate, ownership updates, item copy into actor (FR-ENT-01..06). Returns projections only; live data is via collab (M5).
   - **Done when:** integration tests enforce ownership rules on every endpoint.
+  - **Note:** `apps/server/test/actors.test.ts` and `items.test.ts`. Actor and item types are read from new `plugins` columns that tests seed until T-0403; restore endpoints, the `playersMayCreateAnyActorType` table option and the trash purge schedule were added (ADR-015).
 
 - [ ] **T-0203 · Events WebSocket**
   - **Deps:** T-0105, T-0110
@@ -1069,6 +1071,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0402, T-0102
   - **Do:** Scan `DATA_DIR/plugins`, validate, check `coreApi`, persist registry rows, expose enable/disable (FR-PLUGIN-01, 03, 07). Rescan endpoint.
   - **Done when:** adding a folder and calling rescan makes it appear without restart.
+  - **Note:** also fill `plugins.actor_types` (`{ <type>: { controlledBy } }`) and `plugins.item_types` from `actors/` and `items/`; the entity API reads them (ADR-015).
 
 - [ ] **T-0404 · Scoped CSS processor**
   - **Deps:** T-0403
@@ -1326,6 +1329,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted |
 | ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
+| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
