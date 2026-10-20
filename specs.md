@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | ------------------------------------------------------------- | ----------- | -------- | ------ |
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
-| M2    | Entities & realtime: actors, items, events socket, chat       | In progress | 100%     | —      |
+| M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Not started | 0%       | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M2
-- **Next task:** M2 sign-off, then `T-0301`
+- **Active milestone:** M3
+- **Next task:** `T-0301`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -52,6 +52,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added. |
 | 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                    |
 | 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                               |
+| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                  |
 
 ---
 
