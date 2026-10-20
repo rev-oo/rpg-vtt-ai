@@ -59,9 +59,14 @@ export interface RollContext extends EvaluationContext {
   maxDice?: number;
 }
 
-/** A roll's total and every die behind it (FR-DICE-04). */
+/** A roll as stored in a chat message (FR-DICE-02, 04). */
 export interface RollResult {
+  /** The formula as written. */
+  expression: string;
+  /** The formula with every reference replaced by the value it read: `1d20 + 2 + 3`. */
+  resolved: string;
   total: number;
+  /** Every dice term, in the order rolled. */
   dice: DiceRoll[];
 }
 
@@ -71,6 +76,8 @@ interface Rolling {
   customDice: Readonly<Record<string, CustomDie>>;
   budget: DiceBudget;
   rolls: DiceRoll[];
+  /** What each reference and dice count evaluated to, for the resolved expression. */
+  values: Map<Expression, Value>;
 }
 
 /** A parsed formula with its source, which error positions refer to. */
@@ -178,8 +185,11 @@ class Evaluator {
       case 'string':
       case 'boolean':
         return node.value;
-      case 'reference':
-        return this.reference(node.name, node.path, node.span);
+      case 'reference': {
+        const value = this.reference(node.name, node.path, node.span);
+        this.rolling?.values.set(node, value);
+        return value;
+      }
       case 'unary':
         return node.operator === '-'
           ? this.finite(-this.number(node.operand), node.span)
@@ -212,6 +222,7 @@ class Evaluator {
         node.count?.span ?? node.span,
       );
     }
+    this.rolling.values.set(node, count);
     const resolved: Dice = {
       ...node,
       count: { kind: 'number', value: count, raw: String(count), span: node.span },
@@ -518,6 +529,7 @@ export function roll(formula: Formula | string, context: RollContext): RollResul
     customDice: context.customDice ?? {},
     budget: { remaining: context.maxDice ?? DEFAULT_MAX_DICE },
     rolls: [],
+    values: new Map(),
   };
   const total = new Evaluator(source, context, rolling).evaluate(ast);
   if (typeof total !== 'number') {
@@ -528,5 +540,69 @@ export function roll(formula: Formula | string, context: RollContext): RollResul
       source,
     );
   }
-  return { total, dice: rolling.rolls };
+  return {
+    expression: source,
+    resolved: print(substitute(ast, rolling.values)),
+    total,
+    dice: rolling.rolls,
+  };
+}
+
+/** A literal for a value read during a roll. */
+function literal(value: Scalar, span: Span): Expression {
+  if (typeof value === 'number') return { kind: 'number', value, raw: String(value), span };
+  if (typeof value === 'string') return { kind: 'string', value, span };
+  return { kind: 'boolean', value, span };
+}
+
+/**
+ * The tree with every evaluated reference replaced by its value and every dice count resolved.
+ * A list passed to a function is spread into its arguments: `sum(@skills[*].rank)` becomes
+ * `sum(1, 3)`. Branches that were not evaluated keep their references.
+ */
+function substitute(node: Expression, values: Map<Expression, Value>): Expression {
+  const recurse = (child: Expression) => substitute(child, values);
+  switch (node.kind) {
+    case 'reference': {
+      const value = values.get(node);
+      if (value === undefined || typeof value === 'object') {
+        return {
+          ...node,
+          path: node.path.map((segment) =>
+            segment.kind === 'index' ? { ...segment, index: recurse(segment.index) } : segment,
+          ),
+        };
+      }
+      return literal(value, node.span);
+    }
+    case 'unary':
+      return { ...node, operand: recurse(node.operand) };
+    case 'binary':
+      return { ...node, left: recurse(node.left), right: recurse(node.right) };
+    case 'conditional':
+      return {
+        ...node,
+        test: recurse(node.test),
+        then: recurse(node.then),
+        otherwise: recurse(node.otherwise),
+      };
+    case 'call':
+      return {
+        ...node,
+        args: node.args.flatMap((arg) => {
+          const value = arg.kind === 'reference' ? values.get(arg) : undefined;
+          return typeof value === 'object'
+            ? value.map((item) => literal(item, arg.span))
+            : [recurse(arg)];
+        }),
+      };
+    case 'dice': {
+      const count = values.get(node);
+      return typeof count === 'number'
+        ? { ...node, count: literal(count, node.span) }
+        : { ...node, count: node.count && recurse(node.count) };
+    }
+    default:
+      return node;
+  }
 }

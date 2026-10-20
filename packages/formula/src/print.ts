@@ -54,10 +54,12 @@ export function print(node: Expression): string {
       return String(node.value);
     case 'reference':
       return `@${node.name}${node.path.map(printSegment).join('')}`;
-    case 'unary':
-      return node.operator === '-'
-        ? `-${wrap(node.operand, PRECEDENCE.negation)}`
-        : `not ${wrap(node.operand, PRECEDENCE.not)}`;
+    case 'unary': {
+      if (node.operator === 'not') return `not ${wrap(node.operand, PRECEDENCE.not)}`;
+      const operand = wrap(node.operand, PRECEDENCE.negation);
+      // `-(-1)` rather than `--1`, which reads like a typo.
+      return operand.startsWith('-') ? `-(${operand})` : `-${operand}`;
+    }
     case 'binary': {
       const precedence = binaryPrecedence(node.operator);
       // Comparisons do not chain, so both sides of one need to bind tighter.
