@@ -28,7 +28,7 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 
 ## Tech stack
 
-TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (SPA) · Tailwind CSS 4 · Node.js + Fastify · WebSocket events + Hocuspocus/Yjs · SQLite via Drizzle · Zod · Vitest + Playwright · ESLint + Prettier.
+TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (React Router framework mode, SPA) · TanStack Form · Tailwind CSS 4 · Node.js + Fastify · WebSocket events + Hocuspocus/Yjs · SQLite via Drizzle · Zod · Vitest + Playwright · ESLint + Prettier.
 
 ## Getting started
 

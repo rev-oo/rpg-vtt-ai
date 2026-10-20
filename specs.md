@@ -44,6 +44,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                         |
 | 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.        |
 | 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off. |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                |
 
 ---
 
@@ -120,7 +121,7 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 | Language             | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere                      | Type safety across client, server, and shared packages        |
 | Monorepo             | **pnpm workspaces** + Turborepo for task caching                                           | Fast installs, strict dependency isolation                    |
 | Frontend             | **React 18+ with Vite**, SPA                                                               | Plugins are loaded at runtime; SSR is not needed behind login |
-| Frontend routing     | React Router                                                                               | Simple, well understood                                       |
+| Frontend routing     | React Router, **framework mode as an SPA** (`ssr: false`) (ADR-013)                        | Typed routes, loaders for guards and data; no SSR server      |
 | Client state         | **Zustand** for UI state; **Yjs** for document state                                       | Minimal boilerplate; CRDT handles collaborative data          |
 | Backend              | **Node.js LTS + Fastify**                                                                  | Lightweight, good plugin model, native TypeScript support     |
 | Realtime (events)    | **WebSocket** (`ws`) at `/ws/events`                                                       | Chat, rolls, entity change notifications, presence            |
@@ -130,6 +131,7 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 | Formula/dice         | Custom parser in `packages/formula`, no `eval`                                             | Safe, testable, same code on both sides                       |
 | Scoped CSS           | PostCSS (or lightningcss) in the plugin loader                                             | Predictable, server-side scoping                              |
 | Styling (core UI)    | **Tailwind CSS 4**; tokens as a `@theme` in `packages/ui` (ADR-012)                        | Fast iteration, one token file, both colour schemes           |
+| Forms                | **TanStack Form** with Zod schemas as validators (ADR-013)                                 | Typed field state; same schema style as the server            |
 | Testing              | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests       | Standard, fast, multi-browser                                 |
 | Lint                 | **ESLint flat config** + `typescript-eslint` + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering                |
 | Format               | **Prettier**                                                                               | Consistent style, enforced in CI and pre-commit               |
@@ -175,11 +177,13 @@ vtt/
 ├─ apps/
 │  ├─ web/                        Vite + React SPA
 │  │  └─ src/
-│  │     ├─ shell/                layout, routing, sidebar tabs, sheet windows
+│  │     ├─ routes/               route modules (React Router framework mode)
+│  │     ├─ shell/                layout, session, access rules, sidebar tabs, sheet windows
 │  │     ├─ features/             chat · actors · items · journal · combat · tables · members
 │  │     ├─ collab/               Yjs providers, sheet store, awareness
 │  │     ├─ plugin-host/          loads plugin manifests, mounts sheets, injects scoped CSS, import map
-│  │     └─ main.tsx
+│  │     ├─ root.tsx              root route: HTML shell, error boundary
+│  │     └─ routes.ts             route config
 │  └─ server/
 │     └─ src/
 │        ├─ http/                 Fastify routes (auth, tables, entities, chat, plugins)
@@ -1316,6 +1320,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                   | Accepted |
 | ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md) | Accepted |
 | ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                   | Accepted |
+| ADR-013 | [React Router framework mode (SPA) and TanStack Form](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
