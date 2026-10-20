@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | In progress | 60%      | —      |
+| M3    | Formula & dice engine                                         | In progress | 80%      | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M3
-- **Next task:** `T-0304`
+- **Next task:** `T-0305`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -56,6 +56,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                   |
 | 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                       |
 | 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                      |
+| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                    |
 
 ---
 
@@ -1062,7 +1063,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** seeded RNG gives identical results across runs (FR-DICE-05); distribution test for `2d6` over 100k rolls within tolerance.
   - **Note:** modifier order, custom dice faces and limits are in ADR-017.
 
-- [ ] **T-0304 · Roll resolution with references**
+- [x] **T-0304 · Roll resolution with references**
   - **Deps:** T-0303
   - **Do:** Resolve `@` references against actor state, record resolved expressions in the result (FR-DICE-02, 04).
   - **Done when:** the result object includes expression, resolved expression, dice, and total.

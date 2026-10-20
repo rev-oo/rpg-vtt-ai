@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-20
-- **Tasks:** T-0301, T-0302, T-0303
+- **Tasks:** T-0301, T-0302, T-0303, T-0304
 - **Amends:** §8.8 (custom dice names), §8.9 (grammar details), §14 Q8
 
 ## Context
@@ -90,6 +90,22 @@
    - the count and the die
    - every die, with its value, its label, whether it counts (`active`) and the `rerolled`, `exploded`, `dropped`, `success` and `failure` flags
    - its total
+
+## Roll results (T-0304)
+
+A roll result is plain JSON, ready to store in a chat message. It holds:
+
+- `expression`: the formula as written
+- `resolved`: the formula printed canonically, with each reference that was evaluated replaced by its value, and each dice count resolved
+  - `1d20 + @derived.strMod + @skills[@args.id].rank` → `1d20 + 2 + 3`
+  - `(@pool)d6` → `3d6`
+  - A list passed to a function is spread into its arguments: `sum(@skills[*].rank)` → `sum(3, 1)`.
+  - References in branches that were not evaluated stay as written.
+  - Negating a negative value prints as `-(-1)`.
+- `dice`: every term with every die (T-0303)
+- `total`
+
+The caller supplies the actor's state as `data` (FR-DICE-02). Until the plugin engine computes derived values (M4), `@derived` holds only what the caller passes.
 
 ## Consequences
 
