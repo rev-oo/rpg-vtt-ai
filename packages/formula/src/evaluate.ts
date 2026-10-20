@@ -1,7 +1,19 @@
-import type { Expression, PathSegment, Span } from './ast.js';
+import type { Dice, Expression, PathSegment, Span } from './ast.js';
+import {
+  customDie,
+  DEFAULT_MAX_DICE,
+  DiceError,
+  rollDice,
+  standardDie,
+  type CustomDie,
+  type DiceBudget,
+  type DiceRoll,
+  type ResolvedDie,
+} from './dice.js';
 import { FormulaError, type FormulaErrorCode } from './errors.js';
 import { parse } from './parser.js';
 import { print } from './print.js';
+import type { Rng } from './rng.js';
 
 /** What a formula computes. Lists come only from aggregates: `@skills[*].rank`. */
 export type Scalar = number | string | boolean;
@@ -36,6 +48,29 @@ export interface EvaluationContext {
   functions?: Readonly<Record<string, FormulaFunction>>;
   /** Nodes and aggregate elements evaluated before giving up (specs §8.9). */
   maxSteps?: number;
+}
+
+/** Rolling mode: dice allowed, server only (specs §8.9). */
+export interface RollContext extends EvaluationContext {
+  rng: Rng;
+  /** The system's custom dice by name, such as `dF` (FR-DICE-03). */
+  customDice?: Readonly<Record<string, CustomDie>>;
+  /** Dice one roll may use, explosions and rerolls included. */
+  maxDice?: number;
+}
+
+/** A roll's total and every die behind it (FR-DICE-04). */
+export interface RollResult {
+  total: number;
+  dice: DiceRoll[];
+}
+
+/** Dice state while rolling; absent in pure mode. */
+interface Rolling {
+  rng: Rng;
+  customDice: Readonly<Record<string, CustomDie>>;
+  budget: DiceBudget;
+  rolls: DiceRoll[];
 }
 
 /** A parsed formula with its source, which error positions refer to. */
@@ -90,6 +125,7 @@ class Evaluator {
   constructor(
     private readonly source: string,
     context: EvaluationContext,
+    private readonly rolling: Rolling | null = null,
   ) {
     this.maxSteps = context.maxSteps ?? DEFAULT_MAX_STEPS;
     this.data = context.data ?? {};
@@ -153,14 +189,58 @@ class Evaluator {
       case 'call':
         return this.call(node.name, node.args, node.span);
       case 'dice':
-        throw this.error(
-          'dice_not_allowed',
-          'Dice can only be used in a roll, not in a derived value or a condition',
-          node.span,
-        );
+        return this.dice(node);
       case 'binary':
         return this.binary(node);
     }
+  }
+
+  private dice(node: Dice): number {
+    if (!this.rolling) {
+      throw this.error(
+        'dice_not_allowed',
+        'Dice can only be used in a roll, not in a derived value or a condition',
+        node.span,
+      );
+    }
+    const { rng, budget, rolls, customDice } = this.rolling;
+    const count = node.count ? this.number(node.count) : 1;
+    if (!Number.isInteger(count) || count < 0) {
+      throw this.error(
+        'invalid_dice',
+        `The number of dice must be a whole number of 0 or more, not ${String(count)}`,
+        node.count?.span ?? node.span,
+      );
+    }
+    const resolved: Dice = {
+      ...node,
+      count: { kind: 'number', value: count, raw: String(count), span: node.span },
+    };
+    try {
+      const die = this.die(node, customDice);
+      const roll = rollDice(node, die, count, rng, budget, print(resolved));
+      rolls.push(roll);
+      return roll.total;
+    } catch (error) {
+      if (error instanceof DiceError) throw this.error(error.code, error.message, node.span);
+      throw error;
+    }
+  }
+
+  private die({ die, span }: Dice, customDice: Readonly<Record<string, CustomDie>>): ResolvedDie {
+    if (die.kind === 'standard') return standardDie(die.sides);
+    const custom = Object.hasOwn(customDice, die.name) ? customDice[die.name] : undefined;
+    if (!custom) {
+      const known = Object.keys(customDice);
+      throw this.error(
+        'unknown_die',
+        known.length > 0
+          ? `Unknown die "${die.name}"; this system has ${known.join(', ')}`
+          : `Unknown die "${die.name}"; this system has no custom dice`,
+        span,
+      );
+    }
+    return customDie(die.name, custom);
   }
 
   private binary(node: Extract<Expression, { kind: 'binary' }>): Value {
@@ -425,4 +505,28 @@ class Evaluator {
 export function evaluate(formula: Formula | string, context: EvaluationContext = {}): Value {
   const { source, ast } = typeof formula === 'string' ? compile(formula) : formula;
   return new Evaluator(source, context).evaluate(ast);
+}
+
+/**
+ * Evaluates a formula in rolling mode (server only): dice are rolled with `context.rng`, and
+ * the result lists every die. The total must be a number.
+ */
+export function roll(formula: Formula | string, context: RollContext): RollResult {
+  const { source, ast } = typeof formula === 'string' ? compile(formula) : formula;
+  const rolling: Rolling = {
+    rng: context.rng,
+    customDice: context.customDice ?? {},
+    budget: { remaining: context.maxDice ?? DEFAULT_MAX_DICE },
+    rolls: [],
+  };
+  const total = new Evaluator(source, context, rolling).evaluate(ast);
+  if (typeof total !== 'number') {
+    throw new FormulaError(
+      'type_error',
+      `A roll must add up to a number, not ${typeName(total)}`,
+      ast.span,
+      source,
+    );
+  }
+  return { total, dice: rolling.rolls };
 }

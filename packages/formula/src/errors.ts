@@ -21,7 +21,11 @@ export type FormulaErrorCode =
   | 'not_finite'
   | 'function_failed'
   | 'dice_not_allowed'
-  | 'step_limit';
+  | 'step_limit'
+  // Rolling (T-0303)
+  | 'unknown_die'
+  | 'invalid_dice'
+  | 'too_many_dice';
 
 /** A 1-based line and column in the formula source. */
 export interface SourcePosition {
