@@ -13,6 +13,7 @@ import {
 } from '@vtt/shared/api';
 
 import { sendChatMessage } from '../domain/chat.js';
+import { sendRollMessage } from '../domain/rolls.js';
 import { findMembership } from '../domain/tables.js';
 import { AppError, notFound } from '../errors.js';
 import type { AppContext } from '../http/app.js';
@@ -72,7 +73,7 @@ function isSameOrigin(origin: string | undefined, host: string | undefined, publ
 }
 
 /** `/ws/events`: session-authenticated on upgrade, one JSON envelope per message. */
-export function eventsSocket({ app, db, config, sessions, events, now }: AppContext): void {
+export function eventsSocket({ app, db, config, sessions, events, now, rng }: AppContext): void {
   app.get(
     '/ws/events',
     {
@@ -159,8 +160,18 @@ export function eventsSocket({ app, db, config, sessions, events, now }: AppCont
             publishChatMessage(events, row);
             return;
           }
-          case 'roll.request':
-            throw new AppError(501, 'not_implemented', 'Rolls are not available yet.');
+          case 'roll.request': {
+            const membership = findMembership(db, event.tableId, connection.userId);
+            if (!membership) throw notFound('Table not found.');
+            const row = sendRollMessage(
+              db,
+              { tableId: event.tableId, userId: connection.userId, role: membership.role },
+              event.payload,
+              { now: now(), rng },
+            );
+            publishChatMessage(events, row);
+            return;
+          }
           case 'presence.ping':
             return;
         }

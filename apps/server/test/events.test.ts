@@ -67,8 +67,12 @@ describe('connecting to /ws/events (§10.2)', () => {
     socket.ws.send(Buffer.from([1, 2, 3]), { binary: true });
     expect(await errorCode()).toMatchObject({ code: 'invalid_message' });
 
-    const roll = await socket.request({ type: 'roll.request', tableId: t.table.id, payload: {} });
-    expect(roll).toMatchObject({ type: 'error', payload: { code: 'not_implemented' } });
+    const roll = await socket.request({
+      type: 'roll.request',
+      tableId: t.table.id,
+      payload: { formula: '1 +' },
+    });
+    expect(roll).toMatchObject({ type: 'error', payload: { code: 'invalid_formula' } });
     // Still usable after errors.
     expect((await socket.request({ type: 'presence.ping' })).type).toBe('ack');
   });

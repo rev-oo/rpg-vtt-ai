@@ -4,6 +4,8 @@ import {
   chatHistoryQuery,
   chatSendBody,
   clientEventSchema,
+  rollRequestBody,
+  rollSchema,
   serverEventSchema,
 } from '../src/api/index.js';
 import { canSendChat, TABLE_ROLES } from '../src/index.js';
@@ -42,6 +44,48 @@ describe('chat bodies (FR-CHAT-01, 02, 07)', () => {
 
   it('lets every role but spectators post (§2)', () => {
     expect(TABLE_ROLES.filter(canSendChat)).toEqual(['gm', 'assistant', 'player']);
+  });
+});
+
+describe('rolls (FR-CHAT-03, 04, 08)', () => {
+  it('takes a formula with the same audiences as chat', () => {
+    expect(rollRequestBody.parse({ formula: ' 1d20 + 2 ' })).toEqual({
+      formula: '1d20 + 2',
+      audience: 'public',
+      recipientIds: [],
+      actorId: null,
+    });
+    expect(rollRequestBody.safeParse({ formula: '1d20', audience: 'gm' }).success).toBe(true);
+    expect(rollRequestBody.safeParse({ formula: '1d20', audience: 'whisper' }).success).toBe(false);
+    expect(rollRequestBody.safeParse({ formula: ' ' }).success).toBe(false);
+    expect(rollRequestBody.safeParse({ formula: '1'.repeat(501) }).success).toBe(false);
+  });
+
+  it('describes every die of a stored roll (FR-DICE-04)', () => {
+    const stored = {
+      expression: '4dF + @mod',
+      resolved: '4dF + 1',
+      total: 2,
+      dice: [
+        {
+          formula: '4dF',
+          count: 4,
+          die: 'dF',
+          total: 1,
+          results: [
+            { value: 1, label: '+', active: true },
+            { value: 0, label: ' ', active: true, exploded: true },
+            { value: -1, active: false, dropped: true },
+            { value: 1, active: true, success: true },
+          ],
+        },
+      ],
+    };
+    expect(rollSchema.parse(stored)).toEqual(stored);
+    expect(
+      rollSchema.safeParse({ ...stored, dice: [{ ...stored.dice[0], results: [{ value: 1 }] }] })
+        .success,
+    ).toBe(false);
   });
 });
 

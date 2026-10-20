@@ -20,6 +20,7 @@ import { useTableEvents } from '../../realtime/use-table-events.js';
 
 import { parseChatInput } from './commands.js';
 import { mergeMessages, type ChatPage } from './messages.js';
+import { RollView } from './RollView.js';
 
 export interface ChatPanelProps {
   table: TableView;
@@ -221,8 +222,13 @@ function MessageItem({
           <span className="rounded-full bg-info-soft px-2 text-xs">{t('chat.gmOnly')}</span>
         )}
       </div>
-      {/* Plain text only; roll and card rendering arrive with M3 (FR-CHAT-06 falls back to text). */}
-      <p className="break-words whitespace-pre-wrap">{message.text}</p>
+      {message.kind === 'roll' && message.rolls.length > 0 ? (
+        message.rolls.map((roll, index) => <RollView key={index} roll={roll} />)
+      ) : (
+        // Cards render through plugin templates (M4); until then, and when a template is
+        // missing, they fall back to their text (FR-CHAT-06).
+        <p className="break-words whitespace-pre-wrap">{message.text}</p>
+      )}
     </li>
   );
 }
@@ -272,10 +278,7 @@ function Composer({
         case 'empty':
           return;
         case 'roll':
-          // The dice engine arrives with M3; the server answers roll requests with 501 until then.
-          onNotice(t('chat.rollsUnavailable', { formula: input.formula }));
-          formApi.setFieldValue('text', '');
-          return;
+          break;
         case 'usage':
           onNotice(t('chat.rollUsage', { command: input.command }));
           return;
@@ -285,17 +288,22 @@ function Composer({
         case 'message':
           break;
       }
-      if (value.audience === 'whisper' && value.recipientIds.length === 0) {
+      // `/gmr` is always secret; `/r` goes to whoever the message would (FR-CHAT-05).
+      const audience = input.kind === 'roll' && input.audience === 'gm' ? 'gm' : value.audience;
+      if (audience === 'whisper' && value.recipientIds.length === 0) {
         onNotice(t('chat.chooseRecipients'));
         return;
       }
+      const target = {
+        audience,
+        recipientIds: audience === 'whisper' ? value.recipientIds : [],
+        actorId: value.speaker || null,
+      };
       try {
-        const message = await api.sendChat(tableId, {
-          text: input.text,
-          audience: value.audience,
-          recipientIds: value.audience === 'whisper' ? value.recipientIds : [],
-          actorId: value.speaker || null,
-        });
+        const message =
+          input.kind === 'roll'
+            ? await api.roll(tableId, { formula: input.formula, ...target })
+            : await api.sendChat(tableId, { text: input.text, ...target });
         formApi.setFieldValue('text', '');
         onSent(message);
       } catch (e) {

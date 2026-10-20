@@ -218,17 +218,28 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     expect(screen.getByLabelText('Message')).toHaveValue('hi');
   });
 
-  it('parses dice commands without sending them yet (FR-CHAT-08)', async () => {
+  it('rolls dice commands on the server (FR-CHAT-03, 05, 08)', async () => {
+    const rolled = (formula: string, total: number) =>
+      message(formula, {
+        senderId: USER.id,
+        kind: 'roll',
+        rolls: [{ expression: formula, resolved: formula, total, dice: [] }],
+      });
     const { calls } = openTable({
       handlers: {
+        'POST /tables/t1/rolls': (body) => {
+          const { formula } = body as { formula: string };
+          return { status: 201, body: { message: rolled(formula, 7) } };
+        },
         'POST /tables/t1/messages': { status: 201, body: { message: message('/r is literal') } },
       },
     });
     const user = userEvent.setup();
     const input = await screen.findByLabelText('Message');
+    const posts = () => calls.filter((c) => c.method === 'POST').map((c) => [c.path, c.body]);
 
-    await user.type(input, '/gmr 1d20{Enter}');
-    expect(await screen.findByText(/“1d20” was not rolled/)).toBeVisible();
+    await user.type(input, '/gmr 1d20 + 2{Enter}');
+    expect(await screen.findByLabelText('Total 7')).toBeVisible();
     expect(input).toHaveValue('');
 
     await user.type(input, '/r{Enter}');
@@ -236,13 +247,96 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     await user.clear(input);
     await user.type(input, '/dance{Enter}');
     expect(await screen.findByText(/Unknown command \/dance/)).toBeVisible();
-    expect(calls.some((c) => c.method === 'POST')).toBe(false);
 
+    // `/r` follows the chosen audience.
     await user.clear(input);
+    await user.selectOptions(screen.getByLabelText('Send to'), 'Whisper');
+    await user.click(
+      within(screen.getByRole('group', { name: 'Recipients' })).getByLabelText('Bob'),
+    );
+    await user.type(input, '/r 2d6{Enter}');
+    await user.selectOptions(screen.getByLabelText('Send to'), 'Everyone');
     await user.type(input, '//r is literal{Enter}');
+
     await waitFor(() => {
-      expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({ text: '/r is literal' });
+      expect(posts()).toEqual([
+        [
+          '/tables/t1/rolls',
+          { formula: '1d20 + 2', audience: 'gm', recipientIds: [], actorId: null },
+        ],
+        [
+          '/tables/t1/rolls',
+          { formula: '2d6', audience: 'whisper', recipientIds: ['u2'], actorId: null },
+        ],
+        [
+          '/tables/t1/messages',
+          { text: '/r is literal', audience: 'public', recipientIds: [], actorId: null },
+        ],
+      ]);
     });
+  });
+
+  it('shows why a formula cannot be rolled', async () => {
+    openTable({
+      handlers: {
+        'POST /tables/t1/rolls': {
+          status: 422,
+          body: {
+            error: {
+              code: 'invalid_formula',
+              message:
+                'Unknown name "str"; references start with "@", as in @str (line 1, column 8)',
+            },
+          },
+        },
+      },
+    });
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText('Message'), '/r 1d20 + str{Enter}');
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Unknown name "str"; references start with "@", as in @str (line 1, column 8)',
+    );
+    expect(screen.getByLabelText('Message')).toHaveValue('/r 1d20 + str');
+  });
+
+  it('shows every die and the total of a roll (FR-DICE-04)', async () => {
+    const roll = message('4d6kh3 + @mod', {
+      kind: 'roll',
+      audience: 'gm',
+      rolls: [
+        {
+          expression: '4d6kh3 + @mod',
+          resolved: '4d6kh3 + 2',
+          total: 17,
+          dice: [
+            {
+              formula: '4d6kh3',
+              count: 4,
+              die: 'd6',
+              total: 15,
+              results: [
+                { value: 6, active: true, exploded: true },
+                { value: 1, active: false, dropped: true },
+                { value: 5, active: true },
+                { value: 4, active: true },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    openTable({ history: page([roll]) });
+    expect(await screen.findByLabelText('Total 17')).toHaveTextContent('17');
+    const item = within(log());
+    expect(item.getByText('4d6kh3 + @mod')).toBeVisible();
+    expect(item.getByText('→ 4d6kh3 + 2')).toBeVisible();
+    const dice = screen.getByRole('list', { name: 'Dice of 4d6kh3' });
+    expect(
+      within(dice)
+        .getAllByRole('listitem')
+        .map((die) => die.title),
+    ).toEqual(['6, exploded', '1, dropped', '5', '4']);
+    expect(within(log()).getByText('GM only')).toBeVisible();
   });
 
   it('lets spectators read but not post', async () => {
