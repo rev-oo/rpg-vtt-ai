@@ -1,17 +1,10 @@
-import { z } from 'zod';
+import { setupAdminBody } from '@vtt/shared/api';
 
-import { MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH } from '../../domain/auth/password.js';
 import { countUsers, insertUser, prepareUser, toPublicUser } from '../../domain/users.js';
 import { conflict } from '../../errors.js';
 import type { AppContext } from '../app.js';
 import { setSessionCookie } from '../auth.js';
-import { displayNameSchema, parseInput, usernameSchema } from '../validation.js';
-
-const setupAdminBody = z.object({
-  username: usernameSchema,
-  displayName: displayNameSchema,
-  password: z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH),
-});
+import { parseInput } from '../validation.js';
 
 const alreadySetUp = () => conflict('already_set_up', 'This instance already has users.');
 

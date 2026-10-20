@@ -1,32 +1,17 @@
 import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
+import { createUserBody, updateUserBody } from '@vtt/shared/api';
+
 import { users } from '../../db/schema.js';
 import { generatePassword, hashPassword } from '../../domain/auth/password.js';
 import { insertUser, prepareUser, type User } from '../../domain/users.js';
 import { badRequest, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
 import { requireAdmin } from '../auth.js';
-import { displayNameSchema, parseInput, usernameSchema } from '../validation.js';
+import { parseInput } from '../validation.js';
 
 const userIdParams = z.object({ id: z.uuid() });
-
-const createUserBody = z.object({
-  username: usernameSchema,
-  displayName: displayNameSchema,
-  isAdmin: z.boolean().default(false),
-});
-
-const updateUserBody = z
-  .object({
-    displayName: displayNameSchema,
-    isAdmin: z.boolean(),
-    disabled: z.boolean(),
-    /** Replaces the password with a new one-time password, returned once. */
-    resetPassword: z.literal(true),
-  })
-  .partial()
-  .refine((body) => Object.keys(body).length > 0, 'Provide at least one field.');
 
 /** What admins see about a user. */
 function toAdminUser(user: User) {

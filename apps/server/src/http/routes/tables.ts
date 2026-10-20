@@ -2,6 +2,7 @@ import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageTable } from '@vtt/shared';
+import { createTableBody, updateTableBody } from '@vtt/shared/api';
 
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
@@ -13,23 +14,6 @@ import { requireMember } from '../membership.js';
 import { parseInput } from '../validation.js';
 
 export const tableIdParams = z.object({ id: z.uuid() });
-
-const tableName = z.string().trim().min(1).max(100);
-const tableDescription = z.string().trim().max(2000);
-const tableSettings = z.record(z.string(), z.unknown());
-
-const createTableBody = z.object({
-  name: tableName,
-  description: tableDescription.default(''),
-  systemId: z.string().min(1).max(100),
-  settings: tableSettings.default({}),
-});
-
-// Strict: the system plugin and version are fixed at creation (FR-TABLE-02).
-const updateTableBody = z
-  .strictObject({ name: tableName, description: tableDescription, settings: tableSettings })
-  .partial()
-  .refine((body) => Object.keys(body).length > 0, 'Provide at least one field.');
 
 /** Table creation, listing and settings (FR-TABLE-01, 02, 07). */
 export function tableRoutes({ app, db }: AppContext): void {

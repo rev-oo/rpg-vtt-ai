@@ -1,19 +1,21 @@
 import { useForm } from '@tanstack/react-form';
 import { useEffect, useState, type ReactElement } from 'react';
 
+import { createTableBody, type GameSystem, type TableView } from '@vtt/shared/api';
 import { Alert, Button, Dialog } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
-import type { GameSystem, GameTable } from '../../api/schemas.js';
 import { SelectInput, TextInput } from '../../forms/fields.js';
-import { createTableSchema } from '../../forms/schemas.js';
 import { t } from '../../i18n/index.js';
+
+// The form edits every field except `settings`, so none of them is optional.
+const createTableForm = createTableBody.omit({ settings: true }).required();
 
 export interface CreateTableDialogProps {
   open: boolean;
   onClose: () => void;
-  onCreated: (table: GameTable) => void;
+  onCreated: (table: TableView) => void;
 }
 
 /** Creates a table with one of the enabled system plugins (FR-TABLE-01). */
@@ -27,11 +29,11 @@ export function CreateTableDialog({
 
   const form = useForm({
     defaultValues: { name: '', description: '', systemId: '' },
-    validators: { onChange: createTableSchema, onSubmit: createTableSchema },
+    validators: { onChange: createTableForm, onSubmit: createTableForm },
     onSubmit: async ({ value, formApi }) => {
       setError(null);
       try {
-        const table = await api.createTable(createTableSchema.parse(value));
+        const table = await api.createTable(createTableBody.parse(value));
         formApi.reset({ name: '', description: '', systemId: value.systemId });
         onCreated(table);
       } catch (caught) {

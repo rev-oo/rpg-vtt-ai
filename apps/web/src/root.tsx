@@ -1,4 +1,5 @@
 import './styles.css';
+import './forms/zod-messages.js';
 
 import type { ReactElement, ReactNode } from 'react';
 import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 'react-router';

@@ -1,4 +1,3 @@
-import { request, requestNoContent } from './client.js';
 import {
   sessionSchema,
   setupStatusSchema,
@@ -6,45 +5,44 @@ import {
   tableResponseSchema,
   tablesResponseSchema,
   userResponseSchema,
+  type ChangePasswordInput,
+  type CreateTableInput,
   type GameSystem,
-  type GameTable,
+  type LoginInput,
   type PublicUser,
   type Session,
-} from './schemas.js';
+  type SetupAdminInput,
+  type TableView,
+  type UpdateMeInput,
+} from '@vtt/shared/api';
 
-export interface Credentials {
-  username: string;
-  password: string;
-}
+import { request, requestNoContent } from './client.js';
 
 export const api = {
   setupStatus: async (): Promise<boolean> =>
     (await request('GET', '/setup/status', setupStatusSchema)).needsSetup,
 
-  setupAdmin: (input: Credentials & { displayName: string }): Promise<Session> =>
+  setupAdmin: (input: SetupAdminInput): Promise<Session> =>
     request('POST', '/setup/admin', sessionSchema, input),
 
-  login: (input: Credentials): Promise<Session> =>
+  login: (input: LoginInput): Promise<Session> =>
     request('POST', '/auth/login', sessionSchema, input),
 
   logout: (): Promise<void> => requestNoContent('POST', '/auth/logout'),
 
   me: (): Promise<Session> => request('GET', '/me', sessionSchema),
 
-  updateMe: async (input: { displayName: string }): Promise<PublicUser> =>
+  updateMe: async (input: UpdateMeInput): Promise<PublicUser> =>
     (await request('PATCH', '/me', userResponseSchema, input)).user,
 
-  changePassword: (input: { currentPassword: string; newPassword: string }): Promise<void> =>
+  changePassword: (input: ChangePasswordInput): Promise<void> =>
     requestNoContent('POST', '/me/password', input),
 
-  listTables: async (): Promise<GameTable[]> =>
+  listTables: async (): Promise<TableView[]> =>
     (await request('GET', '/tables', tablesResponseSchema)).tables,
 
-  createTable: async (input: {
-    name: string;
-    description: string;
-    systemId: string;
-  }): Promise<GameTable> => (await request('POST', '/tables', tableResponseSchema, input)).table,
+  createTable: async (input: CreateTableInput): Promise<TableView> =>
+    (await request('POST', '/tables', tableResponseSchema, input)).table,
 
   listSystems: async (): Promise<GameSystem[]> =>
     (await request('GET', '/systems', systemsResponseSchema)).systems,

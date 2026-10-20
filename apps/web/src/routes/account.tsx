@@ -2,12 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
+import { changePasswordBody, MIN_PASSWORD_LENGTH, updateMeBody } from '@vtt/shared/api';
 import { Alert, Button, Card } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { TextInput } from '../forms/fields.js';
-import { MIN_PASSWORD_LENGTH, passwordSchema, profileSchema } from '../forms/schemas.js';
 import { t } from '../i18n/index.js';
 import { storeUser } from '../shell/session.js';
 import { useSession } from '../shell/use-session.js';
@@ -32,11 +32,11 @@ export default function AccountRoute(): ReactElement {
 
   const profile = useForm({
     defaultValues: { displayName: user?.displayName ?? '' },
-    validators: { onChange: profileSchema, onSubmit: profileSchema },
+    validators: { onChange: updateMeBody, onSubmit: updateMeBody },
     onSubmit: async ({ value }) => {
       setProfileStatus(null);
       try {
-        storeUser(await api.updateMe(profileSchema.parse(value)));
+        storeUser(await api.updateMe(updateMeBody.parse(value)));
         await revalidator.revalidate();
         setProfileStatus({ tone: 'success', message: t('account.profileSaved') });
       } catch (caught) {
@@ -47,7 +47,7 @@ export default function AccountRoute(): ReactElement {
 
   const password = useForm({
     defaultValues: { currentPassword: '', newPassword: '' },
-    validators: { onChange: passwordSchema, onSubmit: passwordSchema },
+    validators: { onChange: changePasswordBody, onSubmit: changePasswordBody },
     onSubmit: async ({ value, formApi }) => {
       setPasswordStatus(null);
       try {

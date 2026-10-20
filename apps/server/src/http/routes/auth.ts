@@ -1,33 +1,15 @@
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
+
+import { changePasswordBody, loginBody, updateMeBody } from '@vtt/shared/api';
 
 import { users } from '../../db/schema.js';
-import {
-  hashPassword,
-  MAX_PASSWORD_LENGTH,
-  MIN_PASSWORD_LENGTH,
-  verifyPassword,
-} from '../../domain/auth/password.js';
+import { hashPassword, verifyPassword } from '../../domain/auth/password.js';
 import { findUserByUsername, toPublicUser } from '../../domain/users.js';
 import { AppError, badRequest } from '../../errors.js';
 import type { AppContext } from '../app.js';
 import { clearSessionCookie, requireSession, setSessionCookie } from '../auth.js';
 import { SESSION_COOKIE } from '../cookies.js';
-import { displayNameSchema, parseInput } from '../validation.js';
-
-const passwordSchema = z.string().min(MIN_PASSWORD_LENGTH).max(MAX_PASSWORD_LENGTH);
-
-const loginBody = z.object({
-  username: z.string().trim().min(1).max(64),
-  password: z.string().min(1).max(MAX_PASSWORD_LENGTH),
-});
-
-const updateMeBody = z.object({ displayName: displayNameSchema });
-
-const changePasswordBody = z.object({
-  currentPassword: z.string().min(1).max(MAX_PASSWORD_LENGTH),
-  newPassword: passwordSchema,
-});
+import { parseInput } from '../validation.js';
 
 const invalidCredentials = () =>
   new AppError(401, 'invalid_credentials', 'Wrong username or password.');

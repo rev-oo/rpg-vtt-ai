@@ -2,12 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useState, type ReactElement } from 'react';
 import { redirect, useNavigate } from 'react-router';
 
+import { MIN_PASSWORD_LENGTH, setupAdminBody } from '@vtt/shared/api';
 import { Alert, Button, Card } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { TextInput } from '../forms/fields.js';
-import { MIN_PASSWORD_LENGTH, setupSchema } from '../forms/schemas.js';
 import { t } from '../i18n/index.js';
 import { setupRedirect } from '../shell/access.js';
 import { loadSession, storeSession } from '../shell/session.js';
@@ -23,11 +23,11 @@ export default function SetupRoute(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const form = useForm({
     defaultValues: { username: '', displayName: '', password: '' },
-    validators: { onChange: setupSchema, onSubmit: setupSchema },
+    validators: { onChange: setupAdminBody, onSubmit: setupAdminBody },
     onSubmit: async ({ value }) => {
       setError(null);
       try {
-        storeSession(await api.setupAdmin(setupSchema.parse(value)));
+        storeSession(await api.setupAdmin(setupAdminBody.parse(value)));
         await navigate('/', { replace: true });
       } catch (caught) {
         setError(errorMessage(caught));

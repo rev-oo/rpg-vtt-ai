@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import { errorResponseSchema } from './schemas.js';
+import { errorResponseSchema } from '@vtt/shared/api';
 
 const BASE = '/api/v1';
 const CSRF_HEADER = 'X-CSRF-Token';

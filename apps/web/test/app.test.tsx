@@ -212,6 +212,7 @@ describe('tables (FR-TABLE-01)', () => {
       name: 'Crimson Throne',
       description: '',
       systemId: 'tiny-d20',
+      settings: {},
     });
   });
 

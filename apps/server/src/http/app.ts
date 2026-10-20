@@ -17,6 +17,7 @@ import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
+import { installValidationMessages } from './validation.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
 
@@ -70,6 +71,7 @@ export async function buildApp({
     reply.header(REQUEST_ID_HEADER, request.id);
   });
 
+  installValidationMessages();
   registerErrorHandling(app);
   // JSON is the only accepted body type. A cross-site HTML form can send text/plain without a
   // CORS preflight, which would bypass the CSRF reasoning in ./auth.ts.

@@ -2,12 +2,12 @@ import { useForm } from '@tanstack/react-form';
 import { useState, type ReactElement } from 'react';
 import { redirect, useNavigate, useSearchParams } from 'react-router';
 
+import { loginBody } from '@vtt/shared/api';
 import { Alert, Button, Card } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { TextInput } from '../forms/fields.js';
-import { loginSchema } from '../forms/schemas.js';
 import { t } from '../i18n/index.js';
 import { guestRedirect } from '../shell/access.js';
 import { safeNext } from '../shell/next.js';
@@ -26,11 +26,11 @@ export default function LoginRoute(): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const form = useForm({
     defaultValues: { username: '', password: '' },
-    validators: { onSubmit: loginSchema },
+    validators: { onSubmit: loginBody },
     onSubmit: async ({ value }) => {
       setError(null);
       try {
-        storeSession(await api.login(loginSchema.parse(value)));
+        storeSession(await api.login(loginBody.parse(value)));
         await navigate(safeNext(params.get('next')), { replace: true });
       } catch (caught) {
         setError(errorMessage(caught));

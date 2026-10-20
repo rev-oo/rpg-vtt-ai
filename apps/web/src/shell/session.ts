@@ -1,6 +1,7 @@
+import type { PublicUser, Session } from '@vtt/shared/api';
+
 import { ApiError, setCsrfToken } from '../api/client.js';
 import { api } from '../api/endpoints.js';
-import type { PublicUser, Session } from '../api/schemas.js';
 
 export interface SessionState {
   /** True until the first user exists (FR-AUTH-01). */

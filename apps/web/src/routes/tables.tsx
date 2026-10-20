@@ -1,17 +1,17 @@
 import { useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
+import type { TableView } from '@vtt/shared/api';
 import { Alert, Button, Card } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
-import type { GameTable } from '../api/schemas.js';
 import { CreateTableDialog } from '../features/tables/CreateTableDialog.js';
 import { t } from '../i18n/index.js';
 
 import type { Route } from './+types/tables';
 
-type TablesData = { tables: GameTable[]; error: null } | { tables: null; error: string };
+type TablesData = { tables: TableView[]; error: null } | { tables: null; error: string };
 
 /** A failed list shows inline, so the header and "New table" stay usable. */
 export async function clientLoader(): Promise<TablesData> {

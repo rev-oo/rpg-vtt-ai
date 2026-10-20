@@ -1,8 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createTableBody, setupStatusSchema } from '@vtt/shared/api';
+
 import { ApiError, request, requestNoContent, setCsrfToken } from '../src/api/client.js';
 import { errorMessage } from '../src/api/errors.js';
-import { setupStatusSchema } from '../src/api/schemas.js';
+import '../src/forms/zod-messages.js';
 import { t } from '../src/i18n/index.js';
 import { guestRedirect, setupRedirect, userRedirect } from '../src/shell/access.js';
 import { safeNext } from '../src/shell/next.js';
@@ -19,6 +21,20 @@ describe('t()', () => {
   it('fills placeholders and leaves unknown ones', () => {
     expect(t('nav.signedInAs', { name: 'Alice' })).toBe('Signed in as Alice');
     expect(t('nav.signedInAs')).toBe('Signed in as {name}');
+  });
+});
+
+describe('validation messages', () => {
+  it('words shared API schema issues from the catalogue', () => {
+    const result = createTableBody.safeParse({
+      name: ' ',
+      systemId: 'x',
+      description: 'x'.repeat(2001),
+    });
+    expect(result.error?.issues.map((issue) => issue.message)).toEqual([
+      'Required.',
+      'Must be at most 2000 characters.',
+    ]);
   });
 });
 

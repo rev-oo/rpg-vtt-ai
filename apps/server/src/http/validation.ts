@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { describeIssue, type IssueDescription } from '@vtt/shared/api';
+
 import { badRequest } from '../errors.js';
 
 /** Validates untrusted input (body, params, query) at the HTTP boundary (specs §6.1). */
@@ -15,9 +17,28 @@ export function parseInput<T extends z.ZodType>(schema: T, input: unknown): z.in
   return result.data;
 }
 
-export const usernameSchema = z
-  .string()
-  .trim()
-  .regex(/^[A-Za-z0-9_.-]{3,32}$/, '3–32 characters: letters, digits, "_", "." or "-".');
+function englishMessage(issue: IssueDescription): string {
+  switch (issue.key) {
+    case 'required':
+      return 'Required.';
+    case 'tooShort':
+      return `Must be at least ${String(issue.min)} characters.`;
+    case 'tooLong':
+      return `Must be at most ${String(issue.max)} characters.`;
+    case 'username':
+      return '3–32 characters: letters, digits, "_", "." or "-".';
+  }
+}
 
-export const displayNameSchema = z.string().trim().min(1).max(64);
+/**
+ * English messages for the shared API schemas (`@vtt/shared/api`), which carry none so the web
+ * can translate them. Other issues keep Zod's default wording.
+ */
+export function installValidationMessages(): void {
+  z.config({
+    customError: (issue) => {
+      const described = describeIssue(issue);
+      return described && englishMessage(described);
+    },
+  });
+}

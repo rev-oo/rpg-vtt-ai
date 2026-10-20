@@ -13,9 +13,6 @@ const ARGON2_OPTIONS = {
   parallelism: 1,
 } as const;
 
-export const MIN_PASSWORD_LENGTH = 8;
-export const MAX_PASSWORD_LENGTH = 256;
-
 export function hashPassword(password: string): Promise<string> {
   return hash(password, ARGON2_OPTIONS);
 }

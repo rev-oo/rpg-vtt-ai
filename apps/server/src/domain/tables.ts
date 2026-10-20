@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 
 import type { TableRole } from '@vtt/shared';
+import type { TableView } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
 import { gameTables, members, plugins } from '../db/schema.js';
@@ -18,20 +19,6 @@ export function findMembership(db: DbOrTx, tableId: string, userId: string): Mem
 
 export function findTable(db: DbOrTx, tableId: string): GameTable | undefined {
   return db.select().from(gameTables).where(eq(gameTables.id, tableId)).get();
-}
-
-/** The table fields members may see, plus the caller's own role. */
-export interface TableView {
-  id: string;
-  name: string;
-  description: string;
-  systemId: string;
-  /** The plugin's display name, or its id if the plugin is no longer installed. */
-  systemName: string;
-  systemVersion: string;
-  settings: Record<string, unknown>;
-  createdAt: string;
-  role: TableRole;
 }
 
 export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): TableView {
