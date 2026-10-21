@@ -22,9 +22,9 @@ import {
 import {
   actorAccess,
   actorTypeControl,
-  systemTypes,
   toActorView,
   toItemView,
+  writableSystemTypes,
 } from '../../domain/entities.js';
 import { conflict, forbidden, gone, notFound } from '../../errors.js';
 import { publishActorChanged } from '../../realtime/notify.js';
@@ -65,7 +65,7 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
     const { table, membership } = requireMember(db, request, id);
     const body = parseInput(createActorBody, request.body);
 
-    const controlledBy = actorTypeControl(systemTypes(db, table), body.type);
+    const controlledBy = actorTypeControl(writableSystemTypes(db, table), body.type);
     if (!canCreateActor(membership.role, controlledBy, table.playersMayCreateAnyActorType)) {
       throw forbidden('You cannot create actors of this type.');
     }
@@ -135,7 +135,7 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
   app.post('/api/v1/actors/:id/duplicate', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
     const { actor, table, membership } = requireActor(db, request, id);
-    const controlledBy = actorTypeControl(systemTypes(db, table), actor.type);
+    const controlledBy = actorTypeControl(writableSystemTypes(db, table), actor.type);
     if (!canCreateActor(membership.role, controlledBy, table.playersMayCreateAnyActorType)) {
       throw forbidden('You cannot create actors of this type.');
     }

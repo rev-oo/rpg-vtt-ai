@@ -1,7 +1,10 @@
+import path from 'node:path';
+
 import { ConfigError, loadConfig, type Config } from './config/index.js';
 import { openDatabase, runMigrations } from './db/client.js';
 import { buildApp } from './http/app.js';
 import { createLogger } from './logger/index.js';
+import { PluginRegistry } from './plugins/registry.js';
 
 function readConfig(): Config {
   try {
@@ -20,7 +23,15 @@ const config = readConfig();
 const logger = createLogger(config.logLevel);
 const db = openDatabase({ dataDir: config.dataDir });
 runMigrations(db);
-const app = await buildApp({ logger, db, config });
+// Plugins found at startup are available without a rescan (FR-PLUGIN-01).
+const plugins = new PluginRegistry({
+  db,
+  dir: path.join(config.dataDir, 'plugins'),
+  logger,
+  now: () => new Date(),
+});
+await plugins.scan();
+const app = await buildApp({ logger, db, config, plugins });
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {

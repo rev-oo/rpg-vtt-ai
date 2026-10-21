@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-21
-- **Tasks:** T-0401, T-0402
+- **Tasks:** T-0401, T-0402, T-0403
 - **Amends:** §5 (the validator lives in `plugin-schema`; the server only reads the folder), §8.4 (reserved field names), §8.5 (the `derived` node takes a `label`), §8.8 (custom dice may map text faces to numbers)
 
 ## Context
@@ -23,7 +23,8 @@ The server's scanner (T-0403) and `vtt-plugin validate` (T-0410) must report the
    - `hasCode` against the `code/` folder; custom nodes and handler recipes need code.
    - Translations: once any lang file exists, English is required, and every listed locale needs a file. A missing English text is an error; a missing text in another locale is a warning, since English is the fallback (FR-PLUGIN-05).
    - A JSON file of no known kind (such as `packs/`, v1) is a warning.
-   - CSS rules are checked by the CSS processor (T-0404) and `coreApi` by the scanner (T-0403).
+   - `coreApi` must be a semver range that includes this core's `CORE_API_VERSION` (`@vtt/shared`), and, when the caller names the folder, the id must match it (T-0403).
+   - CSS rules are checked by the CSS processor (T-0404).
 3. **Reference roots.** Formulas get `@derived.*`, `@args.*`, `@row.*`, `@settings.*`, `@total` and `@roll.*` from the core, so a top-level field may not take one of those names. Each root exists only where it makes sense: `@row` inside a list, `@args` in recipes, `@total` and `@roll` in outcomes and cards.
 4. **Which type a formula belongs to.** Sheets are checked against the types that use them, and recipes and cards against the types whose sheets roll them. When nothing ties a formula to a type, or that type's file is broken, data references go unchecked instead of failing in cascade.
 5. **Lang keys.** A text with no spaces and at least one dot (`type.character`) is a lang key; anything else is literal text, as §8.5 allows.

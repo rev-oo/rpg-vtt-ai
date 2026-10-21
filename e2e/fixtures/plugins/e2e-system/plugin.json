@@ -1,0 +1,9 @@
+{
+  "id": "e2e-system",
+  "name": "E2E System",
+  "version": "1.0.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "description": "The system the end-to-end tests play with.",
+  "hasCode": false
+}

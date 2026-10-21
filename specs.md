@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
-| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 17%      | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 25%      | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M4
-- **Next task:** `T-0403`
+- **Next task:** `T-0404`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -61,6 +61,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                |
 | 2026-10-21 | T-0401 implemented (plugin file schemas, emitted JSON Schemas, first versions of `tiny-d20` and `tiny-pool`).                     |
 | 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                               |
+| 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                      |
 
 ---
 
@@ -829,7 +830,7 @@ Key resource groups:
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
 | Rolls           | `POST /tables/:id/rolls` (formula; roll recipes with T-0407, ADR-018)                                                        |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                                                           |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020)                    |
 | Health          | `GET /api/health`                                                                                                            |
 
 ### 10.2 Events WebSocket (`/ws/events`)
@@ -1092,11 +1093,12 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** a fixture set of valid and invalid plugins produces expected error lists.
   - **Note:** `validatePlugin(files)` in `@vtt/plugin-schema` is pure, so the server and the CLI share it (ADR-019). Fixtures are in `packages/plugin-schema/test/fixtures/plugins.ts`; both reference plugins validate clean. CSS checks come with T-0404 and `coreApi` with T-0403.
 
-- [ ] **T-0403 · Plugin scanner and registry**
+- [x] **T-0403 · Plugin scanner and registry**
   - **Deps:** T-0402, T-0102
   - **Do:** Scan `DATA_DIR/plugins`, validate, check `coreApi`, persist registry rows, expose enable/disable (FR-PLUGIN-01, 03, 07). Rescan endpoint.
   - **Done when:** adding a folder and calling rescan makes it appear without restart.
   - **Note:** also fill `plugins.actor_types` (`{ <type>: { controlledBy } }`) and `plugins.item_types` from `actors/` and `items/`; the entity API reads them (ADR-015).
+  - **Note:** done in `apps/server/src/plugins/` with `apps/server/test/plugins.test.ts`. Rows get a status (`ready`, `invalid`, `incompatible`, `missing`) and the last scan's issues; enabling code needs `acknowledgeCode`; tables of an unavailable system are read-only for entity changes and rolls (ADR-020).
 
 - [ ] **T-0404 · Scoped CSS processor**
   - **Deps:** T-0403
@@ -1359,6 +1361,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted |
 | ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted |
 | ADR-019 | [Plugin validation: one pure validator, issue codes, reference roots](docs/adr/ADR-019-plugin-validation.md)                                    | Accepted |
+| ADR-020 | [Plugin registry: scanning, status, enabling, read-only tables](docs/adr/ADR-020-plugin-registry.md)                                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

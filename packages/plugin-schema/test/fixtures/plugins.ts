@@ -117,6 +117,20 @@ export interface FixtureCase {
 
 export const CASES: FixtureCase[] = [
   {
+    name: 'a core API this server does not provide',
+    change: (f: PluginFixture): void => {
+      at(f, 'plugin.json').coreApi = '^2.0.0';
+    },
+    issues: ['error incompatible_core_api plugin.json $.coreApi'],
+  },
+  {
+    name: 'a coreApi that is not a range',
+    change: (f: PluginFixture): void => {
+      at(f, 'plugin.json').coreApi = 'latest and greatest';
+    },
+    issues: ['error invalid_core_api plugin.json $.coreApi'],
+  },
+  {
     name: 'no manifest',
     change: (f: PluginFixture): void => {
       delete f['plugin.json'];

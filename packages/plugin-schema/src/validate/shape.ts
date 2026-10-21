@@ -40,7 +40,7 @@ export function shapeIssues(
 ): PluginIssue[] {
   const result: PluginIssue[] = [];
   const add = (code: PluginIssue['code'], path: JsonPath, params: PluginIssue['params'] = {}) =>
-    result.push({ severity: 'error', code, file, path, params });
+    result.push({ severity: 'error', code, file, path: [...path], params });
 
   const visit = (issue: ZodIssue, base: JsonPath): void => {
     const path = [...base, ...toPath(issue.path)];

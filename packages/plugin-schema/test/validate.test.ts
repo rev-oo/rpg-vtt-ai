@@ -41,6 +41,21 @@ describe('validatePlugin', () => {
     expect(result.plugin !== undefined).toBe(valid === true);
   });
 
+  it('checks the id against the folder and coreApi against the given core version', () => {
+    const files = toFiles(mini());
+    expect(validatePlugin(files, { folder: 'mini', coreVersion: '0.1.9' }).issues).toEqual([]);
+    const { issues, manifest, plugin } = validatePlugin(files, {
+      folder: 'other',
+      coreVersion: '0.2.0',
+    });
+    expect(issues.map(summary)).toEqual([
+      'error folder_mismatch plugin.json $.id',
+      'error incompatible_core_api plugin.json $.coreApi',
+    ]);
+    expect(manifest?.id).toBe('mini');
+    expect(plugin).toBeUndefined();
+  });
+
   it.each(REFERENCE_PLUGINS)('accepts the reference plugin %s', async (id) => {
     const files = await pluginFiles(id);
     const { issues, plugin } = validatePlugin(files);

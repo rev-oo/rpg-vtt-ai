@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 
 import {
+  adminPluginSchema,
   changePasswordBody,
   copyItemBody,
   createActorBody,
@@ -14,9 +15,11 @@ import {
   createTableBody,
   createUserBody,
   describeIssue,
+  enablePluginBody,
   loginBody,
   MAX_PASSWORD_LENGTH,
   MIN_PASSWORD_LENGTH,
+  pluginsResponseSchema,
   setupAdminBody,
   tableSchema,
   updateMeBody,
@@ -176,6 +179,35 @@ describe('responses', () => {
     };
     expect(tableSchema.parse(table)).toEqual(table);
     expect(tableSchema.safeParse({ ...table, role: 'owner' }).success).toBe(false);
+  });
+
+  it('validates an admin plugin view and the enable body', () => {
+    const plugin = {
+      id: 'tiny-d20',
+      name: 'Tiny D20',
+      version: '0.1.0',
+      description: null,
+      coreApi: '^0.1.0',
+      hasCode: false,
+      codeEntries: [],
+      enabled: true,
+      status: 'invalid',
+      available: false,
+      issues: [
+        {
+          severity: 'error',
+          code: 'unknown_key',
+          file: 'plugin.json',
+          path: ['x', 0],
+          params: { key: 'x' },
+        },
+      ],
+      scannedAt: '2026-10-21T00:00:00.000Z',
+    };
+    expect(pluginsResponseSchema.parse({ plugins: [plugin] })).toEqual({ plugins: [plugin] });
+    expect(adminPluginSchema.safeParse({ ...plugin, status: 'broken' }).success).toBe(false);
+    expect(enablePluginBody.parse({})).toEqual({});
+    expect(enablePluginBody.safeParse({ acknowledgeCode: 'yes' }).success).toBe(false);
   });
 });
 

@@ -1,3 +1,7 @@
+import { satisfies, validRange } from 'semver';
+
+import { CORE_API_VERSION } from '@vtt/shared';
+
 import type { Card } from '../cards.js';
 import type { Combat } from '../combat.js';
 import { DIE_NAME, IDENTIFIER, LOCALE, NAME } from '../common.js';
@@ -34,6 +38,8 @@ export interface PluginDefinition {
 
 export interface PluginValidation {
   issues: PluginIssue[];
+  /** The manifest, when it passed its own schema; set even when other files have errors. */
+  manifest?: Manifest | undefined;
   /** Set when no issue is an error. */
   plugin?: PluginDefinition | undefined;
 }
@@ -83,7 +89,17 @@ interface TypeEntry {
  * `files` maps each path in the folder (`/`-separated, relative) to its text. Only JSON
  * contents are read; other files only need to be listed.
  */
-export function validatePlugin(files: ReadonlyMap<string, string>): PluginValidation {
+export interface ValidateOptions {
+  /** The core API version to check `coreApi` against; this core's by default. */
+  coreVersion?: string;
+  /** The folder the plugin was found in; its name must be the plugin id. */
+  folder?: string;
+}
+
+export function validatePlugin(
+  files: ReadonlyMap<string, string>,
+  { coreVersion = CORE_API_VERSION, folder }: ValidateOptions = {},
+): PluginValidation {
   const issues: PluginIssue[] = [];
   const seen = new Set<string>();
   const add = (
@@ -96,7 +112,7 @@ export function validatePlugin(files: ReadonlyMap<string, string>): PluginValida
     const key = JSON.stringify([code, file, path, params]);
     if (seen.has(key)) return;
     seen.add(key);
-    issues.push({ severity, code, file, path, params });
+    issues.push({ severity, code, file, path: [...path], params });
   };
   const error = (
     code: PluginIssue['code'],
@@ -166,6 +182,20 @@ export function validatePlugin(files: ReadonlyMap<string, string>): PluginValida
     error('has_code_mismatch', 'plugin.json', ['hasCode'], { hasCode: String(manifest.hasCode) });
   }
   const hasCode = manifest?.hasCode ?? codeFolder;
+  if (manifest && folder !== undefined && manifest.id !== folder) {
+    error('folder_mismatch', 'plugin.json', ['id'], { folder });
+  }
+  if (manifest) {
+    const range = validRange(manifest.coreApi);
+    if (range === null) {
+      error('invalid_core_api', 'plugin.json', ['coreApi'], { coreApi: manifest.coreApi });
+    } else if (!satisfies(coreVersion, range)) {
+      error('incompatible_core_api', 'plugin.json', ['coreApi'], {
+        coreApi: manifest.coreApi,
+        core: coreVersion,
+      });
+    }
+  }
 
   const rolls = withoutSchemaUrl((one('rolls.json') as Record<string, Recipe> | undefined) ?? {});
   const dice = withoutSchemaUrl((one('dice.json') as Record<string, Die> | undefined) ?? {});
@@ -489,6 +519,7 @@ export function validatePlugin(files: ReadonlyMap<string, string>): PluginValida
   const valid = manifest !== undefined && !issues.some((issue) => issue.severity === 'error');
   return {
     issues,
+    manifest,
     plugin: valid
       ? {
           manifest,

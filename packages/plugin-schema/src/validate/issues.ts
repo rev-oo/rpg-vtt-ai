@@ -8,6 +8,11 @@ export const PLUGIN_ISSUE_CODES = [
   'invalid_json',
   'unknown_file',
   'invalid_name',
+  'folder_mismatch',
+  'file_too_large',
+  // Compatibility
+  'invalid_core_api',
+  'incompatible_core_api',
   // Shapes (from the Zod schemas)
   'missing_key',
   'unknown_key',
@@ -48,7 +53,7 @@ export interface PluginIssue {
   code: PluginIssueCode;
   /** The file, relative to the plugin folder (`sheets/character.json`). */
   file: string;
-  path: JsonPath;
+  path: (string | number)[];
   params: Readonly<Record<string, string | number>>;
 }
 
@@ -90,6 +95,11 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   invalid_json: (x) => `The file is not valid JSON: ${p(x, 'detail')}`,
   unknown_file: () => 'This file is not part of the plugin format and is ignored',
   invalid_name: (x) => `"${p(x, 'name')}" is not a valid ${p(x, 'of')} name`,
+  folder_mismatch: (x) => `The id must match the folder name "${p(x, 'folder')}"`,
+  file_too_large: (x) => `The file is larger than ${p(x, 'limit')} bytes and was not read`,
+  invalid_core_api: (x) => `"${p(x, 'coreApi')}" is not a semver range`,
+  incompatible_core_api: (x) =>
+    `The plugin needs core API ${p(x, 'coreApi')}, but this server provides ${p(x, 'core')}`,
   missing_key: (x) => `"${p(x, 'key')}" is required`,
   unknown_key: (x) => `Unknown key "${p(x, 'key')}"`,
   unsupported_keyword: (x) =>

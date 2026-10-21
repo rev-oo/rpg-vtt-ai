@@ -17,7 +17,13 @@ import {
   type ControlledBy,
   type Ownership,
 } from '@vtt/shared';
-import { MESSAGE_KINDS, type Roll, type Speaker } from '@vtt/shared/api';
+import {
+  MESSAGE_KINDS,
+  PLUGIN_STATUSES,
+  type PluginIssueView,
+  type Roll,
+  type Speaker,
+} from '@vtt/shared/api';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
@@ -78,15 +84,23 @@ export const instanceSettings = sqliteTable('instance_settings', {
 });
 
 /**
- * Installed plugins. Rows are written by the plugin scanner (T-0403); until then tests
- * insert them directly. Tables reference a plugin by id.
+ * Installed plugins, one row per folder in `DATA_DIR/plugins` (T-0403). The scanner writes
+ * every column except `enabled`, which only admins change. Tables reference a plugin by id.
  */
 export const plugins = sqliteTable('plugins', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   version: text('version').notNull(),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+  description: text('description'),
+  coreApi: text('core_api').notNull().default(''),
   hasCode: integer('has_code', { mode: 'boolean' }).notNull().default(false),
+  /** Files under `code/` (§8.10). */
+  codeEntries: text('code_entries', { mode: 'json' }).$type<string[]>().notNull().default([]),
+  status: text('status', { enum: PLUGIN_STATUSES }).notNull().default('ready'),
+  /** The validator's issues from the last scan (ADR-019). */
+  issues: text('issues', { mode: 'json' }).$type<PluginIssueView[]>().notNull().default([]),
+  scannedAt: timestamp('scanned_at'),
   /** Actor types the plugin declares (§8.4), keyed by type id. */
   actorTypes: text('actor_types', { mode: 'json' })
     .$type<Record<string, { controlledBy: ControlledBy }>>()

@@ -20,7 +20,7 @@ export function insertUser(db: Db, overrides: Partial<NewUser> = {}): typeof use
     .get();
 }
 
-/** Stands in for the plugin scanner (T-0403) until it exists. */
+/** Inserts a ready, enabled plugin row with no folder, as if the scanner had found it. */
 export function insertPlugin(
   db: Db,
   overrides: Partial<typeof plugins.$inferInsert> = {},

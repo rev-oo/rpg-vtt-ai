@@ -1,0 +1,5 @@
+{
+  "label": "Consumable",
+  "sheet": "basic",
+  "schema": { "type": "object", "properties": { "notes": { "type": "string", "default": "" } } }
+}

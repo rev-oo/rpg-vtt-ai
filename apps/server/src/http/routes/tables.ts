@@ -7,6 +7,7 @@ import { createTableBody, updateTableBody, type TableTypes } from '@vtt/shared/a
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
 import { systemTypes } from '../../domain/entities.js';
+import { isAvailable } from '../../domain/plugins.js';
 import { toTableView } from '../../domain/tables.js';
 import { unprocessable } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -36,7 +37,7 @@ export function tableRoutes({ app, db }: AppContext): void {
 
     const table = db.transaction((tx) => {
       const plugin = tx.select().from(plugins).where(eq(plugins.id, body.systemId)).get();
-      if (!plugin?.enabled) {
+      if (!plugin || !isAvailable(plugin)) {
         throw unprocessable(
           'system_unavailable',
           'The selected system plugin is not installed or not enabled.',
