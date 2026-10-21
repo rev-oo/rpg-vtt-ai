@@ -17,7 +17,7 @@ import {
   type ControlledBy,
   type Ownership,
 } from '@vtt/shared';
-import { MESSAGE_KINDS, type Speaker } from '@vtt/shared/api';
+import { MESSAGE_KINDS, type Roll, type Speaker } from '@vtt/shared/api';
 
 const timestamp = (name: string) => integer(name, { mode: 'timestamp_ms' });
 const createdAt = () =>
@@ -258,8 +258,8 @@ export const chatMessages = sqliteTable(
     recipients: text('recipients', { mode: 'json' }).$type<string[]>().notNull().default([]),
     kind: text('kind', { enum: MESSAGE_KINDS }).notNull(),
     text: text('text').notNull(),
-    /** Full die results of roll messages (FR-CHAT-04, M3). */
-    rolls: text('rolls', { mode: 'json' }).$type<unknown[]>().notNull().default([]),
+    /** Full die results of roll messages (FR-CHAT-04). */
+    rolls: text('rolls', { mode: 'json' }).$type<Roll[]>().notNull().default([]),
     /** Plugin card data (FR-CHAT-06, M3). */
     card: text('card', { mode: 'json' }).$type<unknown>(),
     createdAt: createdAt(),

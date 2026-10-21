@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | Not started | 0%       | —      |
+| M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M3
-- **Next task:** `T-0301`
+- **Active milestone:** M4
+- **Next task:** `T-0401`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -53,6 +53,12 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                    |
 | 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                               |
 | 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                  |
+| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                   |
+| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                       |
+| 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                      |
+| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                    |
+| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.           |
+| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                |
 
 ---
 
@@ -820,7 +826,7 @@ Key resource groups:
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`    |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
-| Rolls           | `POST /tables/:id/rolls` (roll recipe or formula)                                                                            |
+| Rolls           | `POST /tables/:id/rolls` (formula; roll recipes with T-0407, ADR-018)                                                        |
 | Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/rescan`                                                           |
 | Health          | `GET /api/health`                                                                                                            |
 
@@ -829,7 +835,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message`, `roll.result`, `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -1041,30 +1047,34 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M3 — Formula and dice engine
 
-- [ ] **T-0301 · Formula lexer and parser**
+- [x] **T-0301 · Formula lexer and parser**
   - **Deps:** T-0002, T-0007
   - **Do:** `packages/formula` parser for the grammar in §8.9 with source positions. Use a parser generator or a hand-written Pratt parser; no `eval`.
   - **Done when:** round-trip tests and error-position tests pass; invalid input produces a message with line and column.
+  - **Note:** grammar details (precedence, dice counts in parentheses, custom dice names like `dF`) are in ADR-017.
 
-- [ ] **T-0302 · Formula evaluator (pure mode)**
+- [x] **T-0302 · Formula evaluator (pure mode)**
   - **Deps:** T-0301
   - **Do:** Evaluate references against an injected data context; whitelist functions; step limit; type errors.
   - **Done when:** property tests show no evaluation outside the whitelist; step limit enforced.
+  - **Note:** typing, reference and function rules are in ADR-017.
 
-- [ ] **T-0303 · Dice engine**
+- [x] **T-0303 · Dice engine**
   - **Deps:** T-0302
   - **Do:** Dice terms (FR-DICE-01), custom dice (FR-DICE-03), injected RNG, full die result list (FR-DICE-04).
   - **Done when:** seeded RNG gives identical results across runs (FR-DICE-05); distribution test for `2d6` over 100k rolls within tolerance.
+  - **Note:** modifier order, custom dice faces and limits are in ADR-017.
 
-- [ ] **T-0304 · Roll resolution with references**
+- [x] **T-0304 · Roll resolution with references**
   - **Deps:** T-0303
   - **Do:** Resolve `@` references against actor state, record resolved expressions in the result (FR-DICE-02, 04).
   - **Done when:** the result object includes expression, resolved expression, dice, and total.
 
-- [ ] **T-0305 · Roll endpoint and chat integration**
+- [x] **T-0305 · Roll endpoint and chat integration**
   - **Deps:** T-0304, T-0206
   - **Do:** `POST /tables/:id/rolls` and `roll.request` over events; server posts roll messages with audience rules (FR-CHAT-03, 04, 05).
   - **Done when:** secret roll results are invisible to players on the wire (integration test).
+  - **Note:** `apps/server/test/rolls.test.ts` checks the wire and history; `e2e/tests/rolls.spec.ts` checks three browser sessions. Roll messages arrive as `chat.message`; recipes join the endpoint with T-0407 (ADR-018).
 
 ### M4 — Plugin system
 
@@ -1293,17 +1303,17 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
 
-| #   | Question                                                                            | Blocks                | Proposed default                                 |
-| --- | ----------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------ |
-| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                 |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it      |
-| Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                 |
-| Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)      |
-| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                    |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)  |
-| Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                   |
-| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | Hand-written Pratt (fewer deps, easier to audit) |
-| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`     |
+| #   | Question                                                                            | Blocks                | Proposed default                                |
+| --- | ----------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------- |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release? | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                    | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it     |
+| Q3  | TipTap for rich text, or a lighter editor?                                          | T-0510                | TipTap (Collaboration extension)                |
+| Q4  | Email-based invites, or link-only?                                                  | T-0109                | **Decided:** Link-only (no SMTP dependency)     |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                            | T-0412, T-0702        | Required, to validate the API                   |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                       | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014) |
+| Q7  | Does Hocuspocus need its own port in development?                                   | T-0501                | No, same port via upgrade path                  |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                             | T-0301                | **Decided:** Hand-written Pratt (ADR-017)       |
+| Q9  | Required Node version: current LTS at the time of M0?                               | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`    |
 
 ---
 
@@ -1342,6 +1352,8 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
 | ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
 | ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
+| ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted |
+| ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

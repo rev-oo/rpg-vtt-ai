@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
+
+// `findBy…` waits 1 s by default, too short for a first render while other suites use the CPU.
+configure({ asyncUtilTimeout: 5000 });
 
 // jsdom lacks the modal API of <dialog>; browsers (NFR-13) all support it.
 const dialogProto = HTMLDialogElement.prototype;

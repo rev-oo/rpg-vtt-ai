@@ -3,10 +3,13 @@ import { randomUUID } from 'node:crypto';
 import fastifyCookie from '@fastify/cookie';
 import Fastify, { LogController, type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 
+import type { Rng } from '@vtt/formula';
+
 import type { Config } from '../config/index.js';
 import type { Db } from '../db/client.js';
 import { LoginThrottle } from '../domain/auth/login-throttle.js';
 import { SessionService } from '../domain/auth/sessions.js';
+import { secureRng } from '../domain/rolls.js';
 import { AppError } from '../errors.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
@@ -18,6 +21,7 @@ import { chatRoutes } from './routes/chat.js';
 import { inviteRoutes } from './routes/invites.js';
 import { itemRoutes } from './routes/items.js';
 import { memberRoutes } from './routes/members.js';
+import { rollRoutes } from './routes/rolls.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
@@ -38,6 +42,8 @@ export interface AppOptions {
   now?: () => Date;
   /** Login rate limiter override for tests. */
   loginThrottle?: LoginThrottle;
+  /** Dice RNG override for tests; rolls are cryptographically random otherwise. */
+  rng?: Rng;
 }
 
 /** Everything a route module needs. */
@@ -51,6 +57,8 @@ export interface AppContext {
   events: EventHub;
   /** The application clock; routes use it instead of `new Date()` so tests can move time. */
   now: () => Date;
+  /** The dice RNG (FR-CHAT-04). */
+  rng: Rng;
 }
 
 /** Builds the Fastify application with every route registered. */
@@ -60,6 +68,7 @@ export async function buildApp({
   config,
   now = () => new Date(),
   loginThrottle = new LoginThrottle(),
+  rng = secureRng,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: logger,
@@ -90,7 +99,7 @@ export async function buildApp({
   registerAuth(app, sessions);
   const events = await registerEvents(app, { db, sessions });
 
-  const context: AppContext = { app, db, config, sessions, loginThrottle, events, now };
+  const context: AppContext = { app, db, config, sessions, loginThrottle, events, now, rng };
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
@@ -101,6 +110,7 @@ export async function buildApp({
   actorRoutes(context);
   itemRoutes(context);
   chatRoutes(context);
+  rollRoutes(context);
   eventsSocket(context);
 
   scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });

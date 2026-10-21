@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { chatMessageSchema, chatSendBody } from './chat.js';
+import { chatMessageSchema, chatSendBody, rollRequestBody } from './chat.js';
 
 // The events WebSocket at /ws/events (specs §10.2). Every message is an envelope
 // `{ v, type, tableId?, payload?, id? }`; the server answers a client message that carries an
@@ -32,7 +32,7 @@ export const clientEventSchema = z.discriminatedUnion('type', [
     ...clientBase,
     type: z.literal('roll.request'),
     tableId: z.uuid(),
-    payload: z.unknown(),
+    payload: rollRequestBody,
   }),
   z.object({ ...clientBase, type: z.literal('presence.ping'), tableId: z.uuid().optional() }),
 ]);

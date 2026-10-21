@@ -23,6 +23,7 @@ import {
   type ChangePasswordInput,
   type ChatMessage,
   type ChatSendInput,
+  type RollRequestInput,
   type CreateTableInput,
   type GameSystem,
   type LoginInput,
@@ -125,6 +126,9 @@ export const api = {
   sendChat: async (tableId: string, input: ChatSendInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/messages`, chatMessageResponseSchema, input))
       .message,
+  /** Rolls a typed formula; the result arrives as a roll message (FR-CHAT-03, 08). */
+  roll: async (tableId: string, input: RollRequestInput): Promise<ChatMessage> =>
+    (await request('POST', `/tables/${tableId}/rolls`, chatMessageResponseSchema, input)).message,
 };
 
 function toQuery(query: EntityListQuery): string {

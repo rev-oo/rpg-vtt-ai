@@ -5,7 +5,12 @@ import { canSendChat, type MessageAudience, type Subject, type TableRole } from 
 import type { ChatMessage, chatSendBody, Speaker } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import { createChatMessage, findActor, type ChatMessageRow } from '../db/repositories/index.js';
+import {
+  createChatMessage,
+  findActor,
+  type Actor,
+  type ChatMessageRow,
+} from '../db/repositories/index.js';
 import { members, users } from '../db/schema.js';
 import { badRequest, forbidden, unprocessable } from '../errors.js';
 
@@ -68,12 +73,9 @@ export function sendChatMessage(
       {
         tableId: sender.tableId,
         senderId: sender.userId,
-        speaker: speakerFor(tx, sender.tableId, subject, input.actorId),
+        speaker: speakerFor(tx, sender.tableId, subject, input.actorId).speaker,
         audience: input.audience,
-        recipients:
-          input.audience === 'whisper'
-            ? whisperRecipients(tx, sender.tableId, sender.userId, input.recipientIds)
-            : [],
+        recipients: recipientsFor(tx, sender, input),
         kind: 'text',
         text: input.text,
       },
@@ -82,26 +84,38 @@ export function sendChatMessage(
   );
 }
 
-function speakerFor(
+/** The speaker of a message, and the actor behind it if the member speaks as one. */
+export function speakerFor(
   db: DbOrTx,
   tableId: string,
   subject: Subject,
   actorId: string | null,
-): Speaker {
+): { speaker: Speaker; actor: Actor | null } {
   if (actorId) {
     const actor = findActor(db, actorId);
     // Hidden and foreign actors get the same answer, so ids cannot be probed.
     if (actor?.tableId !== tableId || actorAccess(subject, actor) !== 'owner') {
       throw unprocessable('invalid_speaker', 'You can only speak as an actor you own.');
     }
-    return { name: actor.name, actorId: actor.id, imageUrl: actor.imageUrl };
+    return { speaker: { name: actor.name, actorId: actor.id, imageUrl: actor.imageUrl }, actor };
   }
   const user = db
     .select({ displayName: users.displayName })
     .from(users)
     .where(eq(users.id, subject.userId))
     .get();
-  return { name: user?.displayName ?? '', actorId: null, imageUrl: null };
+  return { speaker: { name: user?.displayName ?? '', actorId: null, imageUrl: null }, actor: null };
+}
+
+/** Whisper recipients, checked to be other members; empty for other audiences. */
+export function recipientsFor(
+  db: DbOrTx,
+  sender: { tableId: string; userId: string },
+  input: { audience: MessageAudience['audience']; recipientIds: readonly string[] },
+): string[] {
+  return input.audience === 'whisper'
+    ? whisperRecipients(db, sender.tableId, sender.userId, input.recipientIds)
+    : [];
 }
 
 function whisperRecipients(

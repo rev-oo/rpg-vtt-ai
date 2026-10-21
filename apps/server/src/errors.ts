@@ -26,5 +26,5 @@ export const notFound = (message = 'Not found.'): AppError =>
 export const conflict = (code: string, message: string): AppError =>
   new AppError(409, code, message);
 export const gone = (code: string, message: string): AppError => new AppError(410, code, message);
-export const unprocessable = (code: string, message: string): AppError =>
-  new AppError(422, code, message);
+export const unprocessable = (code: string, message: string, details?: unknown): AppError =>
+  new AppError(422, code, message, details);

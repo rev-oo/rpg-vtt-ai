@@ -5,3 +5,4 @@ export * from './events.js';
 export * from './issues.js';
 export * from './requests.js';
 export * from './responses.js';
+export * from './rolls.js';

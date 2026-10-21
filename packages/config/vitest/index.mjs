@@ -13,8 +13,10 @@ import { defineConfig } from 'vitest/config';
  *   coverageGate?: CoverageGate,
  *   environment?: 'node' | 'jsdom',
  *   setupFiles?: string[],
+ *   testTimeout?: number,
  * }} [options]
  *   `environment: 'jsdom'` is for React component tests; `setupFiles` run before each test file.
+ *   `testTimeout` (ms) replaces Vitest's 5 s default for slower suites.
  */
 export function defineVttVitestConfig(options = {}) {
   const gate = options.coverageGate;
@@ -31,6 +33,7 @@ export function defineVttVitestConfig(options = {}) {
       include: ['test/**/*.test.{ts,tsx}'],
       environment: options.environment ?? 'node',
       ...(options.setupFiles && { setupFiles: options.setupFiles }),
+      ...(options.testTimeout && { testTimeout: options.testTimeout }),
       coverage: {
         provider: 'v8',
         include: ['src/**/*.{ts,tsx}'],
