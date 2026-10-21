@@ -6,17 +6,23 @@ export const REFERENCE_PLUGINS = ['tiny-d20', 'tiny-pool'] as const;
 
 const pluginsDir = fileURLToPath(new URL('../../../../plugins/', import.meta.url));
 
-/** Every JSON file of a reference plugin, keyed by its path inside the plugin folder. */
-export async function pluginJsonFiles(id: string): Promise<Map<string, unknown>> {
+/** Every file of a reference plugin as text, keyed by its path inside the plugin folder. */
+export async function pluginFiles(id: string): Promise<Map<string, string>> {
   const root = `${pluginsDir}${id}`;
   const entries = await readdir(root, { recursive: true, withFileTypes: true });
-  const files = new Map<string, unknown>();
+  const files = new Map<string, string>();
   for (const entry of entries) {
-    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    if (!entry.isFile()) continue;
     const path = `${entry.parentPath}/${entry.name}`;
-    files.set(relative(root, path), JSON.parse(await readFile(path, 'utf8')) as unknown);
+    files.set(relative(root, path), await readFile(path, 'utf8'));
   }
   return new Map([...files].sort(([a], [b]) => a.localeCompare(b)));
+}
+
+/** Every JSON file of a reference plugin, parsed. */
+export async function pluginJsonFiles(id: string): Promise<Map<string, unknown>> {
+  const files = [...(await pluginFiles(id))].filter(([path]) => path.endsWith('.json'));
+  return new Map(files.map(([path, text]) => [path, JSON.parse(text) as unknown]));
 }
 
 /** A committed file under `schemas/`. */
