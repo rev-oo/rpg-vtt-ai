@@ -1,0 +1,41 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/actor-type.schema.json",
+  "label": "type.character",
+  "controlledBy": "player",
+  "sheet": "character",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "level": { "type": "integer", "default": 1, "minimum": 1, "maximum": 20 },
+      "str": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
+      "dex": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
+      "hp": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "integer", "default": 10, "x-counter": true },
+          "max": { "type": "integer", "default": 10, "minimum": 1 }
+        }
+      },
+      "skills": {
+        "type": "array",
+        "x-kind": "collection",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string", "default": "", "maxLength": 60 },
+            "ability": { "type": "string", "enum": ["str", "dex"], "default": "str" },
+            "rank": { "type": "integer", "default": 0, "minimum": 0, "maximum": 10 }
+          }
+        }
+      },
+      "portrait": { "type": "string", "x-kind": "image", "default": "" },
+      "notes": { "type": "string", "x-kind": "longText", "default": "" },
+      "gmNotes": { "type": "string", "x-kind": "longText", "x-layer": "secret", "default": "" }
+    }
+  },
+  "derived": {
+    "strMod": "floor((@str - 10) / 2)",
+    "dexMod": "floor((@dex - 10) / 2)",
+    "proficiency": "2 + floor((@level - 1) / 4)"
+  }
+}

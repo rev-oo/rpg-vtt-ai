@@ -1,0 +1,17 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/actor-type.schema.json",
+  "label": "type.character",
+  "controlledBy": "player",
+  "sheet": "character",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "might": { "type": "integer", "default": 2, "minimum": 1, "maximum": 8 },
+      "wits": { "type": "integer", "default": 2, "minimum": 1, "maximum": 8 },
+      "stress": { "type": "integer", "default": 0, "minimum": 0, "maximum": 5, "x-counter": true }
+    }
+  },
+  "derived": {
+    "pool": "@might + @wits"
+  }
+}

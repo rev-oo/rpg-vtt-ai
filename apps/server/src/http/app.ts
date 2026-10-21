@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import path from 'node:path';
 
 import fastifyCookie from '@fastify/cookie';
 import Fastify, { LogController, type FastifyBaseLogger, type FastifyInstance } from 'fastify';
@@ -11,6 +12,7 @@ import { LoginThrottle } from '../domain/auth/login-throttle.js';
 import { SessionService } from '../domain/auth/sessions.js';
 import { secureRng } from '../domain/rolls.js';
 import { AppError } from '../errors.js';
+import { PluginRegistry } from '../plugins/registry.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
 
@@ -21,6 +23,7 @@ import { chatRoutes } from './routes/chat.js';
 import { inviteRoutes } from './routes/invites.js';
 import { itemRoutes } from './routes/items.js';
 import { memberRoutes } from './routes/members.js';
+import { pluginRoutes } from './routes/plugins.js';
 import { rollRoutes } from './routes/rolls.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
@@ -44,6 +47,8 @@ export interface AppOptions {
   loginThrottle?: LoginThrottle;
   /** Dice RNG override for tests; rolls are cryptographically random otherwise. */
   rng?: Rng;
+  /** The plugin registry; by default one over `DATA_DIR/plugins` that has not scanned yet. */
+  plugins?: PluginRegistry;
 }
 
 /** Everything a route module needs. */
@@ -59,6 +64,7 @@ export interface AppContext {
   now: () => Date;
   /** The dice RNG (FR-CHAT-04). */
   rng: Rng;
+  plugins: PluginRegistry;
 }
 
 /** Builds the Fastify application with every route registered. */
@@ -69,6 +75,12 @@ export async function buildApp({
   now = () => new Date(),
   loginThrottle = new LoginThrottle(),
   rng = secureRng,
+  plugins = new PluginRegistry({
+    db,
+    dir: path.join(config.dataDir, 'plugins'),
+    logger,
+    now,
+  }),
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: logger,
@@ -99,11 +111,22 @@ export async function buildApp({
   registerAuth(app, sessions);
   const events = await registerEvents(app, { db, sessions });
 
-  const context: AppContext = { app, db, config, sessions, loginThrottle, events, now, rng };
+  const context: AppContext = {
+    app,
+    db,
+    config,
+    sessions,
+    loginThrottle,
+    events,
+    now,
+    rng,
+    plugins,
+  };
   setupRoutes(context);
   authRoutes(context);
   userRoutes(context);
   systemRoutes(context);
+  pluginRoutes(context);
   tableRoutes(context);
   memberRoutes(context);
   inviteRoutes(context);

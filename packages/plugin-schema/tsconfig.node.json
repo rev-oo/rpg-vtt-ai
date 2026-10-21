@@ -1,0 +1,14 @@
+{
+  "//": "Tests and the schema emitter read files from disk, so they get Node types; src stays pure.",
+  "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/node.json"],
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["test", "scripts"],
+  "references": [
+    {
+      "path": "."
+    }
+  ]
+}

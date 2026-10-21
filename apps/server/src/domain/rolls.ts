@@ -11,6 +11,8 @@ import { createChatMessage, type ChatMessageRow } from '../db/repositories/index
 import { forbidden, unprocessable } from '../errors.js';
 
 import { recipientsFor, speakerFor } from './chat.js';
+import { requireWritableSystem } from './entities.js';
+import { findTable } from './tables.js';
 
 export type RollRequest = z.output<typeof rollRequestBody>;
 
@@ -32,6 +34,8 @@ export function sendRollMessage(
   const subject: Subject = { userId: sender.userId, role: sender.role };
 
   return db.transaction((tx) => {
+    const table = findTable(tx, sender.tableId);
+    if (table) requireWritableSystem(tx, table);
     const { speaker, actor } = speakerFor(tx, sender.tableId, subject, input.actorId);
     const recipients = recipientsFor(tx, sender, input);
     let result;

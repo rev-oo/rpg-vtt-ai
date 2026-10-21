@@ -4,7 +4,12 @@ import type { Subject } from '@vtt/shared';
 
 import type { Db } from '../db/client.js';
 import { findActor, findItem, type Actor, type Item } from '../db/repositories/index.js';
-import { actorAccess, itemAccess, type EntityAccess } from '../domain/entities.js';
+import {
+  actorAccess,
+  itemAccess,
+  requireWritableSystem,
+  type EntityAccess,
+} from '../domain/entities.js';
 import { findMembership, findTable, type GameTable, type Member } from '../domain/tables.js';
 import { forbidden, notFound } from '../errors.js';
 
@@ -33,7 +38,7 @@ export interface ActorAccess extends EntityContext {
 interface LookupOptions {
   /** Also find the entity in the trash (for restore). */
   includeDeleted?: boolean;
-  /** Require edit access; 403 if the caller can only read. */
+  /** Require edit access (403 if the caller can only read) and a writable table (409). */
   edit?: boolean;
 }
 
@@ -52,6 +57,7 @@ export function requireActor(
   const access = context && actorAccess(context.subject, actor);
   if (!actor || !context || !access) throw notFound('Actor not found.');
   if (edit && access !== 'owner') throw forbidden();
+  if (edit) requireWritableSystem(db, context.table);
   return { ...context, actor, access };
 }
 
@@ -77,5 +83,6 @@ export function requireItem(
   const access = context && !orphaned ? itemAccess(context.subject, actor) : null;
   if (!item || !context || !access) throw notFound('Item not found.');
   if (edit && access !== 'owner') throw forbidden();
+  if (edit) requireWritableSystem(db, context.table);
   return { ...context, item, actor, access };
 }

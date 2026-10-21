@@ -1,0 +1,8 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/dice.schema.json",
+  "dF": {
+    "label": "dice.fate",
+    "faces": ["-", "-", " ", " ", "+", "+"],
+    "values": { "-": -1, " ": 0, "+": 1 }
+  }
+}

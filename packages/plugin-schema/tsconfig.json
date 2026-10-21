@@ -4,7 +4,7 @@
     "rootDir": ".",
     "outDir": "dist"
   },
-  "include": ["src", "test"],
+  "include": ["src"],
   "exclude": ["src/__lint-fixtures__"],
   "references": [
     {

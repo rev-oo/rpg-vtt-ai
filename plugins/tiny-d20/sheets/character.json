@@ -1,0 +1,86 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "md",
+    "children": [
+      {
+        "type": "row",
+        "gap": "md",
+        "wrap": true,
+        "children": [
+          { "type": "image", "path": "portrait", "size": "md" },
+          {
+            "type": "grid",
+            "columns": 3,
+            "children": [
+              { "type": "field", "path": "level", "label": "field.level", "input": "number" },
+              { "type": "field", "path": "str", "label": "field.str", "input": "number" },
+              { "type": "field", "path": "dex", "label": "field.dex", "input": "number" },
+              { "type": "derived", "key": "strMod", "label": "field.strMod", "format": "signed" },
+              { "type": "derived", "key": "dexMod", "label": "field.dexMod", "format": "signed" },
+              {
+                "type": "derived",
+                "key": "proficiency",
+                "label": "field.proficiency",
+                "format": "signed"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "title": "section.vitals",
+        "class": "vitals",
+        "children": [
+          { "type": "field", "path": "hp.value", "label": "field.hp", "input": "counter" },
+          { "type": "field", "path": "hp.max", "label": "field.hpMax", "input": "number" },
+          { "type": "text", "text": "hint.unconscious", "visibleIf": "@hp.value <= 0" }
+        ]
+      },
+      {
+        "type": "tabs",
+        "tabs": [
+          {
+            "label": "tab.skills",
+            "children": [
+              {
+                "type": "list",
+                "path": "skills",
+                "addLabel": "skill.add",
+                "item": {
+                  "type": "row",
+                  "gap": "sm",
+                  "children": [
+                    { "type": "field", "path": "name", "label": "skill.name" },
+                    {
+                      "type": "field",
+                      "path": "ability",
+                      "label": "skill.ability",
+                      "input": "select"
+                    },
+                    { "type": "field", "path": "rank", "label": "skill.rank", "input": "number" },
+                    {
+                      "type": "rollButton",
+                      "roll": "skill",
+                      "label": "roll.skill",
+                      "args": { "id": "@row.id" }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "tab.notes",
+            "children": [
+              { "type": "longText", "path": "notes", "label": "field.notes" },
+              { "type": "longText", "path": "gmNotes", "label": "field.gmNotes" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

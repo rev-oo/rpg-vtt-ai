@@ -1,0 +1,538 @@
+{
+  "title": "Sheet layout (sheets/<name>.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "layout": {
+      "$ref": "#/$defs/__schema0"
+    }
+  },
+  "required": [
+    "layout"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "row"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema0"
+                  }
+                },
+                "gap": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "sm",
+                    "md",
+                    "lg"
+                  ]
+                },
+                "wrap": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "children"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "column"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema0"
+                  }
+                },
+                "gap": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "sm",
+                    "md",
+                    "lg"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "children"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "grid"
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema0"
+                  }
+                },
+                "columns": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 12
+                }
+              },
+              "required": [
+                "type",
+                "children",
+                "columns"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "tabs"
+                },
+                "tabs": {
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "label": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 500
+                      },
+                      "children": {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/$defs/__schema0"
+                        }
+                      }
+                    },
+                    "required": [
+                      "label",
+                      "children"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "tabs"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "section"
+                },
+                "title": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "children": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/__schema0"
+                  }
+                },
+                "collapsible": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "type",
+                "title",
+                "children"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "field"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "input": {
+                  "type": "string",
+                  "enum": [
+                    "text",
+                    "number",
+                    "checkbox",
+                    "select",
+                    "counter"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "longText"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "type",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "list"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                },
+                "item": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "addLabel": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "type",
+                "path",
+                "item"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "rollButton"
+                },
+                "roll": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "args": {
+                  "type": "object",
+                  "propertyNames": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  },
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000,
+                        "description": "A formula (specs §8.9)."
+                      },
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "boolean"
+                      }
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "roll",
+                "label"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "derived"
+                },
+                "key": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "format": {
+                  "type": "string",
+                  "enum": [
+                    "integer",
+                    "signed",
+                    "decimal"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "key"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "image"
+                },
+                "path": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                },
+                "size": {
+                  "type": "string",
+                  "enum": [
+                    "sm",
+                    "md",
+                    "lg"
+                  ]
+                }
+              },
+              "required": [
+                "type",
+                "path"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                },
+                "visibleIf": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "type": {
+                  "type": "string",
+                  "const": "text"
+                },
+                "text": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                }
+              },
+              "required": [
+                "type",
+                "text"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "class": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "visibleIf": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000,
+              "description": "A formula (specs §8.9)."
+            },
+            "type": {
+              "type": "string",
+              "pattern": "^custom:[A-Za-z][A-Za-z0-9_-]{0,63}$"
+            },
+            "props": {
+              "type": "object",
+              "propertyNames": {
+                "type": "string"
+              },
+              "additionalProperties": {}
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    }
+  }
+}

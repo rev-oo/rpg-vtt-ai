@@ -1,0 +1,67 @@
+{
+  "title": "Custom dice (dice.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": {
+    "type": "object",
+    "properties": {
+      "label": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "faces": {
+        "minItems": 1,
+        "maxItems": 1000,
+        "type": "array",
+        "items": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 20
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "maxLength": 20
+                },
+                "value": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "label",
+                "value"
+              ],
+              "additionalProperties": false
+            }
+          ]
+        }
+      },
+      "values": {
+        "type": "object",
+        "propertyNames": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "additionalProperties": {
+          "type": "number"
+        }
+      }
+    },
+    "required": [
+      "faces"
+    ],
+    "additionalProperties": false
+  }
+}

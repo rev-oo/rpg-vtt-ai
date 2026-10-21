@@ -1,0 +1,12 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.weapon",
+  "sheet": "weapon",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "damage": { "type": "string", "default": "1d6", "maxLength": 40 },
+      "bonus": { "type": "integer", "default": 0, "minimum": -5, "maximum": 5 }
+    }
+  }
+}

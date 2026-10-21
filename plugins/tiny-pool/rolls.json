@@ -1,0 +1,16 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/rolls.schema.json",
+  "pool": {
+    "label": "roll.pool",
+    "formula": "(@derived.pool)d6cs>=5",
+    "outcomes": [
+      { "when": "@total >= 3", "label": "outcome.great" },
+      { "when": "@total >= 1", "label": "outcome.success" },
+      { "label": "outcome.failure" }
+    ]
+  },
+  "fate": {
+    "label": "roll.fate",
+    "formula": "4dF + @might"
+  }
+}

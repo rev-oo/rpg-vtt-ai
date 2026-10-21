@@ -163,7 +163,8 @@ describe('account (FR-AUTH-05)', () => {
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await screen.findByText('Profile saved.');
-    expect(screen.getByText('Signed in as Al')).toBeInTheDocument();
+    // The header picks up the new name in a later render.
+    expect(await screen.findByText('Signed in as Al')).toBeInTheDocument();
   });
 });
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/plugin.schema.json",
+  "id": "tiny-d20",
+  "name": "Tiny D20",
+  "version": "0.1.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "description": "A small d20 system: abilities, skills, hit points and a skill roll.",
+  "author": "VTT contributors",
+  "license": "MIT",
+  "hasCode": false,
+  "locales": ["en", "pt-BR"],
+  "defaultLocale": "en"
+}

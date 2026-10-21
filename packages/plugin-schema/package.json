@@ -7,19 +7,24 @@
     ".": {
       "types": "./dist/src/index.d.ts",
       "default": "./dist/src/index.js"
-    }
+    },
+    "./schemas/*": "./schemas/*"
   },
   "dependencies": {
+    "@vtt/formula": "workspace:*",
     "@vtt/shared": "workspace:*",
-    "@vtt/formula": "workspace:*"
+    "semver": "^7.8.5",
+    "zod": "^4.6.7"
   },
   "scripts": {
-    "build": "tsc -b",
-    "typecheck": "tsc -b",
+    "build": "tsc -b tsconfig.json tsconfig.node.json && node dist/scripts/emit-schemas.js",
+    "typecheck": "tsc -b tsconfig.json tsconfig.node.json",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@vtt/config": "workspace:*"
+    "@types/semver": "^7.8.0",
+    "@vtt/config": "workspace:*",
+    "ajv": "^8.20.0"
   }
 }

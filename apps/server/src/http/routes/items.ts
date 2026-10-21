@@ -12,7 +12,7 @@ import {
   updateItem,
   type Retention,
 } from '../../db/repositories/index.js';
-import { requireItemType, systemTypes, toItemView } from '../../domain/entities.js';
+import { requireItemType, toItemView, writableSystemTypes } from '../../domain/entities.js';
 import { conflict, gone, notFound, unprocessable } from '../../errors.js';
 import { publishItemChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
@@ -41,7 +41,7 @@ export function itemRoutes({ app, db, config, events, now }: AppContext): void {
     const { id } = parseInput(idParams, request.params);
     const { table } = requireMember(db, request, id, canManageItemLibrary);
     const body = parseInput(createItemBody, request.body);
-    requireItemType(systemTypes(db, table), body.type);
+    requireItemType(writableSystemTypes(db, table), body.type);
 
     const item = createItem(db, { tableId: id, ...body, dataVersion: table.systemVersion }, now());
     publishItemChanged(events, 'created', item, undefined);

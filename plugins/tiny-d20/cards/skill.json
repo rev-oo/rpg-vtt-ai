@@ -1,0 +1,9 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/card.schema.json",
+  "title": "card.skill.title",
+  "rows": [
+    { "label": "card.roll", "value": "@roll.resolved" },
+    { "label": "card.total", "value": "@total", "class": "total" }
+  ],
+  "outcome": true
+}

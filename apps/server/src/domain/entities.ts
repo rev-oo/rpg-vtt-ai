@@ -14,8 +14,9 @@ import type { ActorView, ItemView } from '@vtt/shared/api';
 import type { DbOrTx } from '../db/client.js';
 import type { Actor, Item } from '../db/repositories/index.js';
 import { plugins } from '../db/schema.js';
-import { unprocessable } from '../errors.js';
+import { conflict, unprocessable } from '../errors.js';
 
+import { isAvailable } from './plugins.js';
 import type { GameTable } from './tables.js';
 
 export type EntityAccess = ActorView['access'];
@@ -94,6 +95,30 @@ export function systemTypes(db: DbOrTx, table: GameTable): SystemTypes {
     throw unprocessable('system_unavailable', "The table's system plugin is not installed.");
   }
   return plugin;
+}
+
+/**
+ * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
+ * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
+ */
+export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
+  const plugin = db
+    .select({ enabled: plugins.enabled, status: plugins.status })
+    .from(plugins)
+    .where(eq(plugins.id, table.systemId))
+    .get();
+  if (!plugin || !isAvailable(plugin)) {
+    throw conflict(
+      'table_read_only',
+      "The table's system plugin is disabled or unavailable, so the table is read-only.",
+    );
+  }
+}
+
+/** The types of a table's system, for creating entities; the table must be writable. */
+export function writableSystemTypes(db: DbOrTx, table: GameTable): SystemTypes {
+  requireWritableSystem(db, table);
+  return systemTypes(db, table);
 }
 
 /** How a type is controlled; throws 422 if the system does not declare it. */

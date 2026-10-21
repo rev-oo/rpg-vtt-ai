@@ -1,0 +1,12 @@
+:root {
+  --vtt-accent: #8a2be2;
+}
+
+.vitals {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ok {
+  color: var(--vtt-accent);
+}
