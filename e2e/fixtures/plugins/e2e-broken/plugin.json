@@ -1,0 +1,8 @@
+{
+  "id": "e2e-broken",
+  "name": "E2E Broken",
+  "version": "0.1.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "hasCode": false
+}

@@ -1,0 +1,9 @@
+{
+  "id": "e2e-spare",
+  "name": "E2E Spare",
+  "version": "1.2.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "description": "A valid system that starts disabled, for the plugin admin test.",
+  "hasCode": false
+}

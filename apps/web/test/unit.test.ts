@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { PLUGIN_ISSUE_CODES } from '@vtt/plugin-schema/issues';
 import { createTableBody, setupStatusSchema } from '@vtt/shared/api';
 
 import { ApiError, request, requestNoContent, setCsrfToken } from '../src/api/client.js';
 import { errorMessage } from '../src/api/errors.js';
+import { issueKey, issueLocation, issueMessage } from '../src/features/plugins/issues.js';
 import '../src/forms/zod-messages.js';
 import { t } from '../src/i18n/index.js';
-import { guestRedirect, setupRedirect, userRedirect } from '../src/shell/access.js';
+import { adminRedirect, guestRedirect, setupRedirect, userRedirect } from '../src/shell/access.js';
 import { safeNext } from '../src/shell/next.js';
 import type { SessionState } from '../src/shell/session.js';
 
@@ -131,6 +133,54 @@ describe('API client', () => {
     );
     expect(errorMessage(new TypeError('Failed to fetch'))).toBe(
       'Something went wrong. Please try again.',
+    );
+  });
+});
+
+describe('plugin issues (ADR-019)', () => {
+  it('words every validator issue code', () => {
+    for (const code of PLUGIN_ISSUE_CODES) {
+      const params = code === 'has_code_mismatch' ? { hasCode: 'true' } : {};
+      expect(issueKey({ code, params }), code).toMatch(new RegExp(`^pluginIssue\\.${code}\\b`));
+    }
+  });
+
+  it('picks variants by parameter and falls back for unknown codes', () => {
+    expect(issueKey({ code: 'invalid_value', params: { reason: 'too_big', maximum: 3 } })).toBe(
+      'pluginIssue.invalid_value.too_big',
+    );
+    expect(issueKey({ code: 'invalid_value', params: { reason: 'custom' } })).toBe(
+      'pluginIssue.invalid_value',
+    );
+    expect(issueKey({ code: 'has_code_mismatch', params: { hasCode: 'false' } })).toBe(
+      'pluginIssue.has_code_mismatch.false',
+    );
+    expect(issueKey({ code: 'from_the_future', params: {} })).toBe('pluginIssue.unknown');
+  });
+
+  it('fills parameters and shows where the issue is', () => {
+    const issue = {
+      severity: 'error' as const,
+      code: 'missing_key',
+      file: 'sheets/main.json',
+      path: ['layout', 'children', 2, 'label'],
+      params: { key: 'label' },
+    };
+    expect(issueMessage(issue)).toBe('“label” is required.');
+    expect(issueLocation(issue)).toBe('sheets/main.json $.layout.children[2].label');
+    expect(issueLocation({ ...issue, path: [] })).toBe('sheets/main.json');
+  });
+});
+
+describe('adminRedirect()', () => {
+  const url = new URL('http://localhost/admin/plugins');
+  const user = { id: 'u1', username: 'a', displayName: 'A', mustChangePassword: false };
+
+  it('lets admins in and sends everyone else away', () => {
+    expect(adminRedirect({ needsSetup: false, user: { ...user, isAdmin: true } }, url)).toBeNull();
+    expect(adminRedirect({ needsSetup: false, user: { ...user, isAdmin: false } }, url)).toBe('/');
+    expect(adminRedirect({ needsSetup: false, user: null }, url)).toBe(
+      '/login?next=%2Fadmin%2Fplugins',
     );
   });
 });
