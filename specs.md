@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0    | Foundation (monorepo, TypeScript, lint, format, CI)           | Done        | 100%     | —      |
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
-| M3    | Formula & dice engine                                         | In progress | 100%     | —      |
+| M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Not started | 0%       | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M3
-- **Next task:** M3 sign-off, then `T-0401`
+- **Active milestone:** M4
+- **Next task:** `T-0401`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -58,6 +58,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                      |
 | 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                    |
 | 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.           |
+| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                |
 
 ---
 
