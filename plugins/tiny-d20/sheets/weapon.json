@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "row",
+    "gap": "sm",
+    "children": [
+      { "type": "field", "path": "damage", "label": "field.damage" },
+      { "type": "field", "path": "bonus", "label": "field.bonus", "input": "number" }
+    ]
+  }
+}

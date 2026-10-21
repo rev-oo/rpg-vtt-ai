@@ -1,0 +1,83 @@
+{
+  "title": "Roll recipes (rolls.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": {
+    "anyOf": [
+      {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "formula": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "description": "A formula (specs §8.9)."
+          },
+          "outcomes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "when": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "description": "A formula (specs §8.9)."
+                },
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500
+                },
+                "class": {
+                  "type": "string",
+                  "maxLength": 200
+                }
+              },
+              "required": [
+                "label"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "card": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          }
+        },
+        "required": [
+          "formula"
+        ],
+        "additionalProperties": false
+      },
+      {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "handler": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+          }
+        },
+        "required": [
+          "handler"
+        ],
+        "additionalProperties": false
+      }
+    ]
+  }
+}

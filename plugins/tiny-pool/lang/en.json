@@ -1,0 +1,13 @@
+{
+  "type.character": "Character",
+  "field.might": "Might",
+  "field.wits": "Wits",
+  "field.stress": "Stress",
+  "field.pool": "Pool",
+  "roll.pool": "Roll pool",
+  "roll.fate": "Fate roll",
+  "dice.fate": "Fate die",
+  "outcome.great": "Great success",
+  "outcome.success": "Success",
+  "outcome.failure": "Failure"
+}

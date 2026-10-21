@@ -1,0 +1,20 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "children": [
+          { "type": "field", "path": "str", "label": "field.str", "input": "number" },
+          { "type": "field", "path": "dex", "label": "field.dex", "input": "number" },
+          { "type": "field", "path": "hp.value", "label": "field.hp", "input": "counter" }
+        ]
+      },
+      { "type": "rollButton", "roll": "attack", "label": "roll.attack" },
+      { "type": "longText", "path": "gmNotes", "label": "field.gmNotes" }
+    ]
+  }
+}

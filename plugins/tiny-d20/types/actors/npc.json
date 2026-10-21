@@ -1,0 +1,25 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/actor-type.schema.json",
+  "label": "type.npc",
+  "controlledBy": "gm",
+  "sheet": "npc",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "str": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
+      "dex": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
+      "hp": {
+        "type": "object",
+        "properties": {
+          "value": { "type": "integer", "default": 8, "x-counter": true },
+          "max": { "type": "integer", "default": 8, "minimum": 1 }
+        }
+      },
+      "gmNotes": { "type": "string", "x-kind": "longText", "x-layer": "secret", "default": "" }
+    }
+  },
+  "derived": {
+    "strMod": "floor((@str - 10) / 2)",
+    "dexMod": "floor((@dex - 10) / 2)"
+  }
+}

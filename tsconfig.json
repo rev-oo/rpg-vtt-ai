@@ -11,6 +11,9 @@
       "path": "./packages/plugin-schema"
     },
     {
+      "path": "./packages/plugin-schema/tsconfig.node.json"
+    },
+    {
       "path": "./packages/plugin-engine"
     },
     {

@@ -1,0 +1,5 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/settings.schema.json",
+  "critFumble": { "type": "boolean", "default": true, "label": "setting.critFumble" },
+  "startingHp": { "type": "integer", "default": 10, "minimum": 1, "label": "setting.startingHp" }
+}

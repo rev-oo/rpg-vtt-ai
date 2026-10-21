@@ -1,0 +1,21 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      { "type": "field", "path": "might", "label": "field.might", "input": "number" },
+      { "type": "field", "path": "wits", "label": "field.wits", "input": "number" },
+      { "type": "field", "path": "stress", "label": "field.stress", "input": "counter" },
+      { "type": "derived", "key": "pool", "label": "field.pool" },
+      {
+        "type": "row",
+        "gap": "sm",
+        "children": [
+          { "type": "rollButton", "roll": "pool", "label": "roll.pool" },
+          { "type": "rollButton", "roll": "fate", "label": "roll.fate" }
+        ]
+      }
+    ]
+  }
+}
