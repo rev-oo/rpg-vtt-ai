@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
-| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 33%      | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 42%      | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M4
-- **Next task:** `T-0405`
+- **Next task:** `T-0406`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -63,6 +63,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                               |
 | 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                      |
 | 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                        |
+| 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                  |
 
 ---
 
@@ -1107,10 +1108,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** tests confirm prefixing, `:root` rewrite, `@import` removal, forbidden property stripping, and `@layer plugin` wrapping.
   - **Note:** `scopeCss` is in `@vtt/plugin-schema` (`test/css.test.ts`) so the validator and the CLI apply it too; the server's disk cache is `apps/server/src/plugins/css-cache.ts` (ADR-021).
 
-- [ ] **T-0405 · Plugin asset serving**
+- [x] **T-0405 · Plugin asset serving**
   - **Deps:** T-0404
   - **Do:** Serve `/plugins/<id>/*` with correct MIME types, cache headers, and path traversal protection. Serve only files inside the plugin folder.
   - **Done when:** `../` traversal attempts return 404 (tested).
+  - **Note:** `apps/server/src/http/routes/plugin-assets.ts` with `test/plugin-assets.test.ts`. Signed-in users only, available plugins only, an allow-list of file types, scoped stylesheets, `no-cache` with ETags (ADR-022).
 
 - [ ] **T-0406 · Plugin admin UI**
   - **Deps:** T-0403, T-0111
@@ -1365,6 +1367,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-019 | [Plugin validation: one pure validator, issue codes, reference roots](docs/adr/ADR-019-plugin-validation.md)                                    | Accepted |
 | ADR-020 | [Plugin registry: scanning, status, enabling, read-only tables](docs/adr/ADR-020-plugin-registry.md)                                            | Accepted |
 | ADR-021 | [Scoped plugin CSS: scope, layer, at-rules, URLs, limits](docs/adr/ADR-021-scoped-plugin-css.md)                                                | Accepted |
+| ADR-022 | [Plugin file serving: access, allowed files, scoped CSS, headers](docs/adr/ADR-022-plugin-file-serving.md)                                      | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

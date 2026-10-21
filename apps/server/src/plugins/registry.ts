@@ -59,6 +59,11 @@ export class PluginRegistry {
     this.#options = options;
   }
 
+  /** The folder plugins are scanned from (`DATA_DIR/plugins`). */
+  get dir(): string {
+    return this.#options.dir;
+  }
+
   /** The parsed files of a ready plugin, as of the last scan. */
   definition(id: string): PluginDefinition | undefined {
     return this.#definitions.get(id);
