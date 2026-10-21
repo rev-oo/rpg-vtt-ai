@@ -3,11 +3,14 @@ import path from 'node:path';
 
 import type { PluginIssue } from '@vtt/plugin-schema';
 
-/** JSON files above this size are not read (and reported), so a scan stays cheap. */
-export const MAX_JSON_BYTES = 1024 * 1024;
+/** JSON and CSS files above this size are not read (and reported), so a scan stays cheap. */
+export const MAX_TEXT_BYTES = 1024 * 1024;
+
+/** The files the validator reads; the rest only need to be listed. */
+const isText = (file: string) => file.endsWith('.json') || /^styles\/[^/]+\.css$/.test(file);
 
 export interface PluginFolder {
-  /** Every regular file, `/`-separated and relative; JSON files carry their text. */
+  /** Every regular file, `/`-separated and relative; JSON and style files carry their text. */
   files: Map<string, string>;
   /** Problems found while reading, in the validator's format. */
   issues: PluginIssue[];
@@ -25,18 +28,18 @@ export async function readPluginFolder(dir: string): Promise<PluginFolder> {
     if (!entry.isFile()) continue;
     const full = path.join(entry.parentPath, entry.name);
     const file = path.relative(dir, full).split(path.sep).join('/');
-    if (!file.endsWith('.json')) {
+    if (!isText(file)) {
       files.set(file, '');
       continue;
     }
     const { size } = await stat(full);
-    if (size > MAX_JSON_BYTES) {
+    if (size > MAX_TEXT_BYTES) {
       issues.push({
         severity: 'error',
         code: 'file_too_large',
         file,
         path: [],
-        params: { limit: MAX_JSON_BYTES },
+        params: { limit: MAX_TEXT_BYTES },
       });
       continue;
     }
