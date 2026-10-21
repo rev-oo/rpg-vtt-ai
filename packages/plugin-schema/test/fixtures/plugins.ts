@@ -419,6 +419,18 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'styles that reach outside the sheet, or do not parse',
+    change: (f: PluginFixture): void => {
+      f['styles/sheet.css'] = "@import 'x.css';\nbody { margin: 0 }";
+      f['styles/broken.css'] = '.a {';
+    },
+    issues: [
+      'warning css_stripped styles/sheet.css $',
+      'warning css_stripped styles/sheet.css $',
+      'error css_invalid styles/broken.css $',
+    ],
+  },
+  {
     name: 'files the format does not know',
     change: (f: PluginFixture): void => {
       f['packs/monsters.json'] = [];

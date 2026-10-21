@@ -5,6 +5,7 @@ import { CORE_API_VERSION } from '@vtt/shared';
 import type { Card } from '../cards.js';
 import type { Combat } from '../combat.js';
 import { DIE_NAME, IDENTIFIER, LOCALE, NAME } from '../common.js';
+import { scopeCss } from '../css/scope.js';
 import type { Die } from '../dice.js';
 import { PLUGIN_FILES, type PluginFileKind, pluginFileKind } from '../json-schema.js';
 import type { Lang } from '../lang.js';
@@ -32,7 +33,7 @@ export interface PluginDefinition {
   combat?: Combat | undefined;
   /** Translations by locale. */
   lang: Record<string, Lang>;
-  /** Paths of `styles/*.css`. */
+  /** Paths of `styles/*.css`, in order. */
   styles: string[];
 }
 
@@ -86,8 +87,8 @@ interface TypeEntry {
  * Validates a plugin folder (FR-PLUGIN-02, specs §8.13): every JSON file against its schema,
  * formulas and their references, links between files, `hasCode`, and translations.
  *
- * `files` maps each path in the folder (`/`-separated, relative) to its text. Only JSON
- * contents are read; other files only need to be listed.
+ * `files` maps each path in the folder (`/`-separated, relative) to its text. Only JSON and
+ * `styles/*.css` contents are read; other files only need to be listed.
  */
 export interface ValidateOptions {
   /** The core API version to check `coreApi` against; this core's by default. */
@@ -485,7 +486,18 @@ export function validatePlugin(
       formula(combat.initiative, scope, true, 'combat.json', ['initiative']);
   }
 
-  // 6. Translations: English is required once any lang file exists (specs §8.2).
+  // 6. Styles: the same scoping the server applies (§8.6).
+  const styles = paths.filter((path) => /^styles\/[^/]+\.css$/.test(path));
+  for (const path of styles) {
+    const scoped = scopeCss(files.get(path) ?? '', {
+      pluginId: folder ?? manifest?.id ?? 'plugin',
+      file: path,
+    });
+    for (const issue of scoped.issues)
+      add(issue.severity, issue.code, issue.file, issue.path, issue.params);
+  }
+
+  // 7. Translations: English is required once any lang file exists (specs §8.2).
   const locales = new Set(paths.filter((path) => pluginFileKind(path) === 'lang').map(baseName));
   const listed = manifest?.locales;
   if (locales.size > 0 || listed) {
@@ -532,7 +544,7 @@ export function validatePlugin(
           settings,
           combat,
           lang,
-          styles: paths.filter((path) => path.startsWith('styles/') && path.endsWith('.css')),
+          styles,
         }
       : undefined,
   };

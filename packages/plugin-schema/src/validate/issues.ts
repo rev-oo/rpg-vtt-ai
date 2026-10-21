@@ -13,6 +13,10 @@ export const PLUGIN_ISSUE_CODES = [
   // Compatibility
   'invalid_core_api',
   'incompatible_core_api',
+  // Styles
+  'css_too_large',
+  'css_invalid',
+  'css_stripped',
   // Shapes (from the Zod schemas)
   'missing_key',
   'unknown_key',
@@ -97,6 +101,11 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   invalid_name: (x) => `"${p(x, 'name')}" is not a valid ${p(x, 'of')} name`,
   folder_mismatch: (x) => `The id must match the folder name "${p(x, 'folder')}"`,
   file_too_large: (x) => `The file is larger than ${p(x, 'limit')} bytes and was not read`,
+  css_too_large: (x) => `The stylesheet is larger than ${p(x, 'limit')} bytes`,
+  css_invalid: (x) =>
+    `The stylesheet does not parse: ${p(x, 'detail')} (line ${p(x, 'line')}, column ${p(x, 'column')})`,
+  css_stripped: (x) =>
+    `${p(x, 'rule')} (line ${p(x, 'line')}) was removed: plugin styles cannot reach outside their sheets`,
   invalid_core_api: (x) => `"${p(x, 'coreApi')}" is not a semver range`,
   incompatible_core_api: (x) =>
     `The plugin needs core API ${p(x, 'coreApi')}, but this server provides ${p(x, 'core')}`,

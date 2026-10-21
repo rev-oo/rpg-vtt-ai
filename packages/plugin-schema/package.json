@@ -13,6 +13,9 @@
   "dependencies": {
     "@vtt/formula": "workspace:*",
     "@vtt/shared": "workspace:*",
+    "postcss": "8.5.29",
+    "postcss-selector-parser": "7.1.6",
+    "postcss-value-parser": "^4.2.0",
     "semver": "^7.8.5",
     "zod": "^4.6.7"
   },
