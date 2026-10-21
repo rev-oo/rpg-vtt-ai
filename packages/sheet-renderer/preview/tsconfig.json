@@ -1,0 +1,15 @@
+{
+  "extends": ["../../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
+  "//": "The preview page and its test: they load plugin folders through Vite's import.meta.glob.",
+  "compilerOptions": {
+    "rootDir": "..",
+    "outDir": "../dist/preview",
+    "types": ["vite/client"]
+  },
+  "include": [".", "../test/preview", "../test/setup.ts"],
+  "references": [
+    {
+      "path": ".."
+    }
+  ]
+}

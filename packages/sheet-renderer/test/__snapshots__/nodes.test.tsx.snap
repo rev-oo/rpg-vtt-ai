@@ -1,0 +1,926 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`node snapshots (specs §8.5) > column 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-column flex min-w-0 flex-col gap-(--vtt-gap-lg)"
+    >
+      <p
+        class="vtt-text"
+      >
+        A
+      </p>
+      <p
+        class="vtt-text"
+      >
+        B
+      </p>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > custom 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-custom min-w-0"
+      data-node="hpBar"
+    >
+      <meter
+        data-color="red"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > derived 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-derived flex min-w-0 flex-col gap-1"
+      data-derived="strMod"
+    >
+      <span
+        class="text-sm font-semibold"
+        id="_r_i_"
+      >
+        Modifier
+      </span>
+      <output
+        aria-labelledby="_r_i_"
+        class="text-xl font-bold text-(--vtt-accent)"
+      >
+        +2
+      </output>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > field (checkbox) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-field flex min-w-0 items-center gap-2"
+      data-field="alive"
+    >
+      <input
+        checked=""
+        class="size-5 accent-(--vtt-accent)"
+        id="_r_a_"
+        type="checkbox"
+      />
+      <label
+        class="text-sm font-semibold"
+        for="_r_a_"
+      >
+        alive
+      </label>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > field (counter) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-field flex min-w-0 flex-col gap-1"
+      data-field="hp.value"
+    >
+      <label
+        class="text-sm font-semibold"
+        for="_r_c_"
+      >
+        Hit points
+      </label>
+      <div
+        class="flex min-w-0 items-center gap-1"
+      >
+        <button
+          aria-label="Decrease Hit points"
+          class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-line bg-surface text-fg hover:enabled:bg-canvas"
+          data-variant="secondary"
+          type="button"
+        >
+          −
+        </button>
+        <input
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+          id="_r_c_"
+          inputmode="numeric"
+          type="text"
+          value="10"
+        />
+        <button
+          aria-label="Increase Hit points"
+          class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-line bg-surface text-fg hover:enabled:bg-canvas"
+          data-variant="secondary"
+          type="button"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > field (number) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-field flex min-w-0 flex-col gap-1"
+      data-field="str"
+    >
+      <label
+        class="text-sm font-semibold"
+        for="_r_9_"
+      >
+        Strength
+      </label>
+      <input
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        id="_r_9_"
+        inputmode="numeric"
+        type="text"
+        value="14"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > field (select) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-field flex min-w-0 flex-col gap-1"
+      data-field="size"
+    >
+      <label
+        class="text-sm font-semibold"
+        for="_r_b_"
+      >
+        size
+      </label>
+      <select
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60"
+        id="_r_b_"
+      >
+        <option
+          value="small"
+        >
+          Small
+        </option>
+        <option
+          value="large"
+        >
+          Large
+        </option>
+      </select>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > field (text) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-field flex min-w-0 flex-col gap-1"
+      data-field="name"
+    >
+      <label
+        class="text-sm font-semibold"
+        for="_r_8_"
+      >
+        Name
+      </label>
+      <input
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        id="_r_8_"
+        type="text"
+        value="Ayla"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > grid 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-grid grid min-w-0 gap-(--vtt-gap-md)"
+      style="grid-template-columns: repeat(auto-fill, minmax(max(7rem, calc((100% - 2 * var(--vtt-gap-md)) / 3)), 1fr));"
+    >
+      <div
+        class="vtt-field flex min-w-0 flex-col gap-1"
+        data-field="str"
+      >
+        <label
+          class="text-sm font-semibold"
+          for="_r_2_"
+        >
+          str
+        </label>
+        <input
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          id="_r_2_"
+          inputmode="numeric"
+          type="text"
+          value="14"
+        />
+      </div>
+      <div
+        class="vtt-field flex min-w-0 flex-col gap-1"
+        data-field="speed"
+      >
+        <label
+          class="text-sm font-semibold"
+          for="_r_3_"
+        >
+          speed
+        </label>
+        <input
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          id="_r_3_"
+          inputmode="decimal"
+          type="text"
+          value="1.5"
+        />
+      </div>
+      <div
+        class="vtt-field flex min-w-0 items-center gap-2"
+        data-field="alive"
+      >
+        <input
+          checked=""
+          class="size-5 accent-(--vtt-accent)"
+          id="_r_4_"
+          type="checkbox"
+        />
+        <label
+          class="text-sm font-semibold"
+          for="_r_4_"
+        >
+          alive
+        </label>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > image 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-image shrink-0 size-16"
+      data-field="portrait"
+    >
+      <img
+        alt=""
+        class="size-full rounded-lg border border-line object-cover"
+        src="https://example.com/ayla.png"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > list 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-list flex min-w-0 flex-col gap-(--vtt-gap-sm)"
+      data-field="skills"
+    >
+      <ul
+        class="flex min-w-0 list-none flex-col gap-(--vtt-gap-sm) p-0"
+      >
+        <li
+          class="vtt-list-row flex min-w-0 flex-col gap-2 @md:flex-row @md:items-end"
+          data-row="a"
+        >
+          <div
+            class="min-w-0 flex-1"
+          >
+            <div
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+            >
+              <div
+                class="vtt-field flex min-w-0 flex-col gap-1"
+                data-field="name"
+              >
+                <label
+                  class="text-sm font-semibold"
+                  for="_r_e_"
+                >
+                  name
+                </label>
+                <input
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  id="_r_e_"
+                  type="text"
+                  value="Climb"
+                />
+              </div>
+              <div
+                class="vtt-field flex min-w-0 flex-col gap-1"
+                data-field="rank"
+              >
+                <label
+                  class="text-sm font-semibold"
+                  for="_r_f_"
+                >
+                  rank
+                </label>
+                <input
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  id="_r_f_"
+                  inputmode="numeric"
+                  type="text"
+                  value="2"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="flex shrink-0 gap-1"
+          >
+            <button
+              aria-label="Move up"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              disabled=""
+              title="Move up"
+              type="button"
+            >
+              ↑
+            </button>
+            <button
+              aria-label="Move down"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              title="Move down"
+              type="button"
+            >
+              ↓
+            </button>
+            <button
+              aria-label="Remove"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              title="Remove"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+        </li>
+        <li
+          class="vtt-list-row flex min-w-0 flex-col gap-2 @md:flex-row @md:items-end"
+          data-row="b"
+        >
+          <div
+            class="min-w-0 flex-1"
+          >
+            <div
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+            >
+              <div
+                class="vtt-field flex min-w-0 flex-col gap-1"
+                data-field="name"
+              >
+                <label
+                  class="text-sm font-semibold"
+                  for="_r_g_"
+                >
+                  name
+                </label>
+                <input
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  id="_r_g_"
+                  type="text"
+                  value="Swim"
+                />
+              </div>
+              <div
+                class="vtt-field flex min-w-0 flex-col gap-1"
+                data-field="rank"
+              >
+                <label
+                  class="text-sm font-semibold"
+                  for="_r_h_"
+                >
+                  rank
+                </label>
+                <input
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  id="_r_h_"
+                  inputmode="numeric"
+                  type="text"
+                  value="1"
+                />
+              </div>
+            </div>
+          </div>
+          <div
+            class="flex shrink-0 gap-1"
+          >
+            <button
+              aria-label="Move up"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              title="Move up"
+              type="button"
+            >
+              ↑
+            </button>
+            <button
+              aria-label="Move down"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              disabled=""
+              title="Move down"
+              type="button"
+            >
+              ↓
+            </button>
+            <button
+              aria-label="Remove"
+              class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-transparent text-fg hover:enabled:bg-canvas"
+              data-variant="ghost"
+              title="Remove"
+              type="button"
+            >
+              ✕
+            </button>
+          </div>
+        </li>
+      </ul>
+      <div>
+        <button
+          class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-line bg-surface text-fg hover:enabled:bg-canvas"
+          data-variant="secondary"
+          type="button"
+        >
+          Add skill
+        </button>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > longText 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-longText flex min-w-0 flex-col gap-1"
+      data-field="notes"
+    >
+      <label
+        class="text-sm font-semibold"
+        for="_r_d_"
+      >
+        Notes
+      </label>
+      <textarea
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 min-h-24 w-full min-w-0"
+        id="_r_d_"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > read-only 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+    data-readonly="true"
+  >
+    <div
+      class="vtt-column flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    >
+      <div
+        class="vtt-list flex min-w-0 flex-col gap-(--vtt-gap-sm)"
+        data-field="skills"
+      >
+        <ul
+          class="flex min-w-0 list-none flex-col gap-(--vtt-gap-sm) p-0"
+        >
+          <li
+            class="vtt-list-row flex min-w-0 flex-col gap-2 @md:flex-row @md:items-end"
+            data-row="a"
+          >
+            <div
+              class="min-w-0 flex-1"
+            >
+              <div
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              >
+                <div
+                  class="vtt-field flex min-w-0 flex-col gap-1"
+                  data-field="name"
+                >
+                  <label
+                    class="text-sm font-semibold"
+                    for="_r_j_"
+                  >
+                    name
+                  </label>
+                  <input
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    id="_r_j_"
+                    readonly=""
+                    type="text"
+                    value="Climb"
+                  />
+                </div>
+                <div
+                  class="vtt-field flex min-w-0 flex-col gap-1"
+                  data-field="rank"
+                >
+                  <label
+                    class="text-sm font-semibold"
+                    for="_r_k_"
+                  >
+                    rank
+                  </label>
+                  <input
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    id="_r_k_"
+                    inputmode="numeric"
+                    readonly=""
+                    type="text"
+                    value="2"
+                  />
+                </div>
+              </div>
+            </div>
+          </li>
+          <li
+            class="vtt-list-row flex min-w-0 flex-col gap-2 @md:flex-row @md:items-end"
+            data-row="b"
+          >
+            <div
+              class="min-w-0 flex-1"
+            >
+              <div
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              >
+                <div
+                  class="vtt-field flex min-w-0 flex-col gap-1"
+                  data-field="name"
+                >
+                  <label
+                    class="text-sm font-semibold"
+                    for="_r_l_"
+                  >
+                    name
+                  </label>
+                  <input
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    id="_r_l_"
+                    readonly=""
+                    type="text"
+                    value="Swim"
+                  />
+                </div>
+                <div
+                  class="vtt-field flex min-w-0 flex-col gap-1"
+                  data-field="rank"
+                >
+                  <label
+                    class="text-sm font-semibold"
+                    for="_r_m_"
+                  >
+                    rank
+                  </label>
+                  <input
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    id="_r_m_"
+                    inputmode="numeric"
+                    readonly=""
+                    type="text"
+                    value="1"
+                  />
+                </div>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div
+        class="vtt-field flex min-w-0 flex-col gap-1"
+        data-field="hp.value"
+      >
+        <label
+          class="text-sm font-semibold"
+          for="_r_n_"
+        >
+          Hit points
+        </label>
+        <div
+          class="flex min-w-0 items-center gap-1"
+        >
+          <button
+            aria-label="Decrease Hit points"
+            class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-line bg-surface text-fg hover:enabled:bg-canvas"
+            data-variant="secondary"
+            disabled=""
+            type="button"
+          >
+            −
+          </button>
+          <input
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+            id="_r_n_"
+            inputmode="numeric"
+            readonly=""
+            type="text"
+            value="10"
+          />
+          <button
+            aria-label="Increase Hit points"
+            class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-line bg-surface text-fg hover:enabled:bg-canvas"
+            data-variant="secondary"
+            disabled=""
+            type="button"
+          >
+            +
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > rollButton 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-rollButton"
+      data-roll="skill"
+    >
+      <button
+        class="inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60 border-transparent bg-primary text-on-primary hover:enabled:bg-primary-hover"
+        data-variant="primary"
+        type="button"
+      >
+        Roll skill
+      </button>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > row 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end @md:flex-wrap gap-(--vtt-gap-sm) stats"
+    >
+      <div
+        class="vtt-field flex min-w-0 flex-col gap-1"
+        data-field="str"
+      >
+        <label
+          class="text-sm font-semibold"
+          for="_r_0_"
+        >
+          str
+        </label>
+        <input
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          id="_r_0_"
+          inputmode="numeric"
+          type="text"
+          value="14"
+        />
+      </div>
+      <div
+        class="vtt-field flex min-w-0 flex-col gap-1"
+        data-field="speed"
+      >
+        <label
+          class="text-sm font-semibold"
+          for="_r_1_"
+        >
+          speed
+        </label>
+        <input
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          id="_r_1_"
+          inputmode="decimal"
+          type="text"
+          value="1.5"
+        />
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > section (collapsible) 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <details
+      class="vtt-section flex min-w-0 flex-col gap-(--vtt-gap-sm) rounded-lg border border-line p-3"
+      open=""
+    >
+      <summary
+        class="cursor-pointer font-semibold"
+      >
+        Vitals
+      </summary>
+      <div
+        class="flex min-w-0 flex-col gap-(--vtt-gap-md)"
+      />
+    </details>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > section 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <section
+      class="vtt-section flex min-w-0 flex-col gap-(--vtt-gap-sm) rounded-lg border border-line p-3 vitals"
+    >
+      <h3
+        class="font-semibold"
+      >
+        Vitals
+      </h3>
+      <div
+        class="flex min-w-0 flex-col gap-(--vtt-gap-md)"
+      >
+        <div
+          class="vtt-field flex min-w-0 flex-col gap-1"
+          data-field="hp.max"
+        >
+          <label
+            class="text-sm font-semibold"
+            for="_r_7_"
+          >
+            hp.max
+          </label>
+          <input
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            id="_r_7_"
+            inputmode="numeric"
+            type="text"
+            value="10"
+          />
+        </div>
+      </div>
+    </section>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > tabs 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <div
+      class="vtt-tabs flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    >
+      <div
+        class="flex flex-wrap gap-1 border-b border-line"
+        role="tablist"
+      >
+        <button
+          aria-controls="_r_5_-panel-0"
+          aria-selected="true"
+          class="-mb-px border-b-2 px-3 py-2 text-sm font-semibold border-(--vtt-accent) text-fg"
+          id="_r_5_-tab-0"
+          role="tab"
+          tabindex="0"
+          type="button"
+        >
+          Main
+        </button>
+        <button
+          aria-controls="_r_5_-panel-1"
+          aria-selected="false"
+          class="-mb-px border-b-2 px-3 py-2 text-sm font-semibold border-transparent text-muted hover:text-fg"
+          id="_r_5_-tab-1"
+          role="tab"
+          tabindex="-1"
+          type="button"
+        >
+          Notes
+        </button>
+      </div>
+      <div
+        aria-labelledby="_r_5_-tab-0"
+        class="flex min-w-0 flex-col gap-(--vtt-gap-md)"
+        id="_r_5_-panel-0"
+        role="tabpanel"
+      >
+        <div
+          class="vtt-field flex min-w-0 flex-col gap-1"
+          data-field="str"
+        >
+          <label
+            class="text-sm font-semibold"
+            for="_r_6_"
+          >
+            Strength
+          </label>
+          <input
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            id="_r_6_"
+            inputmode="numeric"
+            type="text"
+            value="14"
+          />
+        </div>
+      </div>
+      <div
+        aria-labelledby="_r_5_-tab-1"
+        class="flex min-w-0 flex-col gap-(--vtt-gap-md)"
+        hidden=""
+        id="_r_5_-panel-1"
+        role="tabpanel"
+      />
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`node snapshots (specs §8.5) > text 1`] = `
+<DocumentFragment>
+  <div
+    class="vtt-sheet @container flex min-w-0 flex-col gap-(--vtt-gap-md)"
+    data-plugin="tiny-test"
+  >
+    <p
+      class="vtt-text hint"
+    >
+      hint.unconscious
+    </p>
+  </div>
+</DocumentFragment>
+`;

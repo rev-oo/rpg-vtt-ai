@@ -15,11 +15,43 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 export const isCollection = (field: FieldSchema): boolean =>
   field.type === 'array' && field['x-kind'] === 'collection';
 
+const DIGITS = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+/** A key strictly between `a` and `b` (`''` and `null` are the open ends). */
+function midpoint(a: string, b: string | null): string {
+  if (b !== null) {
+    let shared = 0;
+    while ((a[shared] ?? '0') === b[shared]) shared += 1;
+    if (shared > 0) return b.slice(0, shared) + midpoint(a.slice(shared), b.slice(shared));
+  }
+  const low = a ? DIGITS.indexOf(a.charAt(0)) : 0;
+  const high = b === null ? DIGITS.length : DIGITS.indexOf(b.charAt(0));
+  if (high - low > 1) return DIGITS.charAt(Math.round((low + high) / 2));
+  if (b !== null && b.length > 1) return b.charAt(0);
+  return DIGITS.charAt(low) + midpoint(a.slice(1), null);
+}
+
+const SORT_KEY = /^[0-9a-z]*[1-9a-z]$/;
+
 /**
- * The sort key of the n-th default row. Keys compare as strings; reordering later puts a row
- * between two keys without touching the others.
+ * A collection sort key between two neighbours (specs §9.4): `null` for the start or the end
+ * of the list. Keys are base-36 fractions compared as strings, so a row moves by changing
+ * only its own key. Keys that are not of this form (or not in order) are treated as absent.
  */
-export const defaultSortKey = (index: number): string => `a${index.toString(36).padStart(4, '0')}`;
+export function sortKeyBetween(before: string | null, after: string | null): string {
+  const low = before !== null && SORT_KEY.test(before) ? before : '';
+  const high = after !== null && SORT_KEY.test(after) && after > low ? after : null;
+  return midpoint(low, high);
+}
+
+/** Sort keys for `count` rows in order, as given to a collection's default rows. */
+export function sortKeys(count: number): string[] {
+  const keys: string[] = [];
+  for (let index = 0; index < count; index += 1) {
+    keys.push(sortKeyBetween(keys.at(-1) ?? null, null));
+  }
+  return keys;
+}
 
 /** Defaults come from JSON files, so a JSON copy is a full copy. */
 const cloneJson = (value: unknown): unknown =>
@@ -44,10 +76,11 @@ const EMPTY: Record<Exclude<FieldSchema['type'], 'object' | 'array'>, unknown> =
 export function defaultValue(field: FieldSchema): unknown {
   if (isCollection(field)) {
     const rows = Array.isArray(field.default) ? (field.default as unknown[]) : [];
+    const keys = sortKeys(rows.length);
     return Object.fromEntries(
       rows.map((row, index) => [
         `d${String(index)}`,
-        { ...withDefaults(field.items, row), sort: defaultSortKey(index) },
+        { ...withDefaults(field.items, row), sort: keys[index] ?? '' },
       ]),
     );
   }

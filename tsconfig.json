@@ -23,6 +23,9 @@
       "path": "./packages/sheet-renderer"
     },
     {
+      "path": "./packages/sheet-renderer/preview"
+    },
+    {
       "path": "./packages/sdk"
     },
     {

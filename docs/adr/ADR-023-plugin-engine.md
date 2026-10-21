@@ -15,7 +15,8 @@ T-0407 builds `packages/plugin-engine`, the pure package that applies a validate
 2. **Collections.** Outside Yjs a collection is an object keyed by row id, the same shape as its `Y.Map` (§9.4).
    - Each row holds its fields and a `sort` key. The id is the key, never a field, and `collectionRows()` adds it back in `sort` order.
    - Formulas read rows by id (`@skills[@args.id].rank`) and aggregate them with `[*]`.
-   - Default rows (a collection's `default` array) get the ids `d0`, `d1`… and the sort keys `a0000`, `a0001`…
+   - Sort keys are base-36 fractions compared as strings (`i`, `r`, `w`…). `sortKeyBetween(before, after)` gives a key between two neighbours, so moving a row changes only its own key.
+   - Default rows (a collection's `default` array) get the ids `d0`, `d1`… and keys from `sortKeys()`.
 3. **Defaults.** A field without `default` starts empty: `''`, `0`, `false`, `[]`, `{}` for a collection, and an object built from its properties.
    - `withDefaults()` fills in only what stored data leaves out, at every depth and in every row.
    - Values of the wrong shape are left alone; repairing them is the store's job (§9.7).
