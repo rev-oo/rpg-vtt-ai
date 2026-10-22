@@ -10,18 +10,39 @@
     }
   },
   "dependencies": {
-    "@vtt/shared": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
     "@vtt/formula": "workspace:*",
+    "@vtt/plugin-engine": "workspace:*",
+    "@vtt/plugin-io": "workspace:*",
     "@vtt/plugin-schema": "workspace:*",
-    "@vtt/plugin-engine": "workspace:*"
+    "@vtt/sdk": "workspace:*",
+    "@vtt/shared": "workspace:*",
+    "@vtt/sheet-renderer": "workspace:*",
+    "@vtt/ui": "workspace:*",
+    "lightningcss": "^1.33.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "rolldown": "^1.2.14",
+    "tailwindcss": "^4.3.3",
+    "vite": "^8.3.4"
   },
   "scripts": {
-    "build": "tsc -b",
-    "typecheck": "tsc -b",
+    "build": "tsc -b tsconfig.json dev/tsconfig.json",
+    "typecheck": "tsc -b tsconfig.json dev/tsconfig.json",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --coverage"
   },
   "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@vtt/config": "workspace:*"
-  }
+  },
+  "description": "vtt-plugin: validate, preview, pack and schema commands for plugin authors (specs \u00a78.13).",
+  "bin": {
+    "vtt-plugin": "./dist/src/bin.js"
+  },
+  "files": [
+    "dist/src",
+    "dev"
+  ]
 }

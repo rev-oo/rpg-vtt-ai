@@ -38,6 +38,9 @@
       "path": "./packages/plugin-cli"
     },
     {
+      "path": "./packages/plugin-cli/dev"
+    },
+    {
       "path": "./apps/server"
     },
     {

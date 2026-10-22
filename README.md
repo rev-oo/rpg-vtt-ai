@@ -72,7 +72,21 @@ With the server running, start the Vite dev server; it proxies `/api` to `VTT_AP
 pnpm --filter @vtt/web dev            # http://localhost:5173
 ```
 
-On a fresh instance the app opens the setup screen. Creating a table needs an enabled system plugin; until the plugin scanner lands (M4), the e2e start script in `e2e/scripts/` shows how one is seeded.
+On a fresh instance the app opens the setup screen. Creating a table needs an enabled system plugin: install one from **Plugins** in the admin menu, or copy a plugin folder into `DATA_DIR/plugins` and press **Rescan**.
+
+### Writing plugins
+
+`vtt-plugin` (from `packages/plugin-cli`) checks, previews and packs a plugin folder:
+
+```bash
+pnpm --filter @vtt/plugin-cli build
+node packages/plugin-cli/dist/src/bin.js validate plugins/tiny-d20   # the server's checks
+node packages/plugin-cli/dist/src/bin.js dev plugins/tiny-d20        # live sheet preview
+node packages/plugin-cli/dist/src/bin.js pack plugins/tiny-d20       # tiny-d20-0.1.0.vttplugin
+node packages/plugin-cli/dist/src/bin.js schema --out schemas        # JSON Schemas for editors
+```
+
+An admin installs the `.vttplugin` file from the plugin admin page.
 
 ## Scripts
 
@@ -107,7 +121,8 @@ packages/
   ui/                Design tokens and UI primitives (React)
   sheet-renderer/    Sheet layout JSON → React
   sdk/               Public API for plugin code
-  plugin-cli/        `vtt-plugin` CLI: validate, dev, pack
+  plugin-io/         Plugin folders and .vttplugin archives on disk (Node)
+  plugin-cli/        `vtt-plugin` CLI: validate, dev, pack, schema
   config/            Shared tsconfig, ESLint and Vitest presets
 plugins/             Reference game systems (tiny-d20, tiny-pool)
 docs/adr/            Architecture decision records

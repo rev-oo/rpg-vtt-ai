@@ -209,6 +209,15 @@ export function defineVttConfig() {
 
     ...Object.entries(workspacePackages).flatMap(([dir, pkg]) => packageConfigs(dir, pkg)),
 
+    // The page `vtt-plugin dev` serves runs in the browser, inside a Node package.
+    {
+      files: ['packages/plugin-cli/dev/**/*.{ts,tsx}'],
+      languageOptions: { globals: globals.browser },
+      // `virtual:vtt-plugin` is served by the dev command (src/commands/dev.ts).
+      rules: { 'import-x/no-unresolved': ['error', { ignore: ['^virtual:'] }] },
+    },
+    { ...reactHooks.configs.flat.recommended, files: ['packages/plugin-cli/dev/**/*.{ts,tsx}'] },
+
     // §6.1: non-null assertions are allowed in tests.
     { files: TEST_FILES, rules: { '@typescript-eslint/no-non-null-assertion': 'off' } },
 
