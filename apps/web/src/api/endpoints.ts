@@ -40,7 +40,7 @@ import {
   type UpdateMeInput,
 } from '@vtt/shared/api';
 
-import { request, requestNoContent } from './client.js';
+import { request, requestNoContent, upload } from './client.js';
 
 export const api = {
   setupStatus: async (): Promise<boolean> =>
@@ -157,6 +157,17 @@ export const api = {
       await request('POST', `/plugins/${id}/enable`, pluginResponseSchema, {
         ...(acknowledgeCode && { acknowledgeCode }),
       })
+    ).plugin,
+
+  /** Installs a `.vttplugin` archive; `replace` lets it replace the same plugin (ADR-026). */
+  installPlugin: async (file: Blob, replace = false): Promise<AdminPlugin> =>
+    (
+      await upload(
+        `/plugins/install${replace ? '?replace=true' : ''}`,
+        pluginResponseSchema,
+        file,
+        'application/zip',
+      )
     ).plugin,
 
   disablePlugin: async (id: string): Promise<AdminPlugin> =>

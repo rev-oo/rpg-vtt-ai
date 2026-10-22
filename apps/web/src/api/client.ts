@@ -14,6 +14,8 @@ export class ApiError extends Error {
     readonly code: string,
     message: string,
     readonly retryAfterSeconds?: number,
+    /** The error's `details`, unchecked; callers parse what they expect. */
+    readonly details?: unknown,
   ) {
     super(message);
   }
@@ -47,16 +49,32 @@ export async function requestNoContent(
   await send(method, path, body);
 }
 
-async function send(method: Method, path: string, body: unknown): Promise<Response> {
+/** Sends a file as the raw body, e.g. a plugin archive (ADR-026). */
+export async function upload<T extends z.ZodType>(
+  path: string,
+  schema: T,
+  file: Blob,
+  contentType: string,
+): Promise<z.infer<T>> {
+  const response = await send('POST', path, file, contentType);
+  return schema.parse(await response.json());
+}
+
+async function send(
+  method: Method,
+  path: string,
+  body: unknown,
+  contentType?: string,
+): Promise<Response> {
   const headers: Record<string, string> = { accept: 'application/json' };
-  if (body !== undefined) headers['content-type'] = 'application/json';
+  if (body !== undefined) headers['content-type'] = contentType ?? 'application/json';
   if (method !== 'GET' && csrfToken) headers[CSRF_HEADER] = csrfToken;
 
   const response = await fetch(`${BASE}${path}`, {
     method,
     headers,
     credentials: 'same-origin',
-    ...(body !== undefined && { body: JSON.stringify(body) }),
+    ...(body !== undefined && { body: body instanceof Blob ? body : JSON.stringify(body) }),
   });
   if (!response.ok) throw await toApiError(response);
   return response;
@@ -66,8 +84,8 @@ async function toApiError(response: Response): Promise<ApiError> {
   const retryAfter = Number(response.headers.get('retry-after'));
   const retryAfterSeconds = Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter : undefined;
   const parsed = errorResponseSchema.safeParse(await response.json().catch(() => null));
-  const { code, message } = parsed.success
+  const { code, message, details } = parsed.success
     ? parsed.data.error
-    : { code: 'http_error', message: response.statusText };
-  return new ApiError(response.status, code, message, retryAfterSeconds);
+    : { code: 'http_error', message: response.statusText, details: undefined };
+  return new ApiError(response.status, code, message, retryAfterSeconds, details);
 }

@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
-| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 75%      | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 83%      | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
@@ -30,44 +30,45 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M4
-- **Next task:** `T-0410`
+- **Next task:** `T-0411`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                                                              |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                    |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                    |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                  |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                  |
-| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.                 |
-| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.          |
-| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                         |
-| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                    |
-| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                                |
-| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                      |
-| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                  |
-| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added.   |
-| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                      |
-| 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                                 |
-| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                    |
-| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                     |
-| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                         |
-| 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                        |
-| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                      |
-| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.             |
-| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                  |
-| 2026-10-21 | T-0401 implemented (plugin file schemas, emitted JSON Schemas, first versions of `tiny-d20` and `tiny-pool`).                       |
-| 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                                 |
-| 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                        |
-| 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                          |
-| 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                    |
-| 2026-10-21 | PR #5 merged (T-0404, T-0405). T-0406 implemented (plugin admin page, with an e2e test).                                            |
-| 2026-10-21 | T-0407 implemented (plugin engine). ADR-023 added.                                                                                  |
-| 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                                |
-| 2026-10-22 | PR #6 merged (T-0406 to T-0408). T-0409 implemented (plugin host, `@vtt/sdk/client`, engine-backed rolls and cards). ADR-025 added. |
+| Date       | Change                                                                                                                                        |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                              |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                              |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                            |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                            |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.                           |
+| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.                    |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                                   |
+| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                              |
+| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                                          |
+| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                                |
+| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                            |
+| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added.             |
+| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                                |
+| 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                                           |
+| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                              |
+| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                               |
+| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                                   |
+| 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                                  |
+| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                                |
+| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.                       |
+| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                            |
+| 2026-10-21 | T-0401 implemented (plugin file schemas, emitted JSON Schemas, first versions of `tiny-d20` and `tiny-pool`).                                 |
+| 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                                           |
+| 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                                  |
+| 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                                    |
+| 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                              |
+| 2026-10-21 | PR #5 merged (T-0404, T-0405). T-0406 implemented (plugin admin page, with an e2e test).                                                      |
+| 2026-10-21 | T-0407 implemented (plugin engine). ADR-023 added.                                                                                            |
+| 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                                          |
+| 2026-10-22 | PR #6 merged (T-0406 to T-0408). T-0409 implemented (plugin host, `@vtt/sdk/client`, engine-backed rolls and cards). ADR-025 added.           |
+| 2026-10-22 | PR #7 merged (T-0409). T-0410 implemented (plugin CLI, `@vtt/plugin-io`, `.vttplugin` archives installed from the admin page). ADR-026 added. |
 
 ---
 
@@ -180,6 +181,7 @@ Everything lives under a single data directory (`DATA_DIR`, default `/data` in D
 /data
 ├─ vtt.sqlite          database (WAL mode)
 ├─ plugins/            installed plugin folders
+├─ cache/              derived files (scoped CSS, installs being unpacked)
 └─ logs/               optional rotating logs
 ```
 
@@ -190,6 +192,7 @@ Everything lives under a single data directory (`DATA_DIR`, default `/data` in D
 3. **Pure packages:** `shared`, `formula`, `plugin-engine` contain no DOM and no Node-only APIs. The RNG is injected.
 4. **Plugins never touch the database or raw Yjs.** They interact through the JSON contract and the narrow `ctx` object.
 5. **The server is authoritative** for rolls, permissions, membership, and projections.
+6. **Node packages:** `plugin-io` (plugin folders and archives on disk) may import `shared`, `formula` and `plugin-schema`; the server and `plugin-cli` use it. The server does not import `plugin-cli` (ADR-026).
 
 ---
 
@@ -225,7 +228,8 @@ vtt/
 │  ├─ sheet-renderer/             layout JSON → React; built-in nodes; SheetStore interface; preview page
 │  ├─ sdk/                        public API for code/ entries (defineShared/Client/Server, hooks, ctx types)
 │  ├─ config/                     shared tsconfig, eslint, prettier presets
-│  └─ plugin-cli/                 vtt-plugin: validate · dev (live preview) · pack
+│  ├─ plugin-io/                  plugin folders and .vttplugin archives on disk (Node; server and CLI)
+│  └─ plugin-cli/                 vtt-plugin: validate · dev (live preview) · pack · schema
 ├─ plugins/                       reference systems built in-tree
 │  ├─ tiny-d20/
 │  └─ tiny-pool/
@@ -472,7 +476,7 @@ my-system/
    └─ server.ts             roll handlers, lifecycle hooks (v1)
 ```
 
-Code entries are TypeScript sources in the plugin folder for development, but the plugin CLI (`vtt-plugin pack`) **compiles them to ES modules** (`code/*.js`, plus `.d.ts` for authors) and the packed plugin is what the server loads. The server never compiles TypeScript at runtime.
+Code entries are TypeScript sources in the plugin folder for development, but the plugin CLI (`vtt-plugin pack`) **compiles them to ES modules** (`code/*.js`; no `.d.ts`, ADR-026) and the packed plugin is what the server loads. The server never compiles TypeScript at runtime.
 
 ### 8.3 Manifest (`plugin.json`)
 
@@ -742,7 +746,7 @@ Values are stored on the table and passed to the plugin engine through the rules
 
 - `vtt-plugin validate <dir>`: checks manifest, all JSON files against plugin schemas, formula syntax and references (`@` paths exist in the schema), CSS rules, lang key coverage, and `hasCode` consistency. Exits non-zero on errors.
 - `vtt-plugin dev <dir>`: starts a local preview server that renders the plugin's sheets with an in-memory store and sample data, with hot reload.
-- `vtt-plugin pack <dir>`: compiles `code/` to ES modules, minifies CSS, writes a `.vttplugin` archive (zip).
+- `vtt-plugin pack <dir>`: compiles `code/` to ES modules, minifies CSS, writes a `.vttplugin` archive (zip). Admins install it from the plugin admin page (`POST /plugins/install`, ADR-026).
 - `vtt-plugin schema`: emits the JSON Schemas used by editors.
 
 The server runs the same validation on install and on rescan.
@@ -823,22 +827,22 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                                                     |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                      |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                     |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                              |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                               |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                   |
-| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                    |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore` |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`    |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                         |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                             |
-| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                      |
-| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                            |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020)                    |
-| Health          | `GET /api/health`                                                                                                            |
+| Group           | Endpoints (illustrative)                                                                                                                     |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                                      |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                     |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                                              |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                               |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                   |
+| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                                    |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                 |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                    |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                                         |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                                             |
+| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                      |
+| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                            |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026) |
+| Health          | `GET /api/health`                                                                                                                            |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
@@ -1143,10 +1147,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** a plugin with a custom node renders it in the app; uninstalling the plugin degrades gracefully (table read-only message).
   - **Note:** `e2e/tests/plugin-host.spec.ts` enables `e2e-code` (client code with a custom node and a custom card), opens a sheet, rolls and disables the system. `GET /systems/:id` sends the definition; rolls and recipes run through the plugin engine (`apps/server/test/system-rolls.test.ts`). Sheets are read-only until M5 (ADR-025).
 
-- [ ] **T-0410 · Plugin CLI**
+- [x] **T-0410 · Plugin CLI**
   - **Deps:** T-0402, T-0404, T-0408
   - **Do:** `packages/plugin-cli` with `validate`, `dev` (preview server), `pack`, `schema` commands (§8.13).
   - **Done when:** `vtt-plugin validate plugins/tiny-d20` passes; `pack` produces an archive the server can install.
+  - **Note:** `packages/plugin-cli/test/cli.test.ts` covers the commands; `e2e/tests/plugin-install.spec.ts` packs a fixture with the CLI and installs it from the plugin admin page (`POST /plugins/install`). Archives and folder reading live in `@vtt/plugin-io` (ADR-026).
 
 - [ ] **T-0411 · Reference plugin: tiny-d20**
   - **Deps:** T-0410
@@ -1381,6 +1386,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-023 | [Plugin engine: collections, defaults, derived values, recipes, cards, document layout](docs/adr/ADR-023-plugin-engine.md)                      | Accepted |
 | ADR-024 | [Sheet renderer: store, inputs, CSS hooks, phone layout, preview](docs/adr/ADR-024-sheet-renderer.md)                                           | Accepted |
 | ADR-025 | [Plugin host: system definitions, engine rolls and cards, import map, SDK client hooks](docs/adr/ADR-025-plugin-host.md)                        | Accepted |
+| ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

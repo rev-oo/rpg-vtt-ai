@@ -32,7 +32,13 @@
       "path": "./packages/sdk/tsconfig.client.json"
     },
     {
+      "path": "./packages/plugin-io"
+    },
+    {
       "path": "./packages/plugin-cli"
+    },
+    {
+      "path": "./packages/plugin-cli/dev"
     },
     {
       "path": "./apps/server"

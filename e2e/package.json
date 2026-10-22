@@ -9,6 +9,7 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@vtt/plugin-cli": "workspace:*",
     "@vtt/server": "workspace:*",
     "@vtt/web": "workspace:*"
   },

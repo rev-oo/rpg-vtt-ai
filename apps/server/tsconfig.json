@@ -20,6 +20,9 @@
       "path": "../../packages/plugin-engine"
     },
     {
+      "path": "../../packages/plugin-io"
+    },
+    {
       "path": "../../packages/sdk"
     }
   ]

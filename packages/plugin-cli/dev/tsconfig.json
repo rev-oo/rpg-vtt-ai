@@ -1,0 +1,18 @@
+{
+  "extends": ["../../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
+  "//": "The page `vtt-plugin dev` serves; Vite compiles it at run time.",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../dist/dev",
+    "types": ["vite/client"]
+  },
+  "include": ["."],
+  "references": [
+    { "path": "../../formula" },
+    { "path": "../../plugin-schema" },
+    { "path": "../../plugin-engine" },
+    { "path": "../../sdk/tsconfig.client.json" },
+    { "path": "../../sheet-renderer" },
+    { "path": "../../ui" }
+  ]
+}

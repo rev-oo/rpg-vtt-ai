@@ -44,3 +44,13 @@ export const pluginResponseSchema = z.object({ plugin: adminPluginSchema });
 /** Enabling a plugin with code must acknowledge it runs in-process (FR-PLUGIN-06, 08). */
 export const enablePluginBody = z.object({ acknowledgeCode: z.boolean().optional() });
 export type EnablePluginInput = z.infer<typeof enablePluginBody>;
+
+/**
+ * `POST /plugins/install` takes a `.vttplugin` archive as an `application/zip` body (ADR-026).
+ * `replace=true` lets it replace an installed plugin of the same id.
+ */
+export const installPluginQuery = z.object({ replace: z.stringbool().default(false) });
+export type InstallPluginQuery = z.input<typeof installPluginQuery>;
+
+/** The `details` of an `invalid_plugin` error: the validator's issues. */
+export const invalidPluginDetailsSchema = z.object({ issues: z.array(pluginIssueSchema) });

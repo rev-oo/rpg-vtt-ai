@@ -1,9 +1,11 @@
-import { readdir } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
+import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import { eq } from 'drizzle-orm';
 import type { FastifyBaseLogger } from 'fastify';
 
+import { ArchiveError, pluginFolderOf, readPluginArchive, readPluginFolder } from '@vtt/plugin-io';
 import {
   PLUGIN_ID,
   validatePlugin,
@@ -14,8 +16,7 @@ import type { PluginStatus } from '@vtt/shared/api';
 
 import type { Db } from '../db/client.js';
 import { plugins } from '../db/schema.js';
-
-import { readPluginFolder } from './folder.js';
+import { conflict, unprocessable } from '../errors.js';
 
 export interface RegistryOptions {
   db: Db;
@@ -25,6 +26,14 @@ export interface RegistryOptions {
   now: () => Date;
   /** The core API version plugins are checked against; this core's by default. */
   coreVersion?: string;
+  /** Where installs unpack before they move into `dir`; on the same disk. */
+  stagingDir?: string;
+}
+
+export interface InstallResult {
+  id: string;
+  /** Whether a plugin with the same id was there before. */
+  replaced: boolean;
 }
 
 interface Scanned {
@@ -74,6 +83,67 @@ export class PluginRegistry {
     const run = this.#queue.then(() => this.#scan());
     this.#queue = run.catch(() => undefined);
     return run;
+  }
+
+  /**
+   * Installs a `.vttplugin` archive (ADR-026): it must be valid, with no errors, and may only
+   * replace an installed plugin of the same id when `replace` is set. The archive is unpacked
+   * next to the plugin folder and moved in, then the folder is rescanned. A replaced plugin
+   * with code is disabled until an admin enables it again, since its code changed
+   * (FR-PLUGIN-06).
+   */
+  install(zip: Buffer, { replace = false }: { replace?: boolean } = {}): Promise<InstallResult> {
+    const run = this.#queue.then(() => this.#install(zip, replace));
+    this.#queue = run.catch(() => undefined);
+    return run;
+  }
+
+  async #install(zip: Buffer, replace: boolean): Promise<InstallResult> {
+    const { dir, db, logger, coreVersion } = this.#options;
+    let contents;
+    try {
+      contents = readPluginArchive(zip);
+    } catch (error) {
+      if (!(error instanceof ArchiveError)) throw error;
+      throw unprocessable('invalid_archive', error.message, { reason: error.reason });
+    }
+    // It goes into a folder named after its own id, so there is no folder name to check.
+    const folder = pluginFolderOf(contents);
+    const result = validatePlugin(folder.files, coreVersion === undefined ? {} : { coreVersion });
+    const id = result.manifest?.id;
+    const issues = [...folder.issues, ...result.issues];
+    if (id === undefined || !PLUGIN_ID.test(id) || issues.some((i) => i.severity === 'error')) {
+      throw unprocessable('invalid_plugin', 'The plugin in the archive has errors.', { issues });
+    }
+
+    const target = path.join(dir, id);
+    const replaced = await exists(target);
+    if (replaced && !replace) {
+      throw conflict('plugin_exists', `A plugin with the id ${id} is installed already.`);
+    }
+    const staging = this.#options.stagingDir ?? path.join(path.dirname(dir), 'cache', 'install');
+    const unpacked = path.join(staging, randomUUID());
+    const previous = path.join(staging, randomUUID());
+    try {
+      for (const [file, data] of contents) {
+        const full = path.join(unpacked, ...file.split('/'));
+        await mkdir(path.dirname(full), { recursive: true });
+        await writeFile(full, data);
+      }
+      await mkdir(dir, { recursive: true });
+      if (replaced) await rename(target, previous);
+      await rename(unpacked, target);
+    } finally {
+      await rm(unpacked, { recursive: true, force: true });
+      await rm(previous, { recursive: true, force: true });
+    }
+    logger.info({ plugin: id, replaced }, 'plugin installed');
+
+    await this.#scan();
+    if (replaced && [...contents.keys()].some((file) => file.startsWith('code/'))) {
+      db.update(plugins).set({ enabled: false }).where(eq(plugins.id, id)).run();
+    }
+    return { id, replaced };
   }
 
   async #scan(): Promise<void> {
@@ -175,5 +245,15 @@ export class PluginRegistry {
       });
     }
     return scanned;
+  }
+}
+
+async function exists(file: string): Promise<boolean> {
+  try {
+    await stat(file);
+    return true;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return false;
+    throw error;
   }
 }

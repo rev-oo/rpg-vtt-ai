@@ -171,6 +171,15 @@ export const en = {
   'plugins.codeEntries': 'Code files',
   'plugins.codeConfirm': 'Enable with code',
   'plugins.cancel': 'Cancel',
+  'plugins.install': 'Install plugin',
+  'plugins.installFile': 'Plugin archive (.vttplugin)',
+  'plugins.installed': '{name} {version} is installed. Enable it to use it.',
+  'plugins.invalidArchive': 'This file is not a plugin archive the server can unpack.',
+  'plugins.invalidPlugin': 'The plugin in this archive has errors and was not installed.',
+  'plugins.replaceTitle': 'Replace the installed plugin?',
+  'plugins.replaceIntro':
+    'A plugin with the same id as {file} is installed. Replacing it keeps its tables; a plugin with code must be enabled again.',
+  'plugins.replace': 'Replace',
 
   'pluginIssue.unknown': 'Unknown problem ({code})',
   'pluginIssue.missing_file': 'The file {file} is required.',
