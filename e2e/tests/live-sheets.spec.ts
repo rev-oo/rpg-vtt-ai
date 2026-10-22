@@ -107,6 +107,29 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await expect(gmSheet.locator('[data-field="str"] [data-presence]')).toHaveText('Lena');
   });
 
+  await test.step('two people type into one note at once without loss (T-0510)', async () => {
+    const notes = (sheet: typeof gmSheet) =>
+      sheet.getByRole('textbox', { name: 'Notes', exact: true });
+    for (const sheet of [ownerSheet, gmSheet]) {
+      await sheet.getByRole('tab', { name: 'Notes' }).click();
+    }
+    await notes(ownerSheet).fill('Likes tea.');
+    await expect(notes(gmSheet)).toHaveValue('Likes tea.');
+
+    // Lena types at the end while the GM types at the start, keystroke by keystroke.
+    await notes(ownerSheet).focus();
+    await notes(ownerSheet).press('End');
+    await notes(gmSheet).focus();
+    await notes(gmSheet).press('Home');
+    await Promise.all([
+      notes(ownerSheet).pressSequentially(' And cake.', { delay: 30 }),
+      notes(gmSheet).pressSequentially('Ayla: ', { delay: 30 }),
+    ]);
+    for (const sheet of [ownerSheet, gmSheet]) {
+      await expect(notes(sheet)).toHaveValue('Ayla: Likes tea. And cake.');
+    }
+  });
+
   await test.step('the data survives a reload', async () => {
     const page = await pageOf(owner);
     const again = await openSheet(page, table.id, actor.id);

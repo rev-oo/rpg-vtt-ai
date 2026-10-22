@@ -10,7 +10,13 @@ import {
   type DocumentLayout,
   type FieldLayout,
 } from '@vtt/plugin-engine';
-import { valueAt, type FieldPath, type SheetStore } from '@vtt/sheet-renderer';
+import {
+  valueAt,
+  type FieldPath,
+  type SharedText,
+  type SheetStore,
+  type TextChange,
+} from '@vtt/sheet-renderer';
 
 /** The field `data` map of a collaborative document (specs §9.2). */
 export const DATA_MAP = 'data';
@@ -63,6 +69,40 @@ function mapAt(map: Y.Map<unknown>, path: FieldPath, create: boolean): Y.Map<unk
 
 const defaultId = () => crypto.randomUUID().slice(0, 8);
 
+/** A `Y.Text` as the renderer's shared text (FR-SHEET-07). */
+function sharedText(text: Y.Text): SharedText {
+  return {
+    read: () => text.toJSON(),
+    splice: (index, remove, insert) => {
+      const apply = () => {
+        if (remove > 0) text.delete(index, remove);
+        if (insert) text.insert(index, insert);
+      };
+      if (text.doc) text.doc.transact(apply);
+      else apply();
+    },
+    observe: (listener) => {
+      const observer = (event: Y.YTextEvent) => {
+        const changes: TextChange[] = [];
+        let index = 0;
+        for (const op of event.delta) {
+          if (op.retain !== undefined) index += op.retain;
+          else if (op.delete !== undefined) changes.push({ index, remove: op.delete, insert: 0 });
+          else if (typeof op.insert === 'string') {
+            changes.push({ index, remove: 0, insert: op.insert.length });
+            index += op.insert.length;
+          }
+        }
+        listener(changes);
+      };
+      text.observe(observer);
+      return () => {
+        text.unobserve(observer);
+      };
+    },
+  };
+}
+
 /**
  * A `SheetStore` over an actor's Yjs documents (specs §9.1, §9.2). Reads join both layers;
  * each write goes to the document whose layout holds the field. Text fields keep their
@@ -87,6 +127,7 @@ export function createYjsStore({
       maps.secret && readLayer(maps.secret, layout.secret ?? {}),
     );
 
+  const texts = new WeakMap<Y.Text, SharedText>();
   let snapshot = read();
   const listeners = new Set<() => void>();
   const onUpdate = () => {
@@ -176,6 +217,19 @@ export function createYjsStore({
       write('main', (map) => {
         mapAt(map, [...path, id], false)?.set('sort', sort);
       });
+    },
+    text: (path) => {
+      const key = path.at(-1);
+      const map = maps[layerOf(layout, path)];
+      const parent = key === undefined || !map ? undefined : mapAt(map, path.slice(0, -1), false);
+      const found: unknown = key === undefined ? undefined : parent?.get(key);
+      if (!(found instanceof Y.Text)) return undefined;
+      let shared = texts.get(found);
+      if (!shared) {
+        shared = sharedText(found);
+        texts.set(found, shared);
+      }
+      return shared;
     },
     destroy: () => {
       docs.main.off('update', onUpdate);

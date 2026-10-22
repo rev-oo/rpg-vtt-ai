@@ -2,7 +2,7 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
-import { collectionRows, documentLayout, ensureMaps } from '@vtt/plugin-engine';
+import { collectionRows, documentLayout, ensureContainers } from '@vtt/plugin-engine';
 import type { FieldSchema } from '@vtt/plugin-schema';
 import type { SheetStore } from '@vtt/sheet-renderer';
 
@@ -23,7 +23,7 @@ const PATH = ['skills'];
 
 /** The document as the server loads it: every map already exists (ADR-034). */
 const SERVER = new Y.Doc();
-ensureMaps(SERVER.getMap(DATA_MAP), LAYOUT.main);
+ensureContainers(SERVER.getMap(DATA_MAP), LAYOUT.main);
 
 /** One client: its synced copy and a store over it, with its own row ids. */
 function client(name: string) {

@@ -67,20 +67,21 @@ function fromYjs(layout: FieldLayout | undefined, value: unknown): unknown {
 }
 
 /**
- * Creates the maps of every object and collection field that `map` lacks, at every depth
- * outside collection rows. Two clients creating the same missing map at once would each make
- * their own, and one of them, with what was written into it, would be lost; so the server
- * creates them when it loads a document, before clients edit it (specs §9.4).
+ * Creates the shared types every field needs that `map` lacks: the maps of objects and
+ * collections and the texts of `longText` and `richText` fields, at every depth outside
+ * collection rows. Two clients creating the same missing type at once would each make their
+ * own, and one of them, with what was written into it, would be lost; so the server creates
+ * them when it loads a document, before clients edit it (specs §9.4).
  */
-export function ensureMaps(map: Y.Map<unknown>, fields: Fields): void {
+export function ensureContainers(map: Y.Map<unknown>, fields: Fields): void {
   for (const [key, layout] of Object.entries(fields)) {
-    if (layout.kind !== 'map' && layout.kind !== 'collection') continue;
+    if (layout.kind === 'value') continue;
     let child: unknown = map.get(key);
     if (child === undefined) {
-      child = new Y.Map<unknown>();
+      child = layout.kind === 'text' ? new Y.Text() : new Y.Map<unknown>();
       map.set(key, child);
     }
-    if (layout.kind === 'map' && child instanceof Y.Map) ensureMaps(child, layout.fields);
+    if (layout.kind === 'map' && child instanceof Y.Map) ensureContainers(child, layout.fields);
   }
 }
 

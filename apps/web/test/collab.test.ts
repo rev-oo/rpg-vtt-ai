@@ -117,6 +117,41 @@ describe('Yjs sheet store (T-0506, specs §9.1, §9.2)', () => {
     expect(store.getSnapshot()).toEqual({});
   });
 
+  it('merges people typing into one note at the same time (FR-SHEET-07, T-0510)', () => {
+    const a = setup();
+    const b = setup();
+    const seed = new Y.Doc();
+    seed.getMap(DATA_MAP).set('notes', new Y.Text('Likes tea.'));
+    for (const { main } of [a, b]) Y.applyUpdate(main, Y.encodeStateAsUpdate(seed));
+    const noteOf = ({ store }: typeof a) => {
+      const text = store.text?.(['notes']);
+      if (!text) throw new Error('no shared text');
+      return text;
+    };
+    // The same object every time, so editors keep their subscription.
+    expect(noteOf(a)).toBe(noteOf(a));
+
+    const seen: number[] = [];
+    noteOf(a).observe((changes) => seen.push(...changes.map((change) => change.index)));
+    // Both type before either hears of the other.
+    const typed = 'green ';
+    for (let index = 0; index < typed.length; index += 1) {
+      noteOf(a).splice(6 + index, 0, typed.charAt(index));
+    }
+    noteOf(b).splice(9, 1, '!');
+    noteOf(b).splice(0, 0, 'Ayla ');
+    Y.applyUpdate(b.main, Y.encodeStateAsUpdate(a.main));
+    Y.applyUpdate(a.main, Y.encodeStateAsUpdate(b.main));
+
+    expect(noteOf(a).read()).toBe('Ayla Likes green tea!');
+    expect(noteOf(b).read()).toBe(noteOf(a).read());
+    expect(a.store.getSnapshot()).toMatchObject({ notes: 'Ayla Likes green tea!' });
+    // A's editor heard its own splices and B's, as positions in the text.
+    expect(seen).toContain(0);
+    // Fields without a text have none.
+    expect(a.store.text?.(['str'])).toBeUndefined();
+  });
+
   it('stops following the documents once destroyed', () => {
     const { store, main } = setup();
     const changes = vi.fn();

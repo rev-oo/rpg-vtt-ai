@@ -9,6 +9,7 @@ import { PresenceBadges, usePresence } from './presence.js';
 import { fieldAt, isSecretPath } from './schema.js';
 import { valueAt, type FieldPath } from './store.js';
 import { fill } from './strings.js';
+import { SharedTextarea } from './text.js';
 
 type NodeOf<T extends SheetNode['type']> = Extract<SheetNode, { type: T }>;
 
@@ -262,7 +263,10 @@ export function FieldNode({
   );
 }
 
-/** A `longText` node. A plain text area until collaborative editing arrives (FR-SHEET-07, M5). */
+/**
+ * A `longText` node. On live stores it edits the field's shared text, so several people can
+ * type at once (FR-SHEET-07); otherwise it writes the whole value.
+ */
 export function LongTextNode({
   node,
   row,
@@ -275,6 +279,8 @@ export function LongTextNode({
   const field = resolveField(sheet, row, node.path);
   if (field.hidden) return null;
   const label = node.label ? sheet.translate(node.label) : node.path;
+  const shared = sheet.store.text?.(field.path);
+  const className = cn(controlClass, 'min-h-24 w-full min-w-0');
   return (
     <FieldShell
       node={node}
@@ -284,15 +290,19 @@ export function LongTextNode({
       errorId={`${id}-error`}
       error={undefined}
     >
-      <textarea
-        id={id}
-        className={cn(controlClass, 'min-h-24 w-full min-w-0')}
-        value={typeof field.value === 'string' ? field.value : ''}
-        readOnly={sheet.readOnly}
-        onChange={(event) => {
-          sheet.store.set(field.path, event.target.value);
-        }}
-      />
+      {shared ? (
+        <SharedTextarea id={id} text={shared} readOnly={sheet.readOnly} className={className} />
+      ) : (
+        <textarea
+          id={id}
+          className={className}
+          value={typeof field.value === 'string' ? field.value : ''}
+          readOnly={sheet.readOnly}
+          onChange={(event) => {
+            sheet.store.set(field.path, event.target.value);
+          }}
+        />
+      )}
     </FieldShell>
   );
 }

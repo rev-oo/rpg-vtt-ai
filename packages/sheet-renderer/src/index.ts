@@ -14,6 +14,9 @@ export {
   valueAt,
   type FieldPath,
   type MemoryStoreOptions,
+  type SharedText,
   type SheetStore,
+  type TextChange,
 } from './store.js';
+export { diffText, SharedTextarea, type SharedTextareaProps } from './text.js';
 export { DEFAULT_STRINGS, type SheetStrings } from './strings.js';

@@ -4,7 +4,7 @@ import * as Y from 'yjs';
 import {
   adjustCounter,
   documentLayout,
-  ensureMaps,
+  ensureContainers,
   layerSchemas,
   mergeLayers,
   readLayer,
@@ -119,7 +119,7 @@ export function loadDocument(
   const type = actorLayout(db, actor, definition);
   if (row) {
     // A schema may have gained maps since the state was stored.
-    ensureMaps(doc.getMap(DATA_MAP), layerFields(type?.layout, ref.layer));
+    ensureContainers(doc.getMap(DATA_MAP), layerFields(type?.layout, ref.layer));
     return;
   }
   const data = type ? withDefaults(type.schema, actor.system) : actor.system;
@@ -127,7 +127,7 @@ export function loadDocument(
   const part = ref.layer === 'secret' ? layers.secret : layers.main;
   const map = doc.getMap(DATA_MAP);
   writeLayer(map, layerFields(type?.layout, ref.layer), part ?? {});
-  ensureMaps(map, layerFields(type?.layout, ref.layer));
+  ensureContainers(map, layerFields(type?.layout, ref.layer));
 }
 
 /** The JSON of a stored document's layer, or `undefined` if it was never stored. */
