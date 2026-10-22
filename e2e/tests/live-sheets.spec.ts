@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { ADMIN, createPlayer, patch, post, signIn } from './support/api.js';
+import { ADMIN, createPlayer, patch, post, remove, signIn } from './support/api.js';
 import { installPlugin, packPlugin } from './support/plugins.js';
 
 const reference = fileURLToPath(new URL('../../plugins/', import.meta.url));
@@ -135,6 +135,15 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     const again = await openSheet(page, table.id, actor.id);
     await expect(again.getByLabel('Strength')).toHaveValue('14');
     await expect(again.getByRole('textbox', { name: 'Hit points', exact: true })).toHaveValue('7');
+  });
+
+  await test.step('a removed member loses the open sheet within 2 s (T-0512)', async () => {
+    await expect(watcherSheet.getByLabel('Strength')).toBeVisible();
+    await remove(gm, `/tables/${table.id}/members/${watcher.userId}`);
+    await expect(
+      watcherSheet.page().getByText('This actor does not exist, or you cannot see it.'),
+    ).toBeVisible({ timeout: 2000 });
+    await expect(watcherSheet).toBeHidden();
   });
 
   expect(errors).toEqual([]);

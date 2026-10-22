@@ -50,6 +50,8 @@ export const collabServerMessage = z.discriminatedUnion('type', [
     id: z.string().nullable(),
     code: z.enum(['invalid_message', 'read_only', 'not_a_counter']),
   }),
+  /** The connection's access changed between read and write while it was open (§9.3). */
+  z.object({ type: z.literal('access'), readOnly: z.boolean() }),
   /** Values the server replaced with their default before storing (FR-SHEET-09). */
   z.object({ type: z.literal('validation'), issues: z.array(dataIssue) }),
 ]);

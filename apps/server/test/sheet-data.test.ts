@@ -81,6 +81,8 @@ describe('adjust (FR-SHEET-08, specs §9.5, T-0505)', () => {
     // While the system is unavailable the sheet is read-only, adjustments included.
     t.db.update(plugins).set({ enabled: false }).where(eq(plugins.id, 'tiny-d20')).run();
     bobMain.send({ type: 'adjust', id: 'ro', path: ['hp', 'value'], delta: -1 });
+    // The client first hears that its access dropped, then why the adjustment failed.
+    expect(await bobMain.next()).toEqual({ type: 'access', readOnly: true });
     expect(await bobMain.next()).toEqual({ type: 'error', id: 'ro', code: 'read_only' });
     expect(hp(bobMain)).toBe(10);
   });

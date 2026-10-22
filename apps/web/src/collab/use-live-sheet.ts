@@ -40,6 +40,9 @@ function parseMessage(payload: string) {
   }
 }
 
+/** Reasons the server gives when it closes a document (@hocuspocus/common). */
+const REVOKED = new Set(['Forbidden', 'Unauthorized']);
+
 interface LayerState {
   synced: boolean;
   denied: boolean;
@@ -89,8 +92,16 @@ export function useLiveSheet(
         },
         onStateless: ({ payload }) => {
           const message = parseMessage(payload);
-          if (message?.type !== 'validation') return;
-          issues = message.issues;
+          if (message?.type === 'validation') issues = message.issues;
+          // Ownership or the table changed while the sheet was open (§9.3).
+          else if (message?.type === 'access') state.readOnly = message.readOnly;
+          else return;
+          update();
+        },
+        // The server closes a document whose access is gone; a dropped socket has no reason.
+        onClose: ({ event }) => {
+          if (!REVOKED.has(event.reason)) return;
+          state.denied = true;
           update();
         },
       });

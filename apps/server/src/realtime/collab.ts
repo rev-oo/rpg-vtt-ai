@@ -156,7 +156,12 @@ interface CollabOptions {
 export interface Collab {
   hocuspocus: Hocuspocus<CollabContext>;
   sockets: Set<WebSocket>;
+  /** Re-checks every open document connection now (§9.3). */
+  recheck: () => void;
 }
+
+/** How often open connections are re-checked without a change, e.g. for expired sessions. */
+export const RECHECK_INTERVAL_MS = 30_000;
 
 /**
  * The Yjs document server (ADR-002, specs §10.3). Every document is authorised when a client
@@ -167,7 +172,7 @@ function createHocuspocus(
   { db, sessions, definition, now, timing = COLLAB_TIMING }: CollabOptions,
   logger: FastifyBaseLogger,
   unloads: DelayedUnloads,
-): Hocuspocus<CollabContext> {
+): { hocuspocus: Hocuspocus<CollabContext>; recheck: () => void } {
   function check(context: CollabContext, documentName: string): DocumentAccess | 'no_session' {
     if (!sessions.validate(context.sessionToken)) return 'no_session';
     const ref = parseDocumentName(documentName);
@@ -175,6 +180,24 @@ function createHocuspocus(
   }
   function deny(context: CollabContext, documentName: string, reason: string): void {
     logger.warn({ userId: context.userId, documentName, reason }, 'collab access denied');
+  }
+
+  /**
+   * Applies a connection's current access: closes the document when it is gone, and tells
+   * the client when it moved between read and write. Read-only drops its updates.
+   */
+  function enforce(connection: Connection, context: CollabContext, documentName: string): void {
+    const access = check(context, documentName);
+    if (access === 'no_session' || access === 'none') {
+      deny(context, documentName, access);
+      connection.readOnly = true;
+      connection.close(access === 'no_session' ? Unauthorized : Forbidden);
+      return;
+    }
+    const readOnly = access !== 'write';
+    if (connection.readOnly === readOnly) return;
+    connection.readOnly = readOnly;
+    send(connection, { type: 'access', readOnly });
   }
 
   /** Hooks run only for names that passed `onAuthenticate`, so the name parses. */
@@ -189,7 +212,7 @@ function createHocuspocus(
   /** Repairs are stored with the store that makes them, not by a store of their own. */
   const repairOrigin: TransactionOrigin = { source: 'local', skipStoreHooks: true };
 
-  return new Hocuspocus<CollabContext>({
+  const hocuspocus = new Hocuspocus<CollabContext>({
     quiet: true,
     debounce: timing.debounceMs,
     maxDebounce: timing.maxDebounceMs,
@@ -257,16 +280,20 @@ function createHocuspocus(
       return Promise.resolve();
     },
     beforeHandleMessage: ({ context, documentName, connection }) => {
-      const access = check(context, documentName);
-      // Read-only drops the update; a closed document receives nothing more.
-      connection.readOnly = access !== 'write';
-      if (access === 'no_session' || access === 'none') {
-        deny(context, documentName, access);
-        connection.close(access === 'no_session' ? Unauthorized : Forbidden);
-      }
+      enforce(connection, context, documentName);
       return Promise.resolve();
     },
   });
+
+  /** Connections that only listen send nothing, so changes of access are pushed to them. */
+  const recheck = () => {
+    for (const document of hocuspocus.documents.values()) {
+      for (const connection of document.getConnections()) {
+        enforce(connection, connection.context as CollabContext, document.name);
+      }
+    }
+  };
+  return { hocuspocus, recheck };
 }
 
 /**
@@ -314,10 +341,29 @@ class DelayedUnloads {
  */
 export function registerCollab(app: FastifyInstance, options: CollabOptions): Collab {
   const unloads = new DelayedUnloads();
-  const hocuspocus = createHocuspocus(options, app.log, unloads);
-  const collab: Collab = { hocuspocus, sockets: new Set() };
+  const { hocuspocus, recheck } = createHocuspocus(options, app.log, unloads);
+  const collab: Collab = { hocuspocus, sockets: new Set(), recheck };
   app.decorate('collab', collab);
+
+  // Membership, roles, ownership, deletions, sessions and plugins all change through the API:
+  // after any successful change, every open connection is checked again, once per tick.
+  let pending = false;
+  app.addHook('onResponse', (request, reply, done) => {
+    if (request.method !== 'GET' && request.method !== 'HEAD' && reply.statusCode < 400) {
+      if (!pending) {
+        pending = true;
+        setImmediate(() => {
+          pending = false;
+          recheck();
+        });
+      }
+    }
+    done();
+  });
+  const sweep = setInterval(recheck, RECHECK_INTERVAL_MS).unref();
+
   app.addHook('preClose', async () => {
+    clearInterval(sweep);
     unloads.close();
     for (const socket of collab.sockets) socket.close(1001, 'server shutting down');
     collab.sockets.clear();

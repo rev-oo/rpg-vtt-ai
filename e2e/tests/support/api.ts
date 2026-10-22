@@ -37,6 +37,13 @@ export function post<T>(who: SignedIn, path: string, data: unknown = {}): Promis
     .then((response) => json<T>(response));
 }
 
+export async function remove(who: SignedIn, path: string): Promise<void> {
+  const response = await who.context.request.delete(`/api/v1${path}`, {
+    headers: { 'x-csrf-token': who.csrf },
+  });
+  expect(response.ok(), await response.text()).toBe(true);
+}
+
 export function patch<T>(who: SignedIn, path: string, data: unknown): Promise<T> {
   return who.context.request
     .patch(`/api/v1${path}`, { data, headers: { 'x-csrf-token': who.csrf } })
