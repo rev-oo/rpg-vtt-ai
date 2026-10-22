@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 8%       | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 25%      | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0502`
+- **Next task:** `T-0503`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -72,6 +72,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | PR #8 merged (T-0410). T-0411 and T-0412 implemented (tiny-d20 `hpBar`, reference plugin e2e tests). ADR-027 added. M4 awaiting sign-off.     |
 | 2026-10-22 | PR #9 merged. M4 signed off as done. Active milestone is now M5.                                                                              |
 | 2026-10-22 | T-0501 implemented (Hocuspocus on `/ws/collab`, document access checks). ADR-028 added.                                                       |
+| 2026-10-22 | T-0504 and T-0502 implemented (JSON ↔ Yjs mapping in `@vtt/plugin-engine`, `ydocs` persistence and projection). ADR-029 added.                |
 
 ---
 
@@ -1177,20 +1178,22 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** unauthorised connections are rejected in tests; observers cannot send updates (tested).
   - **Note:** `apps/server/src/realtime/collab.ts`, tested in `apps/server/test/collab.test.ts`. Document names are parsed in `@vtt/shared` (`parseDocumentName`); access is re-checked before every message (ADR-028).
 
-- [ ] **T-0502 · Document persistence**
+- [x] **T-0502 · Document persistence**
   - **Deps:** T-0501
   - **Do:** `onLoadDocument` and `onStoreDocument` with the `ydocs` table, debounced store, projection refresh in one transaction (§9.6).
   - **Done when:** restart the server and reload a sheet with identical state; projection matches state.
+  - **Note:** `apps/server/src/domain/documents.ts`, tested in `apps/server/test/documents.test.ts`. Built after T-0504, whose mapping it needs to start documents from the projection (ADR-029).
 
 - [ ] **T-0503 · Secret layer isolation**
   - **Deps:** T-0501
   - **Do:** Separate `actor:<id>:secret` documents; ensure they are never sent to unauthorised sockets (NFR-08).
   - **Done when:** a wire-level test with a player socket confirms no secret bytes are received.
 
-- [ ] **T-0504 · Schema-to-Yjs mapping**
+- [x] **T-0504 · Schema-to-Yjs mapping**
   - **Deps:** T-0407, T-0502
   - **Do:** Implement mapping in `packages/plugin-engine` as a pure description; server and client use it to create and read documents (`x-kind` handling, collections keyed by id, `sort` keys).
   - **Done when:** round-trip tests: JSON → Yjs → JSON for every `x-kind`.
+  - **Note:** `packages/plugin-engine/src/ydoc.ts` (`writeLayer`, `readLayer`, `splitLayers`, `mergeLayers`), tested in `packages/plugin-engine/test/ydoc.test.ts`. The server uses it (T-0502); the web app will with T-0506 (ADR-029).
 
 - [ ] **T-0505 · Server-side validation and adjust**
   - **Deps:** T-0504
@@ -1396,6 +1399,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted |
 | ADR-027 | [Reference plugins: tiny-d20 code, end-to-end path, gaps until M5–M7](docs/adr/ADR-027-reference-plugins.md)                                    | Accepted |
 | ADR-028 | [Collaboration socket: Hocuspocus behind @fastify/websocket, per-message access checks, frame limits](docs/adr/ADR-028-collab-socket.md)        | Accepted |
+| ADR-029 | [Document persistence and the Yjs mapping: ydocs, projection, unload delay](docs/adr/ADR-029-document-persistence.md)                           | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
