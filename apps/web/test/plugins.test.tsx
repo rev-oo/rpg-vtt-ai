@@ -191,3 +191,67 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     expect(await screen.findByText(/No plugins found/)).toBeInTheDocument();
   });
 });
+
+describe('installing plugin archives (T-0410, ADR-026)', () => {
+  const archive = () => new File([new Uint8Array([80, 75, 5, 6])], 'tiny-d20.vttplugin');
+  const SPARE = plugin({ id: 'spare', name: 'Spare', version: '2.0.0' });
+
+  it('installs an archive and reports it', async () => {
+    const { calls } = adminApi({
+      'POST /plugins/install': { status: 201, body: { plugin: SPARE } },
+    });
+    renderApp('/admin/plugins');
+    await screen.findByRole('heading', { name: 'Plugins', level: 1 });
+    await userEvent.upload(screen.getByLabelText('Plugin archive (.vttplugin)'), archive());
+    expect(
+      await screen.findByText('Spare 2.0.0 is installed. Enable it to use it.'),
+    ).toBeInTheDocument();
+    const sent = calls.find((call) => call.method === 'POST');
+    expect(sent?.headers.get('content-type')).toBe('application/zip');
+  });
+
+  it('asks before replacing an installed plugin', async () => {
+    const { calls } = adminApi({
+      'POST /plugins/install': {
+        status: 409,
+        body: { error: { code: 'plugin_exists', message: 'exists' } },
+      },
+      'POST /plugins/install?replace=true': { body: { plugin: plugin({ version: '1.1.0' }) } },
+    });
+    renderApp('/admin/plugins');
+    await screen.findByRole('heading', { name: 'Plugins', level: 1 });
+    await userEvent.upload(screen.getByLabelText('Plugin archive (.vttplugin)'), archive());
+    const dialog = await screen.findByRole('dialog', { name: 'Replace the installed plugin?' });
+    expect(dialog).toHaveTextContent('tiny-d20.vttplugin');
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Replace' }));
+    expect(
+      await screen.findByText('Tiny d20 1.1.0 is installed. Enable it to use it.'),
+    ).toBeInTheDocument();
+    expect(calls.filter((call) => call.method === 'POST').map((call) => call.path)).toEqual([
+      '/plugins/install',
+      '/plugins/install?replace=true',
+    ]);
+  });
+
+  it('lists the errors of a plugin it could not install', async () => {
+    adminApi({
+      'POST /plugins/install': {
+        status: 422,
+        body: {
+          error: {
+            code: 'invalid_plugin',
+            message: 'The plugin in the archive has errors.',
+            details: { issues: BROKEN.issues },
+          },
+        },
+      },
+    });
+    renderApp('/admin/plugins');
+    await screen.findByRole('heading', { name: 'Plugins', level: 1 });
+    await userEvent.upload(screen.getByLabelText('Plugin archive (.vttplugin)'), archive());
+    const alert = await screen.findByText(
+      'The plugin in this archive has errors and was not installed.',
+    );
+    expect(alert).toHaveTextContent('sheets/main.json $.layout.children[0].label');
+  });
+});

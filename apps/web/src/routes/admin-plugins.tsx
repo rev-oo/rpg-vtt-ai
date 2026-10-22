@@ -7,6 +7,7 @@ import { Alert, Button } from '@vtt/ui';
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { EnableCodeDialog } from '../features/plugins/EnableCodeDialog.js';
+import { InstallPlugin } from '../features/plugins/InstallPlugin.js';
 import { PluginCard } from '../features/plugins/PluginCard.js';
 import { t } from '../i18n/index.js';
 import { adminRedirect } from '../shell/access.js';
@@ -28,7 +29,7 @@ export async function clientLoader({
   }
 }
 
-/** The plugin admin page: list, rescan, enable and disable (FR-ADMIN-02). */
+/** The plugin admin page: list, rescan, install, enable and disable (FR-ADMIN-02). */
 export default function AdminPluginsRoute({ loaderData }: Route.ComponentProps): ReactElement {
   const { plugins, error: loadError } = loaderData;
   const revalidator = useRevalidator();
@@ -61,12 +62,23 @@ export default function AdminPluginsRoute({ loaderData }: Route.ComponentProps):
     <div className="mx-auto flex max-w-5xl flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('plugins.title')}</h1>
-        <Button
-          onClick={() => void run(() => api.rescanPlugins(), t('plugins.rescanned'))}
-          disabled={busy}
-        >
-          {t('plugins.rescan')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <InstallPlugin
+            busy={busy}
+            onBusy={setBusy}
+            onInstalled={(plugin) => {
+              setError(null);
+              setNotice(t('plugins.installed', { name: plugin.name, version: plugin.version }));
+              void revalidator.revalidate();
+            }}
+          />
+          <Button
+            onClick={() => void run(() => api.rescanPlugins(), t('plugins.rescanned'))}
+            disabled={busy}
+          >
+            {t('plugins.rescan')}
+          </Button>
+        </div>
       </div>
 
       {loadError && <Alert tone="error">{loadError}</Alert>}

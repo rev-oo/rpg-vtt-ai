@@ -5,7 +5,7 @@ import { Button, Card, cn } from '@vtt/ui';
 
 import { t, type MessageKey } from '../../i18n/index.js';
 
-import { issueLocation, issueMessage } from './issues.js';
+import { IssueList } from './IssueList.js';
 
 const STATUS_CLASS: Record<AdminPlugin['status'], string> = {
   ready: 'bg-info-soft text-fg',
@@ -83,19 +83,7 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
           <summary className="cursor-pointer text-sm font-semibold">
             {t('plugins.issues', { errors, warnings })}
           </summary>
-          <ul className="mt-2 flex list-none flex-col gap-2 p-0">
-            {plugin.issues.map((issue, index) => (
-              <li key={index} className="flex flex-col gap-0.5 text-sm">
-                <span className="font-mono text-xs break-all text-muted">
-                  <span className={issue.severity === 'error' ? 'text-danger' : ''}>
-                    {t(issue.severity === 'error' ? 'plugins.error' : 'plugins.warning')}
-                  </span>{' '}
-                  {issueLocation(issue)}
-                </span>
-                <span className="break-words">{issueMessage(issue)}</span>
-              </li>
-            ))}
-          </ul>
+          <IssueList issues={plugin.issues} className="mt-2" />
         </details>
       )}
     </Card>
