@@ -1,5 +1,10 @@
 import { Forbidden, Unauthorized, type CloseEvent } from '@hocuspocus/common';
-import { Hocuspocus } from '@hocuspocus/server';
+import {
+  Hocuspocus,
+  type Connection,
+  type Document,
+  type TransactionOrigin,
+} from '@hocuspocus/server';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RawData, WebSocket } from 'ws';
 
@@ -11,13 +16,20 @@ import {
   type DocumentRef,
   type Subject,
 } from '@vtt/shared';
+import {
+  collabClientMessage,
+  type CollabClientMessage,
+  type CollabServerMessage,
+} from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
 import { findActor, findJournalEntry } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
 import {
+  adjustDocument,
   hasSecretLayer,
   loadDocument,
+  repairDocument,
   storeDocument,
   type DefinitionOf,
 } from '../domain/documents.js';
@@ -98,6 +110,22 @@ class Denied extends Error {
   }
 }
 
+const send = (connection: Connection, message: CollabServerMessage) => {
+  connection.sendStateless(JSON.stringify(message));
+};
+
+/** A stateless message from a client, or `undefined` when it is not one. */
+function parseClientMessage(payload: string): CollabClientMessage | undefined {
+  let json: unknown;
+  try {
+    json = JSON.parse(payload);
+  } catch {
+    return undefined;
+  }
+  const parsed = collabClientMessage.safeParse(json);
+  return parsed.success ? parsed.data : undefined;
+}
+
 /** How long documents wait before they are stored and unloaded (specs §9.6). */
 export interface CollabTiming {
   /** Quiet time after a change before the document is stored. */
@@ -154,6 +182,11 @@ function createHocuspocus(
     return ref;
   }
 
+  /** Who changed each document since it was last stored: they hear about repairs. */
+  const editors = new WeakMap<Document, Set<Connection>>();
+  /** Repairs are stored with the store that makes them, not by a store of their own. */
+  const repairOrigin: TransactionOrigin = { source: 'local', skipStoreHooks: true };
+
   return new Hocuspocus<CollabContext>({
     quiet: true,
     debounce: timing.debounceMs,
@@ -162,8 +195,21 @@ function createHocuspocus(
       loadDocument(db, refOf(documentName), document, definition);
       return Promise.resolve();
     },
+    onChange: ({ document, connection }) => {
+      if (connection) editors.set(document, (editors.get(document) ?? new Set()).add(connection));
+      return Promise.resolve();
+    },
     onStoreDocument: ({ documentName, document, instance }) => {
-      storeDocument(db, refOf(documentName), document, {
+      const ref = refOf(documentName);
+      const issues = repairDocument(db, ref, document, { definition, origin: repairOrigin });
+      if (issues.length > 0) {
+        logger.warn({ documentName, issues }, 'collab data repaired');
+        for (const editor of editors.get(document) ?? []) {
+          send(editor, { type: 'validation', issues });
+        }
+      }
+      editors.delete(document);
+      storeDocument(db, ref, document, {
         definition,
         live: (name) => instance.documents.get(name),
         now: now(),
@@ -185,6 +231,27 @@ function createHocuspocus(
         return Promise.reject(new Denied(access === 'no_session' ? Unauthorized : Forbidden));
       }
       connectionConfig.readOnly = access === 'read';
+      return Promise.resolve();
+    },
+    onStateless: ({ connection, documentName, document, payload }) => {
+      const message = parseClientMessage(payload);
+      if (!message) {
+        send(connection, { type: 'error', id: null, code: 'invalid_message' });
+      } else if (connection.readOnly) {
+        send(connection, { type: 'error', id: message.id, code: 'read_only' });
+      } else {
+        const origin: TransactionOrigin = { source: 'connection', connection };
+        const result = adjustDocument(db, refOf(documentName), document, message, {
+          definition,
+          origin,
+        });
+        send(
+          connection,
+          result
+            ? { type: 'adjusted', id: message.id, ...result }
+            : { type: 'error', id: message.id, code: 'not_a_counter' },
+        );
+      }
       return Promise.resolve();
     },
     beforeHandleMessage: ({ context, documentName, connection }) => {

@@ -1,6 +1,11 @@
 import * as Y from 'yjs';
 
-import type { DocumentLayout, FieldLayout } from './layout.js';
+import type { FieldSchema } from '@vtt/plugin-schema';
+import type { DataIssue, DataIssueReason, FieldPath } from '@vtt/shared/api';
+
+import { clampValue, valueIssue } from './check.js';
+import { defaultValue, isCollection } from './data.js';
+import { fieldLayout, type DocumentLayout, type FieldLayout } from './layout.js';
 
 /** An entity's data, or one layer of it, as JSON (the stored projection, specs §9.6). */
 export type LayerData = Record<string, unknown>;
@@ -132,4 +137,98 @@ export function mergeLayers(main: LayerData, secret: LayerData | undefined): Lay
     merged[key] = isRecord(current) && isRecord(value) ? mergeLayers(current, value) : value;
   }
   return merged;
+}
+
+/** Whether a document value has the shape its field lives in (specs §9.2). */
+function shapeIssue(field: FieldSchema, value: unknown): DataIssueReason | undefined {
+  const layout = fieldLayout(field);
+  if (layout.kind === 'map' || layout.kind === 'collection') {
+    return value instanceof Y.Map ? undefined : 'type';
+  }
+  if (layout.kind === 'text') {
+    return value instanceof Y.Text ? valueIssue(field, value.toJSON()) : 'type';
+  }
+  return value instanceof Y.AbstractType ? 'type' : valueIssue(field, value);
+}
+
+/**
+ * Replaces what does not fit `schema` in a document's `data` map with the field's default
+ * (specs §9.7), at every depth and in every collection row, and lists what it replaced.
+ * Rows that are not maps are removed. Missing fields and keys the schema does not know are
+ * left alone. Call it inside a transaction.
+ */
+export function repairLayer(
+  map: Y.Map<unknown>,
+  schema: FieldSchema,
+  path: FieldPath = [],
+): DataIssue[] {
+  const issues: DataIssue[] = [];
+  for (const [name, field] of Object.entries(schema.properties ?? {})) {
+    const value = map.get(name);
+    if (value === undefined) continue;
+    const at = [...path, name];
+    const reason = shapeIssue(field, value);
+    if (reason) {
+      writeLayer(map, { [name]: fieldLayout(field) }, { [name]: defaultValue(field) });
+      issues.push({ path: at, reason });
+    } else if (value instanceof Y.Map && isCollection(field)) {
+      for (const [id, row] of [...value.entries()]) {
+        if (row instanceof Y.Map)
+          issues.push(...repairLayer(row, field.items ?? field, [...at, id]));
+        else {
+          value.delete(id);
+          issues.push({ path: [...at, id], reason: 'type' });
+        }
+      }
+    } else if (value instanceof Y.Map) {
+      issues.push(...repairLayer(value, field, at));
+    }
+  }
+  return issues;
+}
+
+/** The field a path names under `schema`, with the map that holds it. */
+function counterAt(
+  map: Y.Map<unknown>,
+  schema: FieldSchema,
+  path: FieldPath,
+): { parent: Y.Map<unknown>; key: string; field: FieldSchema } | undefined {
+  const [key, ...rest] = path;
+  const field =
+    key !== undefined && Object.hasOwn(schema.properties ?? {}, key)
+      ? schema.properties?.[key]
+      : undefined;
+  if (!key || !field) return undefined;
+  if (rest.length === 0) return { parent: map, key, field };
+  const child = map.get(key);
+  if (!(child instanceof Y.Map)) return undefined;
+  if (!isCollection(field)) return counterAt(child, field, rest);
+  const [rowId, ...inRow] = rest;
+  const row: unknown = rowId === undefined ? undefined : child.get(rowId);
+  return row instanceof Y.Map && field.items ? counterAt(row, field.items, inRow) : undefined;
+}
+
+/**
+ * Adds `delta` to an `x-counter` field of a document's `data` map (specs §9.5), within the
+ * field's bounds. A missing or invalid current value counts as the field's default. Returns
+ * `undefined` when the path does not name a counter. Call it inside a transaction.
+ */
+export function adjustCounter(
+  map: Y.Map<unknown>,
+  schema: FieldSchema,
+  path: FieldPath,
+  delta: number,
+): { value: number; clamped: boolean } | undefined {
+  const target = counterAt(map, schema, path);
+  if (!target?.field['x-counter']) return undefined;
+  const { parent, key, field } = target;
+  if (field.type !== 'integer' && field.type !== 'number') return undefined;
+  const current: unknown = parent.get(key);
+  const start =
+    typeof current === 'number' && !valueIssue(field, current)
+      ? current
+      : Number(defaultValue(field));
+  const value = clampValue(field, start + delta);
+  parent.set(key, value);
+  return { value, clamped: value !== start + delta };
 }

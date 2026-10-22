@@ -2,17 +2,21 @@ import { eq } from 'drizzle-orm';
 import * as Y from 'yjs';
 
 import {
+  adjustCounter,
   documentLayout,
+  layerSchemas,
   mergeLayers,
   readLayer,
+  repairLayer,
   splitLayers,
   withDefaults,
   writeLayer,
   type DocumentLayout,
   type LayerData,
 } from '@vtt/plugin-engine';
-import type { PluginDefinition } from '@vtt/plugin-schema';
+import type { FieldSchema, PluginDefinition } from '@vtt/plugin-schema';
 import { documentName, type DocumentRef } from '@vtt/shared';
+import type { DataIssue, FieldPath } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
 import { findActor, type Actor } from '../db/repositories/index.js';
@@ -45,6 +49,46 @@ export function hasSecretLayer(db: DbOrTx, actor: Actor, definition: DefinitionO
   const table = findTable(db, actor.tableId);
   if (!table || !definition(table.systemId)) return true;
   return actorLayout(db, actor, definition)?.layout.secret !== undefined;
+}
+
+/** The schema of one of an actor's documents, if its system still declares its type. */
+function layerSchema(db: DbOrTx, ref: DocumentRef, definition: DefinitionOf) {
+  if (ref.kind !== 'actor') return undefined;
+  const actor = findActor(db, ref.id, { includeDeleted: true });
+  const type = actor && actorLayout(db, actor, definition);
+  return type && layerSchemas(type.schema)[ref.layer];
+}
+
+/**
+ * Replaces values that do not fit the schema with their defaults (specs §9.7) and lists
+ * them. The repair reaches every client like any change; `origin` marks its transaction.
+ * Journal bodies and actors of types the system no longer declares are left as they are.
+ */
+export function repairDocument(
+  db: DbOrTx,
+  ref: DocumentRef,
+  doc: Y.Doc,
+  { definition, origin }: { definition: DefinitionOf; origin: unknown },
+): DataIssue[] {
+  const schema: FieldSchema | undefined = layerSchema(db, ref, definition);
+  if (!schema) return [];
+  return doc.transact(() => repairLayer(doc.getMap(DATA_MAP), schema), origin);
+}
+
+/**
+ * Adds `delta` to a counter of the document (specs §9.5) in one transaction on the server's
+ * copy, so concurrent adjustments add up. `undefined` when the path names no counter.
+ */
+export function adjustDocument(
+  db: DbOrTx,
+  ref: DocumentRef,
+  doc: Y.Doc,
+  { path, delta }: { path: FieldPath; delta: number },
+  { definition, origin }: { definition: DefinitionOf; origin: unknown },
+): { value: number; clamped: boolean } | undefined {
+  const schema = layerSchema(db, ref, definition);
+  if (!schema) return undefined;
+  return doc.transact(() => adjustCounter(doc.getMap(DATA_MAP), schema, path, delta), origin);
 }
 
 /** The fields of one layer; without a layout every value is plain. */

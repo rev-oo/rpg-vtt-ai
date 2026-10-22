@@ -5,6 +5,8 @@ import type { WebSocket } from 'ws';
 import * as syncProtocol from 'y-protocols/sync';
 import * as Y from 'yjs';
 
+import { collabServerMessage, type CollabServerMessage } from '@vtt/shared/api';
+
 import type { Client } from './app.js';
 
 const TIMEOUT_MS = 2000;
@@ -13,6 +15,7 @@ const TIMEOUT_MS = 2000;
 const SYNC = 0;
 const AUTH = 2;
 const SYNC_REPLY = 4;
+const STATELESS = 5;
 const CLOSE = 7;
 const SYNC_STATUS = 8;
 // Auth sub-messages (@hocuspocus/common AuthMessageType).
@@ -37,6 +40,10 @@ export interface CollabDocument {
   closed: Promise<string>;
   /** Every frame received for this document, as sent. */
   frames: Uint8Array[];
+  /** Sends a stateless message, as JSON unless it is a string already. */
+  send: (payload: unknown) => void;
+  /** The next stateless message from the server, in order. */
+  next: () => Promise<CollabServerMessage>;
 }
 
 /** A test client speaking the Hocuspocus protocol on `/ws/collab`. */
@@ -114,6 +121,8 @@ export async function openCollab(
     const closedDoc = new Promise<string>((resolve) => {
       close = resolve;
     });
+    const inbox: CollabServerMessage[] = [];
+    const readers: ((message: CollabServerMessage) => void)[] = [];
 
     documents.set(name, (frame) => {
       frames.push(frame);
@@ -136,6 +145,11 @@ export async function openCollab(
         const waiter = statuses.shift();
         if (waiter) waiter(saved);
         else handshake();
+      } else if (type === STATELESS) {
+        const parsed = collabServerMessage.parse(JSON.parse(decoding.readVarString(decoder)));
+        const reader = readers.shift();
+        if (reader) reader(parsed);
+        else inbox.push(parsed);
       } else if (type === CLOSE) {
         close(decoding.readVarString(decoder));
       }
@@ -171,6 +185,19 @@ export async function openCollab(
       auth: answered,
       frames,
       closed: closedDoc,
+      send: (payload) => {
+        const text = typeof payload === 'string' ? payload : JSON.stringify(payload);
+        ws.send(
+          message(name, STATELESS, (encoder) => {
+            encoding.writeVarString(encoder, text);
+          }),
+        );
+      },
+      next: () => {
+        const queued = inbox.shift();
+        if (queued) return Promise.resolve(queued);
+        return waitFor(`${name} stateless message`, (resolve) => readers.push(resolve));
+      },
       change: (edit) => {
         const saved = waitFor<boolean>(`${name} sync status`, (resolve) => statuses.push(resolve));
         doc.transact(() => {
