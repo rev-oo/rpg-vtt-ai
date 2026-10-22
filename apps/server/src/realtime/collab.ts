@@ -24,10 +24,12 @@ import {
 
 import type { DbOrTx } from '../db/client.js';
 import { findActor, findJournalEntry } from '../db/repositories/index.js';
+import type { Actor } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
 import {
   adjustDocument,
   hasSecretLayer,
+  liveActorData,
   loadDocument,
   repairDocument,
   storeDocument,
@@ -363,4 +365,13 @@ export function collabSocket({ app, config, collab }: AppContext): void {
       });
     },
   );
+}
+
+/** Reads an actor's data from its live documents, for rolls (specs §9.6). */
+export function liveDataOf(
+  { collab, db }: Pick<AppContext, 'collab' | 'db'>,
+  definition: DefinitionOf,
+): (actor: Actor) => Record<string, unknown> | undefined {
+  return (actor) =>
+    liveActorData(db, actor, definition, (name) => collab.hocuspocus.documents.get(name));
 }

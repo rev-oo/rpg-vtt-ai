@@ -142,6 +142,47 @@ function storedLayer(db: DbOrTx, name: string, fields: Parameters<typeof readLay
 }
 
 /**
+ * An actor's data from both layers: each from its live document when loaded, else from its
+ * stored state, else from the projection.
+ */
+function joinLayers(
+  db: DbOrTx,
+  actor: Actor,
+  definition: DefinitionOf,
+  live: (name: string) => Y.Doc | undefined,
+): LayerData {
+  const type = actorLayout(db, actor, definition);
+  const split = type && splitLayers(type.layout, actor.system);
+  const layer = (name: DocumentRef['layer']): LayerData | undefined => {
+    const fields = layerFields(type?.layout, name);
+    const docName = documentName({ kind: 'actor', id: actor.id, layer: name });
+    const doc = live(docName);
+    if (doc) return readLayer(doc.getMap(DATA_MAP), fields);
+    return storedLayer(db, docName, fields) ?? (split ? split[name] : undefined);
+  };
+  // Without a layout the projection is one plain layer.
+  const main = layer('main') ?? (type ? {} : actor.system);
+  return mergeLayers(main, layer('secret'));
+}
+
+/**
+ * An actor's current data for rolls (specs §9.6): from its live documents while one is
+ * loaded, so a roll sees edits the store debounce has not saved yet. `undefined` when
+ * neither document is loaded; the projection is then current.
+ */
+export function liveActorData(
+  db: DbOrTx,
+  actor: Actor,
+  definition: DefinitionOf,
+  live: (name: string) => Y.Doc | undefined,
+): LayerData | undefined {
+  const loaded = (['main', 'secret'] as const).some((layer) =>
+    live(documentName({ kind: 'actor', id: actor.id, layer })),
+  );
+  return loaded ? joinLayers(db, actor, definition, live) : undefined;
+}
+
+/**
  * Stores a document and refreshes its entity's projection in one transaction (specs §9.6).
  * An actor's projection joins both layers: the other one comes from `live` when it is
  * loaded, else from its stored state, else from the projection itself.
@@ -175,21 +216,9 @@ export function storeDocument(
       .run();
     if (!owner) return;
 
-    const type = actorLayout(tx, owner, definition);
-    const otherLayer = ref.layer === 'main' ? 'secret' : 'main';
-    const read = (layer: DocumentRef['layer'], from: Y.Doc) =>
-      readLayer(from.getMap(DATA_MAP), layerFields(type?.layout, layer));
-    const otherName = documentName({ kind: 'actor', id: ref.id, layer: otherLayer });
-    const otherDoc = live(otherName);
-    let other: LayerData | undefined = otherDoc
-      ? read(otherLayer, otherDoc)
-      : storedLayer(tx, otherName, layerFields(type?.layout, otherLayer));
-    if (!other && type) {
-      const split = splitLayers(type.layout, owner.system);
-      other = otherLayer === 'main' ? split.main : split.secret;
-    }
-    const own = read(ref.layer, doc);
-    const system = ref.layer === 'main' ? mergeLayers(own, other) : mergeLayers(other ?? {}, own);
+    const system = joinLayers(tx, owner, definition, (name) =>
+      name === documentName(ref) ? doc : live(name),
+    );
     tx.update(actors).set({ system, updatedAt: now }).where(eq(actors.id, ref.id)).run();
   });
 }
