@@ -34,6 +34,8 @@ export const tableSchema = z.object({
   systemVersion: z.string(),
   settings: z.record(z.string(), z.unknown()),
   playersMayCreateAnyActorType: z.boolean(),
+  /** Whether the system plugin is enabled and ready; without it the table is read-only. */
+  systemAvailable: z.boolean(),
   createdAt: z.string(),
   role: z.enum(TABLE_ROLES),
 });
@@ -57,6 +59,25 @@ export const membersResponseSchema = z.object({ members: z.array(memberSchema) }
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
 export const systemsResponseSchema = z.object({ systems: z.array(systemSchema) });
+
+/**
+ * `GET /systems/:id`: what the web app needs to run a system plugin (T-0409, ADR-025). The
+ * definition is the validator's output; its shape is `pluginDefinitionSchema` in
+ * `@vtt/plugin-schema`, which the web checks it against (specs §14).
+ */
+export const systemDefinitionResponseSchema = z.object({
+  system: z.object({
+    id: z.string(),
+    name: z.string(),
+    version: z.string(),
+    definition: z.record(z.string(), z.unknown()),
+    /** Scoped stylesheets, in order (ADR-021, ADR-022). */
+    styles: z.array(z.string()),
+    /** `code/client.js`, when the plugin has one (specs §8.10). */
+    client: z.string().nullable(),
+  }),
+});
+export type SystemDefinitionResponse = z.infer<typeof systemDefinitionResponseSchema>;
 
 /** The actor and item types the table's system declares (§8.4), for creation forms. */
 export const tableTypesSchema = z.object({

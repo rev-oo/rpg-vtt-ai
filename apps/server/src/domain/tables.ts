@@ -6,6 +6,8 @@ import type { TableView } from '@vtt/shared/api';
 import type { DbOrTx } from '../db/client.js';
 import { gameTables, members, plugins } from '../db/schema.js';
 
+import { isAvailable } from './plugins.js';
+
 export type GameTable = typeof gameTables.$inferSelect;
 export type Member = typeof members.$inferSelect;
 
@@ -23,7 +25,7 @@ export function findTable(db: DbOrTx, tableId: string): GameTable | undefined {
 
 export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): TableView {
   const plugin = db
-    .select({ name: plugins.name })
+    .select({ name: plugins.name, enabled: plugins.enabled, status: plugins.status })
     .from(plugins)
     .where(eq(plugins.id, table.systemId))
     .get();
@@ -36,6 +38,7 @@ export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): Tabl
     systemVersion: table.systemVersion,
     settings: table.settings,
     playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
+    systemAvailable: plugin ? isAvailable(plugin) : false,
     createdAt: table.createdAt.toISOString(),
     role,
   };

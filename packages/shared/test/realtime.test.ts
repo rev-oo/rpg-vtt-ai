@@ -4,6 +4,7 @@ import {
   chatHistoryQuery,
   chatSendBody,
   clientEventSchema,
+  recipeCardSchema,
   rollRequestBody,
   rollSchema,
   serverEventSchema,
@@ -59,6 +60,40 @@ describe('rolls (FR-CHAT-03, 04, 08)', () => {
     expect(rollRequestBody.safeParse({ formula: '1d20', audience: 'whisper' }).success).toBe(false);
     expect(rollRequestBody.safeParse({ formula: ' ' }).success).toBe(false);
     expect(rollRequestBody.safeParse({ formula: '1'.repeat(501) }).success).toBe(false);
+  });
+
+  it('takes a recipe with arguments instead, but not both (ADR-025)', () => {
+    expect(
+      rollRequestBody.parse({ recipe: { name: 'skill', args: { id: 'r1', n: 2 } } }),
+    ).toMatchObject({
+      recipe: { name: 'skill', args: { id: 'r1', n: 2 } },
+    });
+    expect(rollRequestBody.parse({ recipe: { name: 'skill' } }).recipe?.args).toEqual({});
+    expect(rollRequestBody.safeParse({ formula: '1d6', recipe: { name: 'skill' } }).success).toBe(
+      false,
+    );
+    expect(rollRequestBody.safeParse({}).success).toBe(false);
+    expect(rollRequestBody.safeParse({ recipe: { name: '' } }).success).toBe(false);
+  });
+
+  it('describes the card of a recipe roll (FR-CHAT-06)', () => {
+    const card = {
+      system: 'tiny-d20',
+      recipe: 'skill',
+      label: 'roll.skill',
+      outcome: { index: 0, label: 'outcome.success', class: 'ok' },
+      card: {
+        name: 'skill',
+        title: 'card.skill.title',
+        outcome: true,
+        rows: [
+          { label: 'card.total', value: '15', class: 'total' },
+          { label: 'x', value: '', error: 'bad' },
+        ],
+      },
+    };
+    expect(recipeCardSchema.parse(card)).toEqual(card);
+    expect(recipeCardSchema.safeParse({ ...card, outcome: null, card: null }).success).toBe(true);
   });
 
   it('describes every die of a stored roll (FR-DICE-04)', () => {

@@ -73,7 +73,16 @@ function isSameOrigin(origin: string | undefined, host: string | undefined, publ
 }
 
 /** `/ws/events`: session-authenticated on upgrade, one JSON envelope per message. */
-export function eventsSocket({ app, db, config, sessions, events, now, rng }: AppContext): void {
+export function eventsSocket({
+  app,
+  db,
+  config,
+  sessions,
+  events,
+  now,
+  rng,
+  plugins,
+}: AppContext): void {
   app.get(
     '/ws/events',
     {
@@ -167,7 +176,7 @@ export function eventsSocket({ app, db, config, sessions, events, now, rng }: Ap
               db,
               { tableId: event.tableId, userId: connection.userId, role: membership.role },
               event.payload,
-              { now: now(), rng },
+              { now: now(), rng, definition: (id) => plugins.definition(id) },
             );
             publishChatMessage(events, row);
             return;

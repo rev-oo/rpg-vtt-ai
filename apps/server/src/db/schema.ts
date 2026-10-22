@@ -21,6 +21,7 @@ import {
   MESSAGE_KINDS,
   PLUGIN_STATUSES,
   type PluginIssueView,
+  type RecipeCard,
   type Roll,
   type Speaker,
 } from '@vtt/shared/api';
@@ -274,8 +275,8 @@ export const chatMessages = sqliteTable(
     text: text('text').notNull(),
     /** Full die results of roll messages (FR-CHAT-04). */
     rolls: text('rolls', { mode: 'json' }).$type<Roll[]>().notNull().default([]),
-    /** Plugin card data (FR-CHAT-06, M3). */
-    card: text('card', { mode: 'json' }).$type<unknown>(),
+    /** What a recipe roll resolved, on `card` messages (FR-CHAT-06, ADR-025). */
+    card: text('card', { mode: 'json' }).$type<RecipeCard>(),
     createdAt: createdAt(),
   },
   (t) => [index('chat_messages_history_idx').on(t.tableId, t.seq)],

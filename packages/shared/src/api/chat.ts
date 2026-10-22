@@ -39,14 +39,64 @@ export const chatSendBody = z
   .refine(hasRecipients, whisperRule);
 export type ChatSendInput = z.input<typeof chatSendBody>;
 
+/** A recipe argument from a sheet's roll button (specs §8.7): `@args.<name>`. */
+const rollArg = z.union([z.number(), z.string().max(200), z.boolean()]);
+
 /**
  * `POST /tables/:id/rolls` and the `roll.request` socket event: a formula typed by a user
- * (FR-CHAT-03, 08). With `actorId`, references read that actor's data (FR-DICE-02).
+ * (FR-CHAT-03, 08), or a roll recipe of the table's system with its arguments (ADR-025).
+ * With `actorId`, references read that actor's data (FR-DICE-02); recipes need one.
  */
 export const rollRequestBody = z
-  .object({ formula: z.string().trim().min(1).max(MAX_FORMULA_LENGTH), ...messageTarget })
+  .object({
+    formula: z.string().trim().min(1).max(MAX_FORMULA_LENGTH).optional(),
+    recipe: z
+      .object({
+        name: z.string().min(1).max(64),
+        args: z.record(z.string().max(64), rollArg).default({}),
+      })
+      .optional(),
+    ...messageTarget,
+  })
+  .refine((body) => (body.formula === undefined) !== (body.recipe === undefined), {
+    message: 'Send either a formula or a recipe.',
+    path: ['formula'],
+  })
   .refine(hasRecipients, whisperRule);
 export type RollRequestInput = z.input<typeof rollRequestBody>;
+
+/** One row of a resolved chat card (specs §8.11). */
+export const cardRowSchema = z.object({
+  label: z.string(),
+  value: z.string(),
+  class: z.string().optional(),
+  /** Why the row's formula failed. */
+  error: z.string().optional(),
+});
+
+/**
+ * The `card` of a recipe roll message: what the plugin engine resolved when it rolled.
+ * Texts are the plugin's lang keys; `text` of the message is the plain-text fallback
+ * (FR-CHAT-06).
+ */
+export const recipeCardSchema = z.object({
+  /** The system plugin that rolled it. */
+  system: z.string(),
+  recipe: z.string(),
+  label: z.string().nullable(),
+  outcome: z
+    .object({ index: z.number().int(), label: z.string(), class: z.string().optional() })
+    .nullable(),
+  card: z
+    .object({
+      name: z.string(),
+      title: z.string(),
+      rows: z.array(cardRowSchema),
+      outcome: z.boolean(),
+    })
+    .nullable(),
+});
+export type RecipeCard = z.infer<typeof recipeCardSchema>;
 
 /** `GET /tables/:id/messages?before=…&limit=…`: newest first. */
 export const chatHistoryQuery = z.object({
@@ -76,7 +126,8 @@ export const chatMessageSchema = z.object({
   text: z.string(),
   /** The rolls of a `roll` message; empty for other kinds. */
   rolls: z.array(rollSchema),
-  card: z.unknown().nullable(),
+  /** Set on `card` messages. */
+  card: recipeCardSchema.nullable(),
   createdAt: z.string(),
 });
 export type ChatMessage = z.infer<typeof chatMessageSchema>;

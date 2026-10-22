@@ -166,6 +166,19 @@ describe('createRules()', () => {
     expect(fate.roll.dice[0]?.results.map((die) => die.label)).toEqual(['-', ' ', '+', '+']);
   });
 
+  it('rolls typed formulas with the same scope, or settings alone', () => {
+    const withActor = rules.rollFormula('1d20 + @derived.attack + @args.x', {
+      type: 'character',
+      data: { str: 12 },
+      args: { x: 1 },
+      rng: scripted(10),
+    });
+    expect(withActor).toMatchObject({ resolved: '1d20 + 4 + 1', total: 15 });
+    expect(rules.rollFormula('2dF + @settings.bonus', { rng: scripted(3, 3) }).total).toBe(5);
+    expect(() => rules.rollFormula('@str', { rng: scripted() })).toThrow(/@str/);
+    expect(() => rules.rollFormula('1', { type: 'dragon', rng: scripted() })).toThrow(EngineError);
+  });
+
   it('refuses unknown types and recipes, and handler recipes', () => {
     const request = { type: 'character', data: {}, rng: scripted() };
     expect(() => rules.roll('nope', request)).toThrow(EngineError);

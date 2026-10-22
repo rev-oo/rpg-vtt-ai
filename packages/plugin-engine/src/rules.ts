@@ -1,4 +1,4 @@
-import type { FormulaFunction, Rng, Value } from '@vtt/formula';
+import { roll, type FormulaFunction, type Rng, type RollResult, type Value } from '@vtt/formula';
 import type { ActorType, ItemType, PluginDefinition } from '@vtt/plugin-schema';
 
 import { withDefaults } from './data.js';
@@ -43,7 +43,18 @@ export interface Rules {
    * when the formula cannot be rolled.
    */
   roll(name: string, request: RollRequest): RecipeResult;
+  /**
+   * Rolls a typed formula with the same scope as a recipe, and the system's custom dice
+   * (FR-DICE-02, 03). Without an entity it reads only `@settings` and `@args`. Throws
+   * `FormulaError` when the formula cannot be rolled.
+   */
+  rollFormula(formula: string, request: FormulaRollRequest): RollResult;
 }
+
+export type FormulaRollRequest = Omit<RollRequest, 'type' | 'data'> & {
+  type?: string | undefined;
+  data?: Readonly<Record<string, unknown>> | undefined;
+};
 
 export function createRules(
   plugin: PluginDefinition,
@@ -62,6 +73,16 @@ export function createRules(
   const derivedOf = (type: ActorType | ItemType, data: Readonly<Record<string, unknown>>) =>
     computeDerived(type.derived ?? {}, data, { settings, functions });
 
+  const scopeOf = (
+    kind: EntityKind,
+    type: ActorType | ItemType,
+    data: Readonly<Record<string, unknown>>,
+    args: Readonly<Record<string, Value>>,
+  ) => {
+    const filled = withDefaults(type.schema, data);
+    return { ...filled, derived: derivedOf(type, filled).values, settings, args };
+  };
+
   return {
     settings,
     defaults: (kind, name) => withDefaults(typeOf(kind, name).schema, {}),
@@ -76,10 +97,15 @@ export function createRules(
       if (!('formula' in recipe)) {
         throw new EngineError('handler_recipe', `The roll "${name}" runs plugin code`);
       }
-      const type = typeOf(kind, typeName);
-      const filled = withDefaults(type.schema, data);
-      const scope = { ...filled, derived: derivedOf(type, filled).values, settings, args };
+      const scope = scopeOf(kind, typeOf(kind, typeName), data, args);
       return rollRecipe(name, recipe, { scope, rng, cards: plugin.cards, customDice, functions });
+    },
+    rollFormula: (formula, { kind = 'actor', type: typeName, data = {}, args = {}, rng }) => {
+      const scope =
+        typeName === undefined
+          ? { ...data, settings, args }
+          : scopeOf(kind, typeOf(kind, typeName), data, args);
+      return roll(formula, { data: scope, rng, customDice, functions });
     },
   };
 }
