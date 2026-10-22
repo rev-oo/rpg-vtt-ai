@@ -82,6 +82,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
 | 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                        |
 | 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                               |
+| 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                     |
 
 ---
 
@@ -559,7 +560,7 @@ Rules for the schema subset:
 
 - Supported keywords: `type` (string, integer, number, boolean, object, array), `properties`, `items`, `default`, `enum`, `minimum`, `maximum`, `minLength`, `maxLength`, `required`, `description`.
 - Unsupported keywords (`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `patternProperties`, `if`/`then`) are rejected by the validator with a clear message. Composition is added in a later `coreApi` version.
-- `x-kind` values: `longText` (Yjs `Y.Text`), `collection` (id-keyed map, see §9.4), `richText` (journal only), `image` (URL string with preview).
+- `x-kind` values: `longText` (Yjs `Y.Text`, plain text), `collection` (id-keyed map, see §9.4), `richText` (Yjs `Y.XmlFragment` edited with TipTap; its JSON value is its plain text, ADR-037), `image` (URL string with preview).
 - `x-counter: true` marks a number as adjustable with `adjust` deltas.
 - `x-layer: "secret"` moves the field to the secret layer (GM and assistant only).
 - `derived` maps names to formulas. Derived values are never stored.
@@ -568,21 +569,21 @@ Rules for the schema subset:
 
 A sheet is a tree of nodes. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
 
-| Node            | Props                                                                        | Notes                                                 |
-| --------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                       |
-| `column`        | `children`, `gap`                                                            | Vertical flex                                         |
-| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                         |
-| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                   |
-| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                          |
-| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation             |
-| `longText`      | `path`, `label`                                                              | Collaborative rich text editor for `x-kind: longText` |
-| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder        |
-| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                  |
-| `derived`       | `key`, `format`                                                              | Displays a derived value                              |
-| `image`         | `path`, `size`                                                               | Shows portrait/image                                  |
-| `text`          | `text` (lang key or literal)                                                 | Static text                                           |
-| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`            |
+| Node            | Props                                                                        | Notes                                                                          |
+| --------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                                                |
+| `column`        | `children`, `gap`                                                            | Vertical flex                                                                  |
+| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                                                  |
+| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                                            |
+| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                                                   |
+| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation                                      |
+| `longText`      | `path`, `label`                                                              | Collaborative text editor for `x-kind: longText` and `richText` (rich: TipTap) |
+| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder                                 |
+| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                                           |
+| `derived`       | `key`, `format`                                                              | Displays a derived value                                                       |
+| `image`         | `path`, `size`                                                               | Shows portrait/image                                                           |
+| `text`          | `text` (lang key or literal)                                                 | Static text                                                                    |
+| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`                                     |
 
 Field `path` uses dot notation for objects. Inside `list`, `path` is relative to the row, and `@row.id` is available in `args`.
 
@@ -784,6 +785,7 @@ Parsing the name is the only way the auth hook derives the entity and layer; the
 ```
 actor:<id>:main
  ├─ data   Y.Map   schema fields: scalars/objects → nested Y.Map; x-kind longText → Y.Text;
+ │                 x-kind richText → Y.XmlFragment (TipTap blocks, ADR-037);
  │                 collection → Y.Map keyed by row id; each row has a `sort` value
  └─ items  Y.Map   owned items keyed by id: { type, name, sourceId, sort, data… }
 ```
@@ -1240,7 +1242,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0506
   - **Do:** Editor bound to `Y.Text` for `longText` fields and journal bodies (FR-SHEET-07, FR-JOURNAL-01, 04). Use TipTap with the Collaboration extension, or a minimal editor if TipTap is deferred.
   - **Done when:** two clients type simultaneously into one note without loss.
-  - **Note:** a minimal editor; TipTap is deferred. `SharedTextarea` in `packages/sheet-renderer/src/text.tsx` over `SheetStore.text()`; the Yjs store wraps the field's `Y.Text`. Journal bodies reuse it with T-0601 (ADR-035). Tested in the renderer, `apps/web/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`.
+  - **Note:** `longText` uses a minimal editor: `SharedTextarea` in `packages/sheet-renderer/src/text.tsx` over `SheetStore.text()`, where the Yjs store wraps the field's `Y.Text` (ADR-035). `richText` uses TipTap with the Collaboration extension over a `Y.XmlFragment` (Q3, ADR-037): `apps/web/src/collab/RichTextEditor.tsx`, rendered through `<Sheet renderRichText>`. Journal bodies reuse it with T-0601. Tested in the renderer, `apps/web/test/collab.test.ts`, `apps/web/test/rich-text.test.tsx` and `e2e/tests/live-sheets.spec.ts`.
 
 - [x] **T-0511 · Phone layout for sheets**
   - **Deps:** T-0506
@@ -1356,18 +1358,18 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
 
-| #   | Question                                                                                                                                                 | Blocks                | Proposed default                                                                                                    |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                      | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                                                                                    |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                         | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                         |
-| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | TipTap (Collaboration extension). T-0510 built a minimal shared textarea meanwhile, pending this decision (ADR-035) |
-| Q4  | Email-based invites, or link-only?                                                                                                                       | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                         |
-| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                 | T-0412, T-0702        | Required, to validate the API                                                                                       |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                            | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                     |
-| Q7  | Does Hocuspocus need its own port in development?                                                                                                        | T-0501                | No, same port via upgrade path                                                                                      |
-| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                           |
-| Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                        |
-| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025)      |
+| #   | Question                                                                                                                                                 | Blocks                | Proposed default                                                                                               |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                      | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                                                                               |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                         | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                    |
+| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | **Decided:** TipTap for `richText`; `longText` keeps the plain shared textarea (ADR-035, ADR-037)              |
+| Q4  | Email-based invites, or link-only?                                                                                                                       | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                    |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                 | T-0412, T-0702        | Required, to validate the API                                                                                  |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                            | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                |
+| Q7  | Does Hocuspocus need its own port in development?                                                                                                        | T-0501                | No, same port via upgrade path                                                                                 |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                      |
+| Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                   |
+| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025) |
 
 ---
 
@@ -1424,8 +1426,9 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted |
 | ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted |
 | ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted |
-| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Proposed |
+| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted |
 | ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
+| ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

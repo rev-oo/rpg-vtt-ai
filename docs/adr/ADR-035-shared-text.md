@@ -1,6 +1,6 @@
 # ADR-035: Collaborative long text with a minimal editor
 
-- **Status:** Proposed (open question Q3, specs §14)
+- **Status:** Accepted. Q3 is decided: `richText` fields use TipTap (ADR-037), and `longText` keeps this editor.
 - **Date:** 2026-10-22
 - **Tasks:** T-0510
 - **Refines:** specs §9.2, FR-SHEET-07, FR-JOURNAL-01, FR-JOURNAL-04
@@ -16,7 +16,7 @@ T-0510 binds `longText` fields, and later journal bodies, to their `Y.Text`. The
    - Each input event becomes one splice: the part between the common prefix and suffix of the old and new text.
    - Other people's changes replace the area's value, and the caret and selection are moved through each change.
    - Only plain text is involved, which needs no new dependency, fits phones, and is all MVP sheets require.
-   - `richText` fields are edited as plain text in the same `Y.Text` until a rich editor arrives. Its marks can then live in the same type.
+   - `richText` fields were edited as plain text in the same `Y.Text` until a rich editor arrived. ADR-037 now gives them TipTap over a `Y.XmlFragment` instead.
 2. **The renderer stays free of Yjs.**
    - `SheetStore.text(path)` returns a `SharedText` (`read`, `splice`, `observe`) for live stores, and the same object for the same text.
    - The Yjs store wraps the field's `Y.Text` and turns `YTextEvent` deltas into splices.
