@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 83%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 92%      | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0511`
+- **Next task:** `T-0512`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -80,6 +80,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                        |
 | 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
 | 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
+| 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                        |
 
 ---
 
@@ -1240,10 +1241,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** two clients type simultaneously into one note without loss.
   - **Note:** a minimal editor; TipTap is deferred. `SharedTextarea` in `packages/sheet-renderer/src/text.tsx` over `SheetStore.text()`; the Yjs store wraps the field's `Y.Text`. Journal bodies reuse it with T-0601 (ADR-035). Tested in the renderer, `apps/web/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`.
 
-- [ ] **T-0511 · Phone layout for sheets**
+- [x] **T-0511 · Phone layout for sheets**
   - **Deps:** T-0506
   - **Do:** Sheet windows become full-screen routes below 768 px with bottom bar (Chat / Sheet / Dice) (FR-SHEET-10, NFR-10).
   - **Done when:** Playwright mobile viewport test passes with no horizontal scroll.
+  - **Note:** on the sheet route below 768 px (`max-md`), `apps/web/src/routes/table.tsx` hides the table header and chat and shows a Chat / Sheet / Dice bar; hidden panes stay mounted so the sheet stays live. The dice pane (`features/table/DicePane.tsx`) rolls common dice or a formula as the sheet's actor. The app header stays. Tested in `e2e/tests/phone-sheets.spec.ts` at 360 px.
 
 - [ ] **T-0512 · Document access revocation**
   - **Deps:** T-0501, T-0110
