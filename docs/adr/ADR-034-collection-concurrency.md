@@ -19,7 +19,7 @@ The property test for T-0508 found the exception. When the map is missing, two c
 
 ## Decision
 
-1. **The server creates the containers.** `ensureMaps` (`@vtt/plugin-engine`) adds the `Y.Map` of every object and collection field a document lacks, at every depth outside collection rows. `loadDocument` runs it on every load, both for documents built from the projection and for stored states, before any client syncs. Clients still create maps when one is missing, as a fallback, but with the server's load that no longer happens in practice.
+1. **The server creates the containers.** `ensureContainers` (`@vtt/plugin-engine`) adds the `Y.Map` of every object and collection field a document lacks, and the `Y.Text` of every text field (T-0510), at every depth outside collection rows. `loadDocument` runs it on every load, both for documents built from the projection and for stored states, before any client syncs. Clients still create maps when one is missing, as a fallback, but with the server's load that no longer happens in practice.
 2. **Ties in order are broken by id.** Two clients can move rows to the same gap at once and get the same `sort` key. `collectionRows` sorts by key and then by id, so every client shows the same order. The next move gives that row a fresh key.
 3. **Property test.** In `apps/web/test/collab-concurrency.test.ts`:
    - two stores over two `Y.Doc`s, started from a server-loaded state, run random adds, removes and moves, and sync at random points;

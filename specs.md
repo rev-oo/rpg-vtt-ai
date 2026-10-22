@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 75%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 83%      | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0510`
+- **Next task:** `T-0511`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -79,6 +79,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0507 implemented (presence outlines and name badges on sheet fields). ADR-033 added.                                                        |
 | 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                        |
 | 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
+| 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
 
 ---
 
@@ -1225,7 +1226,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0506
   - **Do:** `sort` fractional index updates for reorder; add/remove via keyed map (FR-SHEET-06).
   - **Done when:** concurrent add and reorder from two clients produce no duplicates and no lost rows (property test with two Y.Doc instances).
-  - **Note:** `apps/web/test/collab-concurrency.test.ts`. The test found rows lost when two clients created a missing collection map at once; the server now creates every map on load (`ensureMaps`, ADR-034).
+  - **Note:** `apps/web/test/collab-concurrency.test.ts`. The test found rows lost when two clients created a missing collection map at once; the server now creates every map on load (`ensureContainers`, ADR-034).
 
 - [x] **T-0509 · Derived values live**
   - **Deps:** T-0506, T-0302
@@ -1233,10 +1234,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** changing `str` updates `strMod` in a second browser without refresh.
   - **Note:** clients compute derived values from the live store (`e2e/tests/live-sheets.spec.ts`). Rolls read an actor's loaded live documents before the projection (`liveActorData` in `apps/server/src/domain/documents.ts`, tested in `apps/server/test/sheet-data.test.ts`), as §9.6 asks.
 
-- [ ] **T-0510 · Long text collaboration**
+- [x] **T-0510 · Long text collaboration**
   - **Deps:** T-0506
   - **Do:** Editor bound to `Y.Text` for `longText` fields and journal bodies (FR-SHEET-07, FR-JOURNAL-01, 04). Use TipTap with the Collaboration extension, or a minimal editor if TipTap is deferred.
   - **Done when:** two clients type simultaneously into one note without loss.
+  - **Note:** a minimal editor; TipTap is deferred. `SharedTextarea` in `packages/sheet-renderer/src/text.tsx` over `SheetStore.text()`; the Yjs store wraps the field's `Y.Text`. Journal bodies reuse it with T-0601 (ADR-035). Tested in the renderer, `apps/web/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`.
 
 - [ ] **T-0511 · Phone layout for sheets**
   - **Deps:** T-0506
@@ -1350,18 +1352,18 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
 
-| #   | Question                                                                                                                                                 | Blocks                | Proposed default                                                                                               |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                      | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                                                                               |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                         | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                    |
-| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | TipTap (Collaboration extension)                                                                               |
-| Q4  | Email-based invites, or link-only?                                                                                                                       | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                    |
-| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                 | T-0412, T-0702        | Required, to validate the API                                                                                  |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                            | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                |
-| Q7  | Does Hocuspocus need its own port in development?                                                                                                        | T-0501                | No, same port via upgrade path                                                                                 |
-| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                      |
-| Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                   |
-| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025) |
+| #   | Question                                                                                                                                                 | Blocks                | Proposed default                                                                                                    |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                      | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                                                                                    |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                         | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                         |
+| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | TipTap (Collaboration extension). T-0510 built a minimal shared textarea meanwhile, pending this decision (ADR-035) |
+| Q4  | Email-based invites, or link-only?                                                                                                                       | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                         |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                 | T-0412, T-0702        | Required, to validate the API                                                                                       |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                            | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                     |
+| Q7  | Does Hocuspocus need its own port in development?                                                                                                        | T-0501                | No, same port via upgrade path                                                                                      |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                           |
+| Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                        |
+| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025)      |
 
 ---
 
@@ -1418,6 +1420,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted |
 | ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted |
 | ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted |
+| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Proposed |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
