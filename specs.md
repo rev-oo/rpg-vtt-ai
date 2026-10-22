@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 8%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0501`
+- **Next task:** `T-0502`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -71,6 +71,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | PR #7 merged (T-0409). T-0410 implemented (plugin CLI, `@vtt/plugin-io`, `.vttplugin` archives installed from the admin page). ADR-026 added. |
 | 2026-10-22 | PR #8 merged (T-0410). T-0411 and T-0412 implemented (tiny-d20 `hpBar`, reference plugin e2e tests). ADR-027 added. M4 awaiting sign-off.     |
 | 2026-10-22 | PR #9 merged. M4 signed off as done. Active milestone is now M5.                                                                              |
+| 2026-10-22 | T-0501 implemented (Hocuspocus on `/ws/collab`, document access checks). ADR-028 added.                                                       |
 
 ---
 
@@ -860,7 +861,8 @@ Key resource groups:
 ### 10.3 Collaboration WebSocket (`/ws/collab`)
 
 - Hocuspocus protocol. Auth token is the session cookie validated in `onAuthenticate`.
-- The document name is parsed and checked against membership and ownership before any sync message is accepted.
+- The document name is parsed and checked against membership and ownership before any sync message is accepted, and again before every message (ADR-028).
+- Frames are limited to 1 MiB on this socket (16 KiB on `/ws/events`).
 
 ---
 
@@ -1169,10 +1171,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M5 — Live sheets (CRDT)
 
-- [ ] **T-0501 · Hocuspocus server integration**
+- [x] **T-0501 · Hocuspocus server integration**
   - **Deps:** T-0203, T-0102
   - **Do:** Mount Hocuspocus on `/ws/collab`. Implement `onAuthenticate` with session validation, document name parsing, and access checks (§9.3). Log denials.
   - **Done when:** unauthorised connections are rejected in tests; observers cannot send updates (tested).
+  - **Note:** `apps/server/src/realtime/collab.ts`, tested in `apps/server/test/collab.test.ts`. Document names are parsed in `@vtt/shared` (`parseDocumentName`); access is re-checked before every message (ADR-028).
 
 - [ ] **T-0502 · Document persistence**
   - **Deps:** T-0501
@@ -1392,6 +1395,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-025 | [Plugin host: system definitions, engine rolls and cards, import map, SDK client hooks](docs/adr/ADR-025-plugin-host.md)                        | Accepted |
 | ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted |
 | ADR-027 | [Reference plugins: tiny-d20 code, end-to-end path, gaps until M5–M7](docs/adr/ADR-027-reference-plugins.md)                                    | Accepted |
+| ADR-028 | [Collaboration socket: Hocuspocus behind @fastify/websocket, per-message access checks, frame limits](docs/adr/ADR-028-collab-socket.md)        | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
