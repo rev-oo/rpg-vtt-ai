@@ -1,7 +1,6 @@
-import { cp, mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
@@ -12,8 +11,7 @@ import {
   type Client,
   type TestApp,
 } from './support/app.js';
-
-const REFERENCE = fileURLToPath(new URL('../../../plugins/', import.meta.url));
+import { copyReferencePlugin } from './support/reference.js';
 
 let dataDir: string;
 let pluginDir: string;
@@ -23,7 +21,7 @@ let admin: Client;
 beforeEach(async () => {
   dataDir = await mkdtemp(path.join(tmpdir(), 'vtt-assets-'));
   pluginDir = path.join(dataDir, 'plugins', 'tiny-d20');
-  await cp(path.join(REFERENCE, 'tiny-d20'), pluginDir, { recursive: true });
+  await copyReferencePlugin('tiny-d20', pluginDir);
   await mkdir(path.join(pluginDir, 'img'));
   await writeFile(
     path.join(pluginDir, 'img/icon.svg'),

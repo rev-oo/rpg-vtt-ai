@@ -1,7 +1,6 @@
-import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -18,9 +17,8 @@ import {
   type Client,
   type TestApp,
 } from './support/app.js';
+import { copyReferencePlugin } from './support/reference.js';
 import { setupTable } from './support/table.js';
-
-const REFERENCE = fileURLToPath(new URL('../../../plugins/', import.meta.url));
 
 let dataDir: string;
 let pluginsDir: string;
@@ -42,7 +40,7 @@ afterEach(async () => {
 /** Copies a reference plugin into `DATA_DIR/plugins`, optionally under another folder name. */
 async function install(id: string, folder = id): Promise<string> {
   const target = path.join(pluginsDir, folder);
-  await cp(path.join(REFERENCE, id), target, { recursive: true });
+  await copyReferencePlugin(id, target);
   return target;
 }
 

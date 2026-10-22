@@ -7,6 +7,9 @@ const sources = import.meta.glob<string>('../../../plugins/*/**/*.{json,css}', {
   eager: true,
 });
 
+// Code files only need to be listed: the validator checks `hasCode` against them.
+const code = import.meta.glob('../../../plugins/*/code/**');
+
 const PREFIX = '../../../plugins/';
 
 /** The ids of the plugins in `plugins/`. */
@@ -22,7 +25,11 @@ export interface PreviewPlugin extends PluginValidation {
 /** Validates one plugin folder the way the server does, and scopes its CSS. */
 export function loadPreviewPlugin(id: string): PreviewPlugin {
   const files = new Map<string, string>();
-  for (const [path, text] of Object.entries(sources)) {
+  const entries = [
+    ...Object.entries(sources),
+    ...Object.keys(code).map((path): [string, string] => [path, '']),
+  ];
+  for (const [path, text] of entries) {
     const relative = path.slice(PREFIX.length);
     if (relative.startsWith(`${id}/`)) files.set(relative.slice(id.length + 1), text);
   }

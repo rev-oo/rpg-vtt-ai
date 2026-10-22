@@ -1,11 +1,10 @@
-import { mkdtemp, readdir, readFile, rm, stat } from 'node:fs/promises';
+import { mkdtemp, readdir, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { readPluginFolder, writeZip } from '@vtt/plugin-io';
+import { writeZip } from '@vtt/plugin-io';
 import {
   errorResponseSchema,
   invalidPluginDetailsSchema,
@@ -20,8 +19,7 @@ import {
   type Client,
   type TestApp,
 } from './support/app.js';
-
-const REFERENCE = fileURLToPath(new URL('../../../plugins/', import.meta.url));
+import { referencePluginFiles } from './support/reference.js';
 
 let dataDir: string;
 let t: TestApp;
@@ -43,10 +41,7 @@ async function archive(
   id: string,
   edit: (files: Map<string, Buffer>) => void = () => undefined,
 ): Promise<Buffer> {
-  const dir = path.join(REFERENCE, id);
-  const { files: listed } = await readPluginFolder(dir);
-  const files = new Map<string, Buffer>();
-  for (const file of listed.keys()) files.set(file, await readFile(path.join(dir, file)));
+  const files = await referencePluginFiles(id);
   edit(files);
   return writeZip(files);
 }

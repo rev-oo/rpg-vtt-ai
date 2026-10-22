@@ -40,13 +40,22 @@ function CoreCard({
 
 /**
  * A recipe roll in the chat (FR-CHAT-06): the plugin's custom card component, else the core
- * card, while the table's system has the card; otherwise the message's plain-text fallback.
+ * card, while the table's system has the card; otherwise the message's plain-text fallback
+ * and its dice.
  */
 export function CardMessage({ message }: { message: ChatMessage }): ReactElement {
   const host = useSystem();
   const recipe = message.card;
   const card = recipe?.card;
-  const fallback = <p className="break-words whitespace-pre-wrap">{message.text}</p>;
+  // The stored text, with the dice, which every roll shows (FR-CHAT-04).
+  const fallback = (
+    <>
+      <p className="break-words whitespace-pre-wrap">{message.text}</p>
+      {message.rolls.map((roll, index) => (
+        <RollView key={index} roll={roll} />
+      ))}
+    </>
+  );
   if (host.status !== 'ready' || !recipe || !card || recipe.system !== host.system.id)
     return fallback;
 

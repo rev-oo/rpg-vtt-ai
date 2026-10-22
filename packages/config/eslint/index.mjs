@@ -129,6 +129,7 @@ export function defineVttConfig() {
       // Plugin client code is not a workspace module: the browser resolves its imports
       // through the app's import map (ADR-025).
       'e2e/fixtures/plugins/*/code/',
+      'plugins/*/code/',
       // The e2e server's data directory, with its copies of the fixtures.
       'e2e/.data/',
       ...LINT_FIXTURES,

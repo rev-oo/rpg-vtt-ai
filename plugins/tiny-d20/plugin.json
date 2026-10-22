@@ -5,10 +5,10 @@
   "version": "0.1.0",
   "kind": "system",
   "coreApi": "^0.1.0",
-  "description": "A small d20 system: abilities, skills, hit points and a skill roll.",
+  "description": "A small d20 system: abilities, skills, hit points with a bar, and a skill roll.",
   "author": "VTT contributors",
   "license": "MIT",
-  "hasCode": false,
+  "hasCode": true,
   "locales": ["en", "pt-BR"],
   "defaultLocale": "en"
 }
