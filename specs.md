@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 42%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 50%      | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0506`
+- **Next task:** `T-0507`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -75,6 +75,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0504 and T-0502 implemented (JSON ↔ Yjs mapping in `@vtt/plugin-engine`, `ydocs` persistence and projection). ADR-029 added.                |
 | 2026-10-22 | T-0503 implemented (secret layer kept out of player sockets, views and formulas). ADR-030 added.                                              |
 | 2026-10-22 | T-0505 implemented (`adjust` and repair on persist over collab stateless messages). ADR-031 added.                                            |
+| 2026-10-22 | T-0506 implemented (live actor sheets in the web app over Yjs). ADR-032 added.                                                                |
 
 ---
 
@@ -1205,10 +1206,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** concurrent `adjust(-3)` from two clients yields a net −6.
   - **Note:** stateless messages on the document (`collabClientMessage`/`collabServerMessage` in `@vtt/shared/api`); `repairLayer` and `adjustCounter` in `packages/plugin-engine/src/ydoc.ts`. Tested in `apps/server/test/sheet-data.test.ts` and `packages/plugin-engine/test/repair.test.ts` (ADR-031).
 
-- [ ] **T-0506 · Sheet store and binding in web app**
+- [x] **T-0506 · Sheet store and binding in web app**
   - **Deps:** T-0504, T-0408
   - **Do:** `apps/web/src/collab` implements `SheetStore` over Yjs; `field`, `list`, `longText` nodes bind to it; read-only mode for observers (FR-SHEET-03).
   - **Done when:** two browsers edit one sheet and see each other's changes within 500 ms (e2e).
+  - **Note:** `createYjsStore` and `useLiveSheet` in `apps/web/src/collab`, tested in `apps/web/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`. `longText` still replaces the whole text until T-0510 (ADR-032).
 
 - [ ] **T-0507 · Presence and awareness**
   - **Deps:** T-0506
@@ -1407,6 +1409,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-029 | [Document persistence and the Yjs mapping: ydocs, projection, unload delay](docs/adr/ADR-029-document-persistence.md)                           | Accepted |
 | ADR-030 | [Secret layer: filtered views and formulas, secret documents only for secret fields](docs/adr/ADR-030-secret-layer.md)                          | Accepted |
 | ADR-031 | [Counter adjustments and data repair over collab stateless messages](docs/adr/ADR-031-adjust-and-repair.md)                                     | Accepted |
+| ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
