@@ -145,6 +145,18 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     }
   });
 
+  it.each(['tiny-d20', 'tiny-pool'])('validates and packs the reference plugin %s', async (id) => {
+    const dir = path.join(REPO, 'plugins', id);
+    expect((await run('validate', dir)).code).toBe(0);
+    const file = path.join(temp, `${id}.vttplugin`);
+    expect((await run('pack', dir, '--out', file)).code).toBe(0);
+    const files = readZip(await readFile(file), ARCHIVE_LIMITS);
+    // tiny-d20 ships its compiled hpBar node; tiny-pool has no code at all (T-0411, T-0412).
+    expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual(
+      id === 'tiny-d20' ? ['code/client.js'] : [],
+    );
+  });
+
   it('refuses to pack a plugin with errors or clashing code entries', async () => {
     expect((await run('pack', BROKEN, '--out', path.join(temp, 'x.vttplugin'))).code).toBe(1);
     const dir = await tsxPlugin();

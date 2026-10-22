@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
-| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 83%      | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In review   | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M4
-- **Next task:** `T-0411`
+- **Next task:** `T-0501` (after M4 sign-off)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -69,6 +69,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                                          |
 | 2026-10-22 | PR #6 merged (T-0406 to T-0408). T-0409 implemented (plugin host, `@vtt/sdk/client`, engine-backed rolls and cards). ADR-025 added.           |
 | 2026-10-22 | PR #7 merged (T-0409). T-0410 implemented (plugin CLI, `@vtt/plugin-io`, `.vttplugin` archives installed from the admin page). ADR-026 added. |
+| 2026-10-22 | PR #8 merged (T-0410). T-0411 and T-0412 implemented (tiny-d20 `hpBar`, reference plugin e2e tests). ADR-027 added. M4 awaiting sign-off.     |
 
 ---
 
@@ -1153,15 +1154,17 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** `vtt-plugin validate plugins/tiny-d20` passes; `pack` produces an archive the server can install.
   - **Note:** `packages/plugin-cli/test/cli.test.ts` covers the commands; `e2e/tests/plugin-install.spec.ts` packs a fixture with the CLI and installs it from the plugin admin page (`POST /plugins/install`). Archives and folder reading live in `@vtt/plugin-io` (ADR-026).
 
-- [ ] **T-0411 · Reference plugin: tiny-d20**
+- [x] **T-0411 · Reference plugin: tiny-d20**
   - **Deps:** T-0410
   - **Do:** Build a d20 system: character and NPC types, skills collection, HP counter, a secret GM note, a skill roll recipe with outcomes, one custom node (`hpBar`), scoped CSS, pt-BR and en lang files.
   - **Done when:** every feature in §8 that the plugin uses is exercised by an e2e test.
+  - **Note:** `hpBar` is `plugins/tiny-d20/code/client.tsx`. `e2e/tests/reference-plugins.spec.ts` packs, installs and plays the plugin; pt-BR texts, table settings and the item sheet have no place in the app yet (ADR-027).
 
-- [ ] **T-0412 · Reference plugin: tiny-pool**
+- [x] **T-0412 · Reference plugin: tiny-pool**
   - **Deps:** T-0410
   - **Do:** Dice-pool system: custom die `dF`, success-count rolls, no code folder at all.
   - **Done when:** the plugin works with `hasCode: false` and all sheets render.
+  - **Note:** covered by `e2e/tests/reference-plugins.spec.ts` (pool and `4dF` rolls) and the sheet-renderer preview test (ADR-027).
 
 ### M5 — Live sheets (CRDT)
 
@@ -1387,6 +1390,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-024 | [Sheet renderer: store, inputs, CSS hooks, phone layout, preview](docs/adr/ADR-024-sheet-renderer.md)                                           | Accepted |
 | ADR-025 | [Plugin host: system definitions, engine rolls and cards, import map, SDK client hooks](docs/adr/ADR-025-plugin-host.md)                        | Accepted |
 | ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted |
+| ADR-027 | [Reference plugins: tiny-d20 code, end-to-end path, gaps until M5–M7](docs/adr/ADR-027-reference-plugins.md)                                    | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

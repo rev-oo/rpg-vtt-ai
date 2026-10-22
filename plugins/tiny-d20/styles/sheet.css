@@ -2,9 +2,48 @@
   --vtt-accent: #8a2be2;
 }
 
+/* A lighter accent on dark backgrounds keeps text readable (NFR-10). */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --vtt-accent: #c4a1f7;
+  }
+}
+
 .vitals {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+.hpBar {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: var(--vtt-gap-sm);
+}
+
+/* Built from the text colour and the accent, so it reads in light and dark schemes. */
+.hpBar-track {
+  flex: 1;
+  height: 0.5rem;
+  overflow: hidden;
+  border-radius: 0.25rem;
+  background: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.hpBar-fill {
+  height: 100%;
+  background: var(--vtt-accent);
+}
+
+.hpBar[data-low] .hpBar-fill {
+  background: currentColor;
+}
+
+.hpBar-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .ok {

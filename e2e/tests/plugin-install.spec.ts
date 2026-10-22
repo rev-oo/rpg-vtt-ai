@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { cp, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -7,12 +6,9 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
 import { ADMIN, signIn } from './support/api.js';
+import { packPlugin } from './support/plugins.js';
 
 const fixtures = fileURLToPath(new URL('../fixtures/plugins/', import.meta.url));
-// The built CLI, linked as a dependency of this package.
-const cli = fileURLToPath(
-  new URL('../node_modules/@vtt/plugin-cli/dist/src/bin.js', import.meta.url),
-);
 
 let temp = '';
 test.beforeAll(async () => {
@@ -29,13 +25,7 @@ async function pack(fixture: string, id: string, name: string): Promise<string> 
   const manifest = path.join(dir, 'plugin.json');
   const json = JSON.parse(await readFile(manifest, 'utf8')) as Record<string, unknown>;
   await writeFile(manifest, JSON.stringify({ ...json, id, name }));
-  const file = path.join(temp, `${id}.vttplugin`);
-  const result = spawnSync(process.execPath, [cli, 'pack', dir, '--out', file], {
-    encoding: 'utf8',
-  });
-  expect(result.stderr).toBe('');
-  expect(result.status).toBe(0);
-  return file;
+  return packPlugin(dir, path.join(temp, `${id}.vttplugin`));
 }
 
 // T-0410: `vtt-plugin pack` writes an archive the admin installs from the plugin page.

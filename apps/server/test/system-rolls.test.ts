@@ -1,7 +1,6 @@
-import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -26,8 +25,7 @@ import {
   type TableView,
   type TestApp,
 } from './support/app.js';
-
-const REFERENCE = fileURLToPath(new URL('../../../plugins/', import.meta.url));
+import { copyReferencePlugin } from './support/reference.js';
 
 let dataDir: string;
 let t: TestApp;
@@ -37,7 +35,7 @@ let rolls: number[];
 beforeEach(async () => {
   dataDir = await mkdtemp(path.join(tmpdir(), 'vtt-system-'));
   for (const id of ['tiny-d20', 'tiny-pool']) {
-    await cp(path.join(REFERENCE, id), path.join(dataDir, 'plugins', id), { recursive: true });
+    await copyReferencePlugin(id, path.join(dataDir, 'plugins', id));
   }
   rolls = [];
   t = await createTestApp({
