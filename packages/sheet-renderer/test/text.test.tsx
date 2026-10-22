@@ -2,7 +2,17 @@ import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 
-import { diffText, SharedTextarea, type SharedText, type TextChange } from '../src/index.js';
+import type { SheetNode } from '@vtt/plugin-schema';
+
+import {
+  createMemoryStore,
+  diffText,
+  Sheet,
+  SharedTextarea,
+  type RichTextProps,
+  type SharedText,
+  type TextChange,
+} from '../src/index.js';
 
 /** A shared text in memory; `remote` edits it as another person would. */
 function sharedText(initial: string) {
@@ -73,5 +83,59 @@ describe('<SharedTextarea> (FR-SHEET-07)', () => {
     });
     expect(area).toHaveValue('aXYbcde');
     expect(area.selectionStart).toBe(6);
+  });
+});
+
+describe('richText fields (ADR-037)', () => {
+  const type = {
+    schema: {
+      type: 'object' as const,
+      properties: {
+        bio: { type: 'string' as const, 'x-kind': 'richText' as const },
+        notes: { type: 'string' as const, 'x-kind': 'longText' as const },
+      },
+    },
+  };
+  const layout: SheetNode = {
+    type: 'column',
+    children: [
+      { type: 'longText', path: 'bio', label: 'Biography' },
+      { type: 'longText', path: 'notes', label: 'Notes' },
+    ],
+  };
+
+  it('use the host editor, labelled by the field label', () => {
+    const calls: RichTextProps[] = [];
+    render(
+      <Sheet
+        pluginId="p"
+        layout={layout}
+        type={type}
+        store={createMemoryStore({ bio: 'Born in Elm.' })}
+        readOnly
+        renderRichText={(props) => {
+          calls.push(props);
+          return <div role="textbox" aria-labelledby={props.labelId} />;
+        }}
+      />,
+    );
+    expect(calls.at(-1)).toMatchObject({ path: ['bio'], readOnly: true });
+    expect(screen.getByRole('textbox', { name: 'Biography' })).not.toHaveValue();
+    // Only richText fields go to the host; longText stays a text area.
+    expect(screen.getByRole('textbox', { name: 'Notes' }).tagName).toBe('TEXTAREA');
+  });
+
+  it('fall back to a text area when the host renders nothing, or without a host', async () => {
+    const store = createMemoryStore({ bio: 'Born' });
+    const { unmount } = render(
+      <Sheet pluginId="p" layout={layout} type={type} store={store} renderRichText={() => null} />,
+    );
+    const area = screen.getByRole('textbox', { name: 'Biography' });
+    expect(area).toHaveValue('Born');
+    await userEvent.type(area, '!');
+    expect(store.getSnapshot()).toMatchObject({ bio: 'Born!' });
+    unmount();
+    render(<Sheet pluginId="p" layout={layout} type={type} store={store} />);
+    expect(screen.getByRole('textbox', { name: 'Biography' }).tagName).toBe('TEXTAREA');
   });
 });

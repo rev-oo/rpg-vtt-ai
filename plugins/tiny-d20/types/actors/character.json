@@ -29,6 +29,7 @@
         }
       },
       "portrait": { "type": "string", "x-kind": "image", "default": "" },
+      "biography": { "type": "string", "x-kind": "richText", "default": "" },
       "notes": { "type": "string", "x-kind": "longText", "default": "" },
       "gmNotes": { "type": "string", "x-kind": "longText", "x-layer": "secret", "default": "" }
     }

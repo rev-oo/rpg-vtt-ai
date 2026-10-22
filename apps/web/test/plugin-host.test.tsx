@@ -32,15 +32,20 @@ vi.mock('../src/collab/use-live-sheet.js', () => ({
 }));
 
 const liveData = (overrides: Partial<Extract<LiveSheet, { status: 'ready' }>> = {}) => {
-  collab.sheet = {
+  const sheet: Extract<LiveSheet, { status: 'ready' }> = {
     status: 'ready',
-    store: createMemoryStore({ str: 13, secret: 'hidden lair' }),
+    store: {
+      ...createMemoryStore({ str: 13, secret: 'hidden lair' }),
+      richText: () => undefined,
+      destroy: () => undefined,
+    },
     readOnly: false,
     issues: [],
     awareness: undefined,
     ...overrides,
   };
-  return collab.sheet;
+  collab.sheet = sheet;
+  return sheet;
 };
 
 afterEach(() => {

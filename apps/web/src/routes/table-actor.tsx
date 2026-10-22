@@ -1,10 +1,11 @@
-import { useMemo, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactElement } from 'react';
 import { Link, useParams } from 'react-router';
 
 import type { Value } from '@vtt/formula';
 import { documentLayout } from '@vtt/plugin-engine';
 import { canSendChat, isGmLike } from '@vtt/shared';
 import type { ActorView, RollRequestInput, TableView } from '@vtt/shared/api';
+import type { RichTextProps } from '@vtt/sheet-renderer';
 import { Alert } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
@@ -103,6 +104,11 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
 
 type ReadySystem = Extract<TableSystem, { status: 'ready' }>;
 
+// The editor and ProseMirror load only for sheets with rich text (ADR-037).
+const RichTextEditor = lazy(() =>
+  import('../collab/RichTextEditor.js').then((module) => ({ default: module.RichTextEditor })),
+);
+
 const NO_FIELDS = { main: {}, secret: undefined };
 
 function LiveActorSheet({
@@ -125,6 +131,20 @@ function LiveActorSheet({
     userId,
     members,
   });
+  const store = live.status === 'ready' ? live.store : undefined;
+  const renderRichText = useCallback(
+    ({ path, ...props }: RichTextProps) => {
+      const fragment = store?.richText(path);
+      return (
+        fragment && (
+          <Suspense fallback={<p className="text-muted">{t('sheet.loading')}</p>}>
+            <RichTextEditor key={path.join('.')} fragment={fragment} {...props} />
+          </Suspense>
+        )
+      );
+    },
+    [store],
+  );
 
   if (live.status === 'denied') return <Alert tone="error">{t('sheet.notFound')}</Alert>;
   if (live.status === 'connecting') return <p className="text-muted">{t('sheet.connecting')}</p>;
@@ -139,6 +159,7 @@ function LiveActorSheet({
         kind="actor"
         store={live.store}
         presence={presence}
+        renderRichText={renderRichText}
         readOnly={live.readOnly || actor.access !== 'owner'}
         secret={secret}
         onRoll={onRoll}

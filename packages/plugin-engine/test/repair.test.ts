@@ -10,6 +10,7 @@ import {
   layerSchemas,
   readLayer,
   repairLayer,
+  richTextOf,
   valueIssue,
   writeLayer,
 } from '../src/index.js';
@@ -22,6 +23,7 @@ const SCHEMA: FieldSchema = {
     stance: { type: 'string', enum: ['calm', 'angry'], default: 'calm' },
     alive: { type: 'boolean', default: true },
     notes: { type: 'string', 'x-kind': 'longText', default: '', maxLength: 10 },
+    bio: { type: 'string', 'x-kind': 'richText', default: '', maxLength: 10 },
     hp: {
       type: 'object',
       properties: {
@@ -80,6 +82,7 @@ describe('repairLayer (specs §9.7)', () => {
       stance: 'calm',
       alive: false,
       notes: 'far too long',
+      bio: 'also\nfar too long',
       hp: { value: 5, max: 'ten' },
       skills: { s1: { rank: 2, name: 'Climbing' }, s2: { rank: 1, name: 'Swim' } },
       extra: 'kept',
@@ -89,6 +92,7 @@ describe('repairLayer (specs §9.7)', () => {
       { path: ['level'], reason: 'maximum' },
       { path: ['speed'], reason: 'type' },
       { path: ['notes'], reason: 'maxLength' },
+      { path: ['bio'], reason: 'maxLength' },
       { path: ['hp', 'max'], reason: 'type' },
       { path: ['skills', 's1', 'name'], reason: 'maxLength' },
     ]);
@@ -98,21 +102,25 @@ describe('repairLayer (specs §9.7)', () => {
       stance: 'calm',
       alive: false,
       notes: '',
+      bio: '',
       hp: { value: 5, max: 10 },
       skills: { s1: { rank: 2, name: '' }, s2: { rank: 1, name: 'Swim' } },
       extra: 'kept',
     });
-    // The repaired text field is a text again.
+    // The repaired text fields are texts again.
     expect(map.get('notes')).toBeInstanceOf(Y.Text);
+    expect(map.get('bio')).toBeInstanceOf(Y.XmlFragment);
   });
 
   it('rebuilds values of the wrong shape and drops rows that are not maps', () => {
     const map = new Y.Doc().getMap('data');
     map.set('notes', 'plain');
+    map.set('bio', new Y.Text('not rich'));
     map.set('hp', 7);
     map.set('skills', new Y.Map<unknown>([['bad', 3]]));
     expect(repairLayer(map, SCHEMA)).toEqual([
       { path: ['notes'], reason: 'type' },
+      { path: ['bio'], reason: 'type' },
       { path: ['hp'], reason: 'type' },
       { path: ['skills', 'bad'], reason: 'type' },
     ]);
@@ -185,6 +193,21 @@ describe('ensureContainers (specs §9.4)', () => {
     expect(map.get('hp')).toBe(hp);
     expect(map.get('skills')).toBeInstanceOf(Y.Map);
     expect(map.get('notes')).toBeInstanceOf(Y.Text);
-    expect(readLayer(map, MAIN)).toEqual({ hp: { value: 3 }, skills: {}, notes: '' });
+    expect(map.get('bio')).toBeInstanceOf(Y.XmlFragment);
+    expect(readLayer(map, MAIN)).toEqual({ hp: { value: 3 }, skills: {}, notes: '', bio: '' });
+  });
+
+  it('converts a text stored as the other kind, keeping its words (ADR-037)', () => {
+    const map = new Y.Doc().getMap('data');
+    map.set('bio', new Y.Text('Born\nin Elm'));
+    map.set('notes', richTextOf('tea'));
+    ensureContainers(map, MAIN);
+    const bio = map.get('bio');
+    expect(bio).toBeInstanceOf(Y.XmlFragment);
+    expect(bio instanceof Y.XmlFragment && bio.toJSON()).toBe(
+      '<paragraph>Born</paragraph><paragraph>in Elm</paragraph>',
+    );
+    expect(map.get('notes')).toBeInstanceOf(Y.Text);
+    expect(readLayer(map, MAIN)).toMatchObject({ bio: 'Born\nin Elm', notes: 'tea' });
   });
 });

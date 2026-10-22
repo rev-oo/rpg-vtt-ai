@@ -4,6 +4,7 @@ import {
   collectionRows,
   mergeLayers,
   readLayer,
+  replaceRichText,
   sortKeyBetween,
   splitLayers,
   writeLayer,
@@ -103,10 +104,17 @@ function sharedText(text: Y.Text): SharedText {
   };
 }
 
+/** A live sheet's store, with the rich texts its editors bind to (ADR-037). */
+export type YjsStore = SheetStore & {
+  /** The `Y.XmlFragment` of a `richText` field, if the document has one. */
+  richText: (path: FieldPath) => Y.XmlFragment | undefined;
+  destroy: () => void;
+};
+
 /**
  * A `SheetStore` over an actor's Yjs documents (specs §9.1, §9.2). Reads join both layers;
  * each write goes to the document whose layout holds the field. Text fields keep their
- * `Y.Text`, collection rows are keyed maps with a `sort` key in the main document (§9.4),
+ * `Y.Text` or `Y.XmlFragment`, collection rows are keyed maps with a `sort` key in the main document (§9.4),
  * and counters are adjusted by the server so concurrent deltas add up (§9.5).
  */
 export function createYjsStore({
@@ -114,7 +122,7 @@ export function createYjsStore({
   layout,
   adjust,
   newId = defaultId,
-}: YjsStoreOptions): SheetStore & { destroy: () => void } {
+}: YjsStoreOptions): YjsStore {
   const maps = {
     main: docs.main.getMap<unknown>(DATA_MAP),
     secret: docs.secret?.getMap<unknown>(DATA_MAP),
@@ -126,6 +134,14 @@ export function createYjsStore({
       readLayer(maps.main, layout.main),
       maps.secret && readLayer(maps.secret, layout.secret ?? {}),
     );
+
+  /** The shared type at `path`, read without creating anything. */
+  const typeAt = (path: FieldPath): unknown => {
+    const key = path.at(-1);
+    const map = maps[layerOf(layout, path)];
+    const parent = key === undefined || !map ? undefined : mapAt(map, path.slice(0, -1), false);
+    return key === undefined ? undefined : parent?.get(key);
+  };
 
   const texts = new WeakMap<Y.Text, SharedText>();
   let snapshot = read();
@@ -166,6 +182,12 @@ export function createYjsStore({
         if (field?.kind === 'text' && current instanceof Y.Text && typeof value === 'string') {
           current.delete(0, current.length);
           current.insert(0, value);
+        } else if (
+          field?.kind === 'text' &&
+          current instanceof Y.XmlFragment &&
+          typeof value === 'string'
+        ) {
+          replaceRichText(current, value);
         } else if (value === undefined) {
           parent.delete(key);
         } else {
@@ -219,10 +241,7 @@ export function createYjsStore({
       });
     },
     text: (path) => {
-      const key = path.at(-1);
-      const map = maps[layerOf(layout, path)];
-      const parent = key === undefined || !map ? undefined : mapAt(map, path.slice(0, -1), false);
-      const found: unknown = key === undefined ? undefined : parent?.get(key);
+      const found = typeAt(path);
       if (!(found instanceof Y.Text)) return undefined;
       let shared = texts.get(found);
       if (!shared) {
@@ -230,6 +249,10 @@ export function createYjsStore({
         texts.set(found, shared);
       }
       return shared;
+    },
+    richText: (path) => {
+      const found = typeAt(path);
+      return found instanceof Y.XmlFragment ? found : undefined;
     },
     destroy: () => {
       docs.main.off('update', onUpdate);

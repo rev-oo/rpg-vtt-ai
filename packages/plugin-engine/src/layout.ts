@@ -5,7 +5,7 @@ import { isCollection } from './data.js';
 /**
  * How one field lives in an actor's live document (specs §9.2), without depending on Yjs:
  * - `value`: a plain JSON value in its parent map (scalars, images, plain arrays);
- * - `text`: a `Y.Text` (`longText`, `richText`);
+ * - `text`: a `Y.Text` (`longText`), or a `Y.XmlFragment` of the editor's blocks (`richText`);
  * - `map`: a nested `Y.Map` of fields;
  * - `collection`: a `Y.Map` keyed by row id, each row a `Y.Map` with a `sort` key (§9.4).
  */

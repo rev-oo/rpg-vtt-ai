@@ -14,6 +14,7 @@ import {
   useSheet,
   valueAt,
   type CustomNodeProps,
+  type RichTextRenderer,
   type RollHandler,
   type SheetPresence,
   type SheetStore,
@@ -94,6 +95,8 @@ export interface PluginSheetProps {
   store?: SheetStore | undefined;
   /** Other viewers' focus on a live sheet (FR-SHEET-02). */
   presence?: SheetPresence | undefined;
+  /** The editor of `richText` fields on a live sheet (ADR-037). */
+  renderRichText?: RichTextRenderer | undefined;
   onRoll?: RollHandler | undefined;
 }
 
@@ -109,6 +112,7 @@ export function PluginSheet({
   secret,
   store: live,
   presence,
+  renderRichText,
   onRoll,
 }: PluginSheetProps): ReactElement {
   const { system, rules, translate } = host;
@@ -148,6 +152,7 @@ export function PluginSheet({
         strings={strings()}
         nodes={nodes}
         {...(presence && { presence })}
+        {...(renderRichText && { renderRichText })}
         {...(onRoll && { onRoll })}
       />
     </div>

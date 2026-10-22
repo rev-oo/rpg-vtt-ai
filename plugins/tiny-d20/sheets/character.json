@@ -76,6 +76,7 @@
           {
             "label": "tab.notes",
             "children": [
+              { "type": "longText", "path": "biography", "label": "field.biography" },
               { "type": "longText", "path": "notes", "label": "field.notes" },
               { "type": "longText", "path": "gmNotes", "label": "field.gmNotes" }
             ]

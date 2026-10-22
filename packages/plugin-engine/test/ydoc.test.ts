@@ -6,7 +6,10 @@ import type { FieldSchema } from '@vtt/plugin-schema';
 import {
   documentLayout,
   mergeLayers,
+  plainText,
   readLayer,
+  replaceRichText,
+  richTextOf,
   splitLayers,
   withoutSecrets,
   writeLayer,
@@ -57,7 +60,7 @@ const DATA = {
   tags: ['brave', 'tall'],
   portrait: 'img/ayla.png',
   notes: 'Likes tea.',
-  bio: '<p>Born in <b>Elm</b>.</p>',
+  bio: 'Born in Elm.\n\nRaised by wolves.',
   hp: { value: 4, max: 12, reason: 'Poisoned' },
   skills: {
     s1: { name: 'Climb', rank: 2, note: 'Ropes', dc: 15, sort: 'i' },
@@ -111,7 +114,12 @@ describe('JSON ↔ Yjs mapping (specs §9.2, T-0504)', () => {
   it('uses Y.Text for text, nested maps for objects and keyed maps for collections', () => {
     const map = roundTrip(layout.main, splitLayers(layout, DATA).main).doc.getMap('data');
     expect(map.get('notes')).toBeInstanceOf(Y.Text);
-    expect(map.get('bio')).toBeInstanceOf(Y.Text);
+    // Rich text is the editor's blocks, one paragraph per line (ADR-037).
+    const bio = map.get('bio');
+    if (!(bio instanceof Y.XmlFragment)) throw new Error('bio is not a fragment');
+    expect(bio.toJSON()).toBe(
+      '<paragraph>Born in Elm.</paragraph><paragraph></paragraph><paragraph>Raised by wolves.</paragraph>',
+    );
     // Images, scalars and plain arrays are plain values.
     expect(map.get('portrait')).toBe('img/ayla.png');
     expect(map.get('tags')).toEqual(['brave', 'tall']);
@@ -136,6 +144,33 @@ describe('JSON ↔ Yjs mapping (specs §9.2, T-0504)', () => {
     Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
     expect(readLayer(a.getMap('data'), layout.main)).toEqual({ notes: 'Likes tea and cake' });
     expect(readLayer(b.getMap('data'), layout.main)).toEqual({ notes: 'Likes tea and cake' });
+  });
+
+  it('reads rich text as plain text, blocks on their own lines', () => {
+    const doc = new Y.Doc();
+    const fragment = doc.getMap('data').set('bio', new Y.XmlFragment());
+    const heading = new Y.XmlElement('heading');
+    heading.setAttribute('level', '2');
+    heading.insert(0, [new Y.XmlText('Past')]);
+    const paragraph = new Y.XmlElement('paragraph');
+    const bold = new Y.XmlText();
+    paragraph.insert(0, [bold, new Y.XmlElement('hardBreak'), new Y.XmlText('wolves')]);
+    bold.insert(0, 'Born ');
+    bold.insert(5, 'in Elm', { bold: true });
+    const list = new Y.XmlElement('bulletList');
+    const item = new Y.XmlElement('listItem');
+    const inItem = new Y.XmlElement('paragraph');
+    inItem.insert(0, [new Y.XmlText('tea')]);
+    item.insert(0, [inItem]);
+    list.insert(0, [item]);
+    fragment.insert(0, [heading, paragraph, list]);
+    expect(plainText(fragment)).toBe('Past\nBorn in Elm\nwolves\ntea');
+    expect(readLayer(doc.getMap('data'), layout.main)).toEqual({
+      bio: 'Past\nBorn in Elm\nwolves\ntea',
+    });
+    replaceRichText(fragment, 'a\nb');
+    expect(fragment.toJSON()).toBe('<paragraph>a</paragraph><paragraph>b</paragraph>');
+    expect(plainText(richTextOf(''))).toBe('');
   });
 
   it('keeps values that do not fit the layout, and keys it does not know', () => {

@@ -258,6 +258,12 @@ export const en = {
   'sheet.increase': 'Increase {label}',
   'sheet.noRows': 'Nothing here yet.',
   'sheet.noImage': 'No image',
+  'richText.toolbar': 'Formatting',
+  'richText.bold': 'Bold',
+  'richText.italic': 'Italic',
+  'richText.heading': 'Heading',
+  'richText.bulletList': 'Bulleted list',
+  'richText.orderedList': 'Numbered list',
   'sheet.missingNode':
     'This part of the sheet needs the plugin “{name}” component, which is not available.',
 

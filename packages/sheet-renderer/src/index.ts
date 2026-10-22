@@ -1,6 +1,8 @@
 export {
   useSheet,
   type CustomNodeProps,
+  type RichTextProps,
+  type RichTextRenderer,
   type RollHandler,
   type RowScope,
   type SheetEnvironment,

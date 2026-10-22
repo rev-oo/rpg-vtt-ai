@@ -84,6 +84,7 @@ interface FieldShellProps {
   path: FieldPath;
   label: string;
   labelFor?: string;
+  labelId?: string;
   errorId: string;
   error: string | undefined;
   children: ReactNode;
@@ -94,6 +95,7 @@ function FieldShell({
   path,
   label,
   labelFor,
+  labelId,
   errorId,
   error,
   children,
@@ -111,7 +113,9 @@ function FieldShell({
           {label}
         </label>
       ) : (
-        <span className="text-sm font-semibold">{label}</span>
+        <span id={labelId} className="text-sm font-semibold">
+          {label}
+        </span>
       )}
       <PresenceBadges users={presence.users} />
       {children}
@@ -265,7 +269,8 @@ export function FieldNode({
 
 /**
  * A `longText` node. On live stores it edits the field's shared text, so several people can
- * type at once (FR-SHEET-07); otherwise it writes the whole value.
+ * type at once (FR-SHEET-07); otherwise it writes the whole value. A `richText` field uses the
+ * host's rich text editor when there is one (ADR-037).
  */
 export function LongTextNode({
   node,
@@ -281,16 +286,25 @@ export function LongTextNode({
   const label = node.label ? sheet.translate(node.label) : node.path;
   const shared = sheet.store.text?.(field.path);
   const className = cn(controlClass, 'min-h-24 w-full min-w-0');
+  const labelId = `${id}-label`;
+  // The host renders nothing when it cannot edit the field richly, such as without its text.
+  const rich =
+    field.schema?.['x-kind'] === 'richText'
+      ? sheet.renderRichText?.({ path: field.path, labelId, readOnly: sheet.readOnly, className })
+      : undefined;
+  const isRich = rich !== undefined && rich !== null && rich !== false;
   return (
     <FieldShell
       node={node}
       path={field.path}
       label={label}
-      labelFor={id}
+      {...(isRich ? { labelId } : { labelFor: id })}
       errorId={`${id}-error`}
       error={undefined}
     >
-      {shared ? (
+      {isRich ? (
+        rich
+      ) : shared ? (
         <SharedTextarea id={id} text={shared} readOnly={sheet.readOnly} className={className} />
       ) : (
         <textarea

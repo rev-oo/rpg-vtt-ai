@@ -5,10 +5,9 @@ import * as Y from 'yjs';
 import type { DocumentLayout } from '@vtt/plugin-engine';
 import { documentName } from '@vtt/shared';
 import { collabServerMessage, type DataIssue } from '@vtt/shared/api';
-import type { SheetStore } from '@vtt/sheet-renderer';
 
 import type { Awareness } from './presence.js';
-import { createYjsStore, type Layer } from './yjs-store.js';
+import { createYjsStore, type Layer, type YjsStore } from './yjs-store.js';
 
 /** An actor's live sheet data (specs §9): connecting, refused, or synced and editable. */
 export type LiveSheet =
@@ -16,7 +15,7 @@ export type LiveSheet =
   | { status: 'denied' }
   | {
       status: 'ready';
-      store: SheetStore;
+      store: YjsStore;
       /** The server opened the sheet read-only: observers, or an unavailable system. */
       readOnly: boolean;
       /** Values the server last reset to their default (FR-SHEET-09). */

@@ -130,6 +130,47 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     }
   });
 
+  await test.step('two people write and format one rich text at once (ADR-037)', async () => {
+    const biography = (sheet: typeof gmSheet) =>
+      sheet.getByRole('textbox', { name: 'Biography', exact: true });
+    await biography(ownerSheet).click();
+    await biography(ownerSheet).pressSequentially('Born in Elm.');
+    await expect(biography(gmSheet)).toHaveText('Born in Elm.');
+
+    await biography(ownerSheet).press('End');
+    await biography(gmSheet).click();
+    await biography(gmSheet).press('Home');
+    await Promise.all([
+      biography(ownerSheet).pressSequentially(' Raised by wolves.', { delay: 30 }),
+      biography(gmSheet).pressSequentially('Ayla. ', { delay: 30 }),
+    ]);
+    for (const sheet of [ownerSheet, gmSheet]) {
+      await expect(biography(sheet)).toHaveText('Ayla. Born in Elm. Raised by wolves.');
+    }
+
+    // Formatting from one toolbar reaches the others.
+    await watcherSheet.getByRole('tab', { name: 'Notes' }).click();
+    await biography(ownerSheet).press('ControlOrMeta+a');
+    await ownerSheet.getByRole('button', { name: 'Bold' }).click();
+    await ownerSheet.getByRole('button', { name: 'Bulleted list' }).click();
+    for (const sheet of [gmSheet, watcherSheet]) {
+      await expect(biography(sheet).locator('li strong')).toHaveText(
+        'Ayla. Born in Elm. Raised by wolves.',
+      );
+    }
+    // Observers read it without a toolbar.
+    await expect(biography(watcherSheet)).toHaveAttribute('contenteditable', 'false');
+    await expect(watcherSheet.getByRole('toolbar')).toHaveCount(0);
+
+    // The formatting is kept with the document.
+    const again = await openSheet(await pageOf(gm), table.id, actor.id);
+    await again.getByRole('tab', { name: 'Notes' }).click();
+    await expect(biography(again).locator('li strong')).toHaveText(
+      'Ayla. Born in Elm. Raised by wolves.',
+    );
+    await again.page().close();
+  });
+
   await test.step('the data survives a reload', async () => {
     const page = await pageOf(owner);
     const again = await openSheet(page, table.id, actor.id);

@@ -8,6 +8,7 @@ import { cn } from '@vtt/ui';
 import {
   SheetContext,
   type CustomNodeProps,
+  type RichTextRenderer,
   type RollHandler,
   type SheetEnvironment,
 } from './context.js';
@@ -39,6 +40,8 @@ export interface SheetProps {
   nodes?: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
   /** Other viewers' focus, outlined on their fields (FR-SHEET-02). */
   presence?: SheetPresence;
+  /** The editor of `richText` fields, on live sheets (ADR-037). */
+  renderRichText?: RichTextRenderer;
   className?: string;
 }
 
@@ -62,6 +65,7 @@ export function Sheet({
   onRoll,
   nodes = {},
   presence,
+  renderRichText,
   className,
 }: SheetProps): ReactElement {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
@@ -84,6 +88,7 @@ export function Sheet({
     onRoll,
     nodes,
     presence,
+    renderRichText,
   };
 
   return (

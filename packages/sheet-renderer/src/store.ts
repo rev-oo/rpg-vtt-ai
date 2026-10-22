@@ -41,8 +41,8 @@ export interface SheetStore {
   /** Moves a row before another one, or to the end when `before` is null. */
   moveRow: (path: FieldPath, id: string, before: string | null) => void;
   /**
-   * The shared text of a `longText` or `richText` field, on live stores. The same object for
-   * the same text. Without it, text areas write the whole value with `set`.
+   * The shared text of a `longText` field, on live stores. The same object for the same
+   * text. Without it, text areas write the whole value with `set`.
    */
   text?: (path: FieldPath) => SharedText | undefined;
 }
