@@ -1,0 +1,11 @@
+{
+  "check": {
+    "label": "roll.check",
+    "formula": "1d1 + @derived.mod",
+    "outcomes": [
+      { "when": "@total >= 3", "label": "outcome.success", "class": "ok" },
+      { "label": "outcome.failure", "class": "fail" }
+    ],
+    "card": "check"
+  }
+}

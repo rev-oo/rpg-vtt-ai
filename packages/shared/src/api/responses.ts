@@ -78,6 +78,7 @@ export const systemDefinitionResponseSchema = z.object({
   }),
 });
 export type SystemDefinitionResponse = z.infer<typeof systemDefinitionResponseSchema>;
+export type SystemDefinition = SystemDefinitionResponse['system'];
 
 /** The actor and item types the table's system declares (§8.4), for creation forms. */
 export const tableTypesSchema = z.object({

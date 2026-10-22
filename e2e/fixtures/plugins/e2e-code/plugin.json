@@ -1,0 +1,11 @@
+{
+  "id": "e2e-code",
+  "name": "E2E Code",
+  "version": "1.0.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "description": "A system with client code: a custom sheet node and a custom chat card.",
+  "hasCode": true,
+  "locales": ["en"],
+  "defaultLocale": "en"
+}

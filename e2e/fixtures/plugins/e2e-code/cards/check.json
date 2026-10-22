@@ -1,0 +1,5 @@
+{
+  "title": "card.check.title",
+  "rows": [{ "label": "card.total", "value": "@total" }],
+  "outcome": true
+}

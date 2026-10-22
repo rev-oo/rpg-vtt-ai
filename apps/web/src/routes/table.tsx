@@ -16,6 +16,7 @@ import { errorMessage } from '../api/errors.js';
 import { ChatPanel } from '../features/chat/ChatPanel.js';
 import type { TableData, TableLoaderData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
+import { TableSystemContext, useTableSystem } from '../plugin-host/system-context.js';
 import { useTableEvents } from '../realtime/use-table-events.js';
 import { useSession } from '../shell/use-session.js';
 
@@ -88,6 +89,7 @@ const tabClass = ({ isActive }: { isActive: boolean }): string =>
 function TablePage({ data, userId }: { data: TableData; userId: string }): ReactElement {
   const { table, members, actors, chat } = data;
   const revalidator = useRevalidator();
+  const system = useTableSystem(table);
   // Other members' changes refresh the lists (FR-ENT-07); so does a reconnection, which may
   // have missed some.
   useTableEvents(table.id, {
@@ -98,35 +100,40 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
   });
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:h-[calc(100vh-7rem)] lg:flex-row">
-      <div className="flex min-w-0 flex-1 flex-col gap-3 lg:overflow-y-auto">
-        <div>
-          <h1 className="text-2xl font-bold">{table.name}</h1>
-          <p className="text-sm text-muted">
-            {t(`tables.role.${table.role}`)} ·{' '}
-            {t('tables.system', { name: table.systemName, version: table.systemVersion })}
-          </p>
-          {table.description && <p>{table.description}</p>}
+    <TableSystemContext value={system}>
+      <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:h-[calc(100vh-7rem)] lg:flex-row">
+        <div className="flex min-w-0 flex-1 flex-col gap-3 lg:overflow-y-auto">
+          <div>
+            <h1 className="text-2xl font-bold">{table.name}</h1>
+            <p className="text-sm text-muted">
+              {t(`tables.role.${table.role}`)} ·{' '}
+              {t('tables.system', { name: table.systemName, version: table.systemVersion })}
+            </p>
+            {table.description && <p>{table.description}</p>}
+          </div>
+          {system.status === 'unavailable' && (
+            <Alert tone="info">{t('table.readOnly', { name: table.systemName })}</Alert>
+          )}
+          <nav className="flex gap-1" aria-label={t('table.sections')}>
+            <NavLink to={`/tables/${table.id}`} end className={tabClass}>
+              {t('actors.title')}
+            </NavLink>
+            <NavLink to={`/tables/${table.id}/items`} className={tabClass}>
+              {t('items.title')}
+            </NavLink>
+          </nav>
+          <Outlet />
         </div>
-        <nav className="flex gap-1" aria-label={t('table.sections')}>
-          <NavLink to={`/tables/${table.id}`} end className={tabClass}>
-            {t('actors.title')}
-          </NavLink>
-          <NavLink to={`/tables/${table.id}/items`} className={tabClass}>
-            {t('items.title')}
-          </NavLink>
-        </nav>
-        <Outlet />
+        <div className="h-[70vh] shrink-0 lg:h-full lg:w-96">
+          <ChatPanel
+            table={table}
+            members={members}
+            userId={userId}
+            speakers={actors.filter((actor) => actor.access === 'owner')}
+            initialPage={chat}
+          />
+        </div>
       </div>
-      <div className="h-[70vh] shrink-0 lg:h-full lg:w-96">
-        <ChatPanel
-          table={table}
-          members={members}
-          userId={userId}
-          speakers={actors.filter((actor) => actor.access === 'owner')}
-          initialPage={chat}
-        />
-      </div>
-    </div>
+    </TableSystemContext>
   );
 }
