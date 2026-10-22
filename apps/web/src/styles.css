@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@vtt/ui/theme.css';
 
-/* Tailwind only scans this app by default; the primitives live in packages/ui. */
+/* Tailwind only scans this app by default; the primitives and sheets live in packages. */
 @source '../../../packages/ui/src';
+@source '../../../packages/sheet-renderer/src';

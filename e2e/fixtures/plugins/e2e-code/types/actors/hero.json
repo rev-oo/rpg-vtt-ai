@@ -1,0 +1,13 @@
+{
+  "label": "type.hero",
+  "controlledBy": "player",
+  "sheet": "hero",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "might": { "type": "integer", "default": 4 },
+      "hp": { "type": "integer", "default": 7 }
+    }
+  },
+  "derived": { "mod": "@might - 2" }
+}

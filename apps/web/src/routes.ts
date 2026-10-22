@@ -8,6 +8,7 @@ export default [
     route('tables/:tableId', 'routes/table.tsx', [
       index('routes/table-actors.tsx'),
       route('items', 'routes/table-items.tsx'),
+      route('actors/:actorId', 'routes/table-actor.tsx'),
     ]),
     route('account', 'routes/account.tsx'),
     route('admin/plugins', 'routes/admin-plugins.tsx'),

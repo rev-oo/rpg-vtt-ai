@@ -16,6 +16,7 @@ import { Alert, Button, Select } from '@vtt/ui';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { CardMessage } from '../../plugin-host/CardMessage.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 
 import { parseChatInput } from './commands.js';
@@ -222,11 +223,11 @@ function MessageItem({
           <span className="rounded-full bg-info-soft px-2 text-xs">{t('chat.gmOnly')}</span>
         )}
       </div>
-      {message.kind === 'roll' && message.rolls.length > 0 ? (
+      {message.kind === 'card' ? (
+        <CardMessage message={message} />
+      ) : message.kind === 'roll' && message.rolls.length > 0 ? (
         message.rolls.map((roll, index) => <RollView key={index} roll={roll} />)
       ) : (
-        // Cards render through plugin templates (M4); until then, and when a template is
-        // missing, they fall back to their text (FR-CHAT-06).
         <p className="break-words whitespace-pre-wrap">{message.text}</p>
       )}
     </li>

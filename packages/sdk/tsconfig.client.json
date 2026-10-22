@@ -1,0 +1,10 @@
+{
+  "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
+  "//": "@vtt/sdk/client: React hooks for plugin client code (specs §8.10).",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/client", "test/client"],
+  "references": [{ "path": "../shared" }, { "path": "../formula" }]
+}

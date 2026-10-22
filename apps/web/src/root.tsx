@@ -7,13 +7,19 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 
 import { Alert, Button } from '@vtt/ui';
 
 import { t } from './i18n/index.js';
+import { installPluginRuntime } from './plugin-host/runtime.js';
+import { IMPORT_MAP } from './plugin-host/shared-modules.js';
 import { invalidateSession, loadSession, type SessionState } from './shell/session.js';
+
+installPluginRuntime();
 
 export function Layout({ children }: { children: ReactNode }): ReactElement {
   return (
     <html lang="en">
       <head>
         <meta charSet="UTF-8" />
+        {/* Before any module script, so plugin code can import the shared modules. */}
+        <script type="importmap" dangerouslySetInnerHTML={{ __html: IMPORT_MAP }} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{t('app.name')}</title>
         <Meta />

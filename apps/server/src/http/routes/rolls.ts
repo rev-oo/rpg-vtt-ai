@@ -11,8 +11,8 @@ import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
 
-/** Rolls a typed formula into the chat (FR-CHAT-03, 08). The socket's `roll.request` does the same. */
-export function rollRoutes({ app, db, events, now, rng }: AppContext): void {
+/** Rolls a typed formula or a recipe into the chat (FR-CHAT-03, 08); the socket's `roll.request` does the same. */
+export function rollRoutes({ app, db, events, now, rng, plugins }: AppContext): void {
   app.post('/api/v1/tables/:id/rolls', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
     const { membership } = requireMember(db, request, id);
@@ -21,7 +21,7 @@ export function rollRoutes({ app, db, events, now, rng }: AppContext): void {
       db,
       { tableId: id, userId: membership.userId, role: membership.role },
       body,
-      { now: now(), rng },
+      { now: now(), rng, definition: (id) => plugins.definition(id) },
     );
     publishChatMessage(events, row);
     return reply.code(201).send({ message: toChatMessage(row) });

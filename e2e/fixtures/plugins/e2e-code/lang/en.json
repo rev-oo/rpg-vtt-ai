@@ -1,0 +1,10 @@
+{
+  "type.hero": "Hero",
+  "field.might": "Might",
+  "banner.label": "Vitals",
+  "roll.check": "Check",
+  "outcome.success": "Success",
+  "outcome.failure": "Failure",
+  "card.check.title": "Might check",
+  "card.total": "Total"
+}

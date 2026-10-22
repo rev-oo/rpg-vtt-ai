@@ -11,6 +11,7 @@ import {
   pluginsResponseSchema,
   sessionSchema,
   setupStatusSchema,
+  systemDefinitionResponseSchema,
   systemsResponseSchema,
   tableResponseSchema,
   tablesResponseSchema,
@@ -29,6 +30,7 @@ import {
   type RollRequestInput,
   type CreateTableInput,
   type GameSystem,
+  type SystemDefinition,
   type LoginInput,
   type MemberView,
   type PublicUser,
@@ -69,6 +71,15 @@ export const api = {
   listSystems: async (): Promise<GameSystem[]> =>
     (await request('GET', '/systems', systemsResponseSchema)).systems,
 
+  /** An available system's definition and asset URLs, for sheets and cards (T-0409). */
+  getSystem: async (systemId: string): Promise<SystemDefinition> =>
+    (
+      await request(
+        'GET',
+        `/systems/${encodeURIComponent(systemId)}`,
+        systemDefinitionResponseSchema,
+      )
+    ).system,
   getTable: async (tableId: string): Promise<TableView> =>
     (await request('GET', `/tables/${tableId}`, tableResponseSchema)).table,
 

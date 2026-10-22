@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { useRevalidator } from 'react-router';
+import { Link, useRevalidator } from 'react-router';
 
 import { canCreateActor, canSetOwnership } from '@vtt/shared';
 import type { ActorView, ItemView } from '@vtt/shared/api';
@@ -107,6 +107,13 @@ export function ActorList({ data, actors, trash, error }: ActorListProps): React
                 </Button>
               ) : (
                 <>
+                  <Link
+                    to={`/tables/${table.id}/actors/${actor.id}`}
+                    className="self-center"
+                    aria-label={`${t('sheet.open')}: ${actor.name}`}
+                  >
+                    {t('sheet.open')}
+                  </Link>
                   {canDuplicate(actor) && (
                     <Button
                       onClick={() =>

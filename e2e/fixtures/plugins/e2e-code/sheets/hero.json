@@ -1,0 +1,10 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      { "type": "field", "path": "might", "label": "field.might", "input": "number" },
+      { "type": "custom:banner", "props": { "label": "banner.label" } },
+      { "type": "rollButton", "roll": "check", "label": "roll.check" }
+    ]
+  }
+}

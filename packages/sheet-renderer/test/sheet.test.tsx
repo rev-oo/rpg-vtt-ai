@@ -178,8 +178,10 @@ describe('<Sheet>', () => {
     await user.type(screen.getByLabelText('Strength'), '9');
     await user.type(screen.getByLabelText('Notes'), 'x');
     expect(screen.getByLabelText('Alive')).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Roll skill' })).toBeDisabled();
     expect(store.getSnapshot()).toEqual({});
+    // Rolls change no data, so they follow onRoll alone.
+    await user.click(screen.getByRole('button', { name: 'Roll skill' }));
+    expect(onRoll).toHaveBeenCalledWith('skill', {});
   });
 
   it('edits text areas', () => {

@@ -29,6 +29,9 @@
       "path": "./packages/sdk"
     },
     {
+      "path": "./packages/sdk/tsconfig.client.json"
+    },
+    {
       "path": "./packages/plugin-cli"
     },
     {

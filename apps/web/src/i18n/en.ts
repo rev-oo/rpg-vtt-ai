@@ -217,11 +217,43 @@ export const en = {
   'pluginIssue.missing_lang_key': '“{key}” has no {locale} translation.',
   'pluginIssue.unlisted_locale': '{locale} is not listed in the manifest’s locales.',
 
+  'table.readOnly':
+    'The system “{name}” is not available, so this table is read-only. An admin can enable it again.',
+  'table.systemFailed': 'The system could not be loaded: {detail}',
+
+  'sheet.open': 'Open sheet',
+  'sheet.back': 'Back to the actors',
+  'sheet.notFound': 'This actor does not exist, or you cannot see it.',
+  'sheet.loading': 'Loading the sheet…',
+  'sheet.unavailable': 'The sheet is not available while the table’s system is disabled.',
+  'sheet.readOnlyUntilLive': 'Sheets are read-only for now; editing arrives with live sheets.',
+  'sheet.unknownType': 'The system has no sheet for the type “{type}”.',
+  'sheet.rolled': 'Rolled. The result is in the chat.',
+  'sheet.badArgs': 'This roll has a list argument, which cannot be sent.',
+  'sheet.addRow': 'Add',
+  'sheet.removeRow': 'Remove',
+  'sheet.moveUp': 'Move up',
+  'sheet.moveDown': 'Move down',
+  'sheet.decrease': 'Decrease {label}',
+  'sheet.increase': 'Increase {label}',
+  'sheet.noRows': 'Nothing here yet.',
+  'sheet.noImage': 'No image',
+  'sheet.missingNode':
+    'This part of the sheet needs the plugin “{name}” component, which is not available.',
+
+  'plugin.componentFailed': 'The plugin component “{name}” failed to show.',
+  'plugin.clientFailed':
+    'The system’s code could not be loaded, so some parts are missing: {detail}',
+
   'validation.required': 'Required.',
   'validation.tooShort': 'Must be at least {min} characters.',
   'validation.tooLong': 'Must be at most {max} characters.',
   'validation.username': 'Not a valid username.',
   'validation.url': 'Must be a web address starting with http:// or https://.',
+  'validation.notNumber': 'Enter a number.',
+  'validation.notInteger': 'Enter a whole number.',
+  'validation.tooSmallNumber': 'Must be at least {min}.',
+  'validation.tooBigNumber': 'Must be at most {max}.',
 } as const;
 
 export type MessageKey = keyof typeof en;
