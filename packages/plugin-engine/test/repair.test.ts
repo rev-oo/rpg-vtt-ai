@@ -6,6 +6,7 @@ import type { FieldSchema } from '@vtt/plugin-schema';
 import {
   adjustCounter,
   documentLayout,
+  ensureMaps,
   layerSchemas,
   readLayer,
   repairLayer,
@@ -173,5 +174,16 @@ describe('layerSchemas', () => {
     expect(layerSchemas({ type: 'object', properties: { a: { type: 'integer' } } }).secret).toBe(
       undefined,
     );
+  });
+});
+
+describe('ensureMaps (specs §9.4)', () => {
+  it('creates missing object and collection maps, keeping what is there', () => {
+    const map = dataMap({ hp: { value: 3 } });
+    const hp = map.get('hp');
+    ensureMaps(map, MAIN);
+    expect(map.get('hp')).toBe(hp);
+    expect(map.get('skills')).toBeInstanceOf(Y.Map);
+    expect(readLayer(map, MAIN)).toEqual({ hp: { value: 3 }, skills: {} });
   });
 });

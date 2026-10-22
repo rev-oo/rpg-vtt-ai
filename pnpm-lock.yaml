@@ -345,6 +345,9 @@ importers:
       '@vtt/config':
         specifier: workspace:*
         version: link:../../packages/config
+      fast-check:
+        specifier: ^4.10.2
+        version: 4.10.2
       jsdom:
         specifier: ^30.1.3
         version: 30.1.3

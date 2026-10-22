@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import {
   adjustCounter,
   documentLayout,
+  ensureMaps,
   layerSchemas,
   mergeLayers,
   readLayer,
@@ -98,6 +99,7 @@ const layerFields = (layout: DocumentLayout | undefined, layer: DocumentRef['lay
 /**
  * Loads a document (specs §9.6): its stored state, or else a first state built from the
  * entity's projection with the schema's defaults filled in. Journal bodies start empty.
+ * Every object and collection map the layout declares exists afterwards (§9.4).
  */
 export function loadDocument(
   db: DbOrTx,
@@ -110,18 +112,22 @@ export function loadDocument(
     .from(ydocs)
     .where(eq(ydocs.name, documentName(ref)))
     .get();
-  if (row) {
-    Y.applyUpdate(doc, row.state);
-    return;
-  }
+  if (row) Y.applyUpdate(doc, row.state);
   if (ref.kind !== 'actor') return;
   const actor = findActor(db, ref.id, { includeDeleted: true });
   if (!actor) return;
   const type = actorLayout(db, actor, definition);
+  if (row) {
+    // A schema may have gained maps since the state was stored.
+    ensureMaps(doc.getMap(DATA_MAP), layerFields(type?.layout, ref.layer));
+    return;
+  }
   const data = type ? withDefaults(type.schema, actor.system) : actor.system;
   const layers = type ? splitLayers(type.layout, data) : { main: data, secret: undefined };
   const part = ref.layer === 'secret' ? layers.secret : layers.main;
-  writeLayer(doc.getMap(DATA_MAP), layerFields(type?.layout, ref.layer), part ?? {});
+  const map = doc.getMap(DATA_MAP);
+  writeLayer(map, layerFields(type?.layout, ref.layer), part ?? {});
+  ensureMaps(map, layerFields(type?.layout, ref.layer));
 }
 
 /** The JSON of a stored document's layer, or `undefined` if it was never stored. */

@@ -66,6 +66,24 @@ function fromYjs(layout: FieldLayout | undefined, value: unknown): unknown {
   return value;
 }
 
+/**
+ * Creates the maps of every object and collection field that `map` lacks, at every depth
+ * outside collection rows. Two clients creating the same missing map at once would each make
+ * their own, and one of them, with what was written into it, would be lost; so the server
+ * creates them when it loads a document, before clients edit it (specs §9.4).
+ */
+export function ensureMaps(map: Y.Map<unknown>, fields: Fields): void {
+  for (const [key, layout] of Object.entries(fields)) {
+    if (layout.kind !== 'map' && layout.kind !== 'collection') continue;
+    let child: unknown = map.get(key);
+    if (child === undefined) {
+      child = new Y.Map<unknown>();
+      map.set(key, child);
+    }
+    if (layout.kind === 'map' && child instanceof Y.Map) ensureMaps(child, layout.fields);
+  }
+}
+
 /** Reads a document's `data` map back as JSON, the inverse of {@link writeLayer}. */
 export function readLayer(map: Y.Map<unknown>, fields: Fields): LayerData {
   return Object.fromEntries(
