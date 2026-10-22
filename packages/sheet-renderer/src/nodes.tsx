@@ -336,7 +336,8 @@ function RollButtonNode({
       <Button
         variant="primary"
         title={problem}
-        disabled={!onRoll || !args || sheet.readOnly}
+        // Rolling changes no data: an observer may roll whenever the host passes `onRoll`.
+        disabled={!onRoll || !args}
         onClick={() => {
           if (onRoll && args) onRoll(node.roll, args);
         }}

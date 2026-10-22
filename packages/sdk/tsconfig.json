@@ -5,7 +5,7 @@
     "outDir": "dist"
   },
   "include": ["src", "test"],
-  "exclude": ["src/__lint-fixtures__"],
+  "exclude": ["src/__lint-fixtures__", "src/client", "test/client"],
   "references": [
     {
       "path": "../shared"

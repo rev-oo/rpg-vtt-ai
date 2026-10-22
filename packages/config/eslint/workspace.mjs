@@ -34,6 +34,7 @@ const ALL_PACKAGES = [...PURE_CHAIN, 'ui', 'sheet-renderer', 'sdk', 'sdk-client'
  */
 export const boundaryElements = [
   { type: 'sdk-client', pattern: 'packages/sdk/src/client' },
+  { type: 'sdk-client', pattern: 'packages/sdk/test/client' },
   ...Object.entries(workspacePackages).map(([dir, { type }]) => ({ type, pattern: dir })),
 ];
 
@@ -50,7 +51,7 @@ const allowedImports = {
   ui: [],
   'sheet-renderer': [...PURE_CHAIN, 'ui'],
   sdk: [...PURE_CHAIN],
-  'sdk-client': [...PURE_CHAIN, 'sdk'],
+  'sdk-client': [...PURE_CHAIN, 'sdk', 'sdk-client'],
   'plugin-cli': ALL_PACKAGES.filter((t) => t !== 'plugin-cli'),
   config: [],
   // §6.2: the server may not import React packages.

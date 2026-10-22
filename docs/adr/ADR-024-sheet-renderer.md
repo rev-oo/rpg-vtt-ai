@@ -30,7 +30,7 @@ T-0408 turns sheet layouts (§8.5) into React. The live documents (M5), plugin c
    - `longText` is a plain text area until collaborative editing arrives (FR-SHEET-07, M5).
    - Images load only `http(s)`, rooted and `data:image` URLs.
 5. **Secret fields.** A node bound to a secret field, or to a field inside one, renders nothing unless `secret` is set. The server still never sends the field to players (FR-SHEET-04).
-6. **Read-only.** `readOnly` turns inputs read-only, disables checkboxes, selects, counters and roll buttons, and hides list controls. The root gets `data-readonly` (FR-SHEET-03).
+6. **Read-only.** `readOnly` turns inputs read-only, disables checkboxes, selects and counters, and hides list controls. The root gets `data-readonly` (FR-SHEET-03). Roll buttons change no data, so they follow `onRoll` alone: the host passes it to whoever may roll (amended by ADR-025).
 7. **Hooks for plugin CSS.**
    - The root carries `data-plugin` (ADR-021).
    - Each node gets the class `vtt-<type>` plus its own `class`. Bound nodes get `data-field="<path as written>"` (§8.6), list rows `data-row`, derived values `data-derived` and roll buttons `data-roll`.

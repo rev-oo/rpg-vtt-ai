@@ -26,7 +26,7 @@ export interface SheetProps {
   settings?: Readonly<Record<string, Value>>;
   /** The plugin's `shared` functions. */
   functions?: Readonly<Record<string, FormulaFunction>>;
-  /** Observers see the sheet without inputs (FR-SHEET-03). */
+  /** Observers see the sheet without inputs (FR-SHEET-03); roll buttons follow `onRoll`. */
   readOnly?: boolean;
   /** Whether the viewer sees secret fields (FR-SHEET-04); the server sends them only then. */
   secret?: boolean;
