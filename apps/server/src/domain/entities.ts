@@ -1,13 +1,17 @@
 import { eq } from 'drizzle-orm';
 
+import { documentLayout, splitLayers } from '@vtt/plugin-engine';
+import type { PluginDefinition } from '@vtt/plugin-schema';
 import {
   canEditActor,
   canManageItemLibrary,
   canViewActor,
+  isGmLike,
   type ControlledBy,
   type Ownership,
   type OwnershipLevel,
   type Subject,
+  type TableRole,
 } from '@vtt/shared';
 import type { ActorView, ItemView } from '@vtt/shared/api';
 
@@ -36,6 +40,27 @@ export function itemAccess(subject: Subject, actor: Actor | undefined): EntityAc
   return canManageItemLibrary(subject.role) ? 'owner' : 'observer';
 }
 
+/** An entity's plugin data as one member may see it. */
+export type DataFilter = (
+  kind: 'actor' | 'item',
+  type: string,
+  system: Record<string, unknown>,
+) => Record<string, unknown>;
+
+/**
+ * What a member may see of entity data (FR-SHEET-04, NFR-08). GMs and assistants see it all;
+ * everyone else gets it without the secret layer. When the system no longer describes the
+ * type, which fields are secret is unknown, so they get nothing.
+ */
+export function dataFilter(definition: PluginDefinition | undefined, role: TableRole): DataFilter {
+  if (isGmLike(role)) return (_kind, _type, system) => system;
+  return (kind, type, system) => {
+    const types = kind === 'actor' ? definition?.actorTypes : definition?.itemTypes;
+    const declared = types && Object.hasOwn(types, type) ? types[type] : undefined;
+    return declared ? splitLayers(documentLayout(declared.schema), system).main : {};
+  };
+}
+
 const iso = (date: Date | null) => date?.toISOString() ?? null;
 
 function definedLevels(users: Ownership['users']): Record<string, OwnershipLevel> {
@@ -44,7 +69,7 @@ function definedLevels(users: Ownership['users']): Record<string, OwnershipLevel
   return levels;
 }
 
-export function toActorView(actor: Actor, access: EntityAccess): ActorView {
+export function toActorView(actor: Actor, access: EntityAccess, visible: DataFilter): ActorView {
   return {
     id: actor.id,
     tableId: actor.tableId,
@@ -52,7 +77,7 @@ export function toActorView(actor: Actor, access: EntityAccess): ActorView {
     name: actor.name,
     imageUrl: actor.imageUrl,
     ownership: { default: actor.ownership.default, users: definedLevels(actor.ownership.users) },
-    system: actor.system,
+    system: visible('actor', actor.type, actor.system),
     dataVersion: actor.dataVersion,
     createdAt: actor.createdAt.toISOString(),
     updatedAt: actor.updatedAt.toISOString(),
@@ -61,7 +86,7 @@ export function toActorView(actor: Actor, access: EntityAccess): ActorView {
   };
 }
 
-export function toItemView(item: Item, access: EntityAccess): ItemView {
+export function toItemView(item: Item, access: EntityAccess, visible: DataFilter): ItemView {
   return {
     id: item.id,
     tableId: item.tableId,
@@ -70,7 +95,7 @@ export function toItemView(item: Item, access: EntityAccess): ItemView {
     type: item.type,
     name: item.name,
     imageUrl: item.imageUrl,
-    system: item.system,
+    system: visible('item', item.type, item.system),
     dataVersion: item.dataVersion,
     createdAt: item.createdAt.toISOString(),
     updatedAt: item.updatedAt.toISOString(),
@@ -97,17 +122,22 @@ export function systemTypes(db: DbOrTx, table: GameTable): SystemTypes {
   return plugin;
 }
 
-/**
- * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
- * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
- */
-export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
+/** Whether the table's system plugin is available, so its entities may change (FR-PLUGIN-07). */
+export function isSystemWritable(db: DbOrTx, table: GameTable): boolean {
   const plugin = db
     .select({ enabled: plugins.enabled, status: plugins.status })
     .from(plugins)
     .where(eq(plugins.id, table.systemId))
     .get();
-  if (!plugin || !isAvailable(plugin)) {
+  return plugin !== undefined && isAvailable(plugin);
+}
+
+/**
+ * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
+ * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
+ */
+export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
+  if (!isSystemWritable(db, table)) {
     throw conflict(
       'table_read_only',
       "The table's system plugin is disabled or unavailable, so the table is read-only.",

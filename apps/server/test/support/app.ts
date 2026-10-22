@@ -9,6 +9,7 @@ import { buildApp } from '../../src/http/app.js';
 import { CSRF_HEADER } from '../../src/http/auth.js';
 import { SESSION_COOKIE } from '../../src/http/cookies.js';
 import { createLogger } from '../../src/logger/index.js';
+import type { CollabTiming } from '../../src/realtime/collab.js';
 
 import { createTestDb } from './db.js';
 import { captureLogs } from './log-capture.js';
@@ -26,9 +27,12 @@ export async function createTestApp(
     now?: () => Date;
     loginThrottle?: LoginThrottle;
     rng?: Rng;
+    collabTiming?: CollabTiming;
+    /** An existing database, to start the server again on its data. */
+    db?: Db;
   } = {},
 ): Promise<TestApp> {
-  const db = createTestDb();
+  const db = options.db ?? createTestDb();
   const config = loadConfig(options.env ?? {});
   const logs = captureLogs();
   const app = await buildApp({
@@ -38,6 +42,7 @@ export async function createTestApp(
     ...(options.now && { now: options.now }),
     ...(options.loginThrottle && { loginThrottle: options.loginThrottle }),
     ...(options.rng && { rng: options.rng }),
+    ...(options.collabTiming && { collabTiming: options.collabTiming }),
   });
   return { app, db, config, logs };
 }

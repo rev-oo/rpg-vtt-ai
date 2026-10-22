@@ -3,9 +3,15 @@ import { randomInt } from 'node:crypto';
 import type { z } from 'zod';
 
 import { FormulaError, roll, type Rng, type RollResult } from '@vtt/formula';
-import { chatCardView, createRules, EngineError, type Rules } from '@vtt/plugin-engine';
+import {
+  chatCardView,
+  createRules,
+  EngineError,
+  playerDefinition,
+  type Rules,
+} from '@vtt/plugin-engine';
 import type { PluginDefinition } from '@vtt/plugin-schema';
-import { canSendChat, type Subject, type TableRole } from '@vtt/shared';
+import { canSendChat, isGmLike, type Subject, type TableRole } from '@vtt/shared';
 import type { RecipeCard, rollRequestBody } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
@@ -13,7 +19,7 @@ import { createChatMessage, type Actor, type ChatMessageRow } from '../db/reposi
 import { forbidden, unprocessable } from '../errors.js';
 
 import { recipientsFor, speakerFor } from './chat.js';
-import { requireWritableSystem } from './entities.js';
+import { dataFilter, requireWritableSystem, type DataFilter } from './entities.js';
 import { findTable } from './tables.js';
 
 export type RollRequest = z.output<typeof rollRequestBody>;
@@ -55,20 +61,24 @@ function translator(plugin: PluginDefinition): (text: string) => string {
   return (text) => (Object.hasOwn(lang, text) ? (lang[text] ?? text) : text);
 }
 
-/** A typed formula: against the actor and the system's rules when both are known. */
+/**
+ * A typed formula: against the actor and the system's rules when both are known. It reads
+ * only what the sender may see of the actor, so a formula cannot reveal secret fields.
+ */
 function rollFormula(
   formula: string,
   actor: Actor | null,
   system: { plugin: PluginDefinition; rules: Rules } | undefined,
-  rng: Rng,
+  { rng, visible }: { rng: Rng; visible: DataFilter },
 ): RollResult {
-  if (!system) return rolling(() => roll(formula, { rng, data: actor?.system ?? {} }));
+  const data = actor ? visible('actor', actor.type, actor.system) : {};
+  if (!system) return rolling(() => roll(formula, { rng, data }));
   // An actor whose type the plugin no longer has still rolls against its raw data.
   const known = actor !== null && Object.hasOwn(system.plugin.actorTypes, actor.type);
   return rolling(() =>
     system.rules.rollFormula(formula, {
       ...(known ? { type: actor.type } : {}),
-      data: actor?.system ?? {},
+      data,
       rng,
     }),
   );
@@ -141,7 +151,16 @@ export function sendRollMessage(
       );
     }
 
-    const result = rollFormula(input.formula ?? '', actor, system, rng);
+    const visible = dataFilter(plugin, sender.role);
+    // A player's formula runs against the types without their secret fields (FR-SHEET-04).
+    const typed =
+      table && plugin && !isGmLike(sender.role)
+        ? {
+            plugin,
+            rules: createRules(playerDefinition(plugin), { settings: table.settings }),
+          }
+        : system;
+    const result = rollFormula(input.formula ?? '', actor, typed, { rng, visible });
     return createChatMessage(
       tx,
       { ...message, kind: 'roll', text: input.formula ?? '', rolls: [result] },

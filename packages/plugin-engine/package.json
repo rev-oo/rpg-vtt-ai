@@ -10,9 +10,10 @@
     }
   },
   "dependencies": {
-    "@vtt/shared": "workspace:*",
     "@vtt/formula": "workspace:*",
-    "@vtt/plugin-schema": "workspace:*"
+    "@vtt/plugin-schema": "workspace:*",
+    "@vtt/shared": "workspace:*",
+    "yjs": "^13.6.33"
   },
   "scripts": {
     "build": "tsc -b",
