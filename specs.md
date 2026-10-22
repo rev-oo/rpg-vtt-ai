@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 92%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0512`
+- **Next task:** — (M5 tasks done; awaiting sign-off, then `T-0601`)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -81,6 +81,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
 | 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
 | 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                        |
+| 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                               |
 
 ---
 
@@ -800,7 +801,7 @@ Notes:
 
 - The server re-checks permissions on every incoming update, not only on connect.
 - Secret layer state is never broadcast to clients without access. Hocuspocus is configured so that unauthorised connections never receive the document.
-- Ownership changes take effect immediately: connected clients whose access drops are disconnected from the document.
+- Ownership changes take effect immediately: connected clients whose access drops are disconnected from the document (ADR-036).
 
 ### 9.4 Collections
 
@@ -1247,10 +1248,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** Playwright mobile viewport test passes with no horizontal scroll.
   - **Note:** on the sheet route below 768 px (`max-md`), `apps/web/src/routes/table.tsx` hides the table header and chat and shows a Chat / Sheet / Dice bar; hidden panes stay mounted so the sheet stays live. The dice pane (`features/table/DicePane.tsx`) rolls common dice or a formula as the sheet's actor. The app header stays. Tested in `e2e/tests/phone-sheets.spec.ts` at 360 px.
 
-- [ ] **T-0512 · Document access revocation**
+- [x] **T-0512 · Document access revocation**
   - **Deps:** T-0501, T-0110
   - **Do:** When membership or ownership changes, disconnect affected sockets from documents (§9.3).
   - **Done when:** a removed member's open sheet becomes inaccessible within 2 s (e2e).
+  - **Note:** every open connection is re-checked after each successful mutating request and every 30 s; lost access closes the document, read/write changes reach the client as `access` messages (ADR-036). Tested in `apps/server/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`.
 
 ### M6 — Journal, members, settings, administration
 
@@ -1423,6 +1425,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted |
 | ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted |
 | ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Proposed |
+| ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
