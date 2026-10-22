@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 67%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 75%      | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M5
-- **Next task:** `T-0509`
+- **Next task:** `T-0510`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -78,6 +78,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0506 implemented (live actor sheets in the web app over Yjs). ADR-032 added.                                                                |
 | 2026-10-22 | T-0507 implemented (presence outlines and name badges on sheet fields). ADR-033 added.                                                        |
 | 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                        |
+| 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
 
 ---
 
@@ -1226,10 +1227,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** concurrent add and reorder from two clients produce no duplicates and no lost rows (property test with two Y.Doc instances).
   - **Note:** `apps/web/test/collab-concurrency.test.ts`. The test found rows lost when two clients created a missing collection map at once; the server now creates every map on load (`ensureMaps`, ADR-034).
 
-- [ ] **T-0509 · Derived values live**
+- [x] **T-0509 · Derived values live**
   - **Deps:** T-0506, T-0302
   - **Do:** Derived fields recompute on every change in both clients and on the server for rolls (FR-SHEET-05).
   - **Done when:** changing `str` updates `strMod` in a second browser without refresh.
+  - **Note:** clients compute derived values from the live store (`e2e/tests/live-sheets.spec.ts`). Rolls read an actor's loaded live documents before the projection (`liveActorData` in `apps/server/src/domain/documents.ts`, tested in `apps/server/test/sheet-data.test.ts`), as §9.6 asks.
 
 - [ ] **T-0510 · Long text collaboration**
   - **Deps:** T-0506
