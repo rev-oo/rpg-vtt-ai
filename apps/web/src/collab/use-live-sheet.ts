@@ -7,6 +7,7 @@ import { documentName } from '@vtt/shared';
 import { collabServerMessage, type DataIssue } from '@vtt/shared/api';
 import type { SheetStore } from '@vtt/sheet-renderer';
 
+import type { Awareness } from './presence.js';
 import { createYjsStore, type Layer } from './yjs-store.js';
 
 /** An actor's live sheet data (specs §9): connecting, refused, or synced and editable. */
@@ -20,6 +21,8 @@ export type LiveSheet =
       readOnly: boolean;
       /** Values the server last reset to their default (FR-SHEET-09). */
       issues: readonly DataIssue[];
+      /** The main document's awareness, for presence (T-0507). */
+      awareness: Awareness | undefined;
     };
 
 function collabUrl(): string {
@@ -119,7 +122,13 @@ export function useLiveSheet(
       const synced = [...states.values()].every((state) => state.synced || state.denied);
       setSheet(
         synced
-          ? { status: 'ready', store, readOnly: main?.readOnly ?? true, issues }
+          ? {
+              status: 'ready',
+              store,
+              readOnly: main?.readOnly ?? true,
+              issues,
+              awareness: providerOf('main')?.awareness ?? undefined,
+            }
           : { status: 'connecting' },
       );
     }

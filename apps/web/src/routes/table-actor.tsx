@@ -9,12 +9,14 @@ import { Alert } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
+import { useSheetPresence } from '../collab/presence.js';
 import { useLiveSheet } from '../collab/use-live-sheet.js';
 import { useTableData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
 import { entityType } from '../plugin-host/entity-type.js';
 import { PluginSheet } from '../plugin-host/PluginSheet.js';
 import { useSystem, type TableSystem } from '../plugin-host/system-context.js';
+import { useSession } from '../shell/use-session.js';
 
 type RecipeArgs = NonNullable<RollRequestInput['recipe']>['args'];
 
@@ -117,6 +119,12 @@ function LiveActorSheet({
   const type = entityType(host.system.definition, 'actor', actor.type);
   const layout = useMemo(() => (type ? documentLayout(type.schema) : NO_FIELDS), [type]);
   const live = useLiveSheet(actor.id, layout, { secret });
+  const { members } = useTableData();
+  const userId = useSession().user?.id ?? '';
+  const presence = useSheetPresence(live.status === 'ready' ? live.awareness : undefined, {
+    userId,
+    members,
+  });
 
   if (live.status === 'denied') return <Alert tone="error">{t('sheet.notFound')}</Alert>;
   if (live.status === 'connecting') return <p className="text-muted">{t('sheet.connecting')}</p>;
@@ -130,6 +138,7 @@ function LiveActorSheet({
         actor={actor}
         kind="actor"
         store={live.store}
+        presence={presence}
         readOnly={live.readOnly || actor.access !== 'owner'}
         secret={secret}
         onRoll={onRoll}

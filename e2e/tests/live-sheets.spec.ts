@@ -91,6 +91,22 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await expect(watcherSheet.getByRole('button', { name: 'Decrease Hit points' })).toBeDisabled();
   });
 
+  await test.step('others see who is in a field within 1 s (FR-SHEET-02, T-0507)', async () => {
+    const field = (sheet: typeof gmSheet) => sheet.locator('[data-field="dex"]');
+    await ownerSheet.getByLabel('Dexterity').focus();
+    await expect(field(gmSheet).locator('[data-presence]')).toHaveText('Lena', { timeout: 1000 });
+    await expect(field(watcherSheet).locator('[data-presence]')).toHaveText('Lena', {
+      timeout: 1000,
+    });
+    await expect(field(gmSheet)).toHaveCSS('outline-style', 'solid');
+    // Nobody sees themselves.
+    await expect(field(ownerSheet).locator('[data-presence]')).toHaveCount(0);
+
+    await ownerSheet.getByLabel('Strength').focus();
+    await expect(field(gmSheet).locator('[data-presence]')).toHaveCount(0, { timeout: 1000 });
+    await expect(gmSheet.locator('[data-field="str"] [data-presence]')).toHaveText('Lena');
+  });
+
   await test.step('the data survives a reload', async () => {
     const page = await pageOf(owner);
     const again = await openSheet(page, table.id, actor.id);

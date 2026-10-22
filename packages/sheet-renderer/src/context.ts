@@ -4,6 +4,7 @@ import type { FormulaFunction, Value } from '@vtt/formula';
 import type { DerivedValues } from '@vtt/plugin-engine';
 import type { FieldSchema } from '@vtt/plugin-schema';
 
+import type { SheetPresence } from './presence.js';
 import type { FieldPath, SheetStore } from './store.js';
 import type { SheetStrings } from './strings.js';
 
@@ -41,6 +42,8 @@ export interface SheetEnvironment {
   strings: SheetStrings;
   onRoll: RollHandler | undefined;
   nodes: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
+  /** Other viewers' focus, on live sheets (FR-SHEET-02). */
+  presence: SheetPresence | undefined;
 }
 
 export const SheetContext = createContext<SheetEnvironment | null>(null);

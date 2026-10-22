@@ -37,6 +37,7 @@ const liveData = (overrides: Partial<Extract<LiveSheet, { status: 'ready' }>> = 
     store: createMemoryStore({ str: 13, secret: 'hidden lair' }),
     readOnly: false,
     issues: [],
+    awareness: undefined,
     ...overrides,
   };
   return collab.sheet;

@@ -5,6 +5,7 @@ import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
 import { Button, cn, controlClass } from '@vtt/ui';
 
 import { useSheet, type RowScope, type SheetEnvironment } from './context.js';
+import { PresenceBadges, usePresence } from './presence.js';
 import { fieldAt, isSecretPath } from './schema.js';
 import { valueAt, type FieldPath } from './store.js';
 import { fill } from './strings.js';
@@ -78,6 +79,8 @@ function problemWith(
 
 interface FieldShellProps {
   node: { path: string; class?: string | undefined; type: string };
+  /** The field's full path, for presence. */
+  path: FieldPath;
   label: string;
   labelFor?: string;
   errorId: string;
@@ -87,16 +90,20 @@ interface FieldShellProps {
 
 function FieldShell({
   node,
+  path,
   label,
   labelFor,
   errorId,
   error,
   children,
 }: FieldShellProps): ReactElement {
+  const presence = usePresence(path);
   return (
     <div
       className={cn(`vtt-${node.type} flex min-w-0 flex-col gap-1`, node.class)}
       data-field={node.path}
+      style={presence.style}
+      {...presence.handlers}
     >
       {labelFor ? (
         <label className="text-sm font-semibold" htmlFor={labelFor}>
@@ -105,6 +112,7 @@ function FieldShell({
       ) : (
         <span className="text-sm font-semibold">{label}</span>
       )}
+      <PresenceBadges users={presence.users} />
       {children}
       {error && (
         <span id={errorId} className="text-sm text-danger">
@@ -135,7 +143,7 @@ export function FieldNode({
   const label = node.label ? sheet.translate(node.label) : node.path;
   const errorId = `${id}-error`;
   const described = error ? errorId : undefined;
-  const shell = { node, label, errorId, error };
+  const shell = { node, path: field.path, label, errorId, error };
 
   if (input === 'checkbox') {
     return (
@@ -268,7 +276,14 @@ export function LongTextNode({
   if (field.hidden) return null;
   const label = node.label ? sheet.translate(node.label) : node.path;
   return (
-    <FieldShell node={node} label={label} labelFor={id} errorId={`${id}-error`} error={undefined}>
+    <FieldShell
+      node={node}
+      path={field.path}
+      label={label}
+      labelFor={id}
+      errorId={`${id}-error`}
+      error={undefined}
+    >
       <textarea
         id={id}
         className={cn(controlClass, 'min-h-24 w-full min-w-0')}

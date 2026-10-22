@@ -12,6 +12,7 @@ import {
   type SheetEnvironment,
 } from './context.js';
 import { SheetNodeView } from './nodes.js';
+import type { SheetPresence } from './presence.js';
 import type { SheetStore } from './store.js';
 import { DEFAULT_STRINGS, type SheetStrings } from './strings.js';
 
@@ -36,6 +37,8 @@ export interface SheetProps {
   onRoll?: RollHandler;
   /** The plugin's custom nodes by name (`custom:<name>`). */
   nodes?: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
+  /** Other viewers' focus, outlined on their fields (FR-SHEET-02). */
+  presence?: SheetPresence;
   className?: string;
 }
 
@@ -58,6 +61,7 @@ export function Sheet({
   strings,
   onRoll,
   nodes = {},
+  presence,
   className,
 }: SheetProps): ReactElement {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
@@ -79,6 +83,7 @@ export function Sheet({
     strings: { ...DEFAULT_STRINGS, ...strings },
     onRoll,
     nodes,
+    presence,
   };
 
   return (

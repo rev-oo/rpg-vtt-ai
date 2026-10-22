@@ -7,6 +7,7 @@ export {
 } from './context.js';
 export { formatDerived } from './fields.js';
 export { SheetNodeView } from './nodes.js';
+export type { PresenceUser, SheetPresence } from './presence.js';
 export { Sheet, type SheetProps } from './Sheet.js';
 export {
   createMemoryStore,

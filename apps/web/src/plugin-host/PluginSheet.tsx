@@ -15,6 +15,7 @@ import {
   valueAt,
   type CustomNodeProps,
   type RollHandler,
+  type SheetPresence,
   type SheetStore,
   type SheetStrings,
 } from '@vtt/sheet-renderer';
@@ -91,6 +92,8 @@ export interface PluginSheetProps {
   secret: boolean;
   /** The live data (M5); without it the sheet shows the stored data in a memory store. */
   store?: SheetStore | undefined;
+  /** Other viewers' focus on a live sheet (FR-SHEET-02). */
+  presence?: SheetPresence | undefined;
   onRoll?: RollHandler | undefined;
 }
 
@@ -105,6 +108,7 @@ export function PluginSheet({
   readOnly,
   secret,
   store: live,
+  presence,
   onRoll,
 }: PluginSheetProps): ReactElement {
   const { system, rules, translate } = host;
@@ -143,6 +147,7 @@ export function PluginSheet({
         translate={translate}
         strings={strings()}
         nodes={nodes}
+        {...(presence && { presence })}
         {...(onRoll && { onRoll })}
       />
     </div>
