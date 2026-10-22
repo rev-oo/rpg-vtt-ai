@@ -18,6 +18,7 @@ export const workspacePackages = {
   'packages/sheet-renderer': { type: 'sheet-renderer', kind: 'react' },
   'packages/sdk': { type: 'sdk', kind: 'pure' },
   'packages/config': { type: 'config', kind: 'tooling' },
+  'packages/plugin-io': { type: 'plugin-io', kind: 'node' },
   'packages/plugin-cli': { type: 'plugin-cli', kind: 'node' },
   'apps/server': { type: 'server', kind: 'node' },
   'apps/web': { type: 'web', kind: 'web' },
@@ -26,7 +27,15 @@ export const workspacePackages = {
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
-const ALL_PACKAGES = [...PURE_CHAIN, 'ui', 'sheet-renderer', 'sdk', 'sdk-client', 'plugin-cli'];
+const ALL_PACKAGES = [
+  ...PURE_CHAIN,
+  'ui',
+  'sheet-renderer',
+  'sdk',
+  'sdk-client',
+  'plugin-io',
+  'plugin-cli',
+];
 
 /**
  * Element descriptors for eslint-plugin-boundaries: each element is a folder.
@@ -52,10 +61,14 @@ const allowedImports = {
   'sheet-renderer': [...PURE_CHAIN, 'ui'],
   sdk: [...PURE_CHAIN],
   'sdk-client': [...PURE_CHAIN, 'sdk', 'sdk-client'],
+  // Plugin folders and archives on disk: Node only, shared by the server and the CLI.
+  'plugin-io': ['shared', 'formula', 'plugin-schema'],
   'plugin-cli': ALL_PACKAGES.filter((t) => t !== 'plugin-cli'),
   config: [],
   // §6.2: the server may not import React packages.
-  server: ALL_PACKAGES.filter((t) => !['ui', 'sheet-renderer', 'sdk-client'].includes(t)),
+  server: ALL_PACKAGES.filter(
+    (t) => !['ui', 'sheet-renderer', 'sdk-client', 'plugin-cli'].includes(t),
+  ),
   web: ALL_PACKAGES,
   e2e: [],
 };

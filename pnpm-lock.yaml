@@ -211,6 +211,9 @@ importers:
       '@vtt/plugin-engine':
         specifier: workspace:*
         version: link:../../packages/plugin-engine
+      '@vtt/plugin-io':
+        specifier: workspace:*
+        version: link:../../packages/plugin-io
       '@vtt/plugin-schema':
         specifier: workspace:*
         version: link:../../packages/plugin-schema
@@ -439,6 +442,16 @@ importers:
       '@vtt/shared':
         specifier: workspace:*
         version: link:../shared
+    devDependencies:
+      '@vtt/config':
+        specifier: workspace:*
+        version: link:../config
+
+  packages/plugin-io:
+    dependencies:
+      '@vtt/plugin-schema':
+        specifier: workspace:*
+        version: link:../plugin-schema
     devDependencies:
       '@vtt/config':
         specifier: workspace:*

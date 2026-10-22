@@ -9,6 +9,7 @@
     "@node-rs/argon2": "^2.2.2",
     "@vtt/formula": "workspace:*",
     "@vtt/plugin-engine": "workspace:*",
+    "@vtt/plugin-io": "workspace:*",
     "@vtt/plugin-schema": "workspace:*",
     "@vtt/sdk": "workspace:*",
     "@vtt/shared": "workspace:*",
