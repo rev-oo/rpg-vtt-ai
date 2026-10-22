@@ -15,12 +15,20 @@ import {
 import type { DbOrTx } from '../db/client.js';
 import { findActor, findJournalEntry } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
+import { loadDocument, storeDocument, type DefinitionOf } from '../domain/documents.js';
 import { isSystemWritable } from '../domain/entities.js';
 import { findMembership, findTable } from '../domain/tables.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
 
 import { upgradeGuard } from './upgrade.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** The Yjs document server behind `/ws/collab` (specs §10.3). */
+    collab: Collab;
+  }
+}
 
 /** The largest frame a client may send to `/ws/collab`: Yjs updates can carry a whole sheet. */
 export const MAX_COLLAB_MESSAGE_BYTES = 1024 * 1024;
@@ -78,9 +86,28 @@ class Denied extends Error {
   }
 }
 
+/** How long documents wait before they are stored and unloaded (specs §9.6). */
+export interface CollabTiming {
+  /** Quiet time after a change before the document is stored. */
+  debounceMs: number;
+  /** The longest a stream of changes delays a store. */
+  maxDebounceMs: number;
+  /** How long a document with no connections stays in memory. */
+  unloadDelayMs: number;
+}
+
+export const COLLAB_TIMING: CollabTiming = {
+  debounceMs: 2000,
+  maxDebounceMs: 10_000,
+  unloadDelayMs: 60_000,
+};
+
 interface CollabOptions {
   db: DbOrTx;
   sessions: Pick<SessionService, 'validate'>;
+  definition: DefinitionOf;
+  now: () => Date;
+  timing?: CollabTiming | undefined;
 }
 
 /** The Yjs document server and the sockets connected to it. */
@@ -95,8 +122,9 @@ export interface Collab {
  * Read access opens the document read-only: Hocuspocus then drops the client's updates.
  */
 function createHocuspocus(
-  { db, sessions }: CollabOptions,
+  { db, sessions, definition, now, timing = COLLAB_TIMING }: CollabOptions,
   logger: FastifyBaseLogger,
+  unloads: DelayedUnloads,
 ): Hocuspocus<CollabContext> {
   function check(context: CollabContext, documentName: string): DocumentAccess | 'no_session' {
     if (!sessions.validate(context.sessionToken)) return 'no_session';
@@ -107,8 +135,37 @@ function createHocuspocus(
     logger.warn({ userId: context.userId, documentName, reason }, 'collab access denied');
   }
 
+  /** Hooks run only for names that passed `onAuthenticate`, so the name parses. */
+  function refOf(documentName: string): DocumentRef {
+    const ref = parseDocumentName(documentName);
+    if (!ref) throw new Error(`Not a document name: ${documentName}`);
+    return ref;
+  }
+
   return new Hocuspocus<CollabContext>({
     quiet: true,
+    debounce: timing.debounceMs,
+    maxDebounce: timing.maxDebounceMs,
+    onLoadDocument: ({ documentName, document }) => {
+      loadDocument(db, refOf(documentName), document, definition);
+      return Promise.resolve();
+    },
+    onStoreDocument: ({ documentName, document, instance }) => {
+      storeDocument(db, refOf(documentName), document, {
+        definition,
+        live: (name) => instance.documents.get(name),
+        now: now(),
+      });
+      return Promise.resolve();
+    },
+    connected: ({ documentName }) => {
+      unloads.cancel(documentName);
+      return Promise.resolve();
+    },
+    beforeUnloadDocument: ({ documentName, document, instance }) =>
+      unloads.due(documentName, () => void instance.unloadDocument(document), timing.unloadDelayMs)
+        ? Promise.resolve()
+        : Promise.reject(new Denied({ code: 0, reason: 'unload delayed' })),
     onAuthenticate: ({ context, documentName, connectionConfig }) => {
       const access = check(context, documentName);
       if (access === 'no_session' || access === 'none') {
@@ -132,15 +189,61 @@ function createHocuspocus(
 }
 
 /**
+ * Keeps documents in memory for a while after their last connection leaves (specs §9.6).
+ * Hocuspocus asks before it unloads; the first ask schedules a retry once the delay is over.
+ */
+class DelayedUnloads {
+  private readonly timers = new Map<string, NodeJS.Timeout>();
+  private readonly ready = new Set<string>();
+  private closing = false;
+
+  /** Whether a document may unload now; otherwise `retry` runs once the delay is over. */
+  due(name: string, retry: () => void, delayMs: number): boolean {
+    if (this.closing || this.ready.delete(name)) return true;
+    if (!this.timers.has(name)) {
+      const timer = setTimeout(() => {
+        this.timers.delete(name);
+        this.ready.add(name);
+        retry();
+      }, delayMs);
+      this.timers.set(name, timer.unref());
+    }
+    return false;
+  }
+
+  /** A client opened the document again. */
+  cancel(name: string): void {
+    clearTimeout(this.timers.get(name));
+    this.timers.delete(name);
+    this.ready.delete(name);
+  }
+
+  /** On shutdown documents unload at once. */
+  close(): void {
+    this.closing = true;
+    for (const timer of this.timers.values()) clearTimeout(timer);
+    this.timers.clear();
+  }
+}
+
+/**
  * Creates the document server. Call it before the WebSocket plugin registers, so that on
  * shutdown its sockets close with 1001 before the plugin closes the rest without a code.
+ * Shutdown waits until every changed document is stored.
  */
 export function registerCollab(app: FastifyInstance, options: CollabOptions): Collab {
-  const collab: Collab = { hocuspocus: createHocuspocus(options, app.log), sockets: new Set() };
-  app.addHook('preClose', (done) => {
+  const unloads = new DelayedUnloads();
+  const hocuspocus = createHocuspocus(options, app.log, unloads);
+  const collab: Collab = { hocuspocus, sockets: new Set() };
+  app.decorate('collab', collab);
+  app.addHook('preClose', async () => {
+    unloads.close();
     for (const socket of collab.sockets) socket.close(1001, 'server shutting down');
     collab.sockets.clear();
-    done();
+    hocuspocus.flushPendingStores();
+    await Promise.all(
+      [...hocuspocus.documents.values()].map((document) => document.saveMutex.waitForUnlock()),
+    );
   });
   return collab;
 }

@@ -1,6 +1,7 @@
 // Drizzle schema for the core server (specs T-0102). Timestamps are Unix milliseconds.
 import { sql } from 'drizzle-orm';
 import {
+  blob,
   index,
   type AnySQLiteColumn,
   integer,
@@ -280,4 +281,25 @@ export const chatMessages = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index('chat_messages_history_idx').on(t.tableId, t.seq)],
+);
+
+/**
+ * Binary Yjs state of the collaborative documents (specs §9.1, §9.6), keyed by document name.
+ * Each row belongs to its actor or journal entry and goes with it when it is purged.
+ */
+export const ydocs = sqliteTable(
+  'ydocs',
+  {
+    name: text('name').primaryKey(),
+    actorId: text('actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    journalEntryId: text('journal_entry_id').references(() => journalEntries.id, {
+      onDelete: 'cascade',
+    }),
+    state: blob('state', { mode: 'buffer' }).notNull(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index('ydocs_actor_id_idx').on(t.actorId),
+    index('ydocs_journal_entry_id_idx').on(t.journalEntryId),
+  ],
 );

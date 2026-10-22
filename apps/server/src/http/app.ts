@@ -13,7 +13,12 @@ import { SessionService } from '../domain/auth/sessions.js';
 import { secureRng } from '../domain/rolls.js';
 import { AppError } from '../errors.js';
 import { PluginRegistry } from '../plugins/registry.js';
-import { collabSocket, registerCollab, type Collab } from '../realtime/collab.js';
+import {
+  collabSocket,
+  registerCollab,
+  type Collab,
+  type CollabTiming,
+} from '../realtime/collab.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
 
@@ -51,6 +56,8 @@ export interface AppOptions {
   rng?: Rng;
   /** The plugin registry; by default one over `DATA_DIR/plugins` that has not scanned yet. */
   plugins?: PluginRegistry;
+  /** Document store and unload delays; tests shorten them. */
+  collabTiming?: CollabTiming;
 }
 
 /** Everything a route module needs. */
@@ -85,6 +92,7 @@ export async function buildApp({
     logger,
     now,
   }),
+  collabTiming,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: logger,
@@ -113,7 +121,13 @@ export async function buildApp({
 
   const sessions = new SessionService({ db, ttlSeconds: config.sessionTtlSeconds, now });
   registerAuth(app, sessions);
-  const collab = registerCollab(app, { db, sessions });
+  const collab = registerCollab(app, {
+    db,
+    sessions,
+    definition: (id) => plugins.definition(id),
+    now,
+    timing: collabTiming,
+  });
   const events = await registerEvents(app, { db, sessions });
 
   const context: AppContext = {

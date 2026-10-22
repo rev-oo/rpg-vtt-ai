@@ -44,6 +44,11 @@ export interface CollabSocket {
   ws: WebSocket;
   /** Opens a document and resolves once it is denied, or granted and synced. */
   open: (name: string) => Promise<CollabDocument>;
+  /**
+   * Drops the connection and resolves once the server has seen it go. An injected socket
+   * that closes cleanly never ends its stream, so the server would not notice the close.
+   */
+  drop: () => Promise<void>;
   closed: Promise<number>;
 }
 
@@ -172,5 +177,10 @@ export async function openCollab(
     };
   }
 
-  return { ws, open, closed };
+  const drop = async () => {
+    ws.terminate();
+    await closed;
+  };
+
+  return { ws, open, drop, closed };
 }
