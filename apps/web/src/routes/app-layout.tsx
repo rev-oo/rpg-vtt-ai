@@ -54,6 +54,11 @@ export default function AppLayout(): ReactElement {
           <NavLink to="/account" className={navLinkClass}>
             {t('nav.account')}
           </NavLink>
+          {user?.isAdmin && (
+            <NavLink to="/admin/plugins" className={navLinkClass}>
+              {t('nav.plugins')}
+            </NavLink>
+          )}
         </nav>
         <div className="ml-auto flex items-center gap-3">
           <span className="hidden text-sm text-muted sm:inline">

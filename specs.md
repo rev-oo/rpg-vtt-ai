@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M1    | Core server: users, auth, tables, membership                  | Done        | 100%     | —      |
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
-| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 42%      | —      |
+| M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | In progress | 67%      | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Not started | 0%       | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M4
-- **Next task:** `T-0406`
+- **Next task:** `T-0409`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -64,6 +64,9 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                      |
 | 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                        |
 | 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                  |
+| 2026-10-21 | PR #5 merged (T-0404, T-0405). T-0406 implemented (plugin admin page, with an e2e test).                                          |
+| 2026-10-21 | T-0407 implemented (plugin engine). ADR-023 added.                                                                                |
+| 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                              |
 
 ---
 
@@ -218,7 +221,7 @@ vtt/
 │  ├─ plugin-schema/              Zod schemas for every plugin file, JSON Schema emitter, validator, CSS scoper
 │  ├─ plugin-engine/              defaults, derived data, roll recipes, schema→Yjs mapping, outcome logic
 │  ├─ ui/                         design tokens + primitives (Button, Dialog, Tabs, WindowFrame)
-│  ├─ sheet-renderer/             layout JSON → React; built-in nodes; SheetStore interface
+│  ├─ sheet-renderer/             layout JSON → React; built-in nodes; SheetStore interface; preview page
 │  ├─ sdk/                        public API for code/ entries (defineShared/Client/Server, hooks, ctx types)
 │  ├─ config/                     shared tsconfig, eslint, prettier presets
 │  └─ plugin-cli/                 vtt-plugin: validate · dev (live preview) · pack
@@ -1114,20 +1117,23 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** `../` traversal attempts return 404 (tested).
   - **Note:** `apps/server/src/http/routes/plugin-assets.ts` with `test/plugin-assets.test.ts`. Signed-in users only, available plugins only, an allow-list of file types, scoped stylesheets, `no-cache` with ETags (ADR-022).
 
-- [ ] **T-0406 · Plugin admin UI**
+- [x] **T-0406 · Plugin admin UI**
   - **Deps:** T-0403, T-0111
   - **Do:** Admin page listing plugins, status, validation errors, code flag confirmation, enable/disable, rescan.
   - **Done when:** FR-ADMIN-02 has an e2e test.
+  - **Note:** `/admin/plugins` (`apps/web/src/routes/admin-plugins.tsx`), with `test/plugins.test.tsx` and `e2e/tests/plugins.spec.ts`. Issues are worded from the web catalogue (`pluginIssue.*`), using `@vtt/plugin-schema/issues` so the page does not bundle the CSS scoper. Enabling a plugin with code lists its code files and asks first.
 
-- [ ] **T-0407 · Plugin engine**
+- [x] **T-0407 · Plugin engine**
   - **Deps:** T-0402, T-0302
   - **Do:** `packages/plugin-engine`: defaults from schema, derived value computation, roll recipe execution (outcomes), card resolution, actor-to-Yjs schema mapping (no Yjs dependency in this package; mapping produces a plain description).
   - **Done when:** unit tests cover derived values, outcomes ordering, and missing-card fallback (FR-CHAT-06).
+  - **Note:** `createRules()` in `packages/plugin-engine`, tested in `test/derived.test.ts`, `recipes.test.ts`, `data.test.ts` and `rules.test.ts`. Collections are id-keyed maps outside Yjs too; the server's roll endpoint is not wired to the engine yet (ADR-023).
 
-- [ ] **T-0408 · Sheet renderer (layout to React)**
+- [x] **T-0408 · Sheet renderer (layout to React)**
   - **Deps:** T-0401, T-0407, T-0111
   - **Do:** `packages/sheet-renderer` with built-in nodes from §8.5, `visibleIf` evaluation, `SheetStore` interface, `data-field` attributes, phone-responsive layout (FR-SHEET-10).
   - **Done when:** renderer snapshot tests for every node type; preview page renders `tiny-d20` sheet against a mock store.
+  - **Note:** snapshots in `packages/sheet-renderer/test/nodes.test.tsx`; the preview is `pnpm --filter @vtt/sheet-renderer preview`, and `test/preview/tiny-d20.test.tsx` renders `tiny-d20` through it. Checked at 360 px in Chromium (ADR-024).
 
 - [ ] **T-0409 · Plugin host in web app**
   - **Deps:** T-0405, T-0408
@@ -1368,6 +1374,8 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-020 | [Plugin registry: scanning, status, enabling, read-only tables](docs/adr/ADR-020-plugin-registry.md)                                            | Accepted |
 | ADR-021 | [Scoped plugin CSS: scope, layer, at-rules, URLs, limits](docs/adr/ADR-021-scoped-plugin-css.md)                                                | Accepted |
 | ADR-022 | [Plugin file serving: access, allowed files, scoped CSS, headers](docs/adr/ADR-022-plugin-file-serving.md)                                      | Accepted |
+| ADR-023 | [Plugin engine: collections, defaults, derived values, recipes, cards, document layout](docs/adr/ADR-023-plugin-engine.md)                      | Accepted |
+| ADR-024 | [Sheet renderer: store, inputs, CSS hooks, phone layout, preview](docs/adr/ADR-024-sheet-renderer.md)                                           | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

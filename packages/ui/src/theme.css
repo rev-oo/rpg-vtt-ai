@@ -39,6 +39,14 @@
 @layer base {
   :root {
     color-scheme: light dark;
+    /*
+     * Sheet tokens (specs §8.6). Plugins override them in their own :root, which the CSS
+     * scoper turns into their sheet root, so the override wins by inheritance.
+     */
+    --vtt-accent: var(--color-primary);
+    --vtt-gap-sm: 0.5rem;
+    --vtt-gap-md: 1rem;
+    --vtt-gap-lg: 1.5rem;
   }
   body {
     @apply bg-canvas font-sans text-fg antialiased;

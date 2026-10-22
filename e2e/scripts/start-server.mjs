@@ -1,7 +1,8 @@
 // @ts-check
-// Starts the built API server on a fresh data directory with one enabled system plugin. The
-// plugin folder is copied in and the server's startup scan fills its row; only `enabled` is
-// seeded, since enabling needs an admin (FR-PLUGIN-07).
+// Starts the built API server on a fresh data directory with the fixture plugins. The folders
+// are copied in and the server's startup scan fills their rows. Only `e2e-system` is enabled,
+// by seeding `enabled`, since enabling needs an admin (FR-PLUGIN-07); the others start
+// disabled for the plugin admin test.
 import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, rmSync } from 'node:fs';
 import path from 'node:path';

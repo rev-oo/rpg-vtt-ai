@@ -7,6 +7,8 @@ import {
   chatHistoryResponseSchema,
   chatMessageResponseSchema,
   membersResponseSchema,
+  pluginResponseSchema,
+  pluginsResponseSchema,
   sessionSchema,
   setupStatusSchema,
   systemsResponseSchema,
@@ -14,6 +16,7 @@ import {
   tablesResponseSchema,
   userResponseSchema,
   type ActorView,
+  type AdminPlugin,
   type CreateActorInput,
   type CreateItemInput,
   type EntityListQuery,
@@ -129,6 +132,24 @@ export const api = {
   /** Rolls a typed formula; the result arrives as a roll message (FR-CHAT-03, 08). */
   roll: async (tableId: string, input: RollRequestInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/rolls`, chatMessageResponseSchema, input)).message,
+
+  /** Installed plugins, for admins (FR-ADMIN-02). */
+  listPlugins: async (): Promise<AdminPlugin[]> =>
+    (await request('GET', '/plugins', pluginsResponseSchema)).plugins,
+
+  rescanPlugins: async (): Promise<AdminPlugin[]> =>
+    (await request('POST', '/plugins/rescan', pluginsResponseSchema)).plugins,
+
+  /** A plugin with code needs `acknowledgeCode` (FR-PLUGIN-06). */
+  enablePlugin: async (id: string, acknowledgeCode = false): Promise<AdminPlugin> =>
+    (
+      await request('POST', `/plugins/${id}/enable`, pluginResponseSchema, {
+        ...(acknowledgeCode && { acknowledgeCode }),
+      })
+    ).plugin,
+
+  disablePlugin: async (id: string): Promise<AdminPlugin> =>
+    (await request('POST', `/plugins/${id}/disable`, pluginResponseSchema)).plugin,
 };
 
 function toQuery(query: EntityListQuery): string {

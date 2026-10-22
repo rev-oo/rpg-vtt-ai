@@ -1,0 +1,6 @@
+{
+  "label": "Hero",
+  "controlledBy": "player",
+  "sheet": "missing",
+  "schema": { "type": "object", "properties": { "hp": { "type": "number" } } }
+}

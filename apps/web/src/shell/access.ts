@@ -24,3 +24,8 @@ export function userRedirect(session: SessionState, url: URL): string | null {
   if (session.user.mustChangePassword && url.pathname !== '/account') return '/account';
   return null;
 }
+
+/** Admin pages: anyone else goes to their tables (FR-ADMIN-02). */
+export function adminRedirect(session: SessionState, url: URL): string | null {
+  return userRedirect(session, url) ?? (session.user?.isAdmin ? null : '/');
+}

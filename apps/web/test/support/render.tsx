@@ -4,6 +4,7 @@ import { createRoutesStub, type LoaderFunctionArgs } from 'react-router';
 import { TABLE_ROUTE_ID } from '../../src/features/table/table-data.js';
 import * as root from '../../src/root.js';
 import * as account from '../../src/routes/account.js';
+import * as adminPlugins from '../../src/routes/admin-plugins.js';
 import * as appLayout from '../../src/routes/app-layout.js';
 import * as catchAll from '../../src/routes/catch-all.js';
 import * as login from '../../src/routes/login.js';
@@ -69,6 +70,11 @@ const Stub = createRoutesStub([
             ],
           },
           { path: 'account', Component: account.default },
+          {
+            path: 'admin/plugins',
+            Component: adminPlugins.default,
+            loader: asLoader(adminPlugins.clientLoader),
+          },
         ],
       },
       { path: '*', Component: catchAll.default, loader: catchAll.clientLoader },

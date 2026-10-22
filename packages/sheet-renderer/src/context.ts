@@ -1,0 +1,66 @@
+import { createContext, useContext, type ComponentType } from 'react';
+
+import type { FormulaFunction, Value } from '@vtt/formula';
+import type { DerivedValues } from '@vtt/plugin-engine';
+import type { FieldSchema } from '@vtt/plugin-schema';
+
+import type { FieldPath, SheetStore } from './store.js';
+import type { SheetStrings } from './strings.js';
+
+/** Where a node inside a `list` row reads from: its row, by id. */
+export interface RowScope {
+  /** The row's path: the list's path plus the row id. */
+  path: FieldPath;
+  /** The schema of the list's rows. */
+  schema: FieldSchema | undefined;
+  /** The row's data with its id, read by `@row.*`. */
+  row: Readonly<Record<string, unknown>>;
+}
+
+/** What a `custom:<name>` node receives (specs §8.10). */
+export interface CustomNodeProps {
+  props: Readonly<Record<string, unknown>>;
+  /** Set inside a `list`: the row the node sits in. */
+  rowPath?: FieldPath;
+}
+
+export type RollHandler = (roll: string, args: Readonly<Record<string, Value>>) => void;
+
+export interface SheetEnvironment {
+  store: SheetStore;
+  schema: FieldSchema;
+  /** The store's data with defaults filled in. */
+  data: Readonly<Record<string, unknown>>;
+  derived: DerivedValues;
+  settings: Readonly<Record<string, Value>>;
+  functions: Readonly<Record<string, FormulaFunction>>;
+  readOnly: boolean;
+  /** Whether the viewer sees the secret layer (GM and assistants, FR-SHEET-04). */
+  secret: boolean;
+  translate: (text: string) => string;
+  strings: SheetStrings;
+  onRoll: RollHandler | undefined;
+  nodes: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
+}
+
+export const SheetContext = createContext<SheetEnvironment | null>(null);
+
+/** The sheet a node renders in; custom nodes can read it too. */
+export function useSheet(): SheetEnvironment {
+  const sheet = useContext(SheetContext);
+  if (!sheet) throw new Error('useSheet() is only available inside <Sheet>');
+  return sheet;
+}
+
+/** The data formulas in this node read: `@derived`, `@settings` and, in a list, `@row`. */
+export function formulaScope(
+  sheet: SheetEnvironment,
+  row: RowScope | undefined,
+): Record<string, unknown> {
+  return {
+    ...sheet.data,
+    derived: sheet.derived.values,
+    settings: sheet.settings,
+    ...(row && { row: row.row }),
+  };
+}

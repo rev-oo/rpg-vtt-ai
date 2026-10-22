@@ -10,6 +10,7 @@ export default [
       route('items', 'routes/table-items.tsx'),
     ]),
     route('account', 'routes/account.tsx'),
+    route('admin/plugins', 'routes/admin-plugins.tsx'),
   ]),
   route('*', 'routes/catch-all.tsx'),
 ] satisfies RouteConfig;
