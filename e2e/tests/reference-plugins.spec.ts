@@ -109,8 +109,10 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
   });
 
   await test.step('at zero hit points the sheet says so', async () => {
-    setActorData(actor.id, { hp: { value: 0, max: 12 } });
-    await openSheet(page, table.id, 'Ayla');
+    // Sheets are live (M5): the player edits the value in place.
+    const hp = sheet.getByRole('textbox', { name: 'Hit points', exact: true });
+    await hp.fill('0');
+    await hp.blur();
     await expect(sheet.getByText('Unconscious')).toBeVisible();
     await expect(sheet.getByRole('meter', { name: 'Hit points' })).toHaveAttribute(
       'data-low',

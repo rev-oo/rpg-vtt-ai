@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { PluginDefinition } from '@vtt/plugin-schema';
 import type { ChatMessage } from '@vtt/shared/api';
+import { createMemoryStore } from '@vtt/sheet-renderer';
 
 import { setCsrfToken } from '../src/api/client.js';
+import type { LiveSheet } from '../src/collab/use-live-sheet.js';
 import { clearLoadedSystems, systemTranslator } from '../src/plugin-host/load.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
@@ -14,7 +16,35 @@ import { fakeWebSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 
+/**
+ * The sheet's live documents. The Yjs store and the socket are tested on their own
+ * (`collab.test.ts`, e2e); here the route gets a ready sheet over a memory store.
+ */
+const collab = vi.hoisted(() => ({
+  sheet: null as LiveSheet | null,
+  opened: [] as { actorId: string; secret: boolean }[],
+}));
+vi.mock('../src/collab/use-live-sheet.js', () => ({
+  useLiveSheet: (actorId: string, _layout: unknown, { secret }: { secret: boolean }) => {
+    collab.opened.push({ actorId, secret });
+    return collab.sheet;
+  },
+}));
+
+const liveData = (overrides: Partial<Extract<LiveSheet, { status: 'ready' }>> = {}) => {
+  collab.sheet = {
+    status: 'ready',
+    store: createMemoryStore({ str: 13, secret: 'hidden lair' }),
+    readOnly: false,
+    issues: [],
+    ...overrides,
+  };
+  return collab.sheet;
+};
+
 afterEach(() => {
+  collab.sheet = null;
+  collab.opened = [];
   closeEventsClient();
   clearLoadedSystems();
   vi.unstubAllGlobals();
@@ -124,6 +154,7 @@ const CARD_MESSAGE: ChatMessage = {
 
 function openTable(path: string, { role = 'gm', systemAvailable = true } = {}) {
   fakeWebSocket();
+  if (!collab.sheet) liveData();
   const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
     'GET /me': { body: SESSION },
@@ -143,14 +174,20 @@ function openTable(path: string, { role = 'gm', systemAvailable = true } = {}) {
 const log = () => screen.findByRole('log', { name: 'Messages' });
 
 describe('plugin host (T-0409)', () => {
-  it('opens an actor sheet from the list, read-only, with the stored data', async () => {
+  it('opens an actor sheet from the list and edits its live data (T-0506)', async () => {
+    const sheet = liveData();
     openTable('/tables/t1');
     await userEvent.click(await screen.findByRole('link', { name: 'Open sheet: Goblin King' }));
     const strength = await screen.findByLabelText('Strength');
     expect(strength).toHaveValue('13');
-    expect(strength).toHaveAttribute('readonly');
-    // GMs see the secret layer (FR-SHEET-04).
+    expect(strength).not.toHaveAttribute('readonly');
+    await userEvent.clear(strength);
+    await userEvent.type(strength, '15');
+    await userEvent.tab();
+    expect(sheet.store.getSnapshot()).toMatchObject({ str: 15 });
+    // GMs open the secret layer and see it (FR-SHEET-04).
     expect(screen.getByLabelText('Lair')).toHaveValue('hidden lair');
+    expect(collab.opened.at(-1)).toEqual({ actorId: 'a1', secret: true });
     expect(document.head.querySelector('link[data-plugin-style]')).toHaveAttribute(
       'href',
       '/plugins/tiny-d20/styles/sheet.css',
@@ -172,6 +209,21 @@ describe('plugin host (T-0409)', () => {
     expect(await screen.findByLabelText('Strength')).toBeInTheDocument();
     expect(screen.queryByLabelText('Lair')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Attack' })).toBeDisabled();
+    expect(collab.opened.at(-1)).toEqual({ actorId: 'a1', secret: false });
+  });
+
+  it('follows the server: read-only documents, repairs and connecting (FR-SHEET-03, 09)', async () => {
+    liveData({ readOnly: true, issues: [{ path: ['str'], reason: 'maximum' }] });
+    openTable('/tables/t1/actors/a1');
+    expect(await screen.findByLabelText('Strength')).toHaveAttribute('readonly');
+    expect(screen.getByText(/were reset to their default \(1\)/)).toBeInTheDocument();
+  });
+
+  it('waits for the documents before showing the sheet', async () => {
+    collab.sheet = { status: 'connecting' };
+    openTable('/tables/t1/actors/a1');
+    expect(await screen.findByText('Connecting to the sheet…')).toBeInTheDocument();
+    expect(screen.queryByLabelText('Strength')).not.toBeInTheDocument();
   });
 
   it('draws recipe cards in the chat with the plugin texts (FR-CHAT-06)', async () => {

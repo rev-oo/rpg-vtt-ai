@@ -235,7 +235,9 @@ export const en = {
   'sheet.notFound': 'This actor does not exist, or you cannot see it.',
   'sheet.loading': 'Loading the sheet…',
   'sheet.unavailable': 'The sheet is not available while the table’s system is disabled.',
-  'sheet.readOnlyUntilLive': 'Sheets are read-only for now; editing arrives with live sheets.',
+  'sheet.connecting': 'Connecting to the sheet…',
+  'sheet.repaired':
+    'Some values did not fit the sheet’s rules and were reset to their default ({count}).',
   'sheet.unknownType': 'The system has no sheet for the type “{type}”.',
   'sheet.rolled': 'Rolled. The result is in the chat.',
   'sheet.badArgs': 'This roll has a list argument, which cannot be sent.',

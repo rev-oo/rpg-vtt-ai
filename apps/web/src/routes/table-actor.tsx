@@ -1,17 +1,20 @@
-import { useState, type ReactElement } from 'react';
+import { useMemo, useState, type ReactElement } from 'react';
 import { Link, useParams } from 'react-router';
 
 import type { Value } from '@vtt/formula';
+import { documentLayout } from '@vtt/plugin-engine';
 import { canSendChat, isGmLike } from '@vtt/shared';
 import type { ActorView, RollRequestInput, TableView } from '@vtt/shared/api';
 import { Alert } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
+import { useLiveSheet } from '../collab/use-live-sheet.js';
 import { useTableData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
+import { entityType } from '../plugin-host/entity-type.js';
 import { PluginSheet } from '../plugin-host/PluginSheet.js';
-import { useSystem } from '../plugin-host/system-context.js';
+import { useSystem, type TableSystem } from '../plugin-host/system-context.js';
 
 type RecipeArgs = NonNullable<RollRequestInput['recipe']>['args'];
 
@@ -25,7 +28,7 @@ function recipeArgs(args: Readonly<Record<string, Value>>): RecipeArgs | null {
   return sent;
 }
 
-/** An actor's sheet (T-0409). It shows the stored data; editing arrives with M5. */
+/** An actor's live sheet (T-0409, T-0506): edited together over `/ws/collab`. */
 export default function TableActorRoute(): ReactElement {
   const { actorId } = useParams();
   const { table, actors } = useTableData();
@@ -78,23 +81,59 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
       )}
       {host.status === 'ready' && (
         <>
-          <p className="text-sm text-muted">{t('sheet.readOnlyUntilLive')}</p>
           {failure && <Alert tone="error">{failure}</Alert>}
           {status && (
             <p role="status" className="text-sm text-muted">
               {status}
             </p>
           )}
-          <PluginSheet
+          <LiveActorSheet
             host={host}
             actor={actor}
-            kind="actor"
-            readOnly
             secret={isGmLike(table.role)}
             onRoll={mayRoll ? roll : undefined}
           />
         </>
       )}
     </section>
+  );
+}
+
+type ReadySystem = Extract<TableSystem, { status: 'ready' }>;
+
+const NO_FIELDS = { main: {}, secret: undefined };
+
+function LiveActorSheet({
+  host,
+  actor,
+  secret,
+  onRoll,
+}: {
+  host: ReadySystem;
+  actor: ActorView;
+  secret: boolean;
+  onRoll: ((name: string, args: Readonly<Record<string, Value>>) => void) | undefined;
+}): ReactElement {
+  const type = entityType(host.system.definition, 'actor', actor.type);
+  const layout = useMemo(() => (type ? documentLayout(type.schema) : NO_FIELDS), [type]);
+  const live = useLiveSheet(actor.id, layout, { secret });
+
+  if (live.status === 'denied') return <Alert tone="error">{t('sheet.notFound')}</Alert>;
+  if (live.status === 'connecting') return <p className="text-muted">{t('sheet.connecting')}</p>;
+  return (
+    <>
+      {live.issues.length > 0 && (
+        <Alert tone="info">{t('sheet.repaired', { count: live.issues.length })}</Alert>
+      )}
+      <PluginSheet
+        host={host}
+        actor={actor}
+        kind="actor"
+        store={live.store}
+        readOnly={live.readOnly || actor.access !== 'owner'}
+        secret={secret}
+        onRoll={onRoll}
+      />
+    </>
   );
 }
