@@ -130,8 +130,9 @@ export function defineVttConfig() {
       // through the app's import map (ADR-025).
       'e2e/fixtures/plugins/*/code/',
       'plugins/*/code/',
-      // The e2e server's data directory, with its copies of the fixtures.
+      // Server data directories (git-ignored), with their installed plugins.
       'e2e/.data/',
+      'apps/server/data/',
       ...LINT_FIXTURES,
     ]),
 

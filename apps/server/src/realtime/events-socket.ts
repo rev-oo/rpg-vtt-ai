@@ -19,8 +19,10 @@ import { AppError, notFound } from '../errors.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
 
+import { MAX_COLLAB_MESSAGE_BYTES } from './collab.js';
 import { EventHub, SESSION_ENDED, type Connection } from './hub.js';
 import { membersOf, publishChatMessage } from './notify.js';
+import { upgradeGuard } from './upgrade.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -53,23 +55,9 @@ export async function registerEvents(
     hub.closeAll();
     done();
   });
-  await app.register(fastifyWebsocket, { options: { maxPayload: MAX_CLIENT_MESSAGE_BYTES } });
+  // The largest frame of any socket; each route enforces its own limit below that.
+  await app.register(fastifyWebsocket, { options: { maxPayload: MAX_COLLAB_MESSAGE_BYTES } });
   return hub;
-}
-
-/**
- * Whether a browser opened the socket from this instance's own page. Cookies ride along on
- * cross-site upgrades too, so the Origin is checked (cross-site WebSocket hijacking).
- * Clients that send no Origin are not browsers.
- */
-function isSameOrigin(origin: string | undefined, host: string | undefined, publicUrl: URL) {
-  if (origin === undefined) return true;
-  if (origin === publicUrl.origin) return true;
-  try {
-    return host !== undefined && new URL(origin).host === host;
-  } catch {
-    return false;
-  }
 }
 
 /** `/ws/events`: session-authenticated on upgrade, one JSON envelope per message. */
@@ -87,19 +75,7 @@ export function eventsSocket({
     '/ws/events',
     {
       websocket: true,
-      preValidation: (request, reply, done) => {
-        if (!request.session) {
-          void reply
-            .code(401)
-            .send({ error: { code: 'unauthenticated', message: 'Authentication required.' } });
-          return;
-        }
-        if (!isSameOrigin(request.headers.origin, request.headers.host, config.publicUrl)) {
-          void reply.code(403).send({ error: { code: 'forbidden', message: 'Bad origin.' } });
-          return;
-        }
-        done();
-      },
+      preValidation: upgradeGuard(config),
     },
     (socket, request) => {
       const token = request.cookies[SESSION_COOKIE];
@@ -124,6 +100,10 @@ export function eventsSocket({
         events.remove(connection);
       });
       socket.on('message', (data, isBinary) => {
+        if (byteLength(data) > MAX_CLIENT_MESSAGE_BYTES) {
+          socket.close(MESSAGE_TOO_BIG, 'message too big');
+          return;
+        }
         // Logging out or a password change ends the socket's session too.
         if (!sessions.validate(token)) {
           socket.close(SESSION_ENDED, 'session ended');
@@ -213,6 +193,9 @@ class Replies {
   }
 }
 
+/** The WebSocket close code for an oversized frame (RFC 6455). */
+const MESSAGE_TOO_BIG = 1009;
+
 const envelopeHead = z.object({
   v: z.unknown(),
   id: z.string().max(64).optional().catch(undefined),
@@ -245,6 +228,11 @@ function parseEvent(data: RawData, isBinary: boolean, reply: Replies): ClientEve
     return undefined;
   }
   return parsed.data;
+}
+
+function byteLength(data: RawData): number {
+  if (Array.isArray(data)) return data.reduce((total, chunk) => total + chunk.length, 0);
+  return data.byteLength;
 }
 
 function rawText(data: RawData): string {

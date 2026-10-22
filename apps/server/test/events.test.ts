@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { ActorView, ItemView } from '@vtt/shared/api';
+import { MAX_CLIENT_MESSAGE_BYTES, type ActorView, type ItemView } from '@vtt/shared/api';
 
 import { members } from '../src/db/schema.js';
 import { SESSION_ENDED } from '../src/realtime/hub.js';
@@ -75,6 +75,14 @@ describe('connecting to /ws/events (§10.2)', () => {
     expect(roll).toMatchObject({ type: 'error', payload: { code: 'invalid_formula' } });
     // Still usable after errors.
     expect((await socket.request({ type: 'presence.ping' })).type).toBe('ack');
+  });
+
+  it('closes the socket on a message over 16 KiB', async () => {
+    const t = await setupTable();
+    const socket = await openSocket(t.app, t.gm.client);
+    socket.sendRaw('x'.repeat(MAX_CLIENT_MESSAGE_BYTES));
+    socket.sendRaw(' '.repeat(MAX_CLIENT_MESSAGE_BYTES + 1));
+    expect(await socket.closed).toBe(1009);
   });
 
   it('only subscribes members', async () => {

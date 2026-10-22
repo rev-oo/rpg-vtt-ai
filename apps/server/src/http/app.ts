@@ -13,6 +13,7 @@ import { SessionService } from '../domain/auth/sessions.js';
 import { secureRng } from '../domain/rolls.js';
 import { AppError } from '../errors.js';
 import { PluginRegistry } from '../plugins/registry.js';
+import { collabSocket, registerCollab, type Collab } from '../realtime/collab.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
 
@@ -66,6 +67,8 @@ export interface AppContext {
   /** The dice RNG (FR-CHAT-04). */
   rng: Rng;
   plugins: PluginRegistry;
+  /** The Yjs document server behind `/ws/collab` (specs §10.3). */
+  collab: Collab;
 }
 
 /** Builds the Fastify application with every route registered. */
@@ -110,6 +113,7 @@ export async function buildApp({
 
   const sessions = new SessionService({ db, ttlSeconds: config.sessionTtlSeconds, now });
   registerAuth(app, sessions);
+  const collab = registerCollab(app, { db, sessions });
   const events = await registerEvents(app, { db, sessions });
 
   const context: AppContext = {
@@ -122,6 +126,7 @@ export async function buildApp({
     now,
     rng,
     plugins,
+    collab,
   };
   setupRoutes(context);
   authRoutes(context);
@@ -137,6 +142,7 @@ export async function buildApp({
   chatRoutes(context);
   rollRoutes(context);
   eventsSocket(context);
+  collabSocket(context);
 
   scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
 

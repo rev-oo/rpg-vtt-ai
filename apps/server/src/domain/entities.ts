@@ -97,17 +97,22 @@ export function systemTypes(db: DbOrTx, table: GameTable): SystemTypes {
   return plugin;
 }
 
-/**
- * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
- * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
- */
-export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
+/** Whether the table's system plugin is available, so its entities may change (FR-PLUGIN-07). */
+export function isSystemWritable(db: DbOrTx, table: GameTable): boolean {
   const plugin = db
     .select({ enabled: plugins.enabled, status: plugins.status })
     .from(plugins)
     .where(eq(plugins.id, table.systemId))
     .get();
-  if (!plugin || !isAvailable(plugin)) {
+  return plugin !== undefined && isAvailable(plugin);
+}
+
+/**
+ * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
+ * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
+ */
+export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
+  if (!isSystemWritable(db, table)) {
     throw conflict(
       'table_read_only',
       "The table's system plugin is disabled or unavailable, so the table is read-only.",
