@@ -82,10 +82,12 @@ describe('POST /tables/:id/rolls (T-0305, FR-CHAT-03, 04, 08)', () => {
     expect((await history(t, t.carol.client))[0]).toEqual(message);
   });
 
-  it("reads an owned actor's data and speaks as it (FR-DICE-02)", async () => {
+  it("reads an actor's data and speaks as it (FR-DICE-02)", async () => {
     const t = await setupTable({ rng: faces(12) });
     const hero = await bobsHero(t);
-    const res = await rollAs(t, t.bob, {
+    // The GM: `test-system` has no definition, so players see none of its data (FR-SHEET-04).
+    // Players reading their own data with a real plugin is in system-rolls and secrets tests.
+    const res = await rollAs(t, t.gm, {
       formula: '1d20 + floor((@str - 10) / 2) + @skills.climb.rank',
       actorId: hero.id,
     });

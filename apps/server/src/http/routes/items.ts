@@ -12,7 +12,13 @@ import {
   updateItem,
   type Retention,
 } from '../../db/repositories/index.js';
-import { requireItemType, toItemView, writableSystemTypes } from '../../domain/entities.js';
+import {
+  dataFilter,
+  requireItemType,
+  toItemView,
+  writableSystemTypes,
+} from '../../domain/entities.js';
+import type { GameTable, Member } from '../../domain/tables.js';
 import { conflict, gone, notFound, unprocessable } from '../../errors.js';
 import { publishItemChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
@@ -23,35 +29,38 @@ import { parseInput } from '../validation.js';
 const idParams = z.object({ id: z.uuid() });
 
 /** The table's item library and owned items (FR-ENT-05, 06). Live item data is collab (M5). */
-export function itemRoutes({ app, db, config, events, now }: AppContext): void {
+export function itemRoutes({ app, db, config, events, now, plugins }: AppContext): void {
   const retention = (): Retention => ({ now: now(), retentionMs: config.softDeleteRetentionMs });
+  const visibleTo = (table: GameTable, membership: Member) =>
+    dataFilter(plugins.definition(table.systemId), membership.role);
 
   app.get('/api/v1/tables/:id/items', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { membership } = requireMember(db, request, id);
+    const { table, membership } = requireMember(db, request, id);
     const query = parseInput(entityListQuery, request.query);
     const access = canManageItemLibrary(membership.role) ? 'owner' : 'observer';
     // The trash lists what the caller could restore.
     if (query.trash === 'restorable' && access !== 'owner') return { items: [] };
     const items = listItems(db, id, { ...query, actorId: null }, retention());
-    return { items: items.map((item) => toItemView(item, access)) };
+    const visible = visibleTo(table, membership);
+    return { items: items.map((item) => toItemView(item, access, visible)) };
   });
 
   app.post('/api/v1/tables/:id/items', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
-    const { table } = requireMember(db, request, id, canManageItemLibrary);
+    const { table, membership } = requireMember(db, request, id, canManageItemLibrary);
     const body = parseInput(createItemBody, request.body);
     requireItemType(writableSystemTypes(db, table), body.type);
 
     const item = createItem(db, { tableId: id, ...body, dataVersion: table.systemVersion }, now());
     publishItemChanged(events, 'created', item, undefined);
-    return reply.code(201).send({ item: toItemView(item, 'owner') });
+    return reply.code(201).send({ item: toItemView(item, 'owner', visibleTo(table, membership)) });
   });
 
   /** Copies a library item into an actor, keeping a link to its source (FR-ENT-05). */
   app.post('/api/v1/actors/:id/items', (request, reply) => {
     const { id } = parseInput(idParams, request.params);
-    const { actor } = requireActor(db, request, id, { edit: true });
+    const { actor, table, membership } = requireActor(db, request, id, { edit: true });
     const { itemId } = parseInput(copyItemBody, request.body);
     const source = findItem(db, itemId);
     if (source?.tableId !== actor.tableId) throw notFound('Item not found.');
@@ -74,23 +83,23 @@ export function itemRoutes({ app, db, config, events, now }: AppContext): void {
       now(),
     );
     publishItemChanged(events, 'created', copy, actor);
-    return reply.code(201).send({ item: toItemView(copy, 'owner') });
+    return reply.code(201).send({ item: toItemView(copy, 'owner', visibleTo(table, membership)) });
   });
 
   app.get('/api/v1/items/:id', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { item, access } = requireItem(db, request, id);
-    return { item: toItemView(item, access) };
+    const { item, access, table, membership } = requireItem(db, request, id);
+    return { item: toItemView(item, access, visibleTo(table, membership)) };
   });
 
   app.patch('/api/v1/items/:id', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access, actor } = requireItem(db, request, id, { edit: true });
+    const { access, actor, table, membership } = requireItem(db, request, id, { edit: true });
     const body = parseInput(updateItemBody, request.body);
     const updated = updateItem(db, id, body, now());
     if (!updated) throw notFound('Item not found.');
     publishItemChanged(events, 'updated', updated, actor);
-    return { item: toItemView(updated, access) };
+    return { item: toItemView(updated, access, visibleTo(table, membership)) };
   });
 
   app.delete('/api/v1/items/:id', (request, reply) => {
@@ -103,7 +112,10 @@ export function itemRoutes({ app, db, config, events, now }: AppContext): void {
 
   app.post('/api/v1/items/:id/restore', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access, actor } = requireItem(db, request, id, { includeDeleted: true, edit: true });
+    const { access, actor, table, membership } = requireItem(db, request, id, {
+      includeDeleted: true,
+      edit: true,
+    });
     const result = restoreItem(db, id, retention());
     if (result === 'not_deleted') throw conflict('not_deleted', 'The item is not deleted.');
     if (result === 'expired') {
@@ -112,6 +124,6 @@ export function itemRoutes({ app, db, config, events, now }: AppContext): void {
     const restored = findItem(db, id);
     if (!restored) throw notFound('Item not found.');
     publishItemChanged(events, 'restored', restored, actor);
-    return { item: toItemView(restored, access) };
+    return { item: toItemView(restored, access, visibleTo(table, membership)) };
   });
 }

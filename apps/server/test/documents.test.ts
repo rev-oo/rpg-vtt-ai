@@ -1,80 +1,38 @@
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { rm } from 'node:fs/promises';
 
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
-import { documentName } from '@vtt/shared';
-
 import { actors, ydocs } from '../src/db/schema.js';
 import { COLLAB_TIMING, type CollabTiming } from '../src/realtime/collab.js';
 
-import {
-  authHeaders,
-  createTable,
-  createTestApp,
-  createUserClient,
-  setupAdmin,
-  type Client,
-  type TestApp,
-} from './support/app.js';
+import type { Client, TestApp } from './support/app.js';
 import { openCollab, type CollabDocument } from './support/collab.js';
-import { copyReferencePlugin } from './support/reference.js';
+import { createActorAs, startWithSystems, systemsDir, tableWithPlayer } from './support/systems.js';
 
 let dataDir: string;
 let t: TestApp;
 let gm: Client;
 let bob: { client: Client; userId: string };
 
-/**
- * Starts the server on `dataDir` with tiny-d20 enabled; given the database of a previous run,
- * it restarts on that data, where sessions are still valid.
- */
-async function start(options: { db?: TestApp['db']; collabTiming?: CollabTiming } = {}) {
-  const app = await createTestApp({ env: { DATA_DIR: dataDir }, ...options });
-  const admin = options.db ? gm : await setupAdmin(app.app);
-  const headers = authHeaders(admin);
-  await app.app.inject({ method: 'POST', url: '/api/v1/plugins/rescan', headers });
-  await app.app.inject({
-    method: 'POST',
-    url: '/api/v1/plugins/tiny-d20/enable',
-    headers,
-    payload: {},
-  });
-  return { app, admin };
+const SYSTEMS = ['tiny-d20'];
+
+/** Restarts the server on the same data, with other timings if given. */
+async function restart(collabTiming?: CollabTiming) {
+  await t.app.close();
+  ({ t } = await startWithSystems(dataDir, SYSTEMS, {
+    db: t.db,
+    admin: gm,
+    ...(collabTiming && { collabTiming }),
+  }));
 }
 
 /** A tiny-d20 character of bob's, with its main and secret document names. */
 async function createCharacter() {
-  const table = await createTable(t.app, gm, { systemId: 'tiny-d20' });
-  bob = await createUserClient(t.app, gm, 'bob');
-  const invite = await t.app.inject({
-    method: 'POST',
-    url: `/api/v1/tables/${table.id}/invites`,
-    headers: authHeaders(gm),
-    payload: { role: 'player' },
-  });
-  const { token } = invite.json<{ token: string }>();
-  await t.app.inject({
-    method: 'POST',
-    url: `/api/v1/invites/${token}/accept`,
-    headers: authHeaders(bob.client),
-  });
-  const res = await t.app.inject({
-    method: 'POST',
-    url: `/api/v1/tables/${table.id}/actors`,
-    headers: authHeaders(bob.client),
-    payload: { type: 'character', name: 'Ayla' },
-  });
-  expect(res.statusCode, res.body).toBe(201);
-  const id = res.json<{ actor: { id: string } }>().actor.id;
-  return {
-    id,
-    main: documentName({ kind: 'actor', id, layer: 'main' }),
-    secret: documentName({ kind: 'actor', id, layer: 'secret' }),
-  };
+  const { table, player } = await tableWithPlayer(t, gm, 'tiny-d20', 'bob');
+  bob = player;
+  return createActorAs(t, bob.client, table.id, 'character', 'Ayla');
 }
 
 const projection = (id: string) =>
@@ -83,11 +41,8 @@ const projection = (id: string) =>
 const data = (document: CollabDocument) => document.doc.getMap('data');
 
 beforeEach(async () => {
-  dataDir = await mkdtemp(path.join(tmpdir(), 'vtt-documents-'));
-  await copyReferencePlugin('tiny-d20', path.join(dataDir, 'plugins', 'tiny-d20'));
-  const started = await start();
-  t = started.app;
-  gm = started.admin;
+  dataDir = await systemsDir(SYSTEMS);
+  ({ t, gm } = await startWithSystems(dataDir, SYSTEMS));
 });
 
 afterEach(async () => {
@@ -156,7 +111,7 @@ describe('document persistence (specs §9.6, T-0502)', () => {
         .sort(),
     ).toEqual([actor.main, actor.secret].sort());
 
-    t = (await start({ db: t.db })).app;
+    ({ t } = await startWithSystems(dataDir, SYSTEMS, { db: t.db, admin: gm }));
     const reopened = await (await openCollab(t.app, bob.client)).open(actor.main);
     const reopenedSecret = await (await openCollab(t.app, gm)).open(actor.secret);
     expect(data(reopened).toJSON()).toEqual(before.main);
@@ -166,9 +121,7 @@ describe('document persistence (specs §9.6, T-0502)', () => {
   });
 
   it('stores while clients stay connected, after the debounce', async () => {
-    await t.app.close();
-    const timing = { ...COLLAB_TIMING, debounceMs: 20, maxDebounceMs: 100 };
-    t = (await start({ db: t.db, collabTiming: timing })).app;
+    await restart({ ...COLLAB_TIMING, debounceMs: 20, maxDebounceMs: 100 });
     const actor = await createCharacter();
     const main = await (await openCollab(t.app, bob.client)).open(actor.main);
     expect(await main.change((doc) => doc.getMap('data').set('dex', 14))).toBe(true);
@@ -177,8 +130,7 @@ describe('document persistence (specs §9.6, T-0502)', () => {
   });
 
   it('keeps an unused document in memory for the unload delay, then unloads it', async () => {
-    await t.app.close();
-    t = (await start({ db: t.db, collabTiming: { ...COLLAB_TIMING, unloadDelayMs: 200 } })).app;
+    await restart({ ...COLLAB_TIMING, unloadDelayMs: 200 });
     const actor = await createCharacter();
     const loaded = () => t.app.collab.hocuspocus.documents.has(actor.main);
 

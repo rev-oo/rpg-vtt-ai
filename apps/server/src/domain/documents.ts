@@ -37,6 +37,16 @@ function actorLayout(db: DbOrTx, actor: Actor, definition: DefinitionOf) {
   return type && { schema: type.schema, layout: documentLayout(type.schema) };
 }
 
+/**
+ * Whether an actor has a secret document: its type declares secret fields. While the system
+ * cannot describe the type, the document stays reachable for the GM, read-only.
+ */
+export function hasSecretLayer(db: DbOrTx, actor: Actor, definition: DefinitionOf): boolean {
+  const table = findTable(db, actor.tableId);
+  if (!table || !definition(table.systemId)) return true;
+  return actorLayout(db, actor, definition)?.layout.secret !== undefined;
+}
+
 /** The fields of one layer; without a layout every value is plain. */
 const layerFields = (layout: DocumentLayout | undefined, layer: DocumentRef['layer']) =>
   (layer === 'secret' ? layout?.secret : layout?.main) ?? {};

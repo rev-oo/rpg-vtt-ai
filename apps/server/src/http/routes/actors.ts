@@ -22,10 +22,12 @@ import {
 import {
   actorAccess,
   actorTypeControl,
+  dataFilter,
   toActorView,
   toItemView,
   writableSystemTypes,
 } from '../../domain/entities.js';
+import type { GameTable, Member } from '../../domain/tables.js';
 import { conflict, forbidden, gone, notFound } from '../../errors.js';
 import { publishActorChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
@@ -42,20 +44,23 @@ const ownedBy = (userId: string): Ownership => ({ default: 'none', users: { [use
 const copyName = (name: string) => `${name} (copy)`.slice(0, MAX_ENTITY_NAME);
 
 /** Actor CRUD, trash and duplication (FR-ENT-01..04). Live sheet data is collab (M5). */
-export function actorRoutes({ app, db, config, events, now }: AppContext): void {
+export function actorRoutes({ app, db, config, events, now, plugins }: AppContext): void {
   const retention = (): Retention => ({ now: now(), retentionMs: config.softDeleteRetentionMs });
+  const visibleTo = (table: GameTable, membership: Member) =>
+    dataFilter(plugins.definition(table.systemId), membership.role);
 
   app.get('/api/v1/tables/:id/actors', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { membership } = requireMember(db, request, id);
+    const { table, membership } = requireMember(db, request, id);
     const query = parseInput(entityListQuery, request.query);
     const subject = { userId: membership.userId, role: membership.role };
+    const visible = visibleTo(table, membership);
 
     const actors = listActors(db, id, query, retention()).flatMap((actor) => {
       const access = actorAccess(subject, actor);
       // The trash lists what the caller could restore.
       if (!access || (query.trash === 'restorable' && access !== 'owner')) return [];
-      return [toActorView(actor, access)];
+      return [toActorView(actor, access, visible)];
     });
     return { actors };
   });
@@ -86,18 +91,20 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
       now(),
     );
     publishActorChanged(events, 'created', actor);
-    return reply.code(201).send({ actor: toActorView(actor, 'owner') });
+    return reply
+      .code(201)
+      .send({ actor: toActorView(actor, 'owner', visibleTo(table, membership)) });
   });
 
   app.get('/api/v1/actors/:id', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { actor, access } = requireActor(db, request, id);
-    return { actor: toActorView(actor, access) };
+    const { actor, access, table, membership } = requireActor(db, request, id);
+    return { actor: toActorView(actor, access, visibleTo(table, membership)) };
   });
 
   app.patch('/api/v1/actors/:id', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { actor, membership, subject } = requireActor(db, request, id, { edit: true });
+    const { actor, table, membership, subject } = requireActor(db, request, id, { edit: true });
     const body = parseInput(updateActorBody, request.body);
     if (body.ownership && !canSetOwnership(membership.role)) {
       throw forbidden('Only the GM can change ownership.');
@@ -107,7 +114,13 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
     if (!updated) throw notFound('Actor not found.');
     publishActorChanged(events, 'updated', updated, actor.ownership);
     // Only GMs change ownership, and they are implicit owners (FR-ENT-03), so the editor keeps access.
-    return { actor: toActorView(updated, actorAccess(subject, updated) ?? 'owner') };
+    return {
+      actor: toActorView(
+        updated,
+        actorAccess(subject, updated) ?? 'owner',
+        visibleTo(table, membership),
+      ),
+    };
   });
 
   app.delete('/api/v1/actors/:id', (request, reply) => {
@@ -120,7 +133,10 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
 
   app.post('/api/v1/actors/:id/restore', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access } = requireActor(db, request, id, { includeDeleted: true, edit: true });
+    const { access, table, membership } = requireActor(db, request, id, {
+      includeDeleted: true,
+      edit: true,
+    });
     const result = restoreActor(db, id, retention());
     if (result === 'not_deleted') throw conflict('not_deleted', 'The actor is not deleted.');
     if (result === 'expired') {
@@ -129,7 +145,7 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
     const restored = findActor(db, id);
     if (!restored) throw notFound('Actor not found.');
     publishActorChanged(events, 'restored', restored);
-    return { actor: toActorView(restored, access) };
+    return { actor: toActorView(restored, access, visibleTo(table, membership)) };
   });
 
   app.post('/api/v1/actors/:id/duplicate', (request, reply) => {
@@ -178,15 +194,18 @@ export function actorRoutes({ app, db, config, events, now }: AppContext): void 
       return created;
     });
     publishActorChanged(events, 'created', copy);
-    return reply.code(201).send({ actor: toActorView(copy, 'owner') });
+    return reply
+      .code(201)
+      .send({ actor: toActorView(copy, 'owner', visibleTo(table, membership)) });
   });
 
   app.get('/api/v1/actors/:id/items', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { actor, access } = requireActor(db, request, id);
+    const { actor, access, table, membership } = requireActor(db, request, id);
     const query = parseInput(entityListQuery, request.query);
     if (query.trash === 'restorable' && access !== 'owner') return { items: [] };
     const items = listItems(db, actor.tableId, { ...query, actorId: actor.id }, retention());
-    return { items: items.map((item) => toItemView(item, access)) };
+    const visible = visibleTo(table, membership);
+    return { items: items.map((item) => toItemView(item, access, visible)) };
   });
 }

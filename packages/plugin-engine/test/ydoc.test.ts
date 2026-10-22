@@ -3,7 +3,14 @@ import * as Y from 'yjs';
 
 import type { FieldSchema } from '@vtt/plugin-schema';
 
-import { documentLayout, mergeLayers, readLayer, splitLayers, writeLayer } from '../src/index.js';
+import {
+  documentLayout,
+  mergeLayers,
+  readLayer,
+  splitLayers,
+  withoutSecrets,
+  writeLayer,
+} from '../src/index.js';
 
 /** A schema with every kind of field (specs §8.4), and secret fields at several depths. */
 const SCHEMA: FieldSchema = {
@@ -142,6 +149,19 @@ describe('JSON ↔ Yjs mapping (specs §9.2, T-0504)', () => {
     expect(main).toEqual(odd);
     expect(secret).toEqual({ hp: 'full', skills: { s1: 'not a row' } });
     expect(roundTrip(layout.main, main).data).toEqual(odd);
+  });
+
+  it('removes secret fields from a schema at every depth', () => {
+    const stripped = withoutSecrets(SCHEMA);
+    expect(Object.keys(stripped.properties ?? {})).not.toContain('gmNotes');
+    expect(Object.keys(stripped.properties?.hp?.properties ?? {})).toEqual(['value', 'max']);
+    expect(Object.keys(stripped.properties?.skills?.items?.properties ?? {})).toEqual([
+      'name',
+      'rank',
+      'note',
+    ]);
+    // What remains is the main document's layout.
+    expect(documentLayout(stripped)).toEqual({ main: layout.main, secret: undefined });
   });
 
   it('has no secret document for a type without secret fields', () => {

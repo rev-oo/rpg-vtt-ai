@@ -50,6 +50,8 @@ export interface CollabSocket {
    */
   drop: () => Promise<void>;
   closed: Promise<number>;
+  /** Every frame the socket received, for any document, as sent. */
+  received: Uint8Array[];
 }
 
 function waitFor<T>(what: string, register: (resolve: (value: T) => void) => void): Promise<T> {
@@ -81,8 +83,10 @@ export async function openCollab(
     headers: { ...(client && { cookie: client.cookie }), ...headers },
   });
   const documents = new Map<string, (frame: Uint8Array) => void>();
+  const received: Uint8Array[] = [];
   ws.on('message', (data: Buffer) => {
     const frame = new Uint8Array(data);
+    received.push(frame);
     const name = decoding.readVarString(decoding.createDecoder(frame));
     documents.get(name)?.(frame);
   });
@@ -182,5 +186,5 @@ export async function openCollab(
     await closed;
   };
 
-  return { ws, open, drop, closed };
+  return { ws, open, drop, closed, received };
 }

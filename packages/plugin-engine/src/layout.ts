@@ -1,4 +1,4 @@
-import type { FieldSchema } from '@vtt/plugin-schema';
+import type { FieldSchema, PluginDefinition } from '@vtt/plugin-schema';
 
 import { isCollection } from './data.js';
 
@@ -72,4 +72,36 @@ export function documentLayout(schema: FieldSchema): DocumentLayout {
     main: split(schema, 'main'),
     secret: Object.keys(secret).length > 0 ? secret : undefined,
   };
+}
+
+/**
+ * A type's schema without its secret fields (specs §9.1): what a player's view of the type
+ * declares. Formulas run against it cannot reach secret fields, not even their defaults.
+ */
+export function withoutSecrets(schema: FieldSchema): FieldSchema {
+  const { properties, items, ...rest } = schema;
+  const kept =
+    properties &&
+    Object.fromEntries(
+      Object.entries(properties)
+        .filter(([, field]) => field['x-layer'] !== 'secret')
+        .map(([name, field]) => [name, withoutSecrets(field)]),
+    );
+  return {
+    ...rest,
+    ...(kept && { properties: kept }),
+    ...(items && { items: withoutSecrets(items) }),
+  };
+}
+
+/** A plugin as a player sees it: every actor and item type {@link withoutSecrets}. */
+export function playerDefinition(plugin: PluginDefinition): PluginDefinition {
+  const strip = <T extends { schema: FieldSchema }>(types: Record<string, T>) =>
+    Object.fromEntries(
+      Object.entries(types).map(([name, type]) => [
+        name,
+        { ...type, schema: withoutSecrets(type.schema) },
+      ]),
+    );
+  return { ...plugin, actorTypes: strip(plugin.actorTypes), itemTypes: strip(plugin.itemTypes) };
 }

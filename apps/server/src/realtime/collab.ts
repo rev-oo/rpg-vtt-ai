@@ -15,7 +15,12 @@ import {
 import type { DbOrTx } from '../db/client.js';
 import { findActor, findJournalEntry } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
-import { loadDocument, storeDocument, type DefinitionOf } from '../domain/documents.js';
+import {
+  hasSecretLayer,
+  loadDocument,
+  storeDocument,
+  type DefinitionOf,
+} from '../domain/documents.js';
 import { isSystemWritable } from '../domain/entities.js';
 import { findMembership, findTable } from '../domain/tables.js';
 import type { AppContext } from '../http/app.js';
@@ -55,11 +60,18 @@ function entityAccess(db: DbOrTx, userId: string, tableId: string, grant: Grant)
 /**
  * A user's access to a collaborative document (specs §9.3). Unknown and deleted entities and
  * non-members get `none`; a table whose system is unavailable is read-only (FR-PLUGIN-07).
+ * An actor has a secret document only if its type declares secret fields (§9.1).
  */
-export function documentAccess(db: DbOrTx, userId: string, ref: DocumentRef): DocumentAccess {
+export function documentAccess(
+  db: DbOrTx,
+  userId: string,
+  ref: DocumentRef,
+  definition: DefinitionOf,
+): DocumentAccess {
   if (ref.kind === 'actor') {
     const actor = findActor(db, ref.id);
     if (!actor) return 'none';
+    if (ref.layer === 'secret' && !hasSecretLayer(db, actor, definition)) return 'none';
     return entityAccess(db, userId, actor.tableId, (subject) =>
       actorLayerAccess(subject, actor.ownership, ref.layer),
     );
@@ -129,7 +141,7 @@ function createHocuspocus(
   function check(context: CollabContext, documentName: string): DocumentAccess | 'no_session' {
     if (!sessions.validate(context.sessionToken)) return 'no_session';
     const ref = parseDocumentName(documentName);
-    return ref ? documentAccess(db, context.userId, ref) : 'none';
+    return ref ? documentAccess(db, context.userId, ref, definition) : 'none';
   }
   function deny(context: CollabContext, documentName: string, reason: string): void {
     logger.warn({ userId: context.userId, documentName, reason }, 'collab access denied');
