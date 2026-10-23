@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M2    | Entities & realtime: actors, items, events socket, chat       | Done        | 100%     | —      |
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
-| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | In progress | 42%      | —      |
+| M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M5
-- **Next task:** `T-0506`
+- **Active milestone:** M6
+- **Next task:** `T-0601`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -75,6 +75,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0504 and T-0502 implemented (JSON ↔ Yjs mapping in `@vtt/plugin-engine`, `ydocs` persistence and projection). ADR-029 added.                |
 | 2026-10-22 | T-0503 implemented (secret layer kept out of player sockets, views and formulas). ADR-030 added.                                              |
 | 2026-10-22 | T-0505 implemented (`adjust` and repair on persist over collab stateless messages). ADR-031 added.                                            |
+| 2026-10-22 | T-0506 implemented (live actor sheets in the web app over Yjs). ADR-032 added.                                                                |
+| 2026-10-22 | T-0507 implemented (presence outlines and name badges on sheet fields). ADR-033 added.                                                        |
+| 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                        |
+| 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
+| 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
+| 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                        |
+| 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                               |
+| 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                     |
+| 2026-10-23 | PR #11 merged. M5 signed off as done. Active milestone is now M6.                                                                             |
 
 ---
 
@@ -552,7 +561,7 @@ Rules for the schema subset:
 
 - Supported keywords: `type` (string, integer, number, boolean, object, array), `properties`, `items`, `default`, `enum`, `minimum`, `maximum`, `minLength`, `maxLength`, `required`, `description`.
 - Unsupported keywords (`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `patternProperties`, `if`/`then`) are rejected by the validator with a clear message. Composition is added in a later `coreApi` version.
-- `x-kind` values: `longText` (Yjs `Y.Text`), `collection` (id-keyed map, see §9.4), `richText` (journal only), `image` (URL string with preview).
+- `x-kind` values: `longText` (Yjs `Y.Text`, plain text), `collection` (id-keyed map, see §9.4), `richText` (Yjs `Y.XmlFragment` edited with TipTap; its JSON value is its plain text, ADR-037), `image` (URL string with preview).
 - `x-counter: true` marks a number as adjustable with `adjust` deltas.
 - `x-layer: "secret"` moves the field to the secret layer (GM and assistant only).
 - `derived` maps names to formulas. Derived values are never stored.
@@ -561,21 +570,21 @@ Rules for the schema subset:
 
 A sheet is a tree of nodes. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
 
-| Node            | Props                                                                        | Notes                                                 |
-| --------------- | ---------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                       |
-| `column`        | `children`, `gap`                                                            | Vertical flex                                         |
-| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                         |
-| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                   |
-| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                          |
-| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation             |
-| `longText`      | `path`, `label`                                                              | Collaborative rich text editor for `x-kind: longText` |
-| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder        |
-| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                  |
-| `derived`       | `key`, `format`                                                              | Displays a derived value                              |
-| `image`         | `path`, `size`                                                               | Shows portrait/image                                  |
-| `text`          | `text` (lang key or literal)                                                 | Static text                                           |
-| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`            |
+| Node            | Props                                                                        | Notes                                                                          |
+| --------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                                                |
+| `column`        | `children`, `gap`                                                            | Vertical flex                                                                  |
+| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                                                  |
+| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                                            |
+| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                                                   |
+| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation                                      |
+| `longText`      | `path`, `label`                                                              | Collaborative text editor for `x-kind: longText` and `richText` (rich: TipTap) |
+| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder                                 |
+| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                                           |
+| `derived`       | `key`, `format`                                                              | Displays a derived value                                                       |
+| `image`         | `path`, `size`                                                               | Shows portrait/image                                                           |
+| `text`          | `text` (lang key or literal)                                                 | Static text                                                                    |
+| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`                                     |
 
 Field `path` uses dot notation for objects. Inside `list`, `path` is relative to the row, and `@row.id` is available in `args`.
 
@@ -777,6 +786,7 @@ Parsing the name is the only way the auth hook derives the entity and layer; the
 ```
 actor:<id>:main
  ├─ data   Y.Map   schema fields: scalars/objects → nested Y.Map; x-kind longText → Y.Text;
+ │                 x-kind richText → Y.XmlFragment (TipTap blocks, ADR-037);
  │                 collection → Y.Map keyed by row id; each row has a `sort` value
  └─ items  Y.Map   owned items keyed by id: { type, name, sourceId, sort, data… }
 ```
@@ -794,7 +804,7 @@ Notes:
 
 - The server re-checks permissions on every incoming update, not only on connect.
 - Secret layer state is never broadcast to clients without access. Hocuspocus is configured so that unauthorised connections never receive the document.
-- Ownership changes take effect immediately: connected clients whose access drops are disconnected from the document.
+- Ownership changes take effect immediately: connected clients whose access drops are disconnected from the document (ADR-036).
 
 ### 9.4 Collections
 
@@ -1205,40 +1215,47 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** concurrent `adjust(-3)` from two clients yields a net −6.
   - **Note:** stateless messages on the document (`collabClientMessage`/`collabServerMessage` in `@vtt/shared/api`); `repairLayer` and `adjustCounter` in `packages/plugin-engine/src/ydoc.ts`. Tested in `apps/server/test/sheet-data.test.ts` and `packages/plugin-engine/test/repair.test.ts` (ADR-031).
 
-- [ ] **T-0506 · Sheet store and binding in web app**
+- [x] **T-0506 · Sheet store and binding in web app**
   - **Deps:** T-0504, T-0408
   - **Do:** `apps/web/src/collab` implements `SheetStore` over Yjs; `field`, `list`, `longText` nodes bind to it; read-only mode for observers (FR-SHEET-03).
   - **Done when:** two browsers edit one sheet and see each other's changes within 500 ms (e2e).
+  - **Note:** `createYjsStore` and `useLiveSheet` in `apps/web/src/collab`, tested in `apps/web/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`. `longText` still replaces the whole text until T-0510 (ADR-032).
 
-- [ ] **T-0507 · Presence and awareness**
+- [x] **T-0507 · Presence and awareness**
   - **Deps:** T-0506
   - **Do:** Yjs awareness for focused fields; colored outline and name badge (FR-SHEET-02).
   - **Done when:** e2e confirms the badge appears on the other client within 1 s of focus.
+  - **Note:** `useSheetPresence` in `apps/web/src/collab/presence.ts` and the renderer's `presence` prop; awareness carries user ids only, names and colors come from the members (ADR-033). Tested in `apps/web/test/presence.test.ts`, the renderer tests and `e2e/tests/live-sheets.spec.ts`.
 
-- [ ] **T-0508 · Collection reorder under concurrency**
+- [x] **T-0508 · Collection reorder under concurrency**
   - **Deps:** T-0506
   - **Do:** `sort` fractional index updates for reorder; add/remove via keyed map (FR-SHEET-06).
   - **Done when:** concurrent add and reorder from two clients produce no duplicates and no lost rows (property test with two Y.Doc instances).
+  - **Note:** `apps/web/test/collab-concurrency.test.ts`. The test found rows lost when two clients created a missing collection map at once; the server now creates every map on load (`ensureContainers`, ADR-034).
 
-- [ ] **T-0509 · Derived values live**
+- [x] **T-0509 · Derived values live**
   - **Deps:** T-0506, T-0302
   - **Do:** Derived fields recompute on every change in both clients and on the server for rolls (FR-SHEET-05).
   - **Done when:** changing `str` updates `strMod` in a second browser without refresh.
+  - **Note:** clients compute derived values from the live store (`e2e/tests/live-sheets.spec.ts`). Rolls read an actor's loaded live documents before the projection (`liveActorData` in `apps/server/src/domain/documents.ts`, tested in `apps/server/test/sheet-data.test.ts`), as §9.6 asks.
 
-- [ ] **T-0510 · Long text collaboration**
+- [x] **T-0510 · Long text collaboration**
   - **Deps:** T-0506
   - **Do:** Editor bound to `Y.Text` for `longText` fields and journal bodies (FR-SHEET-07, FR-JOURNAL-01, 04). Use TipTap with the Collaboration extension, or a minimal editor if TipTap is deferred.
   - **Done when:** two clients type simultaneously into one note without loss.
+  - **Note:** `longText` uses a minimal editor: `SharedTextarea` in `packages/sheet-renderer/src/text.tsx` over `SheetStore.text()`, where the Yjs store wraps the field's `Y.Text` (ADR-035). `richText` uses TipTap with the Collaboration extension over a `Y.XmlFragment` (Q3, ADR-037): `apps/web/src/collab/RichTextEditor.tsx`, rendered through `<Sheet renderRichText>`. Journal bodies reuse it with T-0601. Tested in the renderer, `apps/web/test/collab.test.ts`, `apps/web/test/rich-text.test.tsx` and `e2e/tests/live-sheets.spec.ts`.
 
-- [ ] **T-0511 · Phone layout for sheets**
+- [x] **T-0511 · Phone layout for sheets**
   - **Deps:** T-0506
   - **Do:** Sheet windows become full-screen routes below 768 px with bottom bar (Chat / Sheet / Dice) (FR-SHEET-10, NFR-10).
   - **Done when:** Playwright mobile viewport test passes with no horizontal scroll.
+  - **Note:** on the sheet route below 768 px (`max-md`), `apps/web/src/routes/table.tsx` hides the table header and chat and shows a Chat / Sheet / Dice bar; hidden panes stay mounted so the sheet stays live. The dice pane (`features/table/DicePane.tsx`) rolls common dice or a formula as the sheet's actor. The app header stays. Tested in `e2e/tests/phone-sheets.spec.ts` at 360 px.
 
-- [ ] **T-0512 · Document access revocation**
+- [x] **T-0512 · Document access revocation**
   - **Deps:** T-0501, T-0110
   - **Do:** When membership or ownership changes, disconnect affected sockets from documents (§9.3).
   - **Done when:** a removed member's open sheet becomes inaccessible within 2 s (e2e).
+  - **Note:** every open connection is re-checked after each successful mutating request and every 30 s; lost access closes the document, read/write changes reach the client as `access` messages (ADR-036). Tested in `apps/server/test/collab.test.ts` and `e2e/tests/live-sheets.spec.ts`.
 
 ### M6 — Journal, members, settings, administration
 
@@ -1346,7 +1363,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------- |
 | Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                      | T-0411+, FR-PLUGIN-08 | Trusted only; admin confirmation                                                                               |
 | Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                         | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                    |
-| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | TipTap (Collaboration extension)                                                                               |
+| Q3  | TipTap for rich text, or a lighter editor?                                                                                                               | T-0510                | **Decided:** TipTap for `richText`; `longText` keeps the plain shared textarea (ADR-035, ADR-037)              |
 | Q4  | Email-based invites, or link-only?                                                                                                                       | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                    |
 | Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                 | T-0412, T-0702        | Required, to validate the API                                                                                  |
 | Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                            | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                |
@@ -1407,6 +1424,12 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-029 | [Document persistence and the Yjs mapping: ydocs, projection, unload delay](docs/adr/ADR-029-document-persistence.md)                           | Accepted |
 | ADR-030 | [Secret layer: filtered views and formulas, secret documents only for secret fields](docs/adr/ADR-030-secret-layer.md)                          | Accepted |
 | ADR-031 | [Counter adjustments and data repair over collab stateless messages](docs/adr/ADR-031-adjust-and-repair.md)                                     | Accepted |
+| ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted |
+| ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted |
+| ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted |
+| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted |
+| ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
+| ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

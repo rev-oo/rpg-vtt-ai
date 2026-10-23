@@ -4,10 +4,12 @@ import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 
+import type { ChatMessage } from '@vtt/shared/api';
+
 import { actors, plugins } from '../src/db/schema.js';
 import { COLLAB_TIMING } from '../src/realtime/collab.js';
 
-import type { Client, TestApp } from './support/app.js';
+import { authHeaders, type Client, type TestApp } from './support/app.js';
 import { openCollab, type CollabDocument } from './support/collab.js';
 import { createActorAs, startWithSystems, systemsDir, tableWithPlayer } from './support/systems.js';
 
@@ -79,6 +81,8 @@ describe('adjust (FR-SHEET-08, specs §9.5, T-0505)', () => {
     // While the system is unavailable the sheet is read-only, adjustments included.
     t.db.update(plugins).set({ enabled: false }).where(eq(plugins.id, 'tiny-d20')).run();
     bobMain.send({ type: 'adjust', id: 'ro', path: ['hp', 'value'], delta: -1 });
+    // The client first hears that its access dropped, then why the adjustment failed.
+    expect(await bobMain.next()).toEqual({ type: 'access', readOnly: true });
     expect(await bobMain.next()).toEqual({ type: 'error', id: 'ro', code: 'read_only' });
     expect(hp(bobMain)).toBe(10);
   });
@@ -125,3 +129,25 @@ const settle = () =>
       resolve('quiet');
     }, 300),
   );
+
+describe('rolls read the live sheet (specs §9.6, T-0509)', () => {
+  it('uses edits the store has not saved yet', async () => {
+    // The default debounce: the change stays unsaved during the test.
+    await t.app.close();
+    ({ t } = await startWithSystems(dataDir, SYSTEMS, { db: t.db, admin: gm }));
+    const { table, player: bob } = await tableWithPlayer(t, gm, 'tiny-d20', 'lena');
+    const actor = await createActorAs(t, bob.client, table.id, 'character', 'Ayla');
+    const main = await (await openCollab(t.app, bob.client)).open(actor.main);
+    expect(await main.change((doc) => doc.getMap('data').set('str', 18))).toBe(true);
+    expect(projection(actor.id)).not.toMatchObject({ str: 18 });
+
+    const res = await t.app.inject({
+      method: 'POST',
+      url: `/api/v1/tables/${table.id}/rolls`,
+      headers: authHeaders(bob.client),
+      payload: { formula: '1d20 + @str', actorId: actor.id },
+    });
+    expect(res.statusCode, res.body).toBe(201);
+    expect(res.json<{ message: ChatMessage }>().message.rolls[0]?.resolved).toBe('1d20 + 18');
+  });
+});

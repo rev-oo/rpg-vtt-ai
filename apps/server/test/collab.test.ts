@@ -201,3 +201,62 @@ describe('document access (§9.3)', () => {
     expect(await owner.closed).toBe('Unauthorized');
   });
 });
+
+describe('access revocation (§9.3, T-0512)', () => {
+  it('closes the documents of a removed member who only listens', async () => {
+    const t = await setupTable();
+    const actorId = await createActor(t);
+    const carol = await openAs(t, t.carol, actorDoc(actorId));
+    expect(carol.auth).toEqual({ scope: 'readonly' });
+
+    const removed = await t.app.inject({
+      method: 'DELETE',
+      url: `/api/v1/tables/${t.table.id}/members/${t.carol.userId}`,
+      headers: authHeaders(t.gm.client),
+    });
+    expect(removed.statusCode).toBe(204);
+    expect(await carol.closed).toBe('Forbidden');
+
+    // Nothing more reaches her copy.
+    const bob = await openAs(t, t.bob, actorDoc(actorId));
+    const frames = carol.frames.length;
+    expect(await bob.change(setHp(3))).toBe(true);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(carol.frames.length).toBe(frames);
+  });
+
+  it('tells a listening client when ownership moves it between read and write', async () => {
+    const t = await setupTable();
+    const actorId = await createActor(t);
+    const bob = await openAs(t, t.bob, actorDoc(actorId));
+    const carol = await openAs(t, t.carol, actorDoc(actorId));
+    const ownership = (users: Record<string, string>) =>
+      t.call(t.gm.client, 'PATCH', `/actors/${actorId}`, {
+        ownership: { default: 'observer', users },
+      });
+
+    await ownership({ [t.carol.userId]: 'owner' });
+    expect(await bob.next()).toEqual({ type: 'access', readOnly: true });
+    expect(await carol.next()).toEqual({ type: 'access', readOnly: false });
+    expect(await bob.change(setHp(1))).toBe(false);
+    expect(await carol.change(setHp(2))).toBe(true);
+
+    // Deleting the actor closes its documents for everyone.
+    await t.call(t.gm.client, 'DELETE', `/actors/${actorId}`);
+    expect(await bob.closed).toBe('Forbidden');
+    expect(await carol.closed).toBe('Forbidden');
+  });
+
+  it('closes the documents of a session that ended elsewhere', async () => {
+    const t = await setupTable();
+    const bob = await openAs(t, t.bob, actorDoc(await createActor(t)));
+    // Bob logs out in another tab; this socket sends nothing meanwhile.
+    const logout = await t.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout',
+      headers: authHeaders(t.bob.client),
+    });
+    expect(logout.statusCode).toBe(204);
+    expect(await bob.closed).toBe('Unauthorized');
+  });
+});

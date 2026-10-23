@@ -1,7 +1,7 @@
 import { useMemo, type ComponentType, type ReactElement } from 'react';
 
 import type { Value } from '@vtt/formula';
-import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
+import type { SheetNode } from '@vtt/plugin-schema';
 import {
   ClientSheetContext,
   type ClientSheet,
@@ -14,13 +14,17 @@ import {
   useSheet,
   valueAt,
   type CustomNodeProps,
+  type RichTextRenderer,
   type RollHandler,
+  type SheetPresence,
+  type SheetStore,
   type SheetStrings,
 } from '@vtt/sheet-renderer';
 import { Alert } from '@vtt/ui';
 
 import { t } from '../i18n/index.js';
 
+import { entityType } from './entity-type.js';
 import { PluginBoundary } from './PluginBoundary.js';
 import type { TableSystem } from './system-context.js';
 
@@ -87,12 +91,18 @@ export interface PluginSheetProps {
   readOnly: boolean;
   /** GMs and assistants see secret fields (FR-SHEET-04). */
   secret: boolean;
+  /** The live data (M5); without it the sheet shows the stored data in a memory store. */
+  store?: SheetStore | undefined;
+  /** Other viewers' focus on a live sheet (FR-SHEET-02). */
+  presence?: SheetPresence | undefined;
+  /** The editor of `richText` fields on a live sheet (ADR-037). */
+  renderRichText?: RichTextRenderer | undefined;
   onRoll?: RollHandler | undefined;
 }
 
 /**
  * An entity's sheet from its system plugin (T-0409), with the plugin's texts, scoped CSS and
- * custom nodes. Until live sheets (M5) it shows the stored data in a memory store.
+ * custom nodes, over the live store when there is one.
  */
 export function PluginSheet({
   host,
@@ -100,18 +110,18 @@ export function PluginSheet({
   kind,
   readOnly,
   secret,
+  store: live,
+  presence,
+  renderRichText,
   onRoll,
 }: PluginSheetProps): ReactElement {
   const { system, rules, translate } = host;
   const { definition, client } = system;
-  const types: Record<
-    string,
-    { schema: FieldSchema; derived?: Record<string, string> | undefined; sheet: string }
-  > = kind === 'actor' ? definition.actorTypes : definition.itemTypes;
-  const type = Object.hasOwn(types, actor.type) ? types[actor.type] : undefined;
+  const type = entityType(definition, kind, actor.type);
   const layout: SheetNode | undefined = type && definition.sheets[type.sheet]?.layout;
 
-  const store = useMemo(() => createMemoryStore(actor.system), [actor.system]);
+  const stored = useMemo(() => createMemoryStore(actor.system), [actor.system]);
+  const store = live ?? stored;
   const nodes = useMemo(() => {
     const sheetActor = { id: actor.id, name: actor.name, type: actor.type };
     return Object.fromEntries(
@@ -141,6 +151,8 @@ export function PluginSheet({
         translate={translate}
         strings={strings()}
         nodes={nodes}
+        {...(presence && { presence })}
+        {...(renderRichText && { renderRichText })}
         {...(onRoll && { onRoll })}
       />
     </div>

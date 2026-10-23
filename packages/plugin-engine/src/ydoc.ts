@@ -15,12 +15,66 @@ type Fields = Record<string, FieldLayout>;
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
+/** One paragraph of rich text per line of `text`. */
+function paragraphs(text: string): Y.XmlElement[] {
+  return text.split('\n').map((line) => {
+    const paragraph = new Y.XmlElement('paragraph');
+    if (line) paragraph.insert(0, [new Y.XmlText(line)]);
+    return paragraph;
+  });
+}
+
+/**
+ * A `richText` field's content (ADR-037): a `Y.XmlFragment` of the editor's blocks, each line
+ * of `text` a paragraph.
+ */
+export function richTextOf(text: string): Y.XmlFragment {
+  const fragment = new Y.XmlFragment();
+  fragment.insert(0, paragraphs(text));
+  return fragment;
+}
+
+/** Replaces a rich text's content with `text`, one paragraph per line, dropping its formatting. */
+export function replaceRichText(fragment: Y.XmlFragment, text: string): void {
+  fragment.delete(0, fragment.length);
+  fragment.insert(0, paragraphs(text));
+}
+
+/**
+ * The plain text of a rich text (ADR-037), its JSON value: the text of each block, blocks on
+ * their own lines and hard breaks as line breaks. Formatting stays in the document only.
+ */
+export function plainText(node: Y.XmlFragment | Y.XmlText): string {
+  if (node instanceof Y.XmlText) {
+    const delta: unknown = node.toDelta();
+    if (!Array.isArray(delta)) return '';
+    return delta
+      .map((op: unknown) => (isRecord(op) && typeof op.insert === 'string' ? op.insert : ''))
+      .join('');
+  }
+  if (node instanceof Y.XmlElement && node.nodeName === 'hardBreak') return '\n';
+  const children = node
+    .toArray()
+    .filter((child) => child instanceof Y.XmlFragment || child instanceof Y.XmlText);
+  const inline = children.some(
+    (child) =>
+      child instanceof Y.XmlText ||
+      (child instanceof Y.XmlElement && child.nodeName === 'hardBreak'),
+  );
+  return children.map((child) => plainText(child)).join(inline ? '' : '\n');
+}
+
+/** The shared type a text field lives in: `Y.Text`, or `Y.XmlFragment` for rich text. */
+function textOf(layout: { rich: boolean }, text: string): Y.Text | Y.XmlFragment {
+  return layout.rich ? richTextOf(text) : new Y.Text(text);
+}
+
 /**
  * The Yjs value of one field (specs §9.2). Values that do not fit their layout, such as a
  * number where text is expected, stay plain values: repairing them is the store's job (§9.7).
  */
 function toYjs(layout: FieldLayout | undefined, value: unknown): unknown {
-  if (layout?.kind === 'text' && typeof value === 'string') return new Y.Text(value);
+  if (layout?.kind === 'text' && typeof value === 'string') return textOf(layout, value);
   if (layout?.kind === 'map' && isRecord(value)) return toYMap(layout.fields, value);
   if (layout?.kind === 'collection' && isRecord(value)) {
     const rows = Object.entries(value).map(([id, row]): [string, unknown] => [
@@ -39,8 +93,8 @@ function toYMap(fields: Fields, data: LayerData): Y.Map<unknown> {
 }
 
 /**
- * Writes JSON data into a document's `data` map (specs §9.2): text fields become `Y.Text`,
- * objects nested `Y.Map`s and collections `Y.Map`s of rows keyed by id. Keys the layout does
+ * Writes JSON data into a document's `data` map (specs §9.2): text fields become `Y.Text`
+ * (rich text `Y.XmlFragment`), objects nested `Y.Map`s and collections `Y.Map`s of rows keyed by id. Keys the layout does
  * not know are kept as plain values.
  */
 export function writeLayer(map: Y.Map<unknown>, fields: Fields, data: LayerData): void {
@@ -51,6 +105,7 @@ export function writeLayer(map: Y.Map<unknown>, fields: Fields, data: LayerData)
 
 function fromYjs(layout: FieldLayout | undefined, value: unknown): unknown {
   if (value instanceof Y.Text) return value.toJSON();
+  if (value instanceof Y.XmlFragment) return plainText(value);
   if (value instanceof Y.Map) {
     if (layout?.kind === 'collection') {
       return Object.fromEntries(
@@ -64,6 +119,37 @@ function fromYjs(layout: FieldLayout | undefined, value: unknown): unknown {
   }
   if (value instanceof Y.AbstractType) return value.toJSON() as unknown;
   return value;
+}
+
+/**
+ * Creates the shared types every field needs that `map` lacks: the maps of objects and
+ * collections and the texts of `longText` and `richText` fields, at every depth outside
+ * collection rows. Two clients creating the same missing type at once would each make their
+ * own, and one of them, with what was written into it, would be lost; so the server creates
+ * them when it loads a document, before clients edit it (specs §9.4). A text stored as the
+ * other kind, after a field moved between `longText` and `richText`, is converted with its
+ * plain text (ADR-037).
+ */
+export function ensureContainers(map: Y.Map<unknown>, fields: Fields): void {
+  for (const [key, layout] of Object.entries(fields)) {
+    if (layout.kind === 'value') continue;
+    let child: unknown = map.get(key);
+    if (layout.kind === 'text') {
+      const current = child instanceof Y.Text || child instanceof Y.XmlFragment ? child : undefined;
+      const fits = layout.rich ? current instanceof Y.XmlFragment : current instanceof Y.Text;
+      if (child === undefined || (current && !fits)) {
+        const text =
+          current instanceof Y.Text ? current.toJSON() : current ? plainText(current) : '';
+        map.set(key, textOf(layout, text));
+      }
+      continue;
+    }
+    if (child === undefined) {
+      child = new Y.Map<unknown>();
+      map.set(key, child);
+    }
+    if (layout.kind === 'map' && child instanceof Y.Map) ensureContainers(child, layout.fields);
+  }
 }
 
 /** Reads a document's `data` map back as JSON, the inverse of {@link writeLayer}. */
@@ -146,6 +232,8 @@ function shapeIssue(field: FieldSchema, value: unknown): DataIssueReason | undef
     return value instanceof Y.Map ? undefined : 'type';
   }
   if (layout.kind === 'text') {
+    if (layout.rich)
+      return value instanceof Y.XmlFragment ? valueIssue(field, plainText(value)) : 'type';
     return value instanceof Y.Text ? valueIssue(field, value.toJSON()) : 'type';
   }
   return value instanceof Y.AbstractType ? 'type' : valueIssue(field, value);

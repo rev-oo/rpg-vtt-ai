@@ -19,7 +19,7 @@ import { AppError, notFound } from '../errors.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
 
-import { MAX_COLLAB_MESSAGE_BYTES } from './collab.js';
+import { liveDataOf, MAX_COLLAB_MESSAGE_BYTES } from './collab.js';
 import { EventHub, SESSION_ENDED, type Connection } from './hub.js';
 import { membersOf, publishChatMessage } from './notify.js';
 import { upgradeGuard } from './upgrade.js';
@@ -70,6 +70,7 @@ export function eventsSocket({
   now,
   rng,
   plugins,
+  collab,
 }: AppContext): void {
   app.get(
     '/ws/events',
@@ -156,7 +157,12 @@ export function eventsSocket({
               db,
               { tableId: event.tableId, userId: connection.userId, role: membership.role },
               event.payload,
-              { now: now(), rng, definition: (id) => plugins.definition(id) },
+              {
+                now: now(),
+                rng,
+                definition: (id) => plugins.definition(id),
+                liveData: liveDataOf({ collab, db }, (id) => plugins.definition(id)),
+              },
             );
             publishChatMessage(events, row);
             return;

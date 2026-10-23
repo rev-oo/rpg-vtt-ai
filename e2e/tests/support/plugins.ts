@@ -33,7 +33,10 @@ export async function installPlugin(admin: SignedIn, file: string): Promise<void
   expect(response.ok(), await response.text()).toBe(true);
 }
 
-/** Sets an actor's plugin data; sheets cannot edit it until live sheets (M5). */
+/**
+ * Sets an actor's stored plugin data. Only for actors whose sheet was never opened: once it
+ * was, its live document is the source of truth (ADR-029).
+ */
 export function setActorData(actorId: string, system: Record<string, unknown>): void {
   const db = new Database(database);
   try {

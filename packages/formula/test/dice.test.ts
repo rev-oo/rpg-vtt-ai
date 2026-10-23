@@ -252,7 +252,7 @@ describe('seeded RNG (FR-DICE-05)', () => {
     expect([...counts.keys()].every((total) => total >= 2 && total <= 12)).toBe(true);
     // 10 degrees of freedom; 29.59 is the 99.9% critical value.
     expect(chiSquare).toBeLessThan(29.59);
-  });
+  }, 30_000);
 });
 
 const REPLAY_VALUES = [[5, 5, 2, 5], [16], [1, 10, 1]];

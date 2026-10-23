@@ -1,9 +1,10 @@
-import { createContext, useContext, type ComponentType } from 'react';
+import { createContext, useContext, type ComponentType, type ReactNode } from 'react';
 
 import type { FormulaFunction, Value } from '@vtt/formula';
 import type { DerivedValues } from '@vtt/plugin-engine';
 import type { FieldSchema } from '@vtt/plugin-schema';
 
+import type { SheetPresence } from './presence.js';
 import type { FieldPath, SheetStore } from './store.js';
 import type { SheetStrings } from './strings.js';
 
@@ -26,6 +27,21 @@ export interface CustomNodeProps {
 
 export type RollHandler = (roll: string, args: Readonly<Record<string, Value>>) => void;
 
+/** What the host's rich text editor receives for a `richText` field (ADR-037). */
+export interface RichTextProps {
+  path: FieldPath;
+  /** The id of the field's label, for `aria-labelledby`. */
+  labelId: string;
+  readOnly: boolean;
+  className: string;
+}
+
+/**
+ * Renders the editor of a `richText` field. The host provides it, so the renderer stays free
+ * of Yjs and of the editor; without it the field is a plain text area.
+ */
+export type RichTextRenderer = (props: RichTextProps) => ReactNode;
+
 export interface SheetEnvironment {
   store: SheetStore;
   schema: FieldSchema;
@@ -41,6 +57,9 @@ export interface SheetEnvironment {
   strings: SheetStrings;
   onRoll: RollHandler | undefined;
   nodes: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
+  /** Other viewers' focus, on live sheets (FR-SHEET-02). */
+  presence: SheetPresence | undefined;
+  renderRichText: RichTextRenderer | undefined;
 }
 
 export const SheetContext = createContext<SheetEnvironment | null>(null);

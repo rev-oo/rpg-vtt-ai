@@ -32,6 +32,8 @@ export interface RollOptions {
   rng: Rng;
   /** The validated definition of a system plugin, from the registry (ADR-020). */
   definition?: (systemId: string) => PluginDefinition | undefined;
+  /** An actor's live sheet data while its document is loaded (specs §9.6). */
+  liveData?: (actor: Actor) => Record<string, unknown> | undefined;
 }
 
 /** A formula engine error as `422 invalid_formula` (ADR-018). */
@@ -96,7 +98,7 @@ export function sendRollMessage(
   db: DbOrTx,
   sender: { tableId: string; userId: string; role: TableRole },
   input: RollRequest,
-  { now, rng, definition }: RollOptions,
+  { now, rng, definition, liveData }: RollOptions,
 ): ChatMessageRow {
   if (!canSendChat(sender.role)) throw forbidden('Spectators cannot roll.');
   const subject: Subject = { userId: sender.userId, role: sender.role };
@@ -104,7 +106,13 @@ export function sendRollMessage(
   return db.transaction((tx) => {
     const table = findTable(tx, sender.tableId);
     if (table) requireWritableSystem(tx, table);
-    const { speaker, actor } = speakerFor(tx, sender.tableId, subject, input.actorId);
+    const spoken = speakerFor(tx, sender.tableId, subject, input.actorId);
+    const { speaker } = spoken;
+    // Rolls read the live sheet, not the projection, which lags by the store debounce.
+    const actor = spoken.actor && {
+      ...spoken.actor,
+      system: liveData?.(spoken.actor) ?? spoken.actor.system,
+    };
     const recipients = recipientsFor(tx, sender, input);
     const plugin = table ? definition?.(table.systemId) : undefined;
     const system =

@@ -393,3 +393,49 @@ describe('createMemoryStore()', () => {
     expect(valueAt(store.getSnapshot(), ['rows', 'id1', 'v'])).toBe(1);
   });
 });
+
+describe('presence (FR-SHEET-02)', () => {
+  const layout: SheetNode = {
+    type: 'column',
+    children: [
+      { type: 'field', path: 'str', label: 'field.str' },
+      { type: 'field', path: 'hp.value', label: 'field.hp' },
+      {
+        type: 'list',
+        path: 'skills',
+        item: { type: 'field', path: 'name', label: 'Skill' },
+      },
+    ],
+  };
+
+  it('outlines fields others are in and reports where the viewer is', async () => {
+    const focus = vi.fn();
+    const lena = { id: 'u2', name: 'Lena', color: 'rgb(200, 0, 0)' };
+    const at = (path: readonly string[]) =>
+      path.join('.') === 'skills.r1.name' || path.join('.') === 'str' ? [lena] : [];
+    renderSheet(layout, {
+      data: { skills: { r1: { name: 'Climb', sort: 'i' } } },
+      presence: { at, focus },
+    });
+
+    const strength = screen.getByLabelText('Strength');
+    const shell = strength.closest('[data-field]');
+    expect(shell).toHaveStyle({ outline: '2px solid rgb(200, 0, 0)' });
+    expect(within(shell as HTMLElement).getByText('Lena')).toBeInTheDocument();
+    const row = screen.getByLabelText('Skill').closest('[data-field]');
+    expect(within(row as HTMLElement).getByText('Lena')).toBeInTheDocument();
+    const hp = screen.getByLabelText('Hit points').closest('[data-field]');
+    expect(hp?.querySelector('[data-presence]')).toBeNull();
+
+    const user = userEvent.setup();
+    await user.click(screen.getByLabelText('Hit points'));
+    expect(focus).toHaveBeenLastCalledWith(['hp', 'value']);
+    // The counter's buttons are part of the same field.
+    await user.click(screen.getByRole('button', { name: 'Increase Hit points' }));
+    expect(focus).toHaveBeenLastCalledWith(['hp', 'value']);
+    await user.click(screen.getByLabelText('Skill'));
+    expect(focus).toHaveBeenLastCalledWith(['skills', 'r1', 'name']);
+    await user.click(document.body);
+    expect(focus).toHaveBeenLastCalledWith(null);
+  });
+});

@@ -120,6 +120,27 @@ describe('document persistence (specs §9.6, T-0502)', () => {
     expect(data(reopened).get('notes')).toBeInstanceOf(Y.Text);
   });
 
+  it('adds the maps a stored state lacks before clients edit it (specs §9.4)', async () => {
+    const actor = await createCharacter();
+    // A state stored before the schema had `hp`, `skills` and `notes`.
+    const old = new Y.Doc();
+    old.getMap('data').set('str', 12);
+    t.db
+      .insert(ydocs)
+      .values({
+        name: actor.main,
+        actorId: actor.id,
+        state: Buffer.from(Y.encodeStateAsUpdate(old)),
+        updatedAt: new Date(),
+      })
+      .run();
+    const main = await (await openCollab(t.app, bob.client)).open(actor.main);
+    expect(data(main).get('str')).toBe(12);
+    expect(data(main).get('skills')).toBeInstanceOf(Y.Map);
+    expect(data(main).get('hp')).toBeInstanceOf(Y.Map);
+    expect(data(main).get('notes')).toBeInstanceOf(Y.Text);
+  });
+
   it('stores while clients stay connected, after the debounce', async () => {
     await restart({ ...COLLAB_TIMING, debounceMs: 20, maxDebounceMs: 100 });
     const actor = await createCharacter();

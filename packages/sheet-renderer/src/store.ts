@@ -3,6 +3,25 @@ import { collectionRows, sortKeyBetween } from '@vtt/plugin-engine';
 /** Keys from the data root to a value; inside a collection, the row id is a key. */
 export type FieldPath = readonly string[];
 
+/** One edit of a text: `remove` characters at `index` replaced by `insert` characters. */
+export interface TextChange {
+  index: number;
+  remove: number;
+  insert: number;
+}
+
+/**
+ * A text several people edit at once (FR-SHEET-07): edits are splices, so concurrent typing
+ * merges instead of one whole value replacing another.
+ */
+export interface SharedText {
+  read: () => string;
+  /** Replaces `remove` characters at `index` with `insert`. */
+  splice: (index: number, remove: number, insert: string) => void;
+  /** Listens to every change, as splices in order, so a caret can follow other people's. */
+  observe: (listener: (changes: readonly TextChange[]) => void) => () => void;
+}
+
 /**
  * Where a sheet reads and writes an entity's data. The live store (M5) backs it with the
  * actor's Yjs documents; `createMemoryStore()` keeps it in memory for previews and tests.
@@ -21,6 +40,11 @@ export interface SheetStore {
   removeRow: (path: FieldPath, id: string) => void;
   /** Moves a row before another one, or to the end when `before` is null. */
   moveRow: (path: FieldPath, id: string, before: string | null) => void;
+  /**
+   * The shared text of a `longText` field, on live stores. The same object for the same
+   * text. Without it, text areas write the whole value with `set`.
+   */
+  text?: (path: FieldPath) => SharedText | undefined;
 }
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>

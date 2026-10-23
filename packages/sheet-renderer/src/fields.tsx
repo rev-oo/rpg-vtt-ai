@@ -5,9 +5,11 @@ import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
 import { Button, cn, controlClass } from '@vtt/ui';
 
 import { useSheet, type RowScope, type SheetEnvironment } from './context.js';
+import { PresenceBadges, usePresence } from './presence.js';
 import { fieldAt, isSecretPath } from './schema.js';
 import { valueAt, type FieldPath } from './store.js';
 import { fill } from './strings.js';
+import { SharedTextarea } from './text.js';
 
 type NodeOf<T extends SheetNode['type']> = Extract<SheetNode, { type: T }>;
 
@@ -78,8 +80,11 @@ function problemWith(
 
 interface FieldShellProps {
   node: { path: string; class?: string | undefined; type: string };
+  /** The field's full path, for presence. */
+  path: FieldPath;
   label: string;
   labelFor?: string;
+  labelId?: string;
   errorId: string;
   error: string | undefined;
   children: ReactNode;
@@ -87,24 +92,32 @@ interface FieldShellProps {
 
 function FieldShell({
   node,
+  path,
   label,
   labelFor,
+  labelId,
   errorId,
   error,
   children,
 }: FieldShellProps): ReactElement {
+  const presence = usePresence(path);
   return (
     <div
       className={cn(`vtt-${node.type} flex min-w-0 flex-col gap-1`, node.class)}
       data-field={node.path}
+      style={presence.style}
+      {...presence.handlers}
     >
       {labelFor ? (
         <label className="text-sm font-semibold" htmlFor={labelFor}>
           {label}
         </label>
       ) : (
-        <span className="text-sm font-semibold">{label}</span>
+        <span id={labelId} className="text-sm font-semibold">
+          {label}
+        </span>
       )}
+      <PresenceBadges users={presence.users} />
       {children}
       {error && (
         <span id={errorId} className="text-sm text-danger">
@@ -135,7 +148,7 @@ export function FieldNode({
   const label = node.label ? sheet.translate(node.label) : node.path;
   const errorId = `${id}-error`;
   const described = error ? errorId : undefined;
-  const shell = { node, label, errorId, error };
+  const shell = { node, path: field.path, label, errorId, error };
 
   if (input === 'checkbox') {
     return (
@@ -254,7 +267,11 @@ export function FieldNode({
   );
 }
 
-/** A `longText` node. A plain text area until collaborative editing arrives (FR-SHEET-07, M5). */
+/**
+ * A `longText` node. On live stores it edits the field's shared text, so several people can
+ * type at once (FR-SHEET-07); otherwise it writes the whole value. A `richText` field uses the
+ * host's rich text editor when there is one (ADR-037).
+ */
 export function LongTextNode({
   node,
   row,
@@ -267,17 +284,39 @@ export function LongTextNode({
   const field = resolveField(sheet, row, node.path);
   if (field.hidden) return null;
   const label = node.label ? sheet.translate(node.label) : node.path;
+  const shared = sheet.store.text?.(field.path);
+  const className = cn(controlClass, 'min-h-24 w-full min-w-0');
+  const labelId = `${id}-label`;
+  // The host renders nothing when it cannot edit the field richly, such as without its text.
+  const rich =
+    field.schema?.['x-kind'] === 'richText'
+      ? sheet.renderRichText?.({ path: field.path, labelId, readOnly: sheet.readOnly, className })
+      : undefined;
+  const isRich = rich !== undefined && rich !== null && rich !== false;
   return (
-    <FieldShell node={node} label={label} labelFor={id} errorId={`${id}-error`} error={undefined}>
-      <textarea
-        id={id}
-        className={cn(controlClass, 'min-h-24 w-full min-w-0')}
-        value={typeof field.value === 'string' ? field.value : ''}
-        readOnly={sheet.readOnly}
-        onChange={(event) => {
-          sheet.store.set(field.path, event.target.value);
-        }}
-      />
+    <FieldShell
+      node={node}
+      path={field.path}
+      label={label}
+      {...(isRich ? { labelId } : { labelFor: id })}
+      errorId={`${id}-error`}
+      error={undefined}
+    >
+      {isRich ? (
+        rich
+      ) : shared ? (
+        <SharedTextarea id={id} text={shared} readOnly={sheet.readOnly} className={className} />
+      ) : (
+        <textarea
+          id={id}
+          className={className}
+          value={typeof field.value === 'string' ? field.value : ''}
+          readOnly={sheet.readOnly}
+          onChange={(event) => {
+            sheet.store.set(field.path, event.target.value);
+          }}
+        />
+      )}
     </FieldShell>
   );
 }
