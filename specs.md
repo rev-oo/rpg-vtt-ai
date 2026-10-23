@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M6
-- **Next task:** `T-0603` (server side; T-0602 and the journal UI go in the M6 web PR)
+- **Next task:** `T-0604` (server side; T-0602, the journal UI and the settings form go in the M6 web PR)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -85,6 +85,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                     |
 | 2026-10-23 | PR #11 merged. M5 signed off as done. Active milestone is now M6.                                                                             |
 | 2026-10-23 | T-0601 implemented (journal entries over REST; hidden by default). ADR-038 added; Q11 decided: the journal UI goes in the M6 web PR.          |
+| 2026-10-23 | T-0603 server side implemented (settings checked against `settings.json`, `table.updated` event, tiny-d20 `maxHp`). ADR-039 added.            |
 
 ---
 
@@ -866,7 +867,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -1275,6 +1276,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0407, T-0111
   - **Do:** Render plugin `settings.json` as form; store values on table; pass to plugin engine (FR-ADMIN-04).
   - **Done when:** changing a house rule changes a derived value in a roll.
+  - **Note:** server side done: settings are checked against `settings.json` on create and `PATCH`, refused while the system is unavailable, and announced with a `table.updated` event; tiny-d20 derives `maxHp` from `startingHp` (ADR-039). Tested in `apps/server/test/system-rolls.test.ts`. The form, and the web app's refetch on `table.updated`, come with the M6 web PR.
 
 - [ ] **T-0604 · Instance settings and health**
   - **Deps:** T-0102
@@ -1434,6 +1436,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
 | ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
 | ADR-038 | [Journal entries over REST and collab: hidden by default, 404 for hidden entries, a `body` fragment](docs/adr/ADR-038-journal-entries.md)       | Accepted |
+| ADR-039 | [Table settings checked against the system's house rules; `table.updated` event](docs/adr/ADR-039-table-settings.md)                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
