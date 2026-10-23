@@ -43,12 +43,16 @@ test('members, invite links and sign-up', async ({ browser }) => {
   const gmPage = await openTab(gm, table.id, '/members');
   const invites = gmPage.getByRole('list', { name: 'Invite links' });
 
+  let lastLink = '';
   const createLink = async (role: string): Promise<string> => {
     await gmPage.getByLabel('Joins as').selectOption({ label: role });
     await gmPage.getByRole('button', { name: 'Create link' }).click();
     const link = gmPage.getByLabel('New invite link');
+    // Wait for the new link: the box still shows the previous one until the server answers.
     await expect(link).toHaveValue(/\/invite\//);
-    return new URL(await link.inputValue()).pathname;
+    await expect(link).not.toHaveValue(lastLink);
+    lastLink = await link.inputValue();
+    return new URL(lastLink).pathname;
   };
 
   await test.step('a member joins through an invite link (FR-TABLE-03)', async () => {
