@@ -57,3 +57,9 @@ export function setSessionCookie(reply: FastifyReply, publicUrl: URL, issued: Is
 export function clearSessionCookie(reply: FastifyReply, publicUrl: URL): void {
   reply.clearCookie(SESSION_COOKIE, clearedSessionCookieOptions(publicUrl));
 }
+
+/** A 429 that tells the client when to try again. */
+export function rateLimited(reply: FastifyReply, retryAfterMs: number, message: string): AppError {
+  reply.header('retry-after', String(Math.ceil(retryAfterMs / 1000)));
+  return new AppError(429, 'rate_limited', `${message} Try again later.`);
+}

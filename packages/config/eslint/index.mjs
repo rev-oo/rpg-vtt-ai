@@ -169,6 +169,9 @@ export function defineVttConfig() {
         ],
         '@typescript-eslint/explicit-module-boundary-types': 'error',
         '@typescript-eslint/consistent-type-imports': 'error',
+        // Code is never built from strings (specs §17, NFR-07); typed linting adds
+        // no-implied-eval, which also covers `new Function`.
+        'no-eval': 'error',
         'import-x/no-cycle': ['error', { ignoreExternal: true }],
         // Noisy with TypeScript-typed default exports (typescript-eslint, react-refresh).
         'import-x/no-named-as-default': 'off',

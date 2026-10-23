@@ -25,7 +25,7 @@ export const en = {
   'login.title': 'Log in',
   'login.submit': 'Log in',
   'login.invalidCredentials': 'Wrong username or password.',
-  'login.rateLimited': 'Too many failed attempts. Try again in {seconds} seconds.',
+  'login.rateLimited': 'Too many attempts. Try again in {seconds} seconds.',
   'login.disabled': 'This account has been disabled.',
 
   'account.title': 'Account',
