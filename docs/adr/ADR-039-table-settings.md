@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-10-23
-- **Tasks:** T-0603 (server side; the form comes with the M6 web PR)
+- **Tasks:** T-0603
 - **Refines:** specs §8.12, FR-ADMIN-04, FR-TABLE-07
 
 ## Context
@@ -24,4 +24,5 @@ Tables already stored a `settings` record, and rolls already passed it to the pl
 
 - Tested in `apps/server/test/system-rolls.test.ts`: the GM changes `startingHp` and a roll of `@derived.maxHp` follows; refused values, unknown names and an unavailable system are covered too.
 - Settings stored before this check, such as names a plugin has since dropped, stay in the row until the next `PATCH`. `settingValues()` still ignores them.
-- The web app does not react to `table.updated` yet. The M6 web PR adds the settings form and the refetch.
+- The table page refetches the table on `table.updated`, so open sheets follow (`e2e/tests/table-admin.spec.ts`).
+- The settings tab (GM only) renders one input per option of `settings.json`: a checkbox for booleans, a number input with the bounds for numbers, a select for string enums, a text input otherwise. Values that do not fit are flagged before saving, worded from the web catalogue.
