@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
-| M6    | Journal, members, table settings, plugin admin                | In progress | 100%     | —      |
+| M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
@@ -29,8 +29,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M6
-- **Next task:** confirm M6 is done (all six tasks are implemented in PR #12, pending review); then `T-0701`
+- **Active milestone:** M7
+- **Next task:** `T-0701`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -87,6 +87,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-23 | T-0601 implemented (journal entries over REST; hidden by default). ADR-038 added; Q11 decided: the journal UI goes in the M6 web PR.                                                                                     |
 | 2026-10-23 | T-0603 server side implemented (settings checked against `settings.json`, `table.updated` event, tiny-d20 `maxHp`). ADR-039 added.                                                                                       |
 | 2026-10-23 | Rest of M6 implemented in PR #12: journal UI, T-0602 members and invites, T-0603 settings tab, T-0604 instance settings, invite sign-up and health, T-0605 backups, T-0606 `pt-BR`. ADR-040, ADR-041 added; Q12 decided. |
+| 2026-10-23 | PR #12 merged. M6 signed off as done. Active milestone is now M7.                                                                                                                                                        |
 
 ---
 
