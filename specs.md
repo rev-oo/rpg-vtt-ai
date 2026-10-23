@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
-| M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
+| M6    | Journal, members, table settings, plugin admin                | In progress | 17%      | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M6
-- **Next task:** `T-0601`
+- **Next task:** `T-0603` (server side; T-0602 and the journal UI go in the M6 web PR)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -84,6 +84,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                               |
 | 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                     |
 | 2026-10-23 | PR #11 merged. M5 signed off as done. Active milestone is now M6.                                                                             |
+| 2026-10-23 | T-0601 implemented (journal entries over REST; hidden by default). ADR-038 added; Q11 decided: the journal UI goes in the M6 web PR.          |
 
 ---
 
@@ -399,12 +400,12 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.6 Journal (`FR-JOURNAL`)
 
-| ID            | Requirement                                                                                  | Priority |
-| ------------- | -------------------------------------------------------------------------------------------- | -------- |
-| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative). | MVP      |
-| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.               | MVP      |
-| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players.    | MVP      |
-| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.        | MVP      |
+| ID            | Requirement                                                                                                                   | Priority |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative).                                  | MVP      |
+| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.                                                | MVP      |
+| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players. New entries start hidden (ADR-038). | MVP      |
+| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.                                         | MVP      |
 
 ### 7.7 Dice engine (`FR-DICE`)
 
@@ -853,7 +854,7 @@ Key resource groups:
 | Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                                    |
 | Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                 |
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                    |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                                         |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                  |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                                             |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                      |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                            |
@@ -1259,10 +1260,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M6 — Journal, members, settings, administration
 
-- [ ] **T-0601 · Journal entries (SQL + collab)**
+- [x] **T-0601 · Journal entries (SQL + collab)**
   - **Deps:** T-0510, T-0201
   - **Do:** Create, list, hide/reveal, ownership for journal entries (FR-JOURNAL-01..03).
   - **Done when:** a hidden entry is absent from player-visible list and document access (tested on the wire).
+  - **Note:** server side only. Routes in `apps/server/src/http/routes/journal.ts`; new entries start hidden; the body is the document's root `Y.XmlFragment` `body`, edited with TipTap (ADR-037, ADR-038). Tested in `apps/server/test/journal.test.ts`. The journal UI (list, create, hide/reveal, ownership, the TipTap body) is built in the M6 web PR, not here (Q11).
 
 - [ ] **T-0602 · Members and invites UI**
   - **Deps:** T-0109, T-0111
@@ -1371,6 +1373,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                      |
 | Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                   |
 | Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025) |
+| Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                      | T-0601                | **Decided:** later, in the M6 web PR with T-0602 and T-0603; T-0601 is the server side (ADR-038)               |
 
 ---
 
@@ -1430,6 +1433,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted |
 | ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
 | ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
+| ADR-038 | [Journal entries over REST and collab: hidden by default, 404 for hidden entries, a `body` fragment](docs/adr/ADR-038-journal-entries.md)       | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
