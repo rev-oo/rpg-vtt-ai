@@ -1,10 +1,17 @@
 import { eq } from 'drizzle-orm';
 
-import { canSeeAudience, canViewActor, type Ownership, type TableRole } from '@vtt/shared';
+import {
+  canSeeAudience,
+  canViewActor,
+  canViewJournal,
+  type JournalAccess,
+  type Ownership,
+  type TableRole,
+} from '@vtt/shared';
 import type { EntityChanged } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import type { Actor, ChatMessageRow, Item } from '../db/repositories/index.js';
+import type { Actor, ChatMessageRow, Item, JournalEntry } from '../db/repositories/index.js';
 import { members } from '../db/schema.js';
 import { messageAudience, toChatMessage } from '../domain/chat.js';
 
@@ -70,5 +77,29 @@ export function publishItemChanged(
       payload: { kind: 'item', id: item.id, change, actorId: item.actorId },
     },
     (subject) => (actor ? canViewActor(subject, actor.ownership) : true),
+  );
+}
+
+/**
+ * Tells the members who can see a journal entry that it changed. Pass its access settings from
+ * before an update, so players who just lost a hidden entry also refresh; changes to an entry
+ * that stays hidden reach only GMs and assistants (FR-JOURNAL-03).
+ */
+export function publishJournalChanged(
+  hub: EventHub,
+  change: EntityChange,
+  entry: JournalEntry,
+  previous?: JournalAccess,
+): void {
+  hub.publish(
+    entry.tableId,
+    {
+      type: 'entity.changed',
+      tableId: entry.tableId,
+      payload: { kind: 'journal', id: entry.id, change, actorId: null },
+    },
+    (subject) =>
+      canViewJournal(subject, entry) ||
+      (previous !== undefined && canViewJournal(subject, previous)),
   );
 }

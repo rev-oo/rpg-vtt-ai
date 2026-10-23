@@ -61,9 +61,11 @@ export function dataFilter(definition: PluginDefinition | undefined, role: Table
   };
 }
 
-const iso = (date: Date | null) => date?.toISOString() ?? null;
+/** A date as views send it, or null. */
+export const iso = (date: Date | null): string | null => date?.toISOString() ?? null;
 
-function definedLevels(users: Ownership['users']): Record<string, OwnershipLevel> {
+/** Per-user ownership levels without the unset ones, as views send them. */
+export function definedLevels(users: Ownership['users']): Record<string, OwnershipLevel> {
   const levels: Record<string, OwnershipLevel> = {};
   for (const [userId, level] of Object.entries(users)) if (level) levels[userId] = level;
   return levels;

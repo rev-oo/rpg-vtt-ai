@@ -185,3 +185,37 @@ export type UpdateItemInput = z.input<typeof updateItemBody>;
 /** `POST /actors/:id/items`: copies a library item into the actor (FR-ENT-05). */
 export const copyItemBody = z.object({ itemId: z.uuid() });
 export type CopyItemInput = z.input<typeof copyItemBody>;
+
+// Journal entries (FR-JOURNAL-01..03). The body is a collaborative document, not REST data.
+
+const journalTitle = z.string().trim().min(1).max(MAX_ENTITY_NAME);
+
+/** `GET /tables/:id/journal`. */
+export const journalListQuery = z.object({
+  /** Case-insensitive substring of the title. */
+  search: z.string().trim().max(MAX_SEARCH).optional(),
+  /** `restorable`: the trash, within the retention window. */
+  trash: z.enum(['live', 'restorable']).default('live'),
+});
+export type JournalListQuery = z.input<typeof journalListQuery>;
+
+export const createJournalBody = z.object({
+  title: journalTitle,
+  /** Players observe entries by default (FR-JOURNAL-02). */
+  ownership: ownershipSchema.optional(),
+  /** New entries stay with the GM until revealed (FR-JOURNAL-03, ADR-038). */
+  hidden: z.boolean().default(true),
+});
+export type CreateJournalInput = z.input<typeof createJournalBody>;
+
+export const updateJournalBody = z
+  .strictObject({
+    title: journalTitle,
+    /** GMs and assistants only. */
+    ownership: ownershipSchema,
+    /** GMs and assistants only. */
+    hidden: z.boolean(),
+  })
+  .partial()
+  .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateJournalInput = z.input<typeof updateJournalBody>;

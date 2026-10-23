@@ -28,6 +28,7 @@ import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
 import { inviteRoutes } from './routes/invites.js';
 import { itemRoutes } from './routes/items.js';
+import { journalRoutes } from './routes/journal.js';
 import { memberRoutes } from './routes/members.js';
 import { pluginAssetRoutes } from './routes/plugin-assets.js';
 import { pluginRoutes } from './routes/plugins.js';
@@ -153,6 +154,7 @@ export async function buildApp({
   inviteRoutes(context);
   actorRoutes(context);
   itemRoutes(context);
+  journalRoutes(context);
   chatRoutes(context);
   rollRoutes(context);
   eventsSocket(context);

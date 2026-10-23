@@ -39,7 +39,7 @@ export const clientEventSchema = z.discriminatedUnion('type', [
 export type ClientEvent = z.infer<typeof clientEventSchema>;
 export type ClientEventInput = z.input<typeof clientEventSchema>;
 
-export const ENTITY_KINDS = ['actor', 'item'] as const;
+export const ENTITY_KINDS = ['actor', 'item', 'journal'] as const;
 export const ENTITY_CHANGES = ['created', 'updated', 'deleted', 'restored'] as const;
 
 /** An entity changed; clients refetch it over REST (FR-ENT-07). */
