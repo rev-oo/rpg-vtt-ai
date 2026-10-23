@@ -26,6 +26,7 @@ import {
   type TestApp,
 } from './support/app.js';
 import { copyReferencePlugin } from './support/reference.js';
+import { openSocket } from './support/socket.js';
 
 let dataDir: string;
 let t: TestApp;
@@ -60,7 +61,7 @@ afterEach(async () => {
   await rm(dataDir, { recursive: true, force: true });
 });
 
-const call = (method: 'GET' | 'POST', url: string, payload?: Record<string, unknown>) =>
+const call = (method: 'GET' | 'POST' | 'PATCH', url: string, payload?: Record<string, unknown>) =>
   t.app.inject({
     method,
     url: `/api/v1${url}`,
@@ -226,5 +227,63 @@ describe('rolls with the system rules (ADR-025)', () => {
     t.db.update(actors).set({ type: 'retired' }).where(eq(actors.id, actor.id)).run();
     const res = await roll(table, { formula: '@str + 1', actorId: actor.id });
     expect(messageOf(res).rolls[0]?.total).toBe(6);
+  });
+});
+
+describe('table settings (T-0603, FR-ADMIN-04)', () => {
+  it('changes a derived value in a roll when the GM changes a house rule', async () => {
+    const table = await createTable(t.app, admin, { systemId: 'tiny-d20' });
+    const actor = await hero(table, 'character', { level: 3 });
+    const maxHp = async () =>
+      messageOf(await roll(table, { formula: '@derived.maxHp', actorId: actor.id })).rolls[0]
+        ?.total;
+    // tiny-d20: maxHp is @settings.startingHp + @level - 1, starting from the default 10.
+    expect(await maxHp()).toBe(12);
+
+    const events = await openSocket(t.app, admin);
+    await events.request({ type: 'subscribe', tableId: table.id });
+    const res = await call('PATCH', `/tables/${table.id}`, { settings: { startingHp: 20 } });
+    expect(res.statusCode).toBe(200);
+    expect(tableResponseSchema.parse(res.json()).table.settings).toEqual({ startingHp: 20 });
+    expect(await maxHp()).toBe(22);
+    // Open sheets hear about it, so their derived values follow.
+    await events.next((event) => event.type === 'table.updated' && event.tableId === table.id);
+  });
+
+  it('refuses settings the system does not define or whose values do not fit', async () => {
+    const table = await createTable(t.app, admin, { systemId: 'tiny-d20' });
+    const res = await call('PATCH', `/tables/${table.id}`, {
+      settings: { startingHp: 0, critFumble: 'yes', gridSize: 70 },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({
+      error: {
+        code: 'validation_failed',
+        details: [
+          { path: 'settings.startingHp', reason: 'minimum' },
+          { path: 'settings.critFumble', reason: 'type' },
+          { path: 'settings.gridSize', reason: 'unknown' },
+        ],
+      },
+    });
+    const created = await call('POST', '/tables', {
+      name: 'Odd',
+      systemId: 'tiny-d20',
+      settings: { startingHp: 1.5 },
+    });
+    expect(created.json()).toMatchObject({
+      error: { details: [{ path: 'settings.startingHp', reason: 'type' }] },
+    });
+    // Settings it leaves out keep their defaults.
+    const ok = await call('PATCH', `/tables/${table.id}`, { settings: { critFumble: false } });
+    expect(ok.statusCode).toBe(200);
+  });
+
+  it('keeps house rules while the system is unavailable, but still allows a rename', async () => {
+    const table = await createTable(t.app, admin, { systemId: 'tiny-d20' });
+    await call('POST', '/plugins/tiny-d20/disable');
+    const res = await call('PATCH', `/tables/${table.id}`, { settings: { startingHp: 12 } });
+    expect(res.json()).toMatchObject({ error: { code: 'table_read_only' } });
+    expect((await call('PATCH', `/tables/${table.id}`, { name: 'Paused' })).statusCode).toBe(200);
   });
 });

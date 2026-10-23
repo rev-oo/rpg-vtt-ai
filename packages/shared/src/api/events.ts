@@ -83,5 +83,12 @@ export const serverEventSchema = z.discriminatedUnion('type', [
     tableId: z.string(),
     payload: z.object({ message: chatMessageSchema }),
   }),
+  /** The table's name, description or settings changed; clients refetch it (FR-ADMIN-04). */
+  z.object({
+    ...serverBase,
+    type: z.literal('table.updated'),
+    tableId: z.string(),
+    payload: z.object({}),
+  }),
 ]);
 export type ServerEvent = z.infer<typeof serverEventSchema>;
