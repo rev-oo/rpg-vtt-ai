@@ -98,6 +98,7 @@ export const updateTableBody = z
   })
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateTableInput = z.input<typeof updateTableBody>;
 
 // Members and invites (FR-TABLE-03..06)
 
@@ -109,6 +110,7 @@ export const updateMemberBody = z
   })
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateMemberInput = z.input<typeof updateMemberBody>;
 
 const DAY_SECONDS = 24 * 60 * 60;
 
@@ -123,6 +125,7 @@ export const createInviteBody = z.object({
     .nullable()
     .default(7 * DAY_SECONDS),
 });
+export type CreateInviteInput = z.input<typeof createInviteBody>;
 
 // Actors and items (FR-ENT-01..06). Plugin data (`system`) is not written over REST: it is
 // edited live on the sheet (M5).

@@ -5,44 +5,52 @@ import { isGmLike, OWNERSHIP_LEVELS, type OwnershipLevel } from '@vtt/shared';
 import type { ActorView, MemberView } from '@vtt/shared/api';
 import { Alert, Button, Dialog, Select } from '@vtt/ui';
 
-import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 
+/** An actor or a journal entry: anything with an ownership map (FR-ENT-02, FR-JOURNAL-02). */
+export interface Owned {
+  id: string;
+  name: string;
+  ownership: ActorView['ownership'];
+}
+
 export interface OwnershipDialogProps {
-  /** The actor to edit; the dialog is closed while `null`. */
-  actor: ActorView | null;
+  /** What to edit; the dialog is closed while `null`. */
+  target: Owned | null;
   members: readonly MemberView[];
   onClose: () => void;
-  onSaved: (actor: ActorView) => void;
+  /** Stores the new ownership; a rejection is shown in the dialog. */
+  onSave: (ownership: Owned['ownership']) => Promise<void>;
 }
 
 const asLevel = (value: string): OwnershipLevel | undefined =>
   OWNERSHIP_LEVELS.find((level) => level === value);
 
 /**
- * Sets who may see and edit an actor (FR-ENT-02, 03): a default level and per-member
- * overrides. GMs and assistants own every actor anyway, so they are not listed.
+ * Sets who may see and edit an actor or a journal entry (FR-ENT-02, 03, FR-JOURNAL-02): a
+ * default level and per-member overrides. GMs and assistants own everything anyway, so they
+ * are not listed.
  */
 export function OwnershipDialog({
-  actor,
+  target,
   members,
   onClose,
-  onSaved,
+  onSave,
 }: OwnershipDialogProps): ReactElement {
   return (
     <Dialog
-      open={actor !== null}
-      title={t('ownership.title', { name: actor?.name ?? '' })}
+      open={target !== null}
+      title={t('ownership.title', { name: target?.name ?? '' })}
       onClose={onClose}
     >
-      {actor && (
+      {target && (
         <OwnershipForm
-          key={actor.id}
-          actor={actor}
+          key={target.id}
+          target={target}
           members={members.filter((m) => !isGmLike(m.role))}
           onClose={onClose}
-          onSaved={onSaved}
+          onSave={onSave}
         />
       )}
     </Dialog>
@@ -50,19 +58,19 @@ export function OwnershipDialog({
 }
 
 function OwnershipForm({
-  actor,
+  target,
   members,
   onClose,
-  onSaved,
-}: OwnershipDialogProps & { actor: ActorView }): ReactElement {
+  onSave,
+}: OwnershipDialogProps & { target: Owned }): ReactElement {
   const [error, setError] = useState<string | null>(null);
   const form = useForm({
     defaultValues: {
-      default: actor.ownership.default,
+      default: target.ownership.default,
       // `''` follows the default.
       users: members.map((m) => ({
         userId: m.userId,
-        level: actor.ownership.users[m.userId] ?? '',
+        level: target.ownership.users[m.userId] ?? '',
       })),
     },
     onSubmit: async ({ value }) => {
@@ -72,9 +80,8 @@ function OwnershipForm({
         const set = asLevel(level);
         if (set) users[userId] = set;
       }
-      const ownership = { default: value.default, users };
       try {
-        onSaved(await api.updateActor(actor.id, { ownership }));
+        await onSave({ default: value.default, users });
       } catch (caught) {
         setError(errorMessage(caught));
       }

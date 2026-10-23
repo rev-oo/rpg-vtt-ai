@@ -57,6 +57,10 @@ export const memberSchema = z.object({
 });
 export type MemberView = z.infer<typeof memberSchema>;
 export const membersResponseSchema = z.object({ members: z.array(memberSchema) });
+/** `PATCH /tables/:id/members/:userId`. */
+export const memberUpdateResponseSchema = z.object({
+  member: memberSchema.pick({ userId: true, role: true, defaultCharacterId: true }),
+});
 
 export const INVITE_STATUSES = ['active', 'expired', 'revoked'] as const;
 export const inviteSchema = z.object({
@@ -81,9 +85,11 @@ export const invitePreviewResponseSchema = z.object({
     table: z.object({ id: z.string(), name: z.string() }),
   }),
 });
+export type InvitePreview = z.infer<typeof invitePreviewResponseSchema>['invite'];
 export const acceptInviteResponseSchema = z.object({ table: tableSchema, joined: z.boolean() });
 /** `POST /invites/:token/signup`: the new account is signed in and has joined the table. */
 export const signupResponseSchema = sessionSchema.extend({ table: tableSchema });
+export type SignupResponse = z.infer<typeof signupResponseSchema>;
 
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
@@ -214,3 +220,11 @@ export const healthResponseSchema = z.object({
   }),
 });
 export type HealthResponse = z.infer<typeof healthResponseSchema>;
+
+/**
+ * The `details` of a `validation_failed` error, one entry per problem. Table settings also
+ * carry a `reason` (a data issue reason or `unknown`, ADR-039) for clients to word.
+ */
+export const validationDetailsSchema = z.array(
+  z.object({ path: z.string(), message: z.string(), reason: z.string().optional() }),
+);

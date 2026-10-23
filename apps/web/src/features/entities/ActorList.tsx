@@ -172,12 +172,14 @@ export function ActorList({ data, actors, trash, error }: ActorListProps): React
         }}
       />
       <OwnershipDialog
-        actor={editingOwnership}
+        target={editingOwnership}
         members={members}
         onClose={() => {
           setEditingOwnership(null);
         }}
-        onSaved={(actor) => {
+        onSave={async (ownership) => {
+          if (!editingOwnership) return;
+          const actor = await api.updateActor(editingOwnership.id, { ownership });
           setEditingOwnership(null);
           setStatus(t('ownership.saved', { name: actor.name }));
           void revalidator.revalidate();
