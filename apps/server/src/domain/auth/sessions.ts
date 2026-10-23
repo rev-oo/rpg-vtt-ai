@@ -27,19 +27,20 @@ export interface IssuedSession {
 
 export interface SessionServiceOptions {
   db: Db;
-  ttlSeconds: number;
+  /** Lifetime of new sessions; a function reads it again for every session (FR-ADMIN-01). */
+  ttlSeconds: number | (() => number);
   now?: () => Date;
 }
 
 /** Server-side session records with expiry (FR-AUTH-04). */
 export class SessionService {
   readonly #db: Db;
-  readonly #ttlMs: number;
+  readonly #ttlSeconds: () => number;
   readonly #now: () => Date;
 
   constructor({ db, ttlSeconds, now = () => new Date() }: SessionServiceOptions) {
     this.#db = db;
-    this.#ttlMs = ttlSeconds * 1000;
+    this.#ttlSeconds = typeof ttlSeconds === 'number' ? () => ttlSeconds : ttlSeconds;
     this.#now = now;
   }
 
@@ -47,7 +48,7 @@ export class SessionService {
     const token = generateToken();
     const csrfToken = generateToken();
     const now = this.#now();
-    const expiresAt = new Date(now.getTime() + this.#ttlMs);
+    const expiresAt = new Date(now.getTime() + this.#ttlSeconds() * 1000);
     this.#db
       .insert(sessions)
       .values({ id: hashToken(token), userId, csrfToken, createdAt: now, expiresAt })

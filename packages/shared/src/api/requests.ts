@@ -9,6 +9,7 @@ import {
   MAX_ENTITY_TYPE,
   MAX_IMAGE_URL,
   MAX_SEARCH,
+  MAX_SITE_NAME,
   MAX_PASSWORD_LENGTH,
   MAX_SYSTEM_ID,
   MAX_TABLE_DESCRIPTION,
@@ -219,3 +220,37 @@ export const updateJournalBody = z
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
 export type UpdateJournalInput = z.input<typeof updateJournalBody>;
+
+// Instance settings (FR-ADMIN-01) and sign-up through an invite link.
+
+/** `closed`: only admins create accounts. `invite`: a table invite link also lets people sign up. */
+export const REGISTRATION_POLICIES = ['closed', 'invite'] as const;
+export type RegistrationPolicy = (typeof REGISTRATION_POLICIES)[number];
+
+export const MIN_SESSION_LIFETIME_SECONDS = 60 * 60;
+export const MAX_SESSION_LIFETIME_SECONDS = 90 * DAY_SECONDS;
+
+export const instanceSettingsSchema = z.object({
+  siteName: z.string().trim().min(1).max(MAX_SITE_NAME),
+  registration: z.enum(REGISTRATION_POLICIES),
+  /** How long a new session lasts; sessions already issued keep their expiry. */
+  sessionLifetimeSeconds: z
+    .int()
+    .min(MIN_SESSION_LIFETIME_SECONDS)
+    .max(MAX_SESSION_LIFETIME_SECONDS),
+});
+export type InstanceSettings = z.infer<typeof instanceSettingsSchema>;
+
+export const updateInstanceSettingsBody = instanceSettingsSchema
+  .strict()
+  .partial()
+  .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type UpdateInstanceSettingsInput = z.input<typeof updateInstanceSettingsBody>;
+
+/** `POST /invites/:token/signup`: a new account that joins the invite's table. */
+export const signupBody = z.object({
+  username: usernameSchema,
+  displayName: displayNameSchema,
+  password: newPasswordSchema,
+});
+export type SignupInput = z.input<typeof signupBody>;

@@ -2,7 +2,9 @@ import { z } from 'zod';
 
 import { CONTROLLED_BY } from '../permissions/entities.js';
 import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
-import { TABLE_ROLES } from '../roles.js';
+import { INVITE_ROLES, TABLE_ROLES } from '../roles.js';
+
+import { instanceSettingsSchema, REGISTRATION_POLICIES } from './requests.js';
 
 // Response bodies of the HTTP API. The server builds them with these types; the web validates
 // them like any external input (specs §17).
@@ -55,6 +57,33 @@ export const memberSchema = z.object({
 });
 export type MemberView = z.infer<typeof memberSchema>;
 export const membersResponseSchema = z.object({ members: z.array(memberSchema) });
+
+export const INVITE_STATUSES = ['active', 'expired', 'revoked'] as const;
+export const inviteSchema = z.object({
+  id: z.string(),
+  role: z.enum(INVITE_ROLES),
+  status: z.enum(INVITE_STATUSES),
+  createdAt: z.string(),
+  expiresAt: z.string().nullable(),
+});
+export type InviteView = z.infer<typeof inviteSchema>;
+export const invitesResponseSchema = z.object({ invites: z.array(inviteSchema) });
+/** The raw token and link are only ever sent once, on creation. */
+export const createdInviteResponseSchema = z.object({
+  invite: inviteSchema,
+  token: z.string(),
+  url: z.string(),
+});
+/** `GET /invites/:token`: which table and role a link is for. */
+export const invitePreviewResponseSchema = z.object({
+  invite: z.object({
+    role: z.enum(INVITE_ROLES),
+    table: z.object({ id: z.string(), name: z.string() }),
+  }),
+});
+export const acceptInviteResponseSchema = z.object({ table: tableSchema, joined: z.boolean() });
+/** `POST /invites/:token/signup`: the new account is signed in and has joined the table. */
+export const signupResponseSchema = sessionSchema.extend({ table: tableSchema });
 
 export const systemSchema = z.object({ id: z.string(), name: z.string(), version: z.string() });
 export type GameSystem = z.infer<typeof systemSchema>;
@@ -160,3 +189,28 @@ export const errorResponseSchema = z.object({
     details: z.unknown().optional(),
   }),
 });
+
+/** `GET/PATCH /admin/settings` (FR-ADMIN-01). */
+export const instanceSettingsResponseSchema = z.object({ settings: instanceSettingsSchema });
+
+/** `GET /instance`: what anyone may know about the instance, before signing in. */
+export const instanceInfoSchema = z.object({
+  siteName: z.string(),
+  registration: z.enum(REGISTRATION_POLICIES),
+});
+export type InstanceInfo = z.infer<typeof instanceInfoSchema>;
+export const instanceInfoResponseSchema = z.object({ instance: instanceInfoSchema });
+
+/** `GET /api/health` (FR-ADMIN-03): 200 when healthy, 503 otherwise. */
+export const healthResponseSchema = z.object({
+  status: z.enum(['ok', 'unhealthy']),
+  database: z.enum(['ok', 'error']),
+  plugins: z.object({
+    /** Enabled plugins, and how many of them are loaded and usable. */
+    enabled: z.int(),
+    ready: z.int(),
+    /** Enabled plugins that are invalid, incompatible or missing. */
+    failed: z.int(),
+  }),
+});
+export type HealthResponse = z.infer<typeof healthResponseSchema>;

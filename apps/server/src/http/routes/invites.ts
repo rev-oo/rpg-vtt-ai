@@ -2,14 +2,16 @@ import { and, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageInvites } from '@vtt/shared';
-import { createInviteBody } from '@vtt/shared/api';
+import { createInviteBody, signupBody, type InviteView } from '@vtt/shared/api';
 
 import { gameTables, invites, members } from '../../db/schema.js';
 import { generateId, generateToken, hashToken } from '../../domain/auth/tokens.js';
 import { findMembership, toTableView } from '../../domain/tables.js';
-import { gone, notFound } from '../../errors.js';
+import { insertUser, prepareUser, toPublicUser } from '../../domain/users.js';
+import { AppError, gone, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
-import { requireSession } from '../auth.js';
+import { requireSession, setSessionCookie } from '../auth.js';
+import { SESSION_COOKIE } from '../cookies.js';
 import { requireMember } from '../membership.js';
 import { parseInput } from '../validation.js';
 
@@ -19,7 +21,7 @@ const tokenParams = z.object({ token: z.string().regex(/^[\w-]{43}$/) });
 
 type Invite = typeof invites.$inferSelect;
 
-function toInviteView(invite: Invite, now: Date) {
+function toInviteView(invite: Invite, now: Date): InviteView {
   const status = invite.revokedAt
     ? 'revoked'
     : invite.expiresAt && invite.expiresAt <= now
@@ -34,8 +36,11 @@ function toInviteView(invite: Invite, now: Date) {
   };
 }
 
-/** Table invite links with a role, expiry and revocation (FR-TABLE-03). */
-export function inviteRoutes({ app, db, config, now }: AppContext): void {
+/**
+ * Table invite links with a role, expiry and revocation (FR-TABLE-03). While the registration
+ * policy is `invite`, a link also lets someone without an account sign up (FR-ADMIN-01).
+ */
+export function inviteRoutes({ app, db, config, now, sessions, instance }: AppContext): void {
   /** Resolves a raw token to a usable invite: 404 if unknown, 410 if revoked or expired. */
   const findUsableInvite = (token: string): Invite => {
     const invite = db
@@ -108,7 +113,8 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
 
   /** Lets the join page show which table and role a link is for before accepting. */
   app.get('/api/v1/invites/:token', (request) => {
-    requireSession(request);
+    // Without an account, only someone who may sign up needs to know where a link leads.
+    if (instance().registration !== 'invite') requireSession(request);
     const { token } = parseInput(tokenParams, request.params);
     const invite = findUsableInvite(token);
     const table = db
@@ -140,6 +146,31 @@ export function inviteRoutes({ app, db, config, now }: AppContext): void {
         joined: !existing,
       };
     });
+  });
+
+  app.post('/api/v1/invites/:token/signup', async (request, reply) => {
+    if (instance().registration !== 'invite') {
+      throw new AppError(403, 'registration_closed', 'Sign-up is closed on this instance.');
+    }
+    const { token } = parseInput(tokenParams, request.params);
+    findUsableInvite(token);
+    const prepared = await prepareUser(parseInput(signupBody, request.body));
+
+    const { user, table } = db.transaction((tx) => {
+      // Checked again: the link may have been revoked while the password was hashed.
+      const invite = findUsableInvite(token);
+      const user = insertUser(tx, prepared);
+      tx.insert(members)
+        .values({ tableId: invite.tableId, userId: user.id, role: invite.role })
+        .run();
+      const table = tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).get();
+      if (!table) throw notFound('Invite not found.');
+      return { user, table: toTableView(tx, table, invite.role) };
+    });
+
+    const issued = sessions.rotate(request.cookies[SESSION_COOKIE], user.id);
+    setSessionCookie(reply, config.publicUrl, issued);
+    return reply.code(201).send({ user: toPublicUser(user), csrfToken: issued.csrfToken, table });
   });
 }
 
