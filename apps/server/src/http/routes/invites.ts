@@ -10,7 +10,7 @@ import { findMembership, toTableView } from '../../domain/tables.js';
 import { insertUser, prepareUser, toPublicUser } from '../../domain/users.js';
 import { AppError, gone, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
-import { requireSession, setSessionCookie } from '../auth.js';
+import { rateLimited, requireSession, setSessionCookie } from '../auth.js';
 import { SESSION_COOKIE } from '../cookies.js';
 import { requireMember } from '../membership.js';
 import { parseInput } from '../validation.js';
@@ -40,7 +40,15 @@ function toInviteView(invite: Invite, now: Date): InviteView {
  * Table invite links with a role, expiry and revocation (FR-TABLE-03). While the registration
  * policy is `invite`, a link also lets someone without an account sign up (FR-ADMIN-01).
  */
-export function inviteRoutes({ app, db, config, now, sessions, instance }: AppContext): void {
+export function inviteRoutes({
+  app,
+  db,
+  config,
+  now,
+  sessions,
+  instance,
+  signupLimit,
+}: AppContext): void {
   /** Resolves a raw token to a usable invite: 404 if unknown, 410 if revoked or expired. */
   const findUsableInvite = (token: string): Invite => {
     const invite = db
@@ -152,9 +160,15 @@ export function inviteRoutes({ app, db, config, now, sessions, instance }: AppCo
     if (instance().registration !== 'invite') {
       throw new AppError(403, 'registration_closed', 'Sign-up is closed on this instance.');
     }
+    // Each sign-up costs a password hash and makes an account; a shared link must not let
+    // one client make them in bulk.
+    const retryAfterMs = signupLimit.retryAfterMs(request.ip);
+    if (retryAfterMs > 0) throw rateLimited(reply, retryAfterMs, 'Too many sign-ups.');
     const { token } = parseInput(tokenParams, request.params);
     findUsableInvite(token);
-    const prepared = await prepareUser(parseInput(signupBody, request.body));
+    const input = parseInput(signupBody, request.body);
+    signupLimit.record(request.ip);
+    const prepared = await prepareUser(input);
 
     const { user, table } = db.transaction((tx) => {
       // Checked again: the link may have been revoked while the password was hashed.

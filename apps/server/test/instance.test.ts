@@ -153,6 +153,25 @@ describe('sign-up through an invite link (FR-ADMIN-01)', () => {
     const expired = await t.call(null, 'POST', `/invites/${t.token}/signup`, newcomer);
     expect(expired.statusCode).toBe(410);
   });
+
+  it('limits sign-ups per client (T-0701)', async () => {
+    const t = await withInvite();
+    await t.call(t.admin, 'PATCH', '/admin/settings', { registration: 'invite' });
+    for (let i = 0; i < 10; i += 1) {
+      const res = await t.call(null, 'POST', `/invites/${t.token}/signup`, {
+        ...newcomer,
+        username: `newcomer${String(i)}`,
+      });
+      expect(res.statusCode).toBe(201);
+    }
+    const res = await t.call(null, 'POST', `/invites/${t.token}/signup`, newcomer);
+    expect(res.statusCode).toBe(429);
+    expect(res.json()).toMatchObject({ error: { code: 'rate_limited' } });
+    t.advance(60 * 60 * 1000);
+    expect((await t.call(null, 'POST', `/invites/${t.token}/signup`, newcomer)).statusCode).toBe(
+      201,
+    );
+  });
 });
 
 describe('GET /api/health (FR-ADMIN-03, T-0604)', () => {
