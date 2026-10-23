@@ -61,8 +61,10 @@ The server is configured with environment variables:
 | `PUBLIC_URL`                 | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure       |
 | `SESSION_TTL`                | `604800` (7 days)       | Default session lifetime in seconds; admins can change it in the app          |
 | `LOG_LEVEL`                  | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`                |
-| `TRUST_PROXY`                | `false`                 | `true` or a hop count when running behind a reverse proxy                     |
+| `TRUST_PROXY`                | `false`                 | Proxy hops to trust behind a reverse proxy, usually `1` (see below)           |
 | `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored             |
+
+Behind a reverse proxy, set `TRUST_PROXY` to the number of proxies in front of the server (`1` for a single Caddy or Traefik), so login and sign-up limits count the real client address. `true` trusts every `X-Forwarded-For` entry, which a client can write itself, so it can dodge those limits.
 
 ### Running the web app
 
