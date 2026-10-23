@@ -36,6 +36,7 @@
         "children": [
           { "type": "field", "path": "hp.value", "label": "field.hp", "input": "counter" },
           { "type": "field", "path": "hp.max", "label": "field.hpMax", "input": "number" },
+          { "type": "derived", "key": "maxHp", "label": "field.maxHpRule" },
           { "type": "custom:hpBar", "props": { "path": "hp", "label": "field.hp" } },
           { "type": "text", "text": "hint.unconscious", "visibleIf": "@hp.value <= 0" }
         ]
