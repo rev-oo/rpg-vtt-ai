@@ -19,7 +19,8 @@
     "format:check": "prettier --check .",
     "lint:root": "eslint --max-warnings 0 eslint.config.mjs lint-staged.config.mjs vitest.config.ts",
     "prepare": "husky",
-    "db:migrate": "pnpm --filter @vtt/server db:migrate"
+    "db:migrate": "pnpm --filter @vtt/server db:migrate",
+    "backup": "pnpm --filter @vtt/server backup"
   },
   "devDependencies": {
     "@types/node": "^24.19.2",
