@@ -1,4 +1,28 @@
 import {
+  acceptInviteResponseSchema,
+  createdInviteResponseSchema,
+  instanceInfoResponseSchema,
+  instanceSettingsResponseSchema,
+  invitePreviewResponseSchema,
+  invitesResponseSchema,
+  journalEntriesResponseSchema,
+  journalEntryResponseSchema,
+  memberUpdateResponseSchema,
+  signupResponseSchema,
+  type CreateInviteInput,
+  type CreateJournalInput,
+  type InstanceInfo,
+  type InstanceSettings,
+  type InvitePreview,
+  type InviteView,
+  type JournalEntryView,
+  type JournalListQuery,
+  type SignupInput,
+  type SignupResponse,
+  type UpdateInstanceSettingsInput,
+  type UpdateJournalInput,
+  type UpdateMemberInput,
+  type UpdateTableInput,
   actorResponseSchema,
   actorsResponseSchema,
   itemResponseSchema,
@@ -83,8 +107,73 @@ export const api = {
   getTable: async (tableId: string): Promise<TableView> =>
     (await request('GET', `/tables/${tableId}`, tableResponseSchema)).table,
 
+  /** Name, description and house rules; GM only (FR-TABLE-07, FR-ADMIN-04). */
+  updateTable: async (tableId: string, input: UpdateTableInput): Promise<TableView> =>
+    (await request('PATCH', `/tables/${tableId}`, tableResponseSchema, input)).table,
+
   listMembers: async (tableId: string): Promise<MemberView[]> =>
     (await request('GET', `/tables/${tableId}/members`, membersResponseSchema)).members,
+
+  /** A role (GM only) or the caller's own default character (FR-TABLE-04, 05). */
+  updateMember: (tableId: string, userId: string, input: UpdateMemberInput): Promise<unknown> =>
+    request('PATCH', `/tables/${tableId}/members/${userId}`, memberUpdateResponseSchema, input),
+
+  /** Removes a member (GM), or leaves the table (anyone, for themselves). */
+  removeMember: (tableId: string, userId: string): Promise<void> =>
+    requestNoContent('DELETE', `/tables/${tableId}/members/${userId}`),
+
+  listInvites: async (tableId: string): Promise<InviteView[]> =>
+    (await request('GET', `/tables/${tableId}/invites`, invitesResponseSchema)).invites,
+
+  /** The link is only shown once: the server keeps a hash of its token (FR-TABLE-03). */
+  createInvite: (
+    tableId: string,
+    input: CreateInviteInput,
+  ): Promise<{ invite: InviteView; url: string }> =>
+    request('POST', `/tables/${tableId}/invites`, createdInviteResponseSchema, input),
+
+  revokeInvite: (tableId: string, inviteId: string): Promise<void> =>
+    requestNoContent('DELETE', `/tables/${tableId}/invites/${inviteId}`),
+
+  previewInvite: async (token: string): Promise<InvitePreview> =>
+    (await request('GET', `/invites/${token}`, invitePreviewResponseSchema)).invite,
+
+  acceptInvite: async (token: string): Promise<TableView> =>
+    (await request('POST', `/invites/${token}/accept`, acceptInviteResponseSchema)).table,
+
+  /** A new account that joins the invite's table, signed in (FR-ADMIN-01). */
+  signup: (token: string, input: SignupInput): Promise<SignupResponse> =>
+    request('POST', `/invites/${token}/signup`, signupResponseSchema, input),
+
+  listJournal: async (tableId: string, query: JournalListQuery = {}): Promise<JournalEntryView[]> =>
+    (
+      await request(
+        'GET',
+        `/tables/${tableId}/journal${toQuery(query)}`,
+        journalEntriesResponseSchema,
+      )
+    ).entries,
+
+  getJournalEntry: async (entryId: string): Promise<JournalEntryView> =>
+    (await request('GET', `/journal/${entryId}`, journalEntryResponseSchema)).entry,
+
+  createJournalEntry: async (
+    tableId: string,
+    input: CreateJournalInput,
+  ): Promise<JournalEntryView> =>
+    (await request('POST', `/tables/${tableId}/journal`, journalEntryResponseSchema, input)).entry,
+
+  updateJournalEntry: async (
+    entryId: string,
+    input: UpdateJournalInput,
+  ): Promise<JournalEntryView> =>
+    (await request('PATCH', `/journal/${entryId}`, journalEntryResponseSchema, input)).entry,
+
+  deleteJournalEntry: (entryId: string): Promise<void> =>
+    requestNoContent('DELETE', `/journal/${entryId}`),
+
+  restoreJournalEntry: async (entryId: string): Promise<JournalEntryView> =>
+    (await request('POST', `/journal/${entryId}/restore`, journalEntryResponseSchema)).entry,
 
   listTypes: (tableId: string): Promise<TableTypes> =>
     request('GET', `/tables/${tableId}/types`, tableTypesSchema),
@@ -172,9 +261,20 @@ export const api = {
 
   disablePlugin: async (id: string): Promise<AdminPlugin> =>
     (await request('POST', `/plugins/${id}/disable`, pluginResponseSchema)).plugin,
+
+  /** The site name and registration policy; needs no session. */
+  instanceInfo: async (): Promise<InstanceInfo> =>
+    (await request('GET', '/instance', instanceInfoResponseSchema)).instance,
+
+  /** Instance settings, for admins (FR-ADMIN-01). */
+  getInstanceSettings: async (): Promise<InstanceSettings> =>
+    (await request('GET', '/admin/settings', instanceSettingsResponseSchema)).settings,
+
+  updateInstanceSettings: async (input: UpdateInstanceSettingsInput): Promise<InstanceSettings> =>
+    (await request('PATCH', '/admin/settings', instanceSettingsResponseSchema, input)).settings,
 };
 
-function toQuery(query: EntityListQuery): string {
+function toQuery(query: EntityListQuery | JournalListQuery): string {
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) if (value) params.set(key, value);
   const text = params.toString();

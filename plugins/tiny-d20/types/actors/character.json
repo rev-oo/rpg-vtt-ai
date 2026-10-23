@@ -37,6 +37,7 @@
   "derived": {
     "strMod": "floor((@str - 10) / 2)",
     "dexMod": "floor((@dex - 10) / 2)",
-    "proficiency": "2 + floor((@level - 1) / 4)"
+    "proficiency": "2 + floor((@level - 1) / 4)",
+    "maxHp": "@settings.startingHp + @level - 1"
   }
 }

@@ -6,16 +6,18 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 
 
 import { Alert, Button } from '@vtt/ui';
 
-import { t } from './i18n/index.js';
+import { LOCALE, t } from './i18n/index.js';
 import { installPluginRuntime } from './plugin-host/runtime.js';
 import { IMPORT_MAP } from './plugin-host/shared-modules.js';
 import { invalidateSession, loadSession, type SessionState } from './shell/session.js';
 
 installPluginRuntime();
+// Hydration keeps the prerendered `lang` (English); set the browser's language directly.
+if (typeof document !== 'undefined') document.documentElement.lang = LOCALE;
 
 export function Layout({ children }: { children: ReactNode }): ReactElement {
   return (
-    <html lang="en">
+    <html lang={LOCALE} suppressHydrationWarning>
       <head>
         <meta charSet="UTF-8" />
         {/* Before any module script, so plugin code can import the shared modules. */}
@@ -53,7 +55,8 @@ const centered = 'grid min-h-screen place-items-center content-center gap-4 p-4'
 
 export function HydrateFallback(): ReactElement {
   return (
-    <main className={`${centered} text-muted`} aria-busy="true">
+    // Prerendered in English (ADR-041); the browser may then show another language.
+    <main className={`${centered} text-muted`} aria-busy="true" suppressHydrationWarning>
       {t('app.loading')}
     </main>
   );

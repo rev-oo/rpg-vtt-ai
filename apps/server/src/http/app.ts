@@ -5,11 +5,13 @@ import fastifyCookie from '@fastify/cookie';
 import Fastify, { LogController, type FastifyBaseLogger, type FastifyInstance } from 'fastify';
 
 import type { Rng } from '@vtt/formula';
+import type { InstanceSettings } from '@vtt/shared/api';
 
 import type { Config } from '../config/index.js';
 import type { Db } from '../db/client.js';
 import { LoginThrottle } from '../domain/auth/login-throttle.js';
 import { SessionService } from '../domain/auth/sessions.js';
+import { instanceDefaults, readInstanceSettings } from '../domain/instance.js';
 import { secureRng } from '../domain/rolls.js';
 import { AppError } from '../errors.js';
 import { PluginRegistry } from '../plugins/registry.js';
@@ -26,8 +28,10 @@ import { registerAuth } from './auth.js';
 import { actorRoutes } from './routes/actors.js';
 import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
+import { instanceRoutes } from './routes/instance.js';
 import { inviteRoutes } from './routes/invites.js';
 import { itemRoutes } from './routes/items.js';
+import { journalRoutes } from './routes/journal.js';
 import { memberRoutes } from './routes/members.js';
 import { pluginAssetRoutes } from './routes/plugin-assets.js';
 import { pluginRoutes } from './routes/plugins.js';
@@ -76,6 +80,8 @@ export interface AppContext {
   plugins: PluginRegistry;
   /** The Yjs document server behind `/ws/collab` (specs §10.3). */
   collab: Collab;
+  /** The current instance settings (FR-ADMIN-01). */
+  instance: () => InstanceSettings;
 }
 
 /** Builds the Fastify application with every route registered. */
@@ -119,7 +125,13 @@ export async function buildApp({
   app.removeContentTypeParser('text/plain');
   await app.register(fastifyCookie);
 
-  const sessions = new SessionService({ db, ttlSeconds: config.sessionTtlSeconds, now });
+  const defaults = instanceDefaults(config.sessionTtlSeconds);
+  const instance = () => readInstanceSettings(db, defaults);
+  const sessions = new SessionService({
+    db,
+    ttlSeconds: () => instance().sessionLifetimeSeconds,
+    now,
+  });
   registerAuth(app, sessions);
   const collab = registerCollab(app, {
     db,
@@ -141,8 +153,10 @@ export async function buildApp({
     rng,
     plugins,
     collab,
+    instance,
   };
   setupRoutes(context);
+  instanceRoutes(context);
   authRoutes(context);
   userRoutes(context);
   systemRoutes(context);
@@ -153,6 +167,7 @@ export async function buildApp({
   inviteRoutes(context);
   actorRoutes(context);
   itemRoutes(context);
+  journalRoutes(context);
   chatRoutes(context);
   rollRoutes(context);
   eventsSocket(context);

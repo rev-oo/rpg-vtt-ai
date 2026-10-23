@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M3    | Formula & dice engine                                         | Done        | 100%     | —      |
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
-| M6    | Journal, members, table settings, plugin admin                | Not started | 0%       | —      |
+| M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
 | M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
@@ -29,61 +29,65 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M6
-- **Next task:** `T-0601`
+- **Active milestone:** M7
+- **Next task:** `T-0701`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
 ### 0.3 Change log
 
-| Date       | Change                                                                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                              |
-| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                              |
-| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                            |
-| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                            |
-| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.                           |
-| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.                    |
-| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                                   |
-| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                              |
-| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                                          |
-| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                                |
-| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                            |
-| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added.             |
-| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                                |
-| 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                                           |
-| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                              |
-| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                               |
-| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                                   |
-| 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                                  |
-| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                                |
-| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.                       |
-| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                            |
-| 2026-10-21 | T-0401 implemented (plugin file schemas, emitted JSON Schemas, first versions of `tiny-d20` and `tiny-pool`).                                 |
-| 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                                           |
-| 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                                  |
-| 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                                    |
-| 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                              |
-| 2026-10-21 | PR #5 merged (T-0404, T-0405). T-0406 implemented (plugin admin page, with an e2e test).                                                      |
-| 2026-10-21 | T-0407 implemented (plugin engine). ADR-023 added.                                                                                            |
-| 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                                          |
-| 2026-10-22 | PR #6 merged (T-0406 to T-0408). T-0409 implemented (plugin host, `@vtt/sdk/client`, engine-backed rolls and cards). ADR-025 added.           |
-| 2026-10-22 | PR #7 merged (T-0409). T-0410 implemented (plugin CLI, `@vtt/plugin-io`, `.vttplugin` archives installed from the admin page). ADR-026 added. |
-| 2026-10-22 | PR #8 merged (T-0410). T-0411 and T-0412 implemented (tiny-d20 `hpBar`, reference plugin e2e tests). ADR-027 added. M4 awaiting sign-off.     |
-| 2026-10-22 | PR #9 merged. M4 signed off as done. Active milestone is now M5.                                                                              |
-| 2026-10-22 | T-0501 implemented (Hocuspocus on `/ws/collab`, document access checks). ADR-028 added.                                                       |
-| 2026-10-22 | T-0504 and T-0502 implemented (JSON ↔ Yjs mapping in `@vtt/plugin-engine`, `ydocs` persistence and projection). ADR-029 added.                |
-| 2026-10-22 | T-0503 implemented (secret layer kept out of player sockets, views and formulas). ADR-030 added.                                              |
-| 2026-10-22 | T-0505 implemented (`adjust` and repair on persist over collab stateless messages). ADR-031 added.                                            |
-| 2026-10-22 | T-0506 implemented (live actor sheets in the web app over Yjs). ADR-032 added.                                                                |
-| 2026-10-22 | T-0507 implemented (presence outlines and name badges on sheet fields). ADR-033 added.                                                        |
-| 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                        |
-| 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                      |
-| 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                   |
-| 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                        |
-| 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                               |
-| 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                     |
-| 2026-10-23 | PR #11 merged. M5 signed off as done. Active milestone is now M6.                                                                             |
+| Date       | Change                                                                                                                                                                                                                   |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-10-19 | PRD v0.1 drafted. Stack, data model, plugin format, and monorepo layout decided.                                                                                                                                         |
+| 2026-10-19 | M0 implemented (T-0001…T-0010). ADR-008, ADR-009, ADR-010 added.                                                                                                                                                         |
+| 2026-10-19 | T-0009 verified on GitHub: PR #1 green, PR #2 (planted `any`) fails at Lint. M0 awaiting sign-off.                                                                                                                       |
+| 2026-10-19 | M0 signed off as done. Active milestone is now M1.                                                                                                                                                                       |
+| 2026-10-19 | M1 server tasks T-0101…T-0110 implemented on `feat/m1-server` (PR 1 of 2; T-0111 web shell is PR 2). ADR-011 added.                                                                                                      |
+| 2026-10-19 | T-0111 implemented (web shell, auth screens, Playwright smoke test). ADR-012 (Tailwind CSS 4) added. M1 awaiting sign-off.                                                                                               |
+| 2026-10-20 | T-0111 web app moved to React Router framework mode (SPA) and TanStack Form. ADR-013 added.                                                                                                                              |
+| 2026-10-20 | HTTP API schemas moved to `@vtt/shared/api`, shared by server and web (ADR-013).                                                                                                                                         |
+| 2026-10-20 | PR #4 merged; first `main` CI run with E2E green. M1 signed off as done. Active milestone is now M2.                                                                                                                     |
+| 2026-10-20 | T-0201 implemented (actors, items, journal metadata; repositories). ADR-014 added; Q6 decided.                                                                                                                           |
+| 2026-10-20 | T-0202 implemented (actor and item REST API with ownership checks). ADR-015 added.                                                                                                                                       |
+| 2026-10-20 | T-0203, T-0205 and T-0206 implemented (events socket, chat storage, history and fan-out); T-0204 server side done. ADR-016 added.                                                                                        |
+| 2026-10-20 | T-0207 implemented (table page with the chat panel; chat e2e).                                                                                                                                                           |
+| 2026-10-20 | T-0208 implemented (actor and item tabs on the table page); T-0204 e2e added. M2 awaiting sign-off.                                                                                                                      |
+| 2026-10-20 | PR #2 merged. M2 signed off as done. Active milestone is now M3.                                                                                                                                                         |
+| 2026-10-20 | T-0301 implemented (formula lexer and Pratt parser). ADR-017 added; Q8 decided.                                                                                                                                          |
+| 2026-10-20 | T-0302 implemented (pure-mode evaluator). ADR-017 extended.                                                                                                                                                              |
+| 2026-10-20 | T-0303 implemented (dice engine, seeded RNG, custom dice). ADR-017 extended.                                                                                                                                             |
+| 2026-10-20 | T-0304 implemented (roll results with resolved expressions). ADR-017 extended.                                                                                                                                           |
+| 2026-10-20 | T-0305 implemented (roll endpoint, `roll.request`, roll messages in the web chat). ADR-018 added. M3 awaiting sign-off.                                                                                                  |
+| 2026-10-21 | M3 signed off as done. Active milestone is now M4.                                                                                                                                                                       |
+| 2026-10-21 | T-0401 implemented (plugin file schemas, emitted JSON Schemas, first versions of `tiny-d20` and `tiny-pool`).                                                                                                            |
+| 2026-10-21 | T-0402 implemented (plugin validator with issue codes and fixtures). ADR-019 added.                                                                                                                                      |
+| 2026-10-21 | T-0403 implemented (plugin scanner, registry rows, admin plugin endpoints, read-only tables). ADR-020 added.                                                                                                             |
+| 2026-10-21 | PR #4 merged (T-0401 to T-0403). T-0404 implemented (scoped plugin CSS and its disk cache). ADR-021 added.                                                                                                               |
+| 2026-10-21 | T-0405 implemented (plugin file serving under `/plugins/<id>/*`). ADR-022 added.                                                                                                                                         |
+| 2026-10-21 | PR #5 merged (T-0404, T-0405). T-0406 implemented (plugin admin page, with an e2e test).                                                                                                                                 |
+| 2026-10-21 | T-0407 implemented (plugin engine). ADR-023 added.                                                                                                                                                                       |
+| 2026-10-21 | T-0408 implemented (sheet renderer and preview page). ADR-024 added.                                                                                                                                                     |
+| 2026-10-22 | PR #6 merged (T-0406 to T-0408). T-0409 implemented (plugin host, `@vtt/sdk/client`, engine-backed rolls and cards). ADR-025 added.                                                                                      |
+| 2026-10-22 | PR #7 merged (T-0409). T-0410 implemented (plugin CLI, `@vtt/plugin-io`, `.vttplugin` archives installed from the admin page). ADR-026 added.                                                                            |
+| 2026-10-22 | PR #8 merged (T-0410). T-0411 and T-0412 implemented (tiny-d20 `hpBar`, reference plugin e2e tests). ADR-027 added. M4 awaiting sign-off.                                                                                |
+| 2026-10-22 | PR #9 merged. M4 signed off as done. Active milestone is now M5.                                                                                                                                                         |
+| 2026-10-22 | T-0501 implemented (Hocuspocus on `/ws/collab`, document access checks). ADR-028 added.                                                                                                                                  |
+| 2026-10-22 | T-0504 and T-0502 implemented (JSON ↔ Yjs mapping in `@vtt/plugin-engine`, `ydocs` persistence and projection). ADR-029 added.                                                                                           |
+| 2026-10-22 | T-0503 implemented (secret layer kept out of player sockets, views and formulas). ADR-030 added.                                                                                                                         |
+| 2026-10-22 | T-0505 implemented (`adjust` and repair on persist over collab stateless messages). ADR-031 added.                                                                                                                       |
+| 2026-10-22 | T-0506 implemented (live actor sheets in the web app over Yjs). ADR-032 added.                                                                                                                                           |
+| 2026-10-22 | T-0507 implemented (presence outlines and name badges on sheet fields). ADR-033 added.                                                                                                                                   |
+| 2026-10-22 | T-0508 implemented (collection concurrency property test; server creates maps on load). ADR-034 added.                                                                                                                   |
+| 2026-10-22 | T-0509 implemented (derived values live; rolls read the live documents).                                                                                                                                                 |
+| 2026-10-22 | T-0510 implemented (collaborative long text with a minimal shared textarea). ADR-035 added.                                                                                                                              |
+| 2026-10-22 | T-0511 implemented (phone layout for sheets: Chat / Sheet / Dice bar).                                                                                                                                                   |
+| 2026-10-22 | T-0512 implemented (access changes pushed to open documents). ADR-036 added. All M5 tasks done.                                                                                                                          |
+| 2026-10-22 | Q3 decided: TipTap edits `richText` fields over a `Y.XmlFragment`; tiny-d20 characters gain a `biography`. ADR-037 added.                                                                                                |
+| 2026-10-23 | PR #11 merged. M5 signed off as done. Active milestone is now M6.                                                                                                                                                        |
+| 2026-10-23 | T-0601 implemented (journal entries over REST; hidden by default). ADR-038 added; Q11 decided: the journal UI goes in the M6 web PR.                                                                                     |
+| 2026-10-23 | T-0603 server side implemented (settings checked against `settings.json`, `table.updated` event, tiny-d20 `maxHp`). ADR-039 added.                                                                                       |
+| 2026-10-23 | Rest of M6 implemented in PR #12: journal UI, T-0602 members and invites, T-0603 settings tab, T-0604 instance settings, invite sign-up and health, T-0605 backups, T-0606 `pt-BR`. ADR-040, ADR-041 added; Q12 decided. |
+| 2026-10-23 | PR #12 merged. M6 signed off as done. Active milestone is now M7.                                                                                                                                                        |
 
 ---
 
@@ -399,12 +403,12 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.6 Journal (`FR-JOURNAL`)
 
-| ID            | Requirement                                                                                  | Priority |
-| ------------- | -------------------------------------------------------------------------------------------- | -------- |
-| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative). | MVP      |
-| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.               | MVP      |
-| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players.    | MVP      |
-| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.        | MVP      |
+| ID            | Requirement                                                                                                                   | Priority |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative).                                  | MVP      |
+| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.                                                | MVP      |
+| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players. New entries start hidden (ADR-038). | MVP      |
+| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.                                         | MVP      |
 
 ### 7.7 Dice engine (`FR-DICE`)
 
@@ -843,29 +847,30 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                                                                     |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                                      |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                     |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                                              |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                               |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                   |
-| Invites         | `POST /tables/:id/invites`, `POST /invites/:token/accept`                                                                                    |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                 |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                    |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`                                                                         |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                                             |
-| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                      |
-| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                            |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026) |
-| Health          | `GET /api/health`                                                                                                                            |
+| Group           | Endpoints (illustrative)                                                                                                                                              |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                                                               |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                              |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                                                                       |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                                                        |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                            |
+| Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040) |
+| Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                                          |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                             |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                           |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                                                                      |
+| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                               |
+| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                     |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026)                          |
+| Health          | `GET /api/health`                                                                                                                                                     |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -1259,35 +1264,41 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M6 — Journal, members, settings, administration
 
-- [ ] **T-0601 · Journal entries (SQL + collab)**
+- [x] **T-0601 · Journal entries (SQL + collab)**
   - **Deps:** T-0510, T-0201
   - **Do:** Create, list, hide/reveal, ownership for journal entries (FR-JOURNAL-01..03).
   - **Done when:** a hidden entry is absent from player-visible list and document access (tested on the wire).
+  - **Note:** routes in `apps/server/src/http/routes/journal.ts`; new entries start hidden; the body is the document's root `Y.XmlFragment` `body`, edited with TipTap (ADR-037, ADR-038). Tested in `apps/server/test/journal.test.ts`. The journal UI came later in the same PR (Q11): the Journal tab lists, creates, hides and reveals entries and sets their ownership, and an entry page edits its title and body (`apps/web/src/features/journal/`, `routes/table-journal*.tsx`), covered by `e2e/tests/table-admin.spec.ts`.
 
-- [ ] **T-0602 · Members and invites UI**
+- [x] **T-0602 · Members and invites UI**
   - **Deps:** T-0109, T-0111
   - **Do:** Table members page, role change, invite link generation and revocation.
   - **Done when:** FR-TABLE-03, 04 have e2e coverage.
+  - **Note:** the Members tab lists members; the GM changes roles, removes members and creates, copies and revokes invite links; each member picks a default character and may leave (`apps/web/src/features/members/`). Links open `/invite/:token`, which joins the table. Covered by `e2e/tests/table-admin.spec.ts`.
 
-- [ ] **T-0603 · Table settings**
+- [x] **T-0603 · Table settings**
   - **Deps:** T-0407, T-0111
   - **Do:** Render plugin `settings.json` as form; store values on table; pass to plugin engine (FR-ADMIN-04).
   - **Done when:** changing a house rule changes a derived value in a roll.
+  - **Note:** settings are checked against `settings.json` on create and `PATCH`, refused while the system is unavailable, and announced with a `table.updated` event; tiny-d20 derives `maxHp` from `startingHp` and shows it on the character sheet (ADR-039). The GM's Settings tab edits the name, description and house rules (`apps/web/src/routes/table-settings.tsx`). Tested in `apps/server/test/system-rolls.test.ts` (a roll) and `e2e/tests/table-admin.spec.ts` (an open sheet follows the change).
 
-- [ ] **T-0604 · Instance settings and health**
+- [x] **T-0604 · Instance settings and health**
   - **Deps:** T-0102
   - **Do:** Instance settings page (FR-ADMIN-01) and `/api/health` (FR-ADMIN-03).
   - **Done when:** health reports DB and plugin status; a broken DB reports unhealthy.
+  - **Note:** site name, registration policy and session lifetime (Q12); with the `invite` policy, a table invite link signs new accounts up. `/api/health` answers 503 when the database fails; failed plugins are reported only (ADR-040). Tested in `apps/server/test/instance.test.ts`; the page is `/admin/settings`.
 
-- [ ] **T-0605 · Backup procedure**
+- [x] **T-0605 · Backup procedure**
   - **Deps:** T-0102, T-0502
   - **Do:** Document and script consistent backup (`VACUUM INTO` or sqlite backup API) plus copying `plugins/` (FR-ADMIN-05 doc).
   - **Done when:** the script produces a restorable copy while the server is running (tested).
+  - **Note:** `pnpm backup <folder>` writes `VACUUM INTO` and copies `plugins/` into a new dated folder (`apps/server/src/db/backup.ts`); `docs/backup.md` covers taking and restoring. Tested in `apps/server/test/backup.test.ts` with uncheckpointed WAL writes and writes during the backup.
 
-- [ ] **T-0606 · Localisation of core UI**
+- [x] **T-0606 · Localisation of core UI**
   - **Deps:** T-0111
   - **Do:** Message catalogues for `en` and `pt-BR`, with a lint rule or test that flags missing keys (NFR-11).
   - **Done when:** the test fails on a missing key in `pt-BR`.
+  - **Note:** `apps/web/src/i18n/pt-BR.ts`, typed by the `en` catalogue; `test/i18n.test.ts` checks keys and placeholders. The language follows the browser, or the choice on the account page (ADR-041).
 
 ### M7 — Reference plugins, hardening, and release
 
@@ -1371,6 +1382,8 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                  | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                      |
 | Q9  | Required Node version: current LTS at the time of M0?                                                                                                    | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                   |
 | Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema? | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025) |
+| Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                      | T-0601                | **Decided:** later in M6, with T-0602 and T-0603; T-0601 is the server side (ADR-038)                          |
+| Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                      | T-0604                | **Decided:** an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)            |
 
 ---
 
@@ -1430,6 +1443,10 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted |
 | ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
 | ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
+| ADR-038 | [Journal entries over REST and collab: hidden by default, 404 for hidden entries, a `body` fragment](docs/adr/ADR-038-journal-entries.md)       | Accepted |
+| ADR-039 | [Table settings checked against the system's house rules; `table.updated` event](docs/adr/ADR-039-table-settings.md)                            | Accepted |
+| ADR-040 | [Instance settings, invite sign-up and `/api/health`](docs/adr/ADR-040-instance-settings-and-health.md)                                         | Accepted |
+| ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

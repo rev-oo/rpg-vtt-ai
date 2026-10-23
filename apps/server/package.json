@@ -31,7 +31,8 @@
     "test": "vitest run --coverage",
     "start": "node dist/src/main.js",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "tsc -b && node dist/src/cli/migrate.js"
+    "db:migrate": "tsc -b && node dist/src/cli/migrate.js",
+    "backup": "tsc -b && node dist/src/cli/backup.js"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",

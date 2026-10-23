@@ -3,12 +3,12 @@ import { useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
 import { changePasswordBody, MIN_PASSWORD_LENGTH, updateMeBody } from '@vtt/shared/api';
-import { Alert, Button, Card } from '@vtt/ui';
+import { Alert, Button, Card, Select } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { TextInput } from '../forms/fields.js';
-import { t } from '../i18n/index.js';
+import { chooseLocale, chosenLocale, LOCALE_NAMES, LOCALES, t } from '../i18n/index.js';
 import { storeUser } from '../shell/session.js';
 import { useSession } from '../shell/use-session.js';
 
@@ -137,6 +137,28 @@ export default function AccountRoute(): ReactElement {
             </password.Subscribe>
           </div>
         </form>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">{t('account.language')}</h2>
+        <Select
+          label={t('account.language')}
+          defaultValue={chosenLocale() ?? ''}
+          onChange={(e) => {
+            const picked = LOCALES.find((locale) => locale === e.target.value);
+            chooseLocale(picked ?? null);
+            // Messages are read once, when the app starts.
+            window.location.reload();
+          }}
+        >
+          <option value="">{t('account.languageAuto')}</option>
+          {LOCALES.map((locale) => (
+            <option key={locale} value={locale} lang={locale}>
+              {LOCALE_NAMES[locale]}
+            </option>
+          ))}
+        </Select>
+        <p className="text-sm text-muted">{t('account.languageHint')}</p>
       </Card>
     </div>
   );

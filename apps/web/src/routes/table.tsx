@@ -8,6 +8,7 @@ import {
   type ShouldRevalidateFunctionArgs,
 } from 'react-router';
 
+import { canManageTable } from '@vtt/shared';
 import type { TableTypes } from '@vtt/shared/api';
 import { Alert, cn } from '@vtt/ui';
 
@@ -106,7 +107,10 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
   // have missed some.
   useTableEvents(table.id, {
     onEvent: (event) => {
-      if (event.type === 'entity.changed') void revalidator.revalidate();
+      // Changed house rules recompute open sheets' derived values (ADR-039).
+      if (event.type === 'entity.changed' || event.type === 'table.updated') {
+        void revalidator.revalidate();
+      }
     },
     onResync: () => void revalidator.revalidate(),
   });
@@ -137,7 +141,7 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             <Alert tone="info">{t('table.readOnly', { name: table.systemName })}</Alert>
           )}
           <nav
-            className={cn('flex gap-1', onSheet && 'max-md:hidden')}
+            className={cn('flex flex-wrap gap-1', onSheet && 'max-md:hidden')}
             aria-label={t('table.sections')}
           >
             <NavLink to={`/tables/${table.id}`} end className={tabClass}>
@@ -146,6 +150,17 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             <NavLink to={`/tables/${table.id}/items`} className={tabClass}>
               {t('items.title')}
             </NavLink>
+            <NavLink to={`/tables/${table.id}/journal`} className={tabClass}>
+              {t('journal.title')}
+            </NavLink>
+            <NavLink to={`/tables/${table.id}/members`} className={tabClass}>
+              {t('members.title')}
+            </NavLink>
+            {canManageTable(table.role) && (
+              <NavLink to={`/tables/${table.id}/settings`} className={tabClass}>
+                {t('settings.title')}
+              </NavLink>
+            )}
           </nav>
           <Outlet />
         </div>

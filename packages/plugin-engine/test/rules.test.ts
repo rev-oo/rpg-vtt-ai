@@ -4,11 +4,42 @@ import {
   createRules,
   documentLayout,
   EngineError,
+  settingsIssues,
   settingValues,
   toCustomDie,
 } from '../src/index.js';
 
 import { CHARACTER, PLUGIN, scripted } from './fixtures.js';
+
+describe('settingsIssues() (FR-ADMIN-04)', () => {
+  it('names every value that cannot be stored, and why', () => {
+    const definitions = {
+      ...PLUGIN.settings,
+      crit: { type: 'boolean' as const, label: 'x', default: true },
+      mode: { type: 'string' as const, label: 'x', default: 'a', enum: ['a', 'b'] },
+      name: { type: 'string' as const, label: 'x', default: '', maxLength: 3 },
+      scale: { type: 'number' as const, label: 'x', default: 1.5, maximum: 2 },
+    };
+    expect(settingsIssues(definitions, { bonus: 4, crit: false, mode: 'b', scale: 2 })).toEqual([]);
+    expect(
+      settingsIssues(definitions, {
+        bonus: 1.5,
+        crit: 'yes',
+        mode: 'c',
+        name: 'abcd',
+        scale: 3,
+        old: 1,
+      }),
+    ).toEqual([
+      { name: 'bonus', reason: 'type' },
+      { name: 'crit', reason: 'type' },
+      { name: 'mode', reason: 'enum' },
+      { name: 'name', reason: 'maxLength' },
+      { name: 'scale', reason: 'maximum' },
+      { name: 'old', reason: 'unknown' },
+    ]);
+  });
+});
 
 describe('settingValues() (specs §8.12)', () => {
   it('keeps stored values that fit and falls back to defaults', () => {

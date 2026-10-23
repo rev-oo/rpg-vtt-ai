@@ -137,15 +137,16 @@ describe('table listing and access', () => {
 });
 
 describe('table settings (FR-TABLE-07)', () => {
-  it('lets the GM rename and change settings', async () => {
+  // House-rule settings are tested with a real system in system-rolls.test.ts (T-0603).
+  it('lets the GM rename the table', async () => {
     const { app, alice } = await setup();
     const table = await createTable(app, alice.client);
     const res = await patchTable(app, alice.client, table.id, {
       name: 'Renamed',
-      settings: { gridSize: 70 },
+      description: 'Thursdays',
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ table: { name: 'Renamed', settings: { gridSize: 70 } } });
+    expect(res.json()).toMatchObject({ table: { name: 'Renamed', description: 'Thursdays' } });
   });
 
   it.each(['assistant', 'player', 'spectator'] as const)('returns 403 to a %s', async (role) => {

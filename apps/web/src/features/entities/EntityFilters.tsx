@@ -10,7 +10,8 @@ const SEARCH_DELAY_MS = 250;
 
 export interface EntityFiltersProps {
   searchLabel: string;
-  types: readonly string[];
+  /** Omitted for lists without types, such as the journal. */
+  types?: readonly string[];
 }
 
 /**
@@ -66,20 +67,22 @@ export function EntityFilters({ searchLabel, types }: EntityFiltersProps): React
       />
       {/* Uncontrolled, so they react at once while the list loads; the key resets them when
           the URL changes another way (back, forward, a link). */}
-      <Select
-        key={`type-${type}`}
-        name="type"
-        label={t('entities.type')}
-        defaultValue={type}
-        onChange={apply}
-      >
-        <option value="">{t('entities.allTypes')}</option>
-        {types.map((option) => (
-          <option key={option} value={option}>
-            {option}
-          </option>
-        ))}
-      </Select>
+      {types && (
+        <Select
+          key={`type-${type}`}
+          name="type"
+          label={t('entities.type')}
+          defaultValue={type}
+          onChange={apply}
+        >
+          <option value="">{t('entities.allTypes')}</option>
+          {types.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </Select>
+      )}
       <label className="flex min-h-10 items-center gap-2">
         <input
           key={`trash-${String(trash)}`}

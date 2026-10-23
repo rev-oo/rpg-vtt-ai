@@ -3,13 +3,21 @@ import type { FastifyRequest } from 'fastify';
 import type { Subject } from '@vtt/shared';
 
 import type { Db } from '../db/client.js';
-import { findActor, findItem, type Actor, type Item } from '../db/repositories/index.js';
+import {
+  findActor,
+  findItem,
+  findJournalEntry,
+  type Actor,
+  type Item,
+  type JournalEntry,
+} from '../db/repositories/index.js';
 import {
   actorAccess,
   itemAccess,
   requireWritableSystem,
   type EntityAccess,
 } from '../domain/entities.js';
+import { journalEntryAccess } from '../domain/journal.js';
 import { findMembership, findTable, type GameTable, type Member } from '../domain/tables.js';
 import { forbidden, notFound } from '../errors.js';
 
@@ -85,4 +93,28 @@ export function requireItem(
   if (edit && access !== 'owner') throw forbidden();
   if (edit) requireWritableSystem(db, context.table);
   return { ...context, item, actor, access };
+}
+
+export interface JournalEntryAccess extends EntityContext {
+  entry: JournalEntry;
+  access: EntityAccess;
+}
+
+/**
+ * Resolves a journal entry the caller may see. Hidden entries are not found for players, like
+ * entries of other tables, so their ids cannot be probed (FR-JOURNAL-03).
+ */
+export function requireJournalEntry(
+  db: Db,
+  request: FastifyRequest,
+  id: string,
+  { includeDeleted = false, edit = false }: LookupOptions = {},
+): JournalEntryAccess {
+  const entry = findJournalEntry(db, id, { includeDeleted });
+  const context = entry && memberOf(db, request, entry.tableId);
+  const access = context && journalEntryAccess(context.subject, entry);
+  if (!entry || !context || !access) throw notFound('Journal entry not found.');
+  if (edit && access !== 'owner') throw forbidden();
+  if (edit) requireWritableSystem(db, context.table);
+  return { ...context, entry, access };
 }

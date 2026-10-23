@@ -54,15 +54,15 @@ pnpm --filter @vtt/server start       # http://localhost:3000/api/v1
 
 The server is configured with environment variables:
 
-| Variable                     | Default                 | Meaning                                                                 |
-| ---------------------------- | ----------------------- | ----------------------------------------------------------------------- |
-| `DATA_DIR`                   | `./data`                | Folder holding the SQLite database; back up by copying it               |
-| `PORT`                       | `3000`                  | HTTP port                                                               |
-| `PUBLIC_URL`                 | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure |
-| `SESSION_TTL`                | `604800` (7 days)       | Session lifetime in seconds                                             |
-| `LOG_LEVEL`                  | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`          |
-| `TRUST_PROXY`                | `false`                 | `true` or a hop count when running behind a reverse proxy               |
-| `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored       |
+| Variable                     | Default                 | Meaning                                                                       |
+| ---------------------------- | ----------------------- | ----------------------------------------------------------------------------- |
+| `DATA_DIR`                   | `./data`                | Folder holding the SQLite database and plugins; see [backups](docs/backup.md) |
+| `PORT`                       | `3000`                  | HTTP port                                                                     |
+| `PUBLIC_URL`                 | `http://localhost:PORT` | Public URL, used for invite links; `https` makes session cookies Secure       |
+| `SESSION_TTL`                | `604800` (7 days)       | Default session lifetime in seconds; admins can change it in the app          |
+| `LOG_LEVEL`                  | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`                |
+| `TRUST_PROXY`                | `false`                 | `true` or a hop count when running behind a reverse proxy                     |
+| `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored             |
 
 ### Running the web app
 
@@ -71,6 +71,10 @@ With the server running, start the Vite dev server; it proxies `/api` to `VTT_AP
 ```bash
 pnpm --filter @vtt/web dev            # http://localhost:5173
 ```
+
+`GET /api/health` reports the database and the enabled plugins, and answers 503 when the database is unavailable.
+
+Back up a running instance with `pnpm backup <folder>`; [docs/backup.md](docs/backup.md) covers taking and restoring backups.
 
 On a fresh instance the app opens the setup screen. Creating a table needs an enabled system plugin: install one from **Plugins** in the admin menu, or copy a plugin folder into `DATA_DIR/plugins` and press **Rescan**.
 
