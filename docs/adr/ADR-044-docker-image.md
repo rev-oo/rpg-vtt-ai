@@ -37,5 +37,6 @@ Specs §4.2 has one Node process serving the API, both sockets, plugin files and
 - **Two bugs surfaced, both fixed:**
   - the 304 policy above, which would have broken every reload in production;
   - a race in counter steps: the first step on a counter that was not stored yet wrote `default + delta`, so two people stepping at once lost a step. The sheet now always asks the server to adjust (FR-SHEET-08), and the server starts a missing counter from its default.
+- The first image build failed in CI: React Router prerenders `index.html` through a preview server it reaches at 127.0.0.1, which in the container listened on ::1 for `localhost`. The preview server is now bound to 127.0.0.1 (`apps/web/vite.config.ts`).
 - `pnpm --filter @vtt/server start` after `pnpm build` serves the whole app on one port.
 - The image is built for the machine that builds it. Publishing images for several architectures is left to T-0705.
