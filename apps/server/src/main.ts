@@ -1,8 +1,10 @@
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { ConfigError, loadConfig, type Config } from './config/index.js';
 import { openDatabase, runMigrations } from './db/client.js';
 import { buildApp } from './http/app.js';
+import { isWebApp } from './http/web-app.js';
 import { createLogger } from './logger/index.js';
 import { PluginRegistry } from './plugins/registry.js';
 
@@ -31,7 +33,22 @@ const plugins = new PluginRegistry({
   now: () => new Date(),
 });
 await plugins.scan();
-const app = await buildApp({ logger, db, config, plugins });
+
+// The web app built next to this package in the repository, unless WEB_DIR names another.
+const builtWebApp = fileURLToPath(new URL('../../../web/build/client', import.meta.url));
+const webDir = config.webDir ?? (isWebApp(builtWebApp) ? builtWebApp : undefined);
+if (webDir !== undefined && !isWebApp(webDir)) {
+  logger.fatal({ webDir }, 'WEB_DIR has no built web app (index.html)');
+  process.exit(1);
+}
+if (webDir === undefined) logger.info('No built web app found; serving the API only');
+const app = await buildApp({
+  logger,
+  db,
+  config,
+  plugins,
+  ...(webDir !== undefined && { webDir }),
+});
 
 for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.once(signal, () => {

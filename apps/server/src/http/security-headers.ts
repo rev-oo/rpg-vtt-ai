@@ -19,7 +19,9 @@ const HEADERS: Readonly<Record<string, string>> = {
 
 export function registerSecurityHeaders(app: FastifyInstance): void {
   app.addHook('onSend', async (_request, reply, payload) => {
-    if (!reply.hasHeader('content-security-policy')) {
+    // A 304 has no content type; the browser keeps the stored response's policy, so none is
+    // sent rather than one meant for data.
+    if (reply.statusCode !== 304 && !reply.hasHeader('content-security-policy')) {
       const type = reply.getHeader('content-type');
       const page = typeof type === 'string' && type.startsWith('text/html');
       reply.header('content-security-policy', page ? PAGE_POLICY : DATA_POLICY);
