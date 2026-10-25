@@ -22,7 +22,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
-| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 40%      | —      |
+| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 60%      | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import   | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M7
-- **Next task:** `T-0703`
+- **Next task:** `T-0704`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -90,6 +90,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-23 | PR #12 merged. M6 signed off as done. Active milestone is now M7.                                                                                                                                                        |
 | 2026-10-23 | T-0701 security review: 6 fixes, 5 accepted risks (`docs/security-review.md`). ADR-042 added.                                                                                                                            |
 | 2026-10-25 | PR #13 merged (T-0701). T-0702: e2e on Chromium, Firefox and WebKit; Firefox plugin-loading and phone chat fixes. ADR-043 added.                                                                                         |
+| 2026-10-25 | PR #14 merged (T-0702). T-0703: Docker image, compose and Caddy examples; the server serves the web app; 304 policy and counter-step race fixed. ADR-044 added.                                                          |
 
 ---
 
@@ -1331,10 +1332,17 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
     Firefox found two bugs: plugin code did not load (the import map came after the module preloads), and the phone chat box overflowed. Both are fixed.
 
-- [ ] **T-0703 · Docker image**
+- [x] **T-0703 · Docker image**
   - **Deps:** T-0009, T-0403
   - **Do:** Multi-stage Dockerfile (builder, runtime with non-root user), `docker-compose.example.yml` with one volume, healthcheck, and reverse proxy example (Caddy) with WebSocket forwarding.
   - **Done when:** `docker compose up` on a clean machine serves the app and a fresh instance completes setup.
+  - **Note:** the image and examples are in `docker/`. The server now serves the built web app (`WEB_DIR`), and e2e runs against it. CI's Docker job runs the compose example on a fresh runner on every push and PR, and `docker/smoke-test.sh` checks:
+    - the page is served;
+    - setup completes;
+    - the server is not root;
+    - data survives a restart.
+
+    Two bugs were fixed on the way: a 304 brought the data policy to a cached page, and concurrent first counter steps could lose one (ADR-044).
 
 - [ ] **T-0704 · Authoring guide and API docs**
   - **Deps:** T-0410, T-0411
@@ -1468,6 +1476,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted |
 | ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted |
 | ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted |
+| ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

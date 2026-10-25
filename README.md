@@ -30,6 +30,21 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 
 TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (React Router framework mode, SPA) · TanStack Form · Tailwind CSS 4 · Node.js + Fastify · WebSocket events + Hocuspocus/Yjs · SQLite via Drizzle · Zod · Vitest + Playwright · ESLint + Prettier.
 
+## Running with Docker
+
+To run an instance, build the image with the example compose file:
+
+```bash
+docker compose -f docker/docker-compose.example.yml up -d --build
+```
+
+Open http://localhost:3000 and create the admin account. The data (database, plugins) lives in the one volume, `vtt-data`.
+
+- **Public address:** behind a domain, set `PUBLIC_URL` in the compose file.
+- **HTTPS:** [`docker/Caddyfile.example`](docker/Caddyfile.example) shows Caddy in front, with HTTPS and both WebSockets passed through.
+
+The image runs as a non-root user and has a healthcheck on `/api/health`.
+
 ## Getting started
 
 Requirements:
@@ -49,8 +64,10 @@ pnpm test
 
 ```bash
 pnpm db:migrate                       # creates data/vtt.sqlite (also runs on start)
-pnpm --filter @vtt/server start       # http://localhost:3000/api/v1
+pnpm --filter @vtt/server start       # http://localhost:3000
 ```
+
+After `pnpm build`, the server also serves the built web app. Without one, it serves the API only.
 
 The server is configured with environment variables:
 
@@ -63,6 +80,7 @@ The server is configured with environment variables:
 | `LOG_LEVEL`                  | `info`                  | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`                |
 | `TRUST_PROXY`                | `false`                 | Proxy hops to trust behind a reverse proxy, usually `1` (see below)           |
 | `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored             |
+| `WEB_DIR`                    | `apps/web/build/client` | The built web app to serve; when set, it must hold `index.html`               |
 
 Behind a reverse proxy, set `TRUST_PROXY` to the number of proxies in front of the server (`1` for a single Caddy or Traefik), so login and sign-up limits count the real client address. `true` trusts every `X-Forwarded-For` entry, which a client can write itself, so it can dodge those limits.
 
