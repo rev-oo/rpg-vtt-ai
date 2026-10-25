@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from '../../domain/auth/password.js';
 import { findUserByUsername, toPublicUser } from '../../domain/users.js';
 import { AppError, badRequest } from '../../errors.js';
 import type { AppContext } from '../app.js';
-import { clearSessionCookie, requireSession, setSessionCookie } from '../auth.js';
+import { clearSessionCookie, rateLimited, requireSession, setSessionCookie } from '../auth.js';
 import { SESSION_COOKIE } from '../cookies.js';
 import { parseInput } from '../validation.js';
 
@@ -24,10 +24,7 @@ export function authRoutes({ app, db, config, sessions, loginThrottle }: AppCont
     const { username, password } = parseInput(loginBody, request.body);
 
     const retryAfterMs = loginThrottle.retryAfterMs(request.ip, username);
-    if (retryAfterMs > 0) {
-      reply.header('retry-after', String(Math.ceil(retryAfterMs / 1000)));
-      throw new AppError(429, 'rate_limited', 'Too many failed login attempts. Try again later.');
-    }
+    if (retryAfterMs > 0) throw rateLimited(reply, retryAfterMs, 'Too many failed login attempts.');
 
     const user = findUserByUsername(db, username);
     const valid = await verifyPassword(user?.passwordHash ?? (await dummyHash), password);
@@ -73,10 +70,17 @@ export function authRoutes({ app, db, config, sessions, loginThrottle }: AppCont
   app.post('/api/v1/me/password', async (request, reply) => {
     const session = requireSession(request);
     const { currentPassword, newPassword } = parseInput(changePasswordBody, request.body);
+    // Guessing the current password counts as failed logins, so a stolen session cannot
+    // try it faster than the login form allows.
+    const { username } = session.user;
+    const retryAfterMs = loginThrottle.retryAfterMs(request.ip, username);
+    if (retryAfterMs > 0) throw rateLimited(reply, retryAfterMs, 'Too many wrong passwords.');
     const user = db.select().from(users).where(eq(users.id, session.user.id)).get();
     if (!user || !(await verifyPassword(user.passwordHash, currentPassword))) {
+      loginThrottle.recordFailure(request.ip, username);
       throw badRequest('wrong_password', 'The current password is wrong.');
     }
+    loginThrottle.recordSuccess(username);
 
     db.update(users)
       .set({ passwordHash: await hashPassword(newPassword), mustChangePassword: false })

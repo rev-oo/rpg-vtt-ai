@@ -61,7 +61,7 @@ describe('logger', () => {
   it('writes structured JSON and redacts credentials', () => {
     const logs = captureLogs();
     createLogger('info', logs).info(
-      { req: { headers: { cookie: 'sid=secret', authorization: 'Bearer x' } } },
+      { res: { headers: { 'set-cookie': 'sid=secret' } }, secret: 'kept' },
       'hi',
     );
 
@@ -69,8 +69,29 @@ describe('logger', () => {
     expect(line).toMatchObject({
       level: 30,
       service: 'vtt-server',
-      req: { headers: { cookie: '[redacted]', authorization: '[redacted]' } },
+      res: { headers: { 'set-cookie': '[redacted]' } },
     });
     expect(typeof line?.time).toBe('string');
+  });
+
+  it('logs requests without headers or invite tokens (T-0701)', async () => {
+    const { app, logs } = await createTestApp();
+    const token = 'a'.repeat(43);
+    await app.inject({
+      method: 'GET',
+      url: `/api/v1/invites/${token}`,
+      headers: { cookie: 'vtt_session=secret' },
+    });
+
+    const incoming = logs.lines.find((l) => l.msg === 'incoming request');
+    expect(incoming?.req).toEqual({
+      method: 'GET',
+      url: '/api/v1/invites/[redacted]',
+      host: 'localhost:80',
+      remoteAddress: '127.0.0.1',
+    });
+    const all = JSON.stringify(logs.lines);
+    expect(all).not.toContain(token);
+    expect(all).not.toContain('secret');
   });
 });

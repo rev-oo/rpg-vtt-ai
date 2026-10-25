@@ -10,6 +10,7 @@ import type { InstanceSettings } from '@vtt/shared/api';
 import type { Config } from '../config/index.js';
 import type { Db } from '../db/client.js';
 import { LoginThrottle } from '../domain/auth/login-throttle.js';
+import { RateLimit } from '../domain/auth/rate-limit.js';
 import { SessionService } from '../domain/auth/sessions.js';
 import { instanceDefaults, readInstanceSettings } from '../domain/instance.js';
 import { secureRng } from '../domain/rolls.js';
@@ -40,6 +41,7 @@ import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
 import { userRoutes } from './routes/users.js';
+import { registerSecurityHeaders } from './security-headers.js';
 import { scheduleTrashPurge } from './trash-purge.js';
 import { installValidationMessages } from './validation.js';
 
@@ -56,6 +58,8 @@ export interface AppOptions {
   now?: () => Date;
   /** Login rate limiter override for tests. */
   loginThrottle?: LoginThrottle;
+  /** Sign-up rate limiter (per IP) override for tests. */
+  signupLimit?: RateLimit;
   /** Dice RNG override for tests; rolls are cryptographically random otherwise. */
   rng?: Rng;
   /** The plugin registry; by default one over `DATA_DIR/plugins` that has not scanned yet. */
@@ -71,6 +75,8 @@ export interface AppContext {
   config: Config;
   sessions: SessionService;
   loginThrottle: LoginThrottle;
+  /** Accounts made through invite links, per IP (FR-ADMIN-01). */
+  signupLimit: RateLimit;
   /** Event socket fan-out (specs §10.2). */
   events: EventHub;
   /** The application clock; routes use it instead of `new Date()` so tests can move time. */
@@ -91,6 +97,7 @@ export async function buildApp({
   config,
   now = () => new Date(),
   loginThrottle = new LoginThrottle(),
+  signupLimit = new RateLimit({ max: 10, windowMs: 60 * 60 * 1000, now: () => now().getTime() }),
   rng = secureRng,
   plugins = new PluginRegistry({
     db,
@@ -120,6 +127,7 @@ export async function buildApp({
 
   installValidationMessages();
   registerErrorHandling(app);
+  registerSecurityHeaders(app);
   // JSON is the only accepted body type. A cross-site HTML form can send text/plain without a
   // CORS preflight, which would bypass the CSRF reasoning in ./auth.ts.
   app.removeContentTypeParser('text/plain');
@@ -148,6 +156,7 @@ export async function buildApp({
     config,
     sessions,
     loginThrottle,
+    signupLimit,
     events,
     now,
     rng,

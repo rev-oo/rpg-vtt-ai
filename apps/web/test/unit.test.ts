@@ -113,7 +113,7 @@ describe('API client', () => {
     const error = await requestNoContent('POST', '/auth/login', {}).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 429, code: 'rate_limited', retryAfterSeconds: 42 });
-    expect(errorMessage(error)).toBe('Too many failed attempts. Try again in 42 seconds.');
+    expect(errorMessage(error)).toBe('Too many attempts. Try again in 42 seconds.');
   });
 
   it('rejects responses that do not match the schema', async () => {

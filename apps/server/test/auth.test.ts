@@ -196,6 +196,24 @@ describe('password change (FR-AUTH-05)', () => {
     expect(res.json()).toMatchObject({ error: { code: 'wrong_password' } });
   });
 
+  it('counts wrong current passwords as failed logins (T-0701)', async () => {
+    const { app, admin } = await setup();
+    for (let i = 0; i < 5; i += 1) {
+      const res = await change(app, authHeaders(admin), {
+        currentPassword: 'not-it-at-all',
+        newPassword: 'brand-new-password',
+      });
+      expect(res.statusCode).toBe(400);
+    }
+    const res = await change(app, authHeaders(admin), {
+      currentPassword: ADMIN.password,
+      newPassword: 'brand-new-password',
+    });
+    expect(res.statusCode).toBe(429);
+    expect(res.headers['retry-after']).toBeDefined();
+    expect((await login(app, ADMIN)).statusCode).toBe(429);
+  });
+
   it('rejects a missing CSRF token', async () => {
     const { app, admin } = await setup();
     const res = await change(app, authHeaders(admin, { csrf: false }), {

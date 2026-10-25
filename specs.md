@@ -22,7 +22,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
-| M7    | Reference plugins & hardening (e2e, Docker, docs)             | Not started | 0%       | —      |
+| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 20%      | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import   | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M7
-- **Next task:** `T-0701`
+- **Next task:** `T-0702`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -88,6 +88,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-23 | T-0603 server side implemented (settings checked against `settings.json`, `table.updated` event, tiny-d20 `maxHp`). ADR-039 added.                                                                                       |
 | 2026-10-23 | Rest of M6 implemented in PR #12: journal UI, T-0602 members and invites, T-0603 settings tab, T-0604 instance settings, invite sign-up and health, T-0605 backups, T-0606 `pt-BR`. ADR-040, ADR-041 added; Q12 decided. |
 | 2026-10-23 | PR #12 merged. M6 signed off as done. Active milestone is now M7.                                                                                                                                                        |
+| 2026-10-23 | T-0701 security review: 6 fixes, 5 accepted risks (`docs/security-review.md`). ADR-042 added.                                                                                                                            |
 
 ---
 
@@ -1302,10 +1303,18 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ### M7 — Reference plugins, hardening, and release
 
-- [ ] **T-0701 · Security review pass**
+- [x] **T-0701 · Security review pass**
   - **Deps:** all M1–M6
   - **Do:** Review CSRF, CSP headers, rate limits, formula sandboxing, audience leaks, path traversal. Record findings in `docs/security-review.md`.
   - **Done when:** all findings are fixed or have an accepted-risk note.
+  - **Note:** 11 findings: 6 fixed, 5 accepted (`docs/security-review.md`). The fixes:
+    - a page CSP with script hashes, and security headers on every response;
+    - password change counts as failed logins, and sign-up is limited per IP;
+    - invite tokens are redacted from logs;
+    - `TRUST_PROXY` guidance in the README;
+    - lint forbids `eval`.
+
+    See ADR-042; `e2e/tests/security.spec.ts` runs the app under the policy.
 
 - [ ] **T-0702 · End-to-end suite**
   - **Deps:** T-0411, T-0412, T-0511, T-0512
@@ -1447,6 +1456,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-039 | [Table settings checked against the system's house rules; `table.updated` event](docs/adr/ADR-039-table-settings.md)                            | Accepted |
 | ADR-040 | [Instance settings, invite sign-up and `/api/health`](docs/adr/ADR-040-instance-settings-and-health.md)                                         | Accepted |
 | ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted |
+| ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
