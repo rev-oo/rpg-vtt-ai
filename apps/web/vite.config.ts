@@ -69,5 +69,7 @@ function pluginRuntime(): Plugin {
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter(), pluginRuntime()],
   server: { proxy },
-  preview: { proxy },
+  // The build prerenders index.html through a preview server it reaches at 127.0.0.1; bound
+  // to `localhost`, it can listen on ::1 instead (as in Docker) and the build fails.
+  preview: { host: '127.0.0.1', proxy },
 });
