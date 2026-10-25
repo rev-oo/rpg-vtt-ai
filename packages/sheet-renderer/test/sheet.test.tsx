@@ -72,7 +72,8 @@ describe('<Sheet>', () => {
           { type: 'field', path: 'hp.value', label: 'field.hp' },
         ],
       },
-      { data: { size: 'huge' } },
+      // Seeded as previews do: the memory store does not know defaults.
+      { data: { size: 'huge', hp: { value: 10 } } },
     );
     const user = userEvent.setup();
     await user.click(screen.getByLabelText('Alive'));
@@ -88,6 +89,17 @@ describe('<Sheet>', () => {
     await user.click(screen.getByRole('button', { name: 'Increase Hit points' }));
     await user.click(screen.getByRole('button', { name: 'Decrease Hit points' }));
     expect(valueAt(store.getSnapshot(), ['hp', 'value'])).toBe(11);
+  });
+
+  it('steps a counter that is not stored yet with an adjustment (FR-SHEET-08)', async () => {
+    const store = createMemoryStore();
+    const set = vi.spyOn(store, 'set');
+    const adjust = vi.spyOn(store, 'adjust');
+    renderSheet({ type: 'field', path: 'hp.value', label: 'field.hp' }, { store });
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Decrease Hit points' }));
+    // Writing `default - 1` would lose a step made at the same time by someone else.
+    expect(adjust).toHaveBeenCalledWith(['hp', 'value'], -1);
+    expect(set).not.toHaveBeenCalled();
   });
 
   it('shows nodes only while visibleIf holds, and hides broken conditions', () => {
