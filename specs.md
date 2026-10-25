@@ -22,7 +22,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
-| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 20%      | —      |
+| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 40%      | —      |
 | MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import   | Not started | 0%       | —      |
@@ -30,7 +30,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M7
-- **Next task:** `T-0702`
+- **Next task:** `T-0703`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -89,6 +89,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-23 | Rest of M6 implemented in PR #12: journal UI, T-0602 members and invites, T-0603 settings tab, T-0604 instance settings, invite sign-up and health, T-0605 backups, T-0606 `pt-BR`. ADR-040, ADR-041 added; Q12 decided. |
 | 2026-10-23 | PR #12 merged. M6 signed off as done. Active milestone is now M7.                                                                                                                                                        |
 | 2026-10-23 | T-0701 security review: 6 fixes, 5 accepted risks (`docs/security-review.md`). ADR-042 added.                                                                                                                            |
+| 2026-10-25 | PR #13 merged (T-0701). T-0702: e2e on Chromium, Firefox and WebKit; Firefox plugin-loading and phone chat fixes. ADR-043 added.                                                                                         |
 
 ---
 
@@ -1316,10 +1317,19 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
     See ADR-042; `e2e/tests/security.spec.ts` runs the app under the policy.
 
-- [ ] **T-0702 · End-to-end suite**
+- [x] **T-0702 · End-to-end suite**
   - **Deps:** T-0411, T-0412, T-0511, T-0512
   - **Do:** Playwright scenarios: two browsers editing one sheet; whispers; secret rolls; observer read-only; mobile sheet; plugin enable/disable; secret layer on the wire.
   - **Done when:** suite is green in CI on three browsers.
+  - **Note:** the suite runs on Chromium, Firefox and WebKit, with one instance per browser (ADR-043). Where each scenario lives:
+    - `live-sheets.spec.ts`: two browsers on one sheet, and an observer;
+    - `chat.spec.ts`: whispers;
+    - `rolls.spec.ts`: secret rolls;
+    - `phone-sheets.spec.ts`: the phone sheet;
+    - `plugins.spec.ts`: enabling and disabling plugins;
+    - `reference-plugins.spec.ts`: the secret layer on the wire, which is new.
+
+    Firefox found two bugs: plugin code did not load (the import map came after the module preloads), and the phone chat box overflowed. Both are fixed.
 
 - [ ] **T-0703 · Docker image**
   - **Deps:** T-0009, T-0403
@@ -1457,6 +1467,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-040 | [Instance settings, invite sign-up and `/api/health`](docs/adr/ADR-040-instance-settings-and-health.md)                                         | Accepted |
 | ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted |
 | ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted |
+| ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

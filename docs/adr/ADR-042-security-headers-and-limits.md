@@ -12,7 +12,7 @@ NFR-05 asks for CSP headers, but the app sent none. The SPA is a prerendered `in
 ## Decision
 
 1. **The page's policy is a `<meta>` tag written at build time.**
-   - `apps/web/scripts/content-security-policy.ts` runs after `react-router build`. It hashes every inline script of `index.html` and puts the policy right after the charset.
+   - `apps/web/scripts/finish-page.ts` runs after `react-router build`. It hashes every inline script of `index.html` and puts the policy right after the charset.
    - Scripts load only from the instance itself, or by hash. There are no nonces, so serving the file needs no server code.
    - Styles allow `'unsafe-inline'`, because the editor adds a `<style>` tag.
    - Images may come from any HTTP(S) site.

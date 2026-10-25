@@ -36,7 +36,7 @@ Checked, no finding:
 
 **1 · Fixed.** There was no policy at all. The fix has two parts (ADR-042):
 
-- **The page** gets a policy as a `<meta>` tag, added to `build/client/index.html` after `react-router build` (`apps/web/scripts/content-security-policy.ts`):
+- **The page** gets a policy as a `<meta>` tag, added to `build/client/index.html` after `react-router build` (`apps/web/scripts/finish-page.ts`):
   - scripts only from the instance itself, plus the page's own inline scripts by SHA-256 hash: the import map and React Router's start-up code;
   - no plugins (`object-src 'none'`), no `<base>`, and forms post only to the instance;
   - connections only to the instance (`connect-src 'self'` covers both sockets);
@@ -52,7 +52,7 @@ Checked, no finding:
 Tests:
 
 - `apps/server/test/security-headers.test.ts` checks the server headers;
-- `apps/web/test/content-security-policy.test.ts` checks the hashes and where the tag goes;
+- `apps/web/test/finish-page.test.ts` checks the hashes and where the tag goes;
 - `e2e/tests/security.spec.ts` runs a plugin sheet, chat and the journal editor under the policy and fails on any violation it reports. Breaking the policy on purpose makes it fail: without the hashes the app does not start, and without inline styles the editor's style tag is reported.
 
 **7 · Accepted: `style-src 'unsafe-inline'`.** The rich-text editor adds a `<style>` tag, and sheets and presence set style attributes. Injected CSS can restyle the page but not run code, and script injection stays blocked. Removing it would mean shipping the editor's CSS ourselves and keeping it in step with TipTap.
