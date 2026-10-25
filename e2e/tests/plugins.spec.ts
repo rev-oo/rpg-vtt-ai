@@ -5,14 +5,14 @@ import { fileURLToPath } from 'node:url';
 import { expect, test } from '@playwright/test';
 
 import { ADMIN, signIn } from './support/api.js';
+import { pluginsDir } from './support/instance.js';
 
 const fixtures = fileURLToPath(new URL('../fixtures/plugins/', import.meta.url));
-// The data directory scripts/start-server.mjs runs the server on.
-const pluginsDir = fileURLToPath(new URL('../.data/plugins/', import.meta.url));
-const lateDir = path.join(pluginsDir, 'e2e-late');
+// The plugins folder of this browser's server.
+const lateDir = () => path.join(pluginsDir(), 'e2e-late');
 
 test.afterAll(async () => {
-  await rm(lateDir, { recursive: true, force: true });
+  await rm(lateDir(), { recursive: true, force: true });
 });
 
 // T-0406: the plugin admin page (FR-ADMIN-02).
@@ -55,8 +55,8 @@ test('admins list, enable, disable and rescan plugins', async ({ browser }) => {
 
   await test.step('rescan finds a new plugin folder', async () => {
     await expect(card('E2E Late')).toHaveCount(0);
-    await cp(path.join(fixtures, 'e2e-spare'), lateDir, { recursive: true });
-    const manifest = path.join(lateDir, 'plugin.json');
+    await cp(path.join(fixtures, 'e2e-spare'), lateDir(), { recursive: true });
+    const manifest = path.join(lateDir(), 'plugin.json');
     const json = JSON.parse(await readFile(manifest, 'utf8')) as Record<string, unknown>;
     await writeFile(manifest, JSON.stringify({ ...json, id: 'e2e-late', name: 'E2E Late' }));
 

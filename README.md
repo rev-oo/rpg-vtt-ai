@@ -111,7 +111,7 @@ Run these from the repository root. Turborepo runs the build, typecheck, lint an
 
 To run a task for one package, filter it: `pnpm turbo run test --filter @vtt/formula`.
 
-Before the first `pnpm e2e`, install the browser once: `pnpm --filter @vtt/e2e exec playwright install chromium`.
+Before the first `pnpm e2e`, install the browsers once: `pnpm --filter @vtt/e2e exec playwright install chromium firefox webkit`. The suite runs on all three, each against its own server and data folder; `E2E_BROWSERS=chromium pnpm e2e` runs just one.
 
 ## Repository layout
 

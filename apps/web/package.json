@@ -30,7 +30,7 @@
   },
   "scripts": {
     "dev": "react-router dev",
-    "build": "react-router typegen && tsc -b && react-router build && node scripts/content-security-policy.ts",
+    "build": "react-router typegen && tsc -b && react-router build && node scripts/finish-page.ts",
     "preview": "vite preview",
     "typecheck": "react-router typegen && tsc -b",
     "lint": "eslint . --max-warnings 0",

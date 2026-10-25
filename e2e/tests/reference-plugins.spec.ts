@@ -27,6 +27,33 @@ async function setUp(admin: SignedIn, id: string): Promise<void> {
   await post(admin, `/plugins/${id}/enable`, { acknowledgeCode: true });
 }
 
+/**
+ * Everything the page receives over its sockets and from the API, as one buffer. Collab
+ * frames are binary Yjs updates, in which strings are plain UTF-8.
+ */
+function recordTraffic(page: Page): () => Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  const bodies: Promise<void>[] = [];
+  page.on('websocket', (socket) => {
+    socket.on('framereceived', ({ payload }) => {
+      chunks.push(typeof payload === 'string' ? Buffer.from(payload) : payload);
+    });
+  });
+  page.on('response', (response) => {
+    if (!new URL(response.url()).pathname.startsWith('/api/')) return;
+    bodies.push(
+      response.body().then(
+        (body) => void chunks.push(body),
+        () => undefined,
+      ),
+    );
+  });
+  return async () => {
+    await Promise.all(bodies);
+    return Buffer.concat(chunks);
+  };
+}
+
 async function openSheet(page: Page, tableId: string, name: string): Promise<void> {
   await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
@@ -63,6 +90,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
   const page = await player.context.newPage();
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  const received = recordTraffic(page);
   await openSheet(page, table.id, 'Ayla');
   const sheet = page.locator('[data-plugin="tiny-d20"]');
 
@@ -106,6 +134,22 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const gmSheet = gmPage.locator('[data-plugin="tiny-d20"]');
     await gmSheet.getByRole('tab', { name: 'Notes' }).click();
     await expect(gmSheet.getByLabel('GM notes')).toHaveValue('Secretly a dragon');
+
+    // The GM edits the secret, then a public field. Once the public change shows on the
+    // player's sheet, the secret edit would have arrived too if it were sent.
+    await gmSheet.getByLabel('GM notes').fill('Hoards stolen gold');
+    await gmSheet.getByRole('textbox', { name: 'Notes', exact: true }).fill('Met at the inn');
+    await expect(sheet.getByRole('textbox', { name: 'Notes', exact: true })).toHaveValue(
+      'Met at the inn',
+    );
+    await gmPage.close();
+  });
+
+  await test.step('the secret layer never reaches the player on the wire (FR-SHEET-04)', async () => {
+    const traffic = await received();
+    expect(traffic.includes('Met at the inn')).toBe(true);
+    expect(traffic.includes('Secretly a dragon')).toBe(false);
+    expect(traffic.includes('Hoards stolen gold')).toBe(false);
   });
 
   await test.step('at zero hit points the sheet says so', async () => {

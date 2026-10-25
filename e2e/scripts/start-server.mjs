@@ -12,7 +12,7 @@ import Database from 'better-sqlite3';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const serverDir = path.resolve(here, '../../apps/server');
-const dataDir = path.resolve(here, '../.data');
+const dataDir = path.resolve(process.env.E2E_DATA_DIR ?? path.join(here, '../.data'));
 const env = { ...process.env, DATA_DIR: dataDir, PORT: process.env.E2E_API_PORT ?? '3100' };
 
 rmSync(dataDir, { recursive: true, force: true });
