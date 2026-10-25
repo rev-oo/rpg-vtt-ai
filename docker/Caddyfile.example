@@ -1,0 +1,11 @@
+# Caddy in front of the VTT (T-0703): HTTPS with an automatic certificate, and the two
+# WebSockets (/ws/events, /ws/collab) passed through. Caddy's reverse_proxy forwards
+# WebSocket upgrades on its own; nothing else is needed for them.
+#
+# With the compose example: set PUBLIC_URL to https://vtt.example.com and TRUST_PROXY to 1,
+# and stop publishing port 3000 if Caddy runs on the same Docker network (then use vtt:3000).
+
+vtt.example.com {
+	encode zstd gzip
+	reverse_proxy localhost:3000
+}

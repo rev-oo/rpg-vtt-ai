@@ -53,26 +53,25 @@ jobs:
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
         run: pnpm e2e
 
+  # Builds the image from the compose example and checks it like a new operator would
+  # (T-0703). Releases publish it (T-0705).
   docker:
     name: Docker image
     needs: checks
-    if: startsWith(github.ref, 'refs/heads/release/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
 
-      # The Dockerfile arrives in T-0703; skip the build until it exists.
-      - name: Check for Dockerfile
-        id: dockerfile
-        run: |
-          if [ -f docker/Dockerfile ]; then echo "exists=true" >> "$GITHUB_OUTPUT"; fi
+      - name: Build and start the compose example
+        run: docker compose -f docker/docker-compose.example.yml up -d --build --wait --wait-timeout 120
 
-      - uses: docker/setup-buildx-action@v4
-        if: steps.dockerfile.outputs.exists == 'true'
+      - name: Smoke test
+        run: docker/smoke-test.sh
 
-      - uses: docker/build-push-action@v7
-        if: steps.dockerfile.outputs.exists == 'true'
-        with:
-          context: .
-          file: docker/Dockerfile
-          push: false
+      - name: Server logs
+        if: failure()
+        run: docker compose -f docker/docker-compose.example.yml logs
+
+      - name: Stop
+        if: always()
+        run: docker compose -f docker/docker-compose.example.yml down --volumes
