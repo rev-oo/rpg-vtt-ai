@@ -6,13 +6,12 @@ import { expect } from '@playwright/test';
 import Database from 'better-sqlite3';
 
 import type { SignedIn } from './api.js';
+import { databaseFile } from './instance.js';
 
 // The built plugin CLI, linked as a dependency of this package.
 const cli = fileURLToPath(
   new URL('../../node_modules/@vtt/plugin-cli/dist/src/bin.js', import.meta.url),
 );
-// The database of the server that scripts/start-server.mjs runs.
-const database = fileURLToPath(new URL('../../.data/vtt.sqlite', import.meta.url));
 
 /** Packs a plugin folder with `vtt-plugin pack`, as an author would (T-0410). */
 export function packPlugin(dir: string, out: string): string {
@@ -38,7 +37,7 @@ export async function installPlugin(admin: SignedIn, file: string): Promise<void
  * was, its live document is the source of truth (ADR-029).
  */
 export function setActorData(actorId: string, system: Record<string, unknown>): void {
-  const db = new Database(database);
+  const db = new Database(databaseFile());
   try {
     db.prepare('update actors set system = ? where id = ?').run(JSON.stringify(system), actorId);
   } finally {

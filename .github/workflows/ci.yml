@@ -45,9 +45,9 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Install Playwright browser
+      - name: Install Playwright browsers
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
-        run: pnpm --filter @vtt/e2e exec playwright install --with-deps chromium
+        run: pnpm --filter @vtt/e2e exec playwright install --with-deps chromium firefox webkit
 
       - name: E2E
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/')
