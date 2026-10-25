@@ -3,7 +3,7 @@ import type { FastifyInstance } from 'fastify';
 /**
  * Headers for every response (NFR-05, T-0701). API answers are data, never a page, so their
  * policy allows nothing. A page brings its own policy in a <meta> tag
- * (apps/web/scripts/content-security-policy.ts), which cannot forbid framing, so pages get a
+ * (apps/web/scripts/finish-page.ts), which cannot forbid framing, so pages get a
  * policy that only does that; both apply. A route that sets its own policy, like plugin
  * assets, keeps it.
  */

@@ -406,7 +406,7 @@ function Composer({
               id={`chat-input-${tableId}`}
               rows={2}
               placeholder={t('chat.placeholder')}
-              className="min-h-10 flex-1 resize-none rounded-lg border border-line bg-surface px-3 py-2 text-fg"
+              className="min-h-10 min-w-0 flex-1 resize-none rounded-lg border border-line bg-surface px-3 py-2 text-fg"
               value={field.state.value}
               onChange={(e) => {
                 field.handleChange(e.target.value);
