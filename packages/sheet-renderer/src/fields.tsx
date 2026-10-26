@@ -201,11 +201,10 @@ export function FieldNode({
   }
 
   const numeric = input === 'number' || input === 'counter';
-  // A counter not stored yet shows its default; the first step starts from there.
+  // Always an adjustment, even before the counter is stored: writing `default + delta`
+  // instead would lose a step when two people make the first one at once (FR-SHEET-08).
   const step = (delta: number) => {
-    const stored = valueAt(store.getSnapshot(), field.path);
-    if (typeof stored === 'number') store.adjust(field.path, delta);
-    else store.set(field.path, (typeof field.value === 'number' ? field.value : 0) + delta);
+    store.adjust(field.path, delta);
   };
   const shown = draft ?? asText(field.value);
   const control = (

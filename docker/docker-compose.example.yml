@@ -1,0 +1,31 @@
+# Runs the VTT from this repository (T-0703). Copy it next to your checkout's docker/ folder
+# or run it in place:
+#   docker compose -f docker/docker-compose.example.yml up -d --build
+# Then open http://localhost:3000 and create the admin account.
+#
+# Everything the instance keeps (database, plugins, caches) lives in the one volume. To back
+# it up while it runs, write a copy and take it out of the volume:
+#   docker compose exec vtt node server/dist/src/cli/backup.js /data/backups
+#   docker compose cp vtt:/data/backups ./backups
+
+services:
+  vtt:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: vtt:local
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      # The address players use. Behind the Caddy example, set your https:// domain, so
+      # invite links point there and session cookies are Secure.
+      PUBLIC_URL: http://localhost:3000
+      # Behind one reverse proxy, uncomment so rate limits see real client addresses.
+      # TRUST_PROXY: '1'
+    volumes:
+      - vtt-data:/data
+    # The image's healthcheck polls /api/health; `docker compose ps` shows the result.
+
+volumes:
+  vtt-data:

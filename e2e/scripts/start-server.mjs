@@ -1,5 +1,6 @@
 // @ts-check
-// Starts the built API server on a fresh data directory with the fixture plugins. The folders
+// Starts the built server, which also serves the built web app, on a fresh data directory
+// with the fixture plugins. The folders
 // are copied in and the server's startup scan fills their rows. Only `e2e-system` is enabled,
 // by seeding `enabled`, since enabling needs an admin (FR-PLUGIN-07); the others start
 // disabled for the plugin admin test.
@@ -13,7 +14,13 @@ import Database from 'better-sqlite3';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const serverDir = path.resolve(here, '../../apps/server');
 const dataDir = path.resolve(process.env.E2E_DATA_DIR ?? path.join(here, '../.data'));
-const env = { ...process.env, DATA_DIR: dataDir, PORT: process.env.E2E_API_PORT ?? '3100' };
+const port = process.env.E2E_API_PORT ?? '3100';
+const env = {
+  ...process.env,
+  DATA_DIR: dataDir,
+  PORT: port,
+  PUBLIC_URL: `http://127.0.0.1:${port}`,
+};
 
 rmSync(dataDir, { recursive: true, force: true });
 mkdirSync(dataDir, { recursive: true });

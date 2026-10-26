@@ -13,7 +13,7 @@ T-0702 asks for the Playwright scenarios to pass in CI on three browsers. Until 
 
 1. **The suite runs on Chromium, Firefox and WebKit** (Desktop Chrome, Firefox and Safari devices). CI installs all three.
 2. **Each browser gets its own instance:**
-   - an API server on its own port and data folder (`e2e/.data/<browser>`), with its own `vite preview` in front;
+   - an API server on its own port and data folder (`e2e/.data/<browser>`), with its own `vite preview` in front (since ADR-044, the server serves the app itself);
    - its own first-run project, which creates the admin.
 
    The tests stay as they are. Helpers that touch the server's files find the folder through the project's metadata (`e2e/tests/support/instance.ts`).

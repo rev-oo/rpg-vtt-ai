@@ -44,6 +44,7 @@ import { userRoutes } from './routes/users.js';
 import { registerSecurityHeaders } from './security-headers.js';
 import { scheduleTrashPurge } from './trash-purge.js';
 import { installValidationMessages } from './validation.js';
+import { isAppPage, registerWebApp, sendAppPage } from './web-app.js';
 
 export const REQUEST_ID_HEADER = 'x-request-id';
 
@@ -66,6 +67,8 @@ export interface AppOptions {
   plugins?: PluginRegistry;
   /** Document store and unload delays; tests shorten them. */
   collabTiming?: CollabTiming;
+  /** The built web app to serve (`apps/web/build/client`); none in tests and development. */
+  webDir?: string;
 }
 
 /** Everything a route module needs. */
@@ -106,6 +109,7 @@ export async function buildApp({
     now,
   }),
   collabTiming,
+  webDir,
 }: AppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     loggerInstance: logger,
@@ -126,7 +130,7 @@ export async function buildApp({
   });
 
   installValidationMessages();
-  registerErrorHandling(app);
+  registerErrorHandling(app, webDir !== undefined);
   registerSecurityHeaders(app);
   // JSON is the only accepted body type. A cross-site HTML form can send text/plain without a
   // CORS preflight, which would bypass the CSRF reasoning in ./auth.ts.
@@ -181,6 +185,7 @@ export async function buildApp({
   rollRoutes(context);
   eventsSocket(context);
   collabSocket(context);
+  if (webDir !== undefined) await registerWebApp(app, webDir);
 
   scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
 
@@ -196,7 +201,7 @@ function toTrustProxyOption(
 }
 
 /** Renders every error as `{ error: { code, message, details? } }` (specs §10.1). */
-function registerErrorHandling(app: FastifyInstance): void {
+function registerErrorHandling(app: FastifyInstance, servesWebApp: boolean): void {
   app.setErrorHandler((error, request, reply) => {
     if (error instanceof AppError) {
       return reply.code(error.statusCode).send({
@@ -223,7 +228,10 @@ function registerErrorHandling(app: FastifyInstance): void {
       .send({ error: { code: 'internal_error', message: 'Something went wrong.' } });
   });
 
-  app.setNotFoundHandler((_request, reply) =>
-    reply.code(404).send({ error: { code: 'not_found', message: 'Not found.' } }),
+  // The app's own routes (`/tables/…`) are not files; they all get index.html.
+  app.setNotFoundHandler((request, reply) =>
+    servesWebApp && isAppPage(request)
+      ? sendAppPage(reply)
+      : reply.code(404).send({ error: { code: 'not_found', message: 'Not found.' } }),
   );
 }

@@ -1,0 +1,19 @@
+# Built and installed again inside the image.
+**/node_modules
+**/dist
+**/build
+**/.react-router
+**/*.tsbuildinfo
+**/coverage
+.turbo
+
+# Local data, test output and tooling.
+**/data
+e2e/.data
+e2e/test-results
+e2e/playwright-report
+.git
+.husky
+.vscode
+.idea
+*.log

@@ -33,7 +33,11 @@ export interface SheetStore {
   getSnapshot: () => Readonly<Record<string, unknown>>;
   subscribe: (onChange: () => void) => () => void;
   set: (path: FieldPath, value: unknown) => void;
-  /** Adds `delta` to a counter (FR-SHEET-08); a non-number counts as 0. */
+  /**
+   * Adds `delta` to a counter (FR-SHEET-08). The live store has the server do it, starting a
+   * missing counter from its default; the memory store counts a non-number as 0, so previews
+   * seed the defaults.
+   */
   adjust: (path: FieldPath, delta: number) => void;
   /** Appends a row and returns its id. */
   addRow: (path: FieldPath, row: Readonly<Record<string, unknown>>) => string;
