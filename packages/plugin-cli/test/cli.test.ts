@@ -104,6 +104,8 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
 
   it('packs compiled code and minified styles into an archive the server accepts', async () => {
     const dir = await tsxPlugin();
+    // An archive left in the folder by an earlier run is not packed again.
+    await writeFile(path.join(dir, 'e2e-code-0.9.0.vttplugin'), 'old archive');
     const file = path.join(temp, 'out.vttplugin');
     const result = await run('pack', dir, '--out', file);
     expect(result.code).toBe(0);

@@ -1349,7 +1349,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0410, T-0411
   - **Do:** `docs/plugin-authoring.md` covering the full format, a "build your first plugin" tutorial, and generated schema reference.
   - **Done when:** a developer unfamiliar with the project can build a minimal plugin from the guide alone (verified by a reader test).
-  - **Note:** the guide describes the format as 0.1.0 runs it, which differs from §8 in places (ADR-045). `docs/plugin-reference.md` is generated from the plugin schemas by `pnpm build`, and a test fails when it is stale. `packages/plugin-cli/test/tutorial.test.ts` follows the tutorial step by step and validates, rolls and packs its plugin. The reader test is pending.
+  - **Note:** the guide describes the format as 0.1.0 runs it, which differs from §8 in places (ADR-045). `docs/plugin-reference.md` is generated from the plugin schemas by `pnpm build`, and a test fails when it is stale. `packages/plugin-cli/test/tutorial.test.ts` follows the tutorial step by step and validates, rolls and packs its plugin. Reader tests: a fresh agent given only the guide and the reference built and packed a different system (2026-10-26); its findings were fixed, including `pack` taking in old archives. A human reader test is pending.
 
 - [ ] **T-0705 · Release 0.1.0**
   - **Deps:** T-0701, T-0702, T-0703, T-0704

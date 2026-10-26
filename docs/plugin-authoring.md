@@ -622,6 +622,8 @@ vtt-plugin pack .
 Packed starter 0.1.0: 7 files, 2539 bytes → starter-0.1.0.vttplugin
 ```
 
+The archive goes to the current folder, or wherever `--out <file>` says. Archives already in the plugin folder are left out of the new one.
+
 Then, signed in to an instance as an admin:
 
 1. Open **Plugins**, choose **Install plugin**, and pick `starter-0.1.0.vttplugin`.
@@ -661,7 +663,7 @@ Names of types, sheets, cards and recipes are [names](plugin-reference.md#name):
 
 `plugin.json` describes the plugin; the [reference](plugin-reference.md#plugin) lists every key. The rules the validator adds:
 
-- **`id`** is lowercase letters, digits and inner hyphens. An installed plugin's folder is named after it, and a plugin found in a folder with another name is refused. Tables store the id, so do not change it once tables use the plugin.
+- **`id`** is lowercase letters, digits and inner hyphens. An installed plugin's folder is named after it, and a plugin found in a folder with another name is refused. `vtt-plugin validate` does not check the folder name, since uploads name the folder for you. Tables store the id, so do not change it once tables use the plugin.
 - **`coreApi`** is a semver range. A plugin whose range does not include the server's core API version (`0.1.0`) is listed but cannot be enabled.
 - **`hasCode`** must be `true` exactly when there is a `code/` folder. Admins must acknowledge code before enabling a plugin that has it.
 - **`locales`** lists the languages in `lang/`; each needs its file, and `en` is always required once there is any. **`defaultLocale`** is the language shown when the viewer's lacks a text.
@@ -674,7 +676,7 @@ A type file in `types/actors/` or `types/items/` defines one type, named after t
 - `sheet`: the sheet in `sheets/` that shows it;
 - `schema`: the data each entity holds;
 - `derived`: values computed from the data;
-- `controlledBy` (actors only): `"player"` lets players create the type, `"gm"` leaves it to the GM.
+- `controlledBy` (required for actors, not allowed on items): `"player"` lets players create the type, `"gm"` leaves it to the GM.
 
 #### Data
 
@@ -697,16 +699,16 @@ Fields left without a `default` start empty (an empty text, zero or false), so g
 
 Annotations change how the core stores and edits a field:
 
-| Annotation               | On                  | Effect                                                                                                                    |
-| ------------------------ | ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `"x-counter": true`      | `integer`, `number` | People change it in steps (`counter` input). Steps from several people at once add up.                                    |
-| `"x-kind": "longText"`   | `string`            | Shared plain text: several people type into it at once without losing each other's words.                                 |
-| `"x-kind": "richText"`   | `string`            | Shared rich text with a toolbar (bold, lists and so on). Formulas see its plain text.                                     |
-| `"x-kind": "collection"` | `array` of `object` | Rows people add, remove and reorder at once. Each row also has an `id`.                                                   |
-| `"x-kind": "image"`      | `string`            | A picture URL, shown by an `image` node.                                                                                  |
-| `"x-layer": "secret"`    | any                 | Only the GM and assistants see the field. Players' browsers never receive it, and formulas a player rolls cannot read it. |
+| Annotation               | On                  | Effect                                                                                                                                                            |
+| ------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"x-counter": true`      | `integer`, `number` | People change it in steps (`counter` input). Steps from several people at once add up.                                                                            |
+| `"x-kind": "longText"`   | `string`            | Shared plain text: several people type into it at once without losing each other's words.                                                                         |
+| `"x-kind": "richText"`   | `string`            | Shared rich text with a toolbar (bold, lists and so on). Formulas see its plain text.                                                                             |
+| `"x-kind": "collection"` | `array` of `object` | Rows people add, remove and reorder at once. Each row also has an `id`.                                                                                           |
+| `"x-kind": "image"`      | `string`            | A picture URL, shown by an `image` node.                                                                                                                          |
+| `"x-layer": "secret"`    | any                 | Only the GM and assistants see the field, not even the player who owns the actor. Players' browsers never receive it, and formulas a player rolls cannot read it. |
 
-Other fields are plain values: the last write wins.
+Annotations combine: `{ "type": "string", "x-kind": "longText", "x-layer": "secret" }` is shared text only the GM and assistants see. Other fields are plain values: the last write wins.
 
 #### Derived values
 
@@ -743,6 +745,7 @@ The validator checks that each `path` exists and fits its node: a `checkbox` nee
 - **Paths** are dot paths from the entity's data, such as `hp.value`. Inside a `list`, paths are relative to the row.
 - **Rows:** formulas inside a `list` read the row as `@row`, so `"args": { "id": "@row.id" }` tells a recipe which row was rolled.
 - **Read-only and secret:** viewers who can only observe the entity see the sheet without inputs. Fields on the secret layer are not rendered for players at all, whatever `visibleIf` says.
+- **GM-only parts:** containers still render when everything in them is secret, so a tab or section holding only secret fields shows players its title and nothing else. No formula can tell who is viewing in 0.1.0, so `visibleIf` cannot hide it either. Put secret fields next to others (players simply do not see them), or accept the empty tab.
 - **Presence:** fields show who else is in them, so the core draws an outline and name badges over the field.
 
 ### Formulas
@@ -799,17 +802,18 @@ Types are strict: nothing converts silently, so `@str + 'x'` and `if(1, …)` ar
 
 Dice belong only in roll formulas (recipes); anywhere else they are an error.
 
-| Term         | Rolls                                                                        |
-| ------------ | ---------------------------------------------------------------------------- |
-| `2d6`, `d20` | Dice, summed                                                                 |
-| `(@pool)d6`  | A count from a formula; the `(` must touch the `d`                           |
-| `4d6kh3`     | Keep the highest 3 (`kl`: lowest; `dh`, `dl`: drop highest or lowest)        |
-| `3d6!`       | Exploding: a die showing its highest value adds another die                  |
-| `2d20r1`     | Reroll a die showing 1, once (`r<3`, `r<=2` and so on also work)             |
-| `5d10cs>=7`  | Count successes instead of summing (`cf` counts failures and subtracts them) |
-| `4dF`        | A [custom die](#custom-dice) declared in `dice.json`                         |
+| Term                  | Rolls                                                                        |
+| --------------------- | ---------------------------------------------------------------------------- |
+| `2d6`, `d20`          | Dice, summed                                                                 |
+| `(@pool)d6`           | A count from a formula; the `(` must touch the `d`                           |
+| `4d6kh3`              | Keep the highest 3 (`kl`: lowest; `dh`, `dl`: drop highest or lowest)        |
+| `3d6!`                | Exploding: a die showing its highest value adds another die                  |
+| `2d20r1`              | Reroll a die showing 1, once (`r<3`, `r<=2` and so on also work)             |
+| `5d10cs>=7`           | Count successes instead of summing (`cf` counts failures and subtracts them) |
+| `(@args.pool)d6cs>=5` | A pool: as many d6 as the argument says, counting 5s and 6s                  |
+| `4dF`                 | A [custom die](#custom-dice) declared in `dice.json`                         |
 
-Modifiers can be combined, once each, and apply in a fixed order: reroll, explode, keep or drop, then count. A roll may use up to 1,000 dice, explosions included.
+With `cs` or `cf`, a term is worth its successes minus its failures, so the `@total` of `(@args.pool)d6cs>=5` is the number of successes. Modifiers can be combined, once each, and apply in a fixed order: reroll, explode, keep or drop, then count. A roll may use up to 1,000 dice, explosions included.
 
 #### Limits and errors
 
@@ -836,7 +840,7 @@ A formula is at most 2,000 characters and is checked when the plugin is validate
 - `formula` is rolled on the server against the entity's current data. Rolls use a cryptographically secure random source, so players cannot predict or forge them.
 - `outcomes` are checked in order. The first whose `when` is true wins, and one without `when` always matches. `class` styles the outcome in chat.
 - `card` shows the roll with a [chat card](#chat-cards).
-- A `rollButton` passes `args`, each a formula, number or `true`/`false`. The recipe reads them as `@args.<name>`.
+- A `rollButton` passes `args`, each a formula, number or `true`/`false`. The recipe reads them as `@args.<name>`. The validator cannot tell which arguments a recipe needs, so it does not check them: a button that leaves one out, or misspells it, validates, and its roll fails with an error naming the missing reference. Give every button of a recipe the same argument names.
 
 ### Custom dice
 
