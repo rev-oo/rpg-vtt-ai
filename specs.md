@@ -1,6 +1,6 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** Draft v0.1 · **Date:** 2026-10-19 · **Owner:** TBD
+> **Status:** Draft v0.1 · **Date:** 2026-10-19 · **Last updated:** 2026-10-26 · **Owner:** TBD
 > **Audience:** Human developers and agentic AI coding assistants. This file lives in the repository root (move to `docs/PRD.md` if preferred) and is the source of truth for scope, decisions, and progress.
 
 ---
@@ -92,6 +92,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-25 | PR #13 merged (T-0701). T-0702: e2e on Chromium, Firefox and WebKit; Firefox plugin-loading and phone chat fixes. ADR-043 added.                                                                                         |
 | 2026-10-25 | PR #14 merged (T-0702). T-0703: Docker image, compose and Caddy examples; the server serves the web app; 304 policy and counter-step race fixed. ADR-044 added.                                                          |
 | 2026-10-26 | PR #15 merged (T-0703); live-sheet flake fixed (PR #16). T-0704: plugin authoring guide, generated file reference, tutorial test. ADR-045 added.                                                                         |
+| 2026-10-26 | PR #17 merged (T-0704). Spec brought in line with the code and ADRs: §4.1–4.3, §5, §6.2–6.4, §8 (as built in 0.1.0), §9.2, §9.7, §10.1–10.2, §13.                                                                        |
 
 ---
 
@@ -163,26 +164,26 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 
 ### 4.1 Stack decisions
 
-| Concern              | Decision                                                                                   | Rationale                                                     |
-| -------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Language             | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere                      | Type safety across client, server, and shared packages        |
-| Monorepo             | **pnpm workspaces** + Turborepo for task caching                                           | Fast installs, strict dependency isolation                    |
-| Frontend             | **React 18+ with Vite**, SPA                                                               | Plugins are loaded at runtime; SSR is not needed behind login |
-| Frontend routing     | React Router, **framework mode as an SPA** (`ssr: false`) (ADR-013)                        | Typed routes, loaders for guards and data; no SSR server      |
-| Client state         | **Zustand** for UI state; **Yjs** for document state                                       | Minimal boilerplate; CRDT handles collaborative data          |
-| Backend              | **Node.js LTS + Fastify**                                                                  | Lightweight, good plugin model, native TypeScript support     |
-| Realtime (events)    | **WebSocket** (`ws`) at `/ws/events`                                                       | Chat, rolls, entity change notifications, presence            |
-| Realtime (documents) | **Hocuspocus** (Yjs WebSocket server) at `/ws/collab`                                      | Mature Yjs backend with auth and persistence hooks            |
-| Database             | **SQLite** via **Drizzle ORM** (`better-sqlite3`)                                          | No external service; backup is copying one file               |
-| Schema validation    | **Zod** in TypeScript, emitted to **JSON Schema** at build                                 | Single source of truth for types and plugin file schemas      |
-| Formula/dice         | Custom parser in `packages/formula`, no `eval`                                             | Safe, testable, same code on both sides                       |
-| Scoped CSS           | PostCSS (or lightningcss) in the plugin loader                                             | Predictable, server-side scoping                              |
-| Styling (core UI)    | **Tailwind CSS 4**; tokens as a `@theme` in `packages/ui` (ADR-012)                        | Fast iteration, one token file, both colour schemes           |
-| Forms                | **TanStack Form**; the shared API schemas (`@vtt/shared/api`) are the validators (ADR-013) | Typed field state; client and server run the same rules       |
-| Testing              | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests       | Standard, fast, multi-browser                                 |
-| Lint                 | **ESLint flat config** + `typescript-eslint` + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering                |
-| Format               | **Prettier**                                                                               | Consistent style, enforced in CI and pre-commit               |
-| Packaging            | One **Docker** image (multi-stage), one `/data` volume                                     | Self-hosting goal G5                                          |
+| Concern              | Decision                                                                                                                        | Rationale                                                     |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Language             | **TypeScript** (`strict`, plus `noUncheckedIndexedAccess`) everywhere                                                           | Type safety across client, server, and shared packages        |
+| Monorepo             | **pnpm workspaces** + Turborepo for task caching                                                                                | Fast installs, strict dependency isolation                    |
+| Frontend             | **React 19 with Vite**, SPA                                                                                                     | Plugins are loaded at runtime; SSR is not needed behind login |
+| Frontend routing     | React Router, **framework mode as an SPA** (`ssr: false`) (ADR-013)                                                             | Typed routes, loaders for guards and data; no SSR server      |
+| Client state         | React state and context for UI state; **Yjs** for document state                                                                | Little UI state to share; CRDT handles collaborative data     |
+| Backend              | **Node.js LTS + Fastify**                                                                                                       | Lightweight, good plugin model, native TypeScript support     |
+| Realtime (events)    | **WebSocket** (`ws`) at `/ws/events`                                                                                            | Chat, rolls, entity change notifications, presence            |
+| Realtime (documents) | **Hocuspocus** (Yjs WebSocket server) at `/ws/collab`                                                                           | Mature Yjs backend with auth and persistence hooks            |
+| Database             | **SQLite** via **Drizzle ORM** (`better-sqlite3`)                                                                               | No external service; backup is copying one file               |
+| Schema validation    | **Zod** in TypeScript, emitted to **JSON Schema** at build                                                                      | Single source of truth for types and plugin file schemas      |
+| Formula/dice         | Custom parser in `packages/formula`, no `eval`                                                                                  | Safe, testable, same code on both sides                       |
+| Scoped CSS           | **PostCSS** in `plugin-schema`, run by the validator and the loader (ADR-021); lightningcss minifies at pack                    | Predictable, server-side scoping                              |
+| Styling (core UI)    | **Tailwind CSS 4**; tokens as a `@theme` in `packages/ui` (ADR-012)                                                             | Fast iteration, one token file, both colour schemes           |
+| Forms                | **TanStack Form**; the shared API schemas (`@vtt/shared/api`) are the validators (ADR-013)                                      | Typed field state; client and server run the same rules       |
+| Testing              | **Vitest** (unit/integration), **Playwright** (e2e), Fastify `inject` for HTTP tests                                            | Standard, fast, multi-browser                                 |
+| Lint                 | **ESLint flat config** + `typescript-eslint` + `eslint-plugin-import-x` (ADR-009) + boundary rules (`eslint-plugin-boundaries`) | Enforces type-aware rules and package layering                |
+| Format               | **Prettier**                                                                                                                    | Consistent style, enforced in CI and pre-commit               |
+| Packaging            | One **Docker** image (multi-stage), one `/data` volume                                                                          | Self-hosting goal G5                                          |
 
 ### 4.2 Process topology
 
@@ -191,21 +192,20 @@ One Node process serves:
 - REST API under `/api/*`
 - Events WebSocket at `/ws/events`
 - Hocuspocus Yjs WebSocket at `/ws/collab`
-- Static SPA assets and built-in UI
-- Plugin static assets under `/plugins/<pluginId>/*` (client bundles and CSS, read from `/data/plugins`)
+- The built SPA (`WEB_DIR`): hashed assets cached for a year, every app route answered with `index.html` (ADR-044)
+- Plugin static assets under `/plugins/<pluginId>/*` (client bundles, scoped CSS, images and fonts, read from `/data/plugins`), to signed-in users while the plugin is available (ADR-022)
 
 Reverse proxy (Caddy or Traefik) handles TLS and must forward WebSocket upgrades on both `/ws/*` paths.
 
 ### 4.3 Data locations
 
-Everything lives under a single data directory (`DATA_DIR`, default `/data` in Docker, `./data` in development):
+Everything lives under a single data directory (`DATA_DIR`, default `/data` in Docker, `./data` in development). Logs go to standard output as JSON.
 
 ```
 /data
 ├─ vtt.sqlite          database (WAL mode)
 ├─ plugins/            installed plugin folders
-├─ cache/              derived files (scoped CSS, installs being unpacked)
-└─ logs/               optional rotating logs
+└─ cache/              derived files (scoped CSS, installs being unpacked)
 ```
 
 ### 4.4 Architectural rules
@@ -227,10 +227,13 @@ vtt/
 │  ├─ web/                        Vite + React SPA
 │  │  └─ src/
 │  │     ├─ routes/               route modules (React Router framework mode)
-│  │     ├─ shell/                layout, session, access rules, sidebar tabs, sheet windows
-│  │     ├─ features/             chat · actors · items · journal · combat · tables · members
+│  │     ├─ shell/                layout, session, access rules, navigation
+│  │     ├─ features/             chat · entities · journal · members · plugins · settings · table · tables
 │  │     ├─ collab/               Yjs providers, sheet store, awareness
-│  │     ├─ plugin-host/          loads plugin manifests, mounts sheets, injects scoped CSS, import map
+│  │     ├─ realtime/             events socket client
+│  │     ├─ api/ · forms/         typed API client, form helpers
+│  │     ├─ i18n/                 message catalogues (en, pt-BR)
+│  │     ├─ plugin-host/          loads systems, mounts sheets and cards, injects scoped CSS, import map
 │  │     ├─ root.tsx              root route: HTML shell, error boundary
 │  │     └─ routes.ts             route config
 │  └─ server/
@@ -241,24 +244,26 @@ vtt/
 │        ├─ db/                   Drizzle schema, migrations, repositories
 │        ├─ plugins/              scanner (runs the plugin-schema validator), registry, scoped CSS cache, static serving
 │        ├─ config/               env parsing (zod)
+│        ├─ logger/               pino logger and request serializers
+│        ├─ cli/                  backup and migration commands
 │        └─ main.ts
 ├─ packages/
 │  ├─ shared/                     entity types, ids, permission rules, event protocol, API contract (Zod)
 │  ├─ formula/                    formula parser, evaluator, dice engine (pure)
 │  ├─ plugin-schema/              Zod schemas for every plugin file, JSON Schema emitter, validator, CSS scoper
 │  ├─ plugin-engine/              defaults, derived data, roll recipes, schema→Yjs mapping, outcome logic
-│  ├─ ui/                         design tokens + primitives (Button, Dialog, Tabs, WindowFrame)
-│  ├─ sheet-renderer/             layout JSON → React; built-in nodes; SheetStore interface; preview page
-│  ├─ sdk/                        public API for code/ entries (defineShared/Client/Server, hooks, ctx types)
+│  ├─ ui/                         design tokens + primitives (Alert, Button, Card, Dialog, Select, TextField)
+│  ├─ sheet-renderer/             layout JSON → React; built-in nodes; SheetStore interface
+│  ├─ sdk/                        public API for code/ entries (defineClient and sheet hooks; server and shared entries later)
 │  ├─ config/                     shared tsconfig, eslint, prettier presets
 │  ├─ plugin-io/                  plugin folders and .vttplugin archives on disk (Node; server and CLI)
-│  └─ plugin-cli/                 vtt-plugin: validate · dev (live preview) · pack · schema
+│  └─ plugin-cli/                 vtt-plugin: validate · dev (live preview page) · pack · schema
 ├─ plugins/                       reference systems built in-tree
 │  ├─ tiny-d20/
 │  └─ tiny-pool/
 ├─ e2e/                           Playwright suites
-├─ docker/                        Dockerfile, docker-compose.example.yml
-├─ docs/                          authoring guide, ADRs, API reference
+├─ docker/                        Dockerfile, compose and Caddy examples, smoke test
+├─ docs/                          plugin authoring guide, plugin file reference, backups, security review, ADRs
 ├─ .github/workflows/             CI
 ├─ .husky/                        git hooks (pre-commit: lint-staged)
 ├─ eslint.config.mjs
@@ -270,7 +275,7 @@ vtt/
 ├─ turbo.json
 ├─ package.json
 ├─ tsconfig.base.json
-└─ PRD.md
+└─ specs.md
 ```
 
 Dev-only runtime data (`./data`) is gitignored.
@@ -294,7 +299,7 @@ These are **mandatory requirements**, not preferences. They are implemented in m
 ### 6.2 ESLint
 
 - ESLint flat config (`eslint.config.mjs`) at the root, shared presets in `packages/config`.
-- Rule sets: `@eslint/js` recommended, `typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` (web), `eslint-plugin-import` (ordering, no cycles).
+- Rule sets: `@eslint/js` recommended, `typescript-eslint` `strictTypeChecked` + `stylisticTypeChecked`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh` (web), `eslint-plugin-import-x` (ordering, no cycles; ADR-009).
 - **Layer boundaries** enforced by `eslint-plugin-boundaries`:
   - `apps/server` may not import `packages/ui`, `packages/sheet-renderer`, or `packages/sdk/client`.
   - `packages/shared`, `packages/formula`, `packages/plugin-engine` may not import `react`, `react-dom`, `fastify`, `drizzle-orm`, or any Node built-in (`fs`, `path`, `node:*`).
@@ -306,7 +311,7 @@ These are **mandatory requirements**, not preferences. They are implemented in m
 
 - `.prettierrc.json`: `printWidth: 100`, `singleQuote: true`, `trailingComma: "all"`, `semi: true`, `arrowParens: "always"`.
 - Format applies to TS, TSX, JSON, CSS, Markdown, and YAML.
-- Plugin JSON files in `plugins/*` are formatted with Prettier too; the plugin CLI emits them in canonical form.
+- Plugin JSON files in `plugins/*` are formatted with Prettier too. Generated files (`packages/plugin-schema/schemas/`, `docs/plugin-reference.md`, migrations) are excluded.
 - `prettier --check` runs in CI. `prettier --write` runs in lint-staged.
 - `eslint-config-prettier` disables conflicting ESLint style rules.
 
@@ -321,7 +326,7 @@ These are **mandatory requirements**, not preferences. They are implemented in m
   5. `pnpm test` (Vitest)
   6. `pnpm build`
   7. `pnpm e2e` (Playwright, on main and release branches)
-  8. Docker image build (on release branches)
+  8. Docker image: build the compose example and run `docker/smoke-test.sh` (every push and PR, ADR-044)
 - A PR cannot merge unless CI is green.
 
 ### 6.5 Editor and tooling
@@ -469,6 +474,8 @@ Out of scope for MVP and v1. Captured here so the data model stays compatible:
 
 ## 8. Plugin System
 
+The plugin authoring guide (`docs/plugin-authoring.md`) describes the format as built, and `docs/plugin-reference.md` lists every key; it is generated from the Zod schemas (ADR-045). Where this section and those documents differ, they are right.
+
 ### 8.1 Principles
 
 - **JSON declares, code is referenced by name.** Layout nodes and rolls reference custom behaviour as `custom:<name>` or `handler: "<name>"`. Code cannot define structure on its own.
@@ -487,7 +494,7 @@ my-system/
 ├─ sheets/<name>.json       layout trees (referenced by types)
 ├─ rolls.json               roll recipes and outcomes (optional)
 ├─ dice.json                custom dice (optional)
-├─ combat.json              initiative formula and ordering (v1, optional)
+├─ combat.json              initiative formula and ordering (v1, optional; validated, not used yet)
 ├─ settings.json            per-table options (optional)
 ├─ cards/<name>.json        chat card templates (optional)
 ├─ lang/<locale>.json       translations, English required if any lang file exists
@@ -501,6 +508,8 @@ my-system/
 
 Code entries are TypeScript sources in the plugin folder for development, but the plugin CLI (`vtt-plugin pack`) **compiles them to ES modules** (`code/*.js`; no `.d.ts`, ADR-026) and the packed plugin is what the server loads. The server never compiles TypeScript at runtime.
 
+**In 0.1.0 only `code/client` runs** (ADR-025). `code/shared` and `code/server` are packed but not loaded, so `handler` recipes fail when rolled and formulas can call only the built-in functions. Other JSON files outside `code/` are ignored with an `unknown_file` warning; a text file over 1 MB is not read.
+
 ### 8.3 Manifest (`plugin.json`)
 
 ```json
@@ -513,6 +522,7 @@ Code entries are TypeScript sources in the plugin folder for development, but th
   "coreApi": "^0.1.0",
   "author": "…",
   "license": "MIT",
+  "description": "…",
   "hasCode": false,
   "locales": ["en", "pt-BR"],
   "defaultLocale": "en"
@@ -521,9 +531,11 @@ Code entries are TypeScript sources in the plugin folder for development, but th
 
 Rules:
 
-- `id`: lowercase kebab-case, unique on the instance, immutable once tables exist.
+- `id`: lowercase kebab-case, unique on the instance, immutable once tables exist. A scanned plugin's folder must be named after it; installs name the folder (ADR-026).
 - `kind`: `system` in v1. `module` reserved for future non-system plugins.
 - `hasCode` must match the presence of `code/`. The validator checks this.
+- `coreApi` must include the server's core API version (`0.1.0`), else the plugin is listed but cannot be enabled (FR-PLUGIN-03).
+- `defaultLocale` must be one of `locales`. Texts fall back to it, then to the first locale, then to `en`.
 
 ### 8.4 Actor and item types
 
@@ -568,35 +580,39 @@ Rules:
 Rules for the schema subset:
 
 - Supported keywords: `type` (string, integer, number, boolean, object, array), `properties`, `items`, `default`, `enum`, `minimum`, `maximum`, `minLength`, `maxLength`, `required`, `description`.
-- Unsupported keywords (`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `patternProperties`, `if`/`then`) are rejected by the validator with a clear message. Composition is added in a later `coreApi` version.
+- Unsupported keywords (`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `patternProperties`, `if`/`then`/`else`) are rejected by the validator with a clear message. Composition is added in a later `coreApi` version.
+- Field names are identifiers. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total` or `roll`, which formulas reserve (ADR-019).
+- `default` must fit its field. A field without one starts empty (`''`, `0`, `false`, `[]`); an array with `x-kind: collection` may list default rows (ADR-023).
 - `x-kind` values: `longText` (Yjs `Y.Text`, plain text), `collection` (id-keyed map, see §9.4), `richText` (Yjs `Y.XmlFragment` edited with TipTap; its JSON value is its plain text, ADR-037), `image` (URL string with preview).
 - `x-counter: true` marks a number as adjustable with `adjust` deltas.
 - `x-layer: "secret"` moves the field to the secret layer (GM and assistant only).
-- `derived` maps names to formulas. Derived values are never stored.
+- `x-kind` and `x-layer` combine; `x-layer` works on any field.
+- `controlledBy` is required on actor types and not allowed on item types.
+- `derived` maps names to formulas without dice. Derived values are never stored, and cycles are rejected.
 
 ### 8.5 Sheets (layout JSON)
 
-A sheet is a tree of nodes. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
+A sheet file holds one tree of nodes under `layout`: `{ "layout": { "type": "column", … } }`. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
 
 | Node            | Props                                                                        | Notes                                                                          |
 | --------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `row`           | `children`, `gap`, `wrap`                                                    | Horizontal flex                                                                |
+| `row`           | `children`, `gap` (`none`, `sm`, `md`, `lg`), `wrap`                         | Horizontal flex                                                                |
 | `column`        | `children`, `gap`                                                            | Vertical flex                                                                  |
-| `grid`          | `children`, `columns`                                                        | CSS grid with `columns` count                                                  |
+| `grid`          | `children`, `columns` (1–12)                                                 | Up to `columns` columns, fewer once one would be narrower than 7rem            |
 | `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                                            |
 | `section`       | `title`, `children`, `collapsible`                                           | Titled group                                                                   |
-| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation                                      |
+| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation; the input must fit the field's type |
 | `longText`      | `path`, `label`                                                              | Collaborative text editor for `x-kind: longText` and `richText` (rich: TipTap) |
 | `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder                                 |
 | `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                                           |
-| `derived`       | `key`, `format`                                                              | Displays a derived value                                                       |
-| `image`         | `path`, `size`                                                               | Shows portrait/image                                                           |
+| `derived`       | `key`, `label`, `format` (`integer`, `signed`, `decimal`)                    | Displays a derived value (ADR-019)                                             |
+| `image`         | `path`, `size` (`sm`, `md`, `lg`)                                            | Shows a picture from a URL field                                               |
 | `text`          | `text` (lang key or literal)                                                 | Static text                                                                    |
-| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`                                     |
+| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`, which receives `props`             |
 
 Field `path` uses dot notation for objects. Inside `list`, `path` is relative to the row, and `@row.id` is available in `args`.
 
-`visibleIf` uses the formula language and can reference `@derived.*`, `@str`, etc. Hidden secret fields are never sent to unauthorised users regardless of `visibleIf`.
+`visibleIf` uses the formula language and can reference `@derived.*`, `@str`, etc. Hidden secret fields are never sent to unauthorised users regardless of `visibleIf`. Containers render even when everything in them is secret, and no formula can tell who is viewing, so a GM-only tab still shows its title to players.
 
 ### 8.6 Scoped CSS
 
@@ -646,7 +662,9 @@ Processed by the plugin loader using PostCSS at load time (and cached on disk):
 - `formula` uses the dice grammar and `@` references. It is evaluated on the server against the actor's current state.
 - `outcomes` are evaluated in order; the first matching `when` wins; a missing `when` is a fallback.
 - `card` references `cards/<name>.json`.
-- `handler` references an exported function in `code/server.ts`. It receives a restricted context (see §8.10).
+- `handler` references an exported function in `code/server.ts`. It receives a restricted context (see §8.10). Not run in 0.1.0: rolling a handler recipe fails with `handler_recipe`.
+- A `rollButton` passes `args` (formulas, numbers or booleans), read as `@args.*`. The validator cannot know which arguments a recipe needs, so a missing one fails only when rolled.
+- Outcomes and cards also read `@total` and `@roll.expression`, `@roll.resolved`, `@roll.total`. An outcome's `class` styles it in chat.
 
 ### 8.8 Custom dice
 
@@ -656,12 +674,13 @@ Processed by the plugin loader using PostCSS at load time (and cached on disk):
 {
   "dF": {
     "faces": ["-", "-", " ", " ", "+", "+"],
+    "values": { "-": -1, " ": 0, "+": 1 },
     "label": "dice.fate"
   }
 }
 ```
 
-Custom dice are used in formulas as `dF`, and the result is the face value. Count-based pools use the core `cs` operator. Result mapping for display is defined in `cards`.
+Custom dice are used in formulas as `dF`; names are `d` followed by capitals or digits (ADR-017). A face is a number, a label whose number comes from `values`, or `{ label, value }` (ADR-019), and the result is the face's number. Count-based pools use the core `cs` operator. Result mapping for display is defined in `cards`.
 
 ### 8.9 Formula language
 
@@ -716,6 +735,8 @@ export default defineServer({
 });
 ```
 
+**Status in 0.1.0:** only `code/client` is loaded, with `defineClient` and the hooks below (ADR-025). `defineShared` and `defineServer` do not exist yet; the examples above show the planned shape.
+
 Rules:
 
 - Server code receives a restricted `ctx` with: `roll`, `chat.post`, `actors.get`, `actors.adjust` (validated writes only), `log`. It has no database handle and no filesystem access.
@@ -761,16 +782,18 @@ Cards are rendered by the core from JSON; custom card components in `code/client
 }
 ```
 
-Values are stored on the table and passed to the plugin engine through the rules context.
+A setting is a `boolean`, `integer`, `number` or `string` (optionally with `enum`), with a `default`, a `label` and an optional `description`. Values are stored on the table, set by the GM on the table settings page, and read in formulas as `@settings.<name>` (ADR-039).
 
 ### 8.13 Plugin validation and CLI
 
 `vtt-plugin` (from `packages/plugin-cli`):
 
-- `vtt-plugin validate <dir>`: checks manifest, all JSON files against plugin schemas, formula syntax and references (`@` paths exist in the schema), CSS rules, lang key coverage, and `hasCode` consistency. Exits non-zero on errors.
-- `vtt-plugin dev <dir>`: starts a local preview server that renders the plugin's sheets with an in-memory store and sample data, with hot reload.
-- `vtt-plugin pack <dir>`: compiles `code/` to ES modules, minifies CSS, writes a `.vttplugin` archive (zip). Admins install it from the plugin admin page (`POST /plugins/install`, ADR-026).
-- `vtt-plugin schema`: emits the JSON Schemas used by editors.
+- `vtt-plugin validate <dir>`: checks manifest, all JSON files against plugin schemas, formula syntax and references (`@` paths exist in the schema), CSS rules, lang key coverage, and `hasCode` consistency. Exits 1 on errors and 2 on bad usage. It does not check the folder name.
+- `vtt-plugin dev <dir> [--port <n>]`: starts a local preview server that renders the plugin's sheets with an in-memory store and the type defaults, with read-only and GM-view switches, rolls, and reload on save.
+- `vtt-plugin pack <dir> [--out <file>]`: compiles `code/` to ES modules, minifies CSS, validates the result, and writes `<id>-<version>.vttplugin` (a zip; earlier archives in the folder are left out). Admins install it from the plugin admin page (`POST /plugins/install`, ADR-026).
+- `vtt-plugin schema [--out <dir>]`: emits the JSON Schemas used by editors.
+
+The CLI is not published yet: authors run it from a build of this repository (ADR-045).
 
 The server runs the same validation on install and on rescan.
 
@@ -792,12 +815,16 @@ Parsing the name is the only way the auth hook derives the entity and layer; the
 ### 9.2 Document structure
 
 ```
-actor:<id>:main
- ├─ data   Y.Map   schema fields: scalars/objects → nested Y.Map; x-kind longText → Y.Text;
- │                 x-kind richText → Y.XmlFragment (TipTap blocks, ADR-037);
- │                 collection → Y.Map keyed by row id; each row has a `sort` value
- └─ items  Y.Map   owned items keyed by id: { type, name, sourceId, sort, data… }
+actor:<id>:main, actor:<id>:secret
+ └─ data   Y.Map   the layer's schema fields: objects → nested Y.Map; x-kind longText → Y.Text;
+                   x-kind richText → Y.XmlFragment (TipTap blocks, ADR-037);
+                   collection → Y.Map keyed by row id, each row with a `sort` value;
+                   everything else → plain values
+journal:<id>:main
+ └─ body   Y.XmlFragment   the entry's rich text (ADR-038)
 ```
+
+Owned items are rows in the `items` table with an `actorId` (ADR-015); items have no live documents. Data the layout does not know stays in `main` (ADR-029).
 
 ### 9.3 Access rules (server-enforced)
 
@@ -835,8 +862,8 @@ Notes:
 ### 9.7 Validation and repair
 
 - Values written by clients are validated against the schema on input (client) and on persist (server).
-- Invalid values on persist are replaced with the schema default and logged. The editor receives a validation event.
-- Schema changes on a plugin version bump are **not** auto-migrated in MVP. Actors store their `dataVersion`, and mismatched actors show a warning; migrations are LATER (see §7.11).
+- Invalid values on persist are replaced with the schema default and logged. The editor receives a `validation` message (ADR-031). Journal bodies are not repaired.
+- Schema changes on a plugin version bump are **not** auto-migrated in MVP. Actors and items store the system version they were created with (`dataVersion`); missing fields read as their defaults. Nothing compares versions yet; migrations are LATER (see §7.11).
 
 ---
 
@@ -846,16 +873,16 @@ Notes:
 
 - Base path `/api/v1`. JSON bodies. Validated with Zod on entry.
 - Errors use `{ error: { code, message, details? } }` with stable `code` strings.
-- Pagination with cursor tokens: `?cursor=…&limit=…`.
+- Lists are not paginated yet (ADR-015). Chat history pages backwards with `?before=…`.
 - Auth: session cookie. Mutating requests require a CSRF header (`X-CSRF-Token`) matched to the session.
 
 Key resource groups:
 
 | Group           | Endpoints (illustrative)                                                                                                                                              |
 | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET /me`, `POST /me/password`                                                                                               |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                         |
 | Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                              |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`                                                                                                                       |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                  |
 | Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                                                        |
 | Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                            |
 | Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040) |
@@ -874,7 +901,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `member.changed`, `plugin.changed`, `combat.updated`, `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `ack`, `error`. `combat.updated` comes with combat (v1). A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -1381,15 +1408,15 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
 ## 13. Testing Strategy
 
-| Level       | Tool                      | Scope                                                                      | Gate                                           |
-| ----------- | ------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
-| Unit        | Vitest                    | `formula`, `plugin-engine`, `shared` permissions, dice distributions       | ≥ 80% coverage on listed packages              |
-| Property    | fast-check                | Formula evaluator safety, collection reorder under concurrency, CSS scoper | Runs in CI                                     |
-| Integration | Vitest + Fastify `inject` | REST auth, ownership, audience filtering, plugin registry                  | Every endpoint has ≥ 1 allow and ≥ 1 deny test |
-| Wire-level  | Vitest + ws client        | Secret and whisper leakage on `/ws/events` and `/ws/collab`                | Required for NFR-08                            |
-| Component   | Vitest + Testing Library  | Sheet renderer nodes, plugin host                                          | Snapshot + behaviour                           |
-| E2E         | Playwright                | Multi-user flows (§12 M7)                                                  | Green on Chrome, Firefox, WebKit               |
-| Plugin      | `vtt-plugin validate`     | Every plugin in `plugins/`                                                 | Blocking in CI                                 |
+| Level       | Tool                                     | Scope                                                                      | Gate                                           |
+| ----------- | ---------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------- |
+| Unit        | Vitest                                   | `formula`, `plugin-engine`, `shared` permissions, dice distributions       | ≥ 80% coverage on listed packages              |
+| Property    | fast-check                               | Formula evaluator safety, collection reorder under concurrency, CSS scoper | Runs in CI                                     |
+| Integration | Vitest + Fastify `inject`                | REST auth, ownership, audience filtering, plugin registry                  | Every endpoint has ≥ 1 allow and ≥ 1 deny test |
+| Wire-level  | Vitest + ws client                       | Secret and whisper leakage on `/ws/events` and `/ws/collab`                | Required for NFR-08                            |
+| Component   | Vitest + Testing Library                 | Sheet renderer nodes, plugin host                                          | Snapshot + behaviour                           |
+| E2E         | Playwright                               | Multi-user flows (§12 M7)                                                  | Green on Chrome, Firefox, WebKit               |
+| Plugin      | `validatePlugin` in tests; tutorial test | Every plugin in `plugins/`; the guide's tutorial plugin (ADR-045)          | Blocking in CI                                 |
 
 Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins are the canonical fixtures for `plugin-engine` and e2e.
 
