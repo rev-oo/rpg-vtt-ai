@@ -15,12 +15,16 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text",
+            "description": "A lang key or literal text."
           },
           "description": {
+            "description": "Help shown under the option.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "type": {
             "type": "string",
@@ -35,7 +39,8 @@
           "type",
           "default"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A checkbox."
       },
       {
         "type": "object",
@@ -43,12 +48,16 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text",
+            "description": "A lang key or literal text."
           },
           "description": {
+            "description": "Help shown under the option.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "type": {
             "type": "string",
@@ -75,7 +84,8 @@
           "type",
           "default"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A whole number."
       },
       {
         "type": "object",
@@ -83,12 +93,16 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text",
+            "description": "A lang key or literal text."
           },
           "description": {
+            "description": "Help shown under the option.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "type": {
             "type": "string",
@@ -109,7 +123,8 @@
           "type",
           "default"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "A number."
       },
       {
         "type": "object",
@@ -117,12 +132,16 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text",
+            "description": "A lang key or literal text."
           },
           "description": {
+            "description": "Help shown under the option.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "type": {
             "type": "string",
@@ -132,6 +151,7 @@
             "type": "string"
           },
           "enum": {
+            "description": "Offers these values to pick from.",
             "minItems": 1,
             "type": "array",
             "items": {
@@ -149,8 +169,11 @@
           "type",
           "default"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "Text, or a choice with `enum`."
       }
-    ]
-  }
+    ],
+    "title": "Setting"
+  },
+  "description": "Options each table sets on its settings page, each under an identifier such as `startingHp`. Formulas read them as `@settings.<name>`."
 }

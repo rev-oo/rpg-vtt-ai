@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
-import { cssClass, formula, name, schemaUrl, text } from './common.js';
+import { cssClass, formula, identifier, name, schemaUrl, text } from './common.js';
 
 /** A dot path into the data (`hp.value`); inside a `list`, relative to the row. */
-const path = z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/);
+const path = z
+  .string()
+  .regex(/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/)
+  .meta({ title: 'Path' });
 /** Spacing steps; sizes come from the core's tokens. */
 const gap = z.enum(['none', 'sm', 'md', 'lg']);
 
@@ -56,89 +59,165 @@ export type SheetNode = NodeBase &
     | { type: `custom:${string}`; props?: Record<string, unknown> | undefined }
   );
 
-const base = { class: cssClass.optional(), visibleIf: formula.optional() };
+const base = {
+  class: cssClass.optional().describe('Extra CSS classes, for `styles/*.css`.'),
+  visibleIf: formula
+    .optional()
+    .describe('Shows the node only while this formula is true. It cannot roll dice.'),
+};
+/** Called inside `z.lazy`, once `sheetNode` exists. */
+const children = () => z.array(sheetNode).describe('The nodes inside, in order.');
+const label = text.optional().describe("A lang key or literal text; defaults to the field's path.");
 
 export const sheetNode: z.ZodType<SheetNode> = z.lazy(() =>
-  z.union([
-    z.discriminatedUnion('type', [
-      z.strictObject({
-        ...base,
-        type: z.literal('row'),
-        children: z.array(sheetNode),
-        gap: gap.optional(),
-        wrap: z.boolean().optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('column'),
-        children: z.array(sheetNode),
-        gap: gap.optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('grid'),
-        children: z.array(sheetNode),
-        columns: z.int().min(1).max(12),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('tabs'),
-        tabs: z.array(z.strictObject({ label: text, children: z.array(sheetNode) })).min(1),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('section'),
-        title: text,
-        children: z.array(sheetNode),
-        collapsible: z.boolean().optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('field'),
-        path,
-        label: text.optional(),
-        input: z.enum(FIELD_INPUTS).optional(),
-      }),
-      z.strictObject({ ...base, type: z.literal('longText'), path, label: text.optional() }),
-      z.strictObject({
-        ...base,
-        type: z.literal('list'),
-        path,
-        item: sheetNode,
-        addLabel: text.optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('rollButton'),
-        /** A recipe in `rolls.json`. */
-        roll: name,
-        label: text,
-        args: z.record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), rollArg).optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('derived'),
-        key: z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/),
-        label: text.optional(),
-        format: z.enum(['integer', 'signed', 'decimal']).optional(),
-      }),
-      z.strictObject({
-        ...base,
-        type: z.literal('image'),
-        path,
-        size: z.enum(['sm', 'md', 'lg']).optional(),
-      }),
-      z.strictObject({ ...base, type: z.literal('text'), text }),
-    ]),
-    z.strictObject({
-      ...base,
-      /** A node from the plugin's `code/client` (specs §8.10). */
-      type: z.templateLiteral(['custom:', name]),
-      props: z.record(z.string(), z.unknown()).optional(),
-    }),
-  ]),
+  z
+    .union([
+      z.discriminatedUnion('type', [
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('row'),
+            children: children(),
+            gap: gap.optional().describe('The space between children.'),
+            wrap: z.boolean().optional().describe('Wraps children onto more lines when narrow.'),
+          })
+          .describe('Lays its children out side by side.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('column'),
+            children: children(),
+            gap: gap.optional().describe('The space between children.'),
+          })
+          .describe('Stacks its children.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('grid'),
+            children: children(),
+            columns: z.int().min(1).max(12).describe('Columns on wide screens; phones show one.'),
+          })
+          .describe('Lays its children out in columns.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('tabs'),
+            tabs: z
+              .array(
+                z
+                  .strictObject({ label: text.describe('The tab title.'), children: children() })
+                  .meta({ title: 'Tab' }),
+              )
+              .min(1),
+          })
+          .describe('Shows one tab at a time.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('section'),
+            title: text.describe('The heading; a lang key or literal text.'),
+            children: children(),
+            collapsible: z.boolean().optional().describe('Lets the viewer fold it away.'),
+          })
+          .describe('A titled group.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('field'),
+            path: path.describe('The field, as a dot path such as `hp.value`.'),
+            label,
+            input: z
+              .enum(FIELD_INPUTS)
+              .optional()
+              .describe(
+                'The control: `text` (the default), `number`, `checkbox` (boolean fields), `select` (fields with `enum`) or `counter` (− and + buttons).',
+              ),
+          })
+          .describe('Edits one field, and shows who else is in it.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('longText'),
+            path: path.describe('A `longText` or `richText` field.'),
+            label,
+          })
+          .describe('A text box several people can type into at once; rich text gets a toolbar.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('list'),
+            path: path.describe('An `array` field.'),
+            item: sheetNode,
+            addLabel: text.optional().describe('The text of the add button.'),
+          })
+          .describe(
+            "The rows of an array, with add, remove and reorder. `item` is one row's layout; its paths are relative to the row.",
+          ),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('rollButton'),
+            /** A recipe in `rolls.json`. */
+            roll: name.describe('A recipe in `rolls.json`.'),
+            label: text.describe("The button's text."),
+            args: z
+              .record(identifier, rollArg)
+              .optional()
+              .describe(
+                'Values the recipe reads as `@args.<name>`: formulas, numbers or true/false. In a list, `"@row.id"` names the row.',
+              ),
+          })
+          .describe('Rolls a recipe for the entity and posts it to chat.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('derived'),
+            key: identifier.describe("A name in the type's `derived`."),
+            label: text.optional().describe('A lang key or literal text; defaults to the key.'),
+            format: z
+              .enum(['integer', 'signed', 'decimal'])
+              .optional()
+              .describe(
+                '`integer` rounds, `signed` rounds and shows `+2` or `−1`, `decimal` keeps two places.',
+              ),
+          })
+          .describe('Shows a derived value.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('image'),
+            path: path.describe('A string field holding the picture URL.'),
+            size: z.enum(['sm', 'md', 'lg']).optional().describe('Defaults to `md`.'),
+          })
+          .describe('Shows a picture from a URL field.'),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('text'),
+            text: text.describe('A lang key or literal text.'),
+          })
+          .describe('Static text.'),
+      ]),
+      z
+        .strictObject({
+          ...base,
+          /** A node from the plugin's `code/client` (specs §8.10). */
+          type: z.templateLiteral(['custom:', name]),
+          props: z
+            .record(z.string(), z.unknown())
+            .optional()
+            .describe('Any JSON, passed to the component as `props`.'),
+        })
+        .meta({
+          title: 'Node `custom:<name>`',
+          description: "A component from the plugin's `code/client`, by its name in `nodes`.",
+        }),
+    ])
+    .meta({ title: 'Node' }),
 );
 
 /** `sheets/<name>.json`: one layout tree. */
-export const sheetSchema = z.strictObject({ ...schemaUrl, layout: sheetNode });
+export const sheetSchema = z
+  .strictObject({ ...schemaUrl, layout: sheetNode })
+  .describe('A sheet layout: a tree of nodes. Types name their sheet in `sheet`.');
 export type Sheet = z.infer<typeof sheetSchema>;

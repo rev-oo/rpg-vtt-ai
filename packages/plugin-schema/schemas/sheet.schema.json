@@ -14,6 +14,7 @@
     "layout"
   ],
   "additionalProperties": false,
+  "description": "A sheet layout: a tree of nodes. Types name their sheet in `sheet`.",
   "$defs": {
     "__schema0": {
       "anyOf": [
@@ -23,14 +24,17 @@
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -40,9 +44,11 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/$defs/__schema0"
-                  }
+                  },
+                  "description": "The nodes inside, in order."
                 },
                 "gap": {
+                  "description": "The space between children.",
                   "type": "string",
                   "enum": [
                     "none",
@@ -52,6 +58,7 @@
                   ]
                 },
                 "wrap": {
+                  "description": "Wraps children onto more lines when narrow.",
                   "type": "boolean"
                 }
               },
@@ -59,20 +66,24 @@
                 "type",
                 "children"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Lays its children out side by side."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -82,9 +93,11 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/$defs/__schema0"
-                  }
+                  },
+                  "description": "The nodes inside, in order."
                 },
                 "gap": {
+                  "description": "The space between children.",
                   "type": "string",
                   "enum": [
                     "none",
@@ -98,20 +111,24 @@
                 "type",
                 "children"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Stacks its children."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -121,12 +138,14 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/$defs/__schema0"
-                  }
+                  },
+                  "description": "The nodes inside, in order."
                 },
                 "columns": {
                   "type": "integer",
                   "minimum": 1,
-                  "maximum": 12
+                  "maximum": 12,
+                  "description": "Columns on wide screens; phones show one."
                 }
               },
               "required": [
@@ -134,20 +153,24 @@
                 "children",
                 "columns"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Lays its children out in columns."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -162,20 +185,24 @@
                       "label": {
                         "type": "string",
                         "minLength": 1,
-                        "maxLength": 500
+                        "maxLength": 500,
+                        "title": "Text",
+                        "description": "The tab title."
                       },
                       "children": {
                         "type": "array",
                         "items": {
                           "$ref": "#/$defs/__schema0"
-                        }
+                        },
+                        "description": "The nodes inside, in order."
                       }
                     },
                     "required": [
                       "label",
                       "children"
                     ],
-                    "additionalProperties": false
+                    "additionalProperties": false,
+                    "title": "Tab"
                   }
                 }
               },
@@ -183,20 +210,24 @@
                 "type",
                 "tabs"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Shows one tab at a time."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -205,15 +236,19 @@
                 "title": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text",
+                  "description": "The heading; a lang key or literal text."
                 },
                 "children": {
                   "type": "array",
                   "items": {
                     "$ref": "#/$defs/__schema0"
-                  }
+                  },
+                  "description": "The nodes inside, in order."
                 },
                 "collapsible": {
+                  "description": "Lets the viewer fold it away.",
                   "type": "boolean"
                 }
               },
@@ -222,20 +257,24 @@
                 "title",
                 "children"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "A titled group."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -243,14 +282,19 @@
                 },
                 "path": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                  "title": "Path",
+                  "description": "The field, as a dot path such as `hp.value`."
                 },
                 "label": {
+                  "description": "A lang key or literal text; defaults to the field's path.",
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text"
                 },
                 "input": {
+                  "description": "The control: `text` (the default), `number`, `checkbox` (boolean fields), `select` (fields with `enum`) or `counter` (− and + buttons).",
                   "type": "string",
                   "enum": [
                     "text",
@@ -265,20 +309,24 @@
                 "type",
                 "path"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Edits one field, and shows who else is in it."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -286,32 +334,40 @@
                 },
                 "path": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                  "title": "Path",
+                  "description": "A `longText` or `richText` field."
                 },
                 "label": {
+                  "description": "A lang key or literal text; defaults to the field's path.",
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text"
                 }
               },
               "required": [
                 "type",
                 "path"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "A text box several people can type into at once; rich text gets a toolbar."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -319,15 +375,19 @@
                 },
                 "path": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                  "title": "Path",
+                  "description": "An `array` field."
                 },
                 "item": {
                   "$ref": "#/$defs/__schema0"
                 },
                 "addLabel": {
+                  "description": "The text of the add button.",
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text"
                 }
               },
               "required": [
@@ -335,20 +395,24 @@
                 "path",
                 "item"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "The rows of an array, with add, remove and reorder. `item` is one row's layout; its paths are relative to the row."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -356,18 +420,24 @@
                 },
                 "roll": {
                   "type": "string",
-                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+                  "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                  "title": "Name",
+                  "description": "A recipe in `rolls.json`."
                 },
                 "label": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text",
+                  "description": "The button's text."
                 },
                 "args": {
+                  "description": "Values the recipe reads as `@args.<name>`: formulas, numbers or true/false. In a list, `\"@row.id\"` names the row.",
                   "type": "object",
                   "propertyNames": {
                     "type": "string",
-                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                    "title": "Identifier"
                   },
                   "additionalProperties": {
                     "anyOf": [
@@ -375,6 +445,7 @@
                         "type": "string",
                         "minLength": 1,
                         "maxLength": 2000,
+                        "title": "Formula",
                         "description": "A formula (specs §8.9)."
                       },
                       {
@@ -392,20 +463,24 @@
                 "roll",
                 "label"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Rolls a recipe for the entity and posts it to chat."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -413,14 +488,19 @@
                 },
                 "key": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "title": "Identifier",
+                  "description": "A name in the type's `derived`."
                 },
                 "label": {
+                  "description": "A lang key or literal text; defaults to the key.",
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text"
                 },
                 "format": {
+                  "description": "`integer` rounds, `signed` rounds and shows `+2` or `−1`, `decimal` keeps two places.",
                   "type": "string",
                   "enum": [
                     "integer",
@@ -433,20 +513,24 @@
                 "type",
                 "key"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Shows a derived value."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -454,9 +538,12 @@
                 },
                 "path": {
                   "type": "string",
-                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                  "title": "Path",
+                  "description": "A string field holding the picture URL."
                 },
                 "size": {
+                  "description": "Defaults to `md`.",
                   "type": "string",
                   "enum": [
                     "sm",
@@ -469,20 +556,24 @@
                 "type",
                 "path"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Shows a picture from a URL field."
             },
             {
               "type": "object",
               "properties": {
                 "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 },
                 "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "type": {
                   "type": "string",
@@ -491,14 +582,17 @@
                 "text": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text",
+                  "description": "A lang key or literal text."
                 }
               },
               "required": [
                 "type",
                 "text"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "description": "Static text."
             }
           ]
         },
@@ -506,20 +600,24 @@
           "type": "object",
           "properties": {
             "class": {
+              "description": "Extra CSS classes, for `styles/*.css`.",
               "type": "string",
-              "maxLength": 200
+              "maxLength": 200,
+              "title": "CSS classes"
             },
             "visibleIf": {
+              "description": "Shows the node only while this formula is true. It cannot roll dice.",
               "type": "string",
               "minLength": 1,
               "maxLength": 2000,
-              "description": "A formula (specs §8.9)."
+              "title": "Formula"
             },
             "type": {
               "type": "string",
               "pattern": "^custom:[A-Za-z][A-Za-z0-9_-]{0,63}$"
             },
             "props": {
+              "description": "Any JSON, passed to the component as `props`.",
               "type": "object",
               "propertyNames": {
                 "type": "string"
@@ -530,9 +628,12 @@
           "required": [
             "type"
           ],
-          "additionalProperties": false
+          "additionalProperties": false,
+          "title": "Node `custom:<name>`",
+          "description": "A component from the plugin's `code/client`, by its name in `nodes`."
         }
-      ]
+      ],
+      "title": "Node"
     }
   }
 }

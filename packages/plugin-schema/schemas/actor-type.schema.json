@@ -9,11 +9,15 @@
     "label": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 500
+      "maxLength": 500,
+      "title": "Text",
+      "description": "The type name players see; a lang key or literal text."
     },
     "sheet": {
       "type": "string",
-      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+      "title": "Name",
+      "description": "The sheet in `sheets/`, without `.json`."
     },
     "schema": {
       "type": "object",
@@ -26,7 +30,8 @@
           "type": "object",
           "propertyNames": {
             "type": "string",
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "title": "Identifier"
           },
           "additionalProperties": {
             "$ref": "#/$defs/__schema0"
@@ -36,7 +41,8 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "title": "Identifier"
           }
         },
         "description": {
@@ -48,18 +54,23 @@
         "type",
         "properties"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Data schema",
+      "description": "The entity's data: an object whose properties are fields."
     },
     "derived": {
+      "description": "Values computed from the data and never stored, by name. Formulas read them as `@derived.<name>`.",
       "type": "object",
       "propertyNames": {
         "type": "string",
-        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+        "title": "Identifier"
       },
       "additionalProperties": {
         "type": "string",
         "minLength": 1,
         "maxLength": 2000,
+        "title": "Formula",
         "description": "A formula (specs §8.9)."
       }
     },
@@ -68,7 +79,8 @@
       "enum": [
         "player",
         "gm"
-      ]
+      ],
+      "description": "Who may create actors of the type: players too, or only the GM."
     }
   },
   "required": [
@@ -78,6 +90,7 @@
     "controlledBy"
   ],
   "additionalProperties": false,
+  "description": "An actor type, such as a character or an NPC.",
   "$defs": {
     "__schema0": {
       "type": "object",
@@ -97,8 +110,11 @@
           "type": "string",
           "maxLength": 2000
         },
-        "default": {},
+        "default": {
+          "description": "The value new entities start with; it must fit the field."
+        },
         "enum": {
+          "description": "The allowed values; a `select` input offers them.",
           "minItems": 1,
           "type": "array",
           "items": {
@@ -128,23 +144,28 @@
           "type": "array",
           "items": {
             "type": "string",
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "title": "Identifier"
           }
         },
         "properties": {
+          "description": "The fields of an `object`, by name.",
           "type": "object",
           "propertyNames": {
             "type": "string",
-            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+            "title": "Identifier"
           },
           "additionalProperties": {
             "$ref": "#/$defs/__schema0"
           }
         },
         "items": {
+          "description": "The rows of an `array`; an `object` for a collection.",
           "$ref": "#/$defs/__schema0"
         },
         "x-kind": {
+          "description": "How the core stores and edits the field: `longText` and `richText` are shared text that several people edit at once, `collection` is a list of rows with ids, `image` is a picture URL.",
           "type": "string",
           "enum": [
             "longText",
@@ -154,9 +175,11 @@
           ]
         },
         "x-counter": {
+          "description": "A number changed in steps; steps from several people at once add up instead of overwriting each other.",
           "type": "boolean"
         },
         "x-layer": {
+          "description": "Only the GM and assistants see the field; it never reaches players.",
           "type": "string",
           "const": "secret"
         }
@@ -164,7 +187,8 @@
       "required": [
         "type"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "title": "Field"
     }
   }
 }

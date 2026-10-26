@@ -40,7 +40,8 @@ async function compile(dir: string, file: string): Promise<Buffer> {
 
 /**
  * The files of the archive (ADR-026): the plugin's files with `code/` compiled to one ES module
- * per entry and its stylesheets minified. Dot files and `node_modules` are left out.
+ * per entry and its stylesheets minified. Dot files, `node_modules` and archives (an earlier
+ * `pack` run inside the folder writes one there) are left out.
  */
 export async function packFiles(
   folder: string,
@@ -50,7 +51,7 @@ export async function packFiles(
   const packed = new Map<string, Buffer>();
   const entries = new Map<string, string>();
   for (const file of [...files].sort()) {
-    if (isIgnoredFile(file)) continue;
+    if (isIgnoredFile(file) || file.endsWith(ARCHIVE_EXTENSION)) continue;
     const entry = ENTRY.exec(file);
     if (entry?.[1] !== undefined) {
       const output = `code/${entry[1]}.js`;

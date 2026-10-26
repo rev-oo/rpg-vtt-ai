@@ -11,9 +11,11 @@
     "type": "object",
     "properties": {
       "label": {
+        "description": "The die name; a lang key or literal text.",
         "type": "string",
         "minLength": 1,
-        "maxLength": 500
+        "maxLength": 500,
+        "title": "Text"
       },
       "faces": {
         "minItems": 1,
@@ -43,12 +45,15 @@
                 "label",
                 "value"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "title": "Face"
             }
           ]
-        }
+        },
+        "description": "Equally likely faces: a label, a number, or `{ label, value }`."
       },
       "values": {
+        "description": "What text faces count as, such as `{ \"-\": -1, \" \": 0, \"+\": 1 }` for Fate.",
         "type": "object",
         "propertyNames": {
           "type": "string",
@@ -62,6 +67,8 @@
     "required": [
       "faces"
     ],
-    "additionalProperties": false
-  }
+    "additionalProperties": false,
+    "title": "Die"
+  },
+  "description": "Custom dice by name: `d` and capitals or digits, such as `dF`."
 }

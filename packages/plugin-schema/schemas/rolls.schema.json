@@ -13,52 +13,65 @@
         "type": "object",
         "properties": {
           "label": {
+            "description": "The roll name in chat; a lang key or literal text.",
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "formula": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2000,
-            "description": "A formula (specs §8.9)."
+            "title": "Formula",
+            "description": "What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`."
           },
           "outcomes": {
+            "description": "Checked in order; the first whose `when` is true is shown.",
             "type": "array",
             "items": {
               "type": "object",
               "properties": {
                 "when": {
+                  "description": "A true/false formula that can read `@total` and `@roll`; leave it out for the fallback.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,
-                  "description": "A formula (specs §8.9)."
+                  "title": "Formula"
                 },
                 "label": {
                   "type": "string",
                   "minLength": 1,
-                  "maxLength": 500
+                  "maxLength": 500,
+                  "title": "Text",
+                  "description": "Shown with the roll; a lang key or literal text."
                 },
                 "class": {
+                  "description": "A CSS class for the outcome, for `styles/*.css`.",
                   "type": "string",
-                  "maxLength": 200
+                  "maxLength": 200,
+                  "title": "CSS classes"
                 }
               },
               "required": [
                 "label"
               ],
-              "additionalProperties": false
+              "additionalProperties": false,
+              "title": "Outcome"
             }
           },
           "card": {
+            "description": "A card in `cards/`, without `.json`, to show the roll with.",
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Name"
           }
         },
         "required": [
           "formula"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "title": "Formula recipe"
       },
       {
         "type": "object",
@@ -66,18 +79,23 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text"
           },
           "handler": {
             "type": "string",
-            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$"
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Name",
+            "description": "A handler in `code/server`. Not run yet: rolling it fails."
           }
         },
         "required": [
           "handler"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "title": "Handler recipe"
       }
     ]
-  }
+  },
+  "description": "Roll recipes for `rollButton` nodes, each under a name such as `skill` (letters, digits, `_` and `-`)."
 }
