@@ -8,27 +8,35 @@
     },
     "id": {
       "type": "string",
-      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$"
+      "pattern": "^[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$",
+      "title": "Plugin id",
+      "description": "Unique on the instance, and the name of the plugin folder. Do not change it once tables use the plugin."
     },
     "name": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 100
+      "maxLength": 100,
+      "description": "The name admins and GMs see."
     },
     "version": {
       "type": "string",
-      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$"
+      "pattern": "^(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[0-9A-Za-z.-]+)?(?:\\+[0-9A-Za-z.-]+)?$",
+      "title": "Version",
+      "description": "The plugin version, such as `1.0.0`."
     },
     "kind": {
       "type": "string",
-      "const": "system"
+      "const": "system",
+      "description": "Only game systems exist for now."
     },
     "coreApi": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 100
+      "maxLength": 100,
+      "description": "The core API versions the plugin works with, as a semver range such as `^0.1.0`. A server outside the range lists the plugin as unusable."
     },
     "description": {
+      "description": "Shown on the plugin admin page.",
       "type": "string",
       "maxLength": 2000
     },
@@ -41,19 +49,24 @@
       "maxLength": 100
     },
     "hasCode": {
-      "type": "boolean"
+      "type": "boolean",
+      "description": "True exactly when the plugin has a `code/` folder. Admins must acknowledge code before enabling the plugin."
     },
     "locales": {
+      "description": "The languages in `lang/`. Each needs its `lang/<locale>.json`.",
       "minItems": 1,
       "type": "array",
       "items": {
         "type": "string",
-        "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$"
+        "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
+        "title": "Locale"
       }
     },
     "defaultLocale": {
+      "description": "The language whose text shows when the viewer's language lacks a key; one of `locales`. Defaults to the first of `locales`, then `en`.",
       "type": "string",
-      "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$"
+      "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
+      "title": "Locale"
     }
   },
   "required": [
@@ -64,5 +77,6 @@
     "coreApi",
     "hasCode"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "The plugin manifest. Every plugin has one, at the root of its folder."
 }

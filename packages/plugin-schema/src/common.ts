@@ -17,17 +17,22 @@ export const NAME = /^[A-Za-z][A-Za-z0-9_-]{0,63}$/;
 /** Custom dice, as the formula grammar reads them (ADR-017): `dF`, `dB2`. */
 export const DIE_NAME = /^d[A-Z][A-Z0-9]*$/;
 
-export const identifier = z.string().regex(IDENTIFIER);
-export const name = z.string().regex(NAME);
+// Titles name the building blocks in the JSON Schemas and the generated reference.
+export const identifier = z.string().regex(IDENTIFIER).meta({ title: 'Identifier' });
+export const name = z.string().regex(NAME).meta({ title: 'Name' });
 
 /** A formula in the language of specs §8.9; the validator parses it. */
-export const formula = z.string().min(1).max(2000).describe('A formula (specs §8.9).');
+export const formula = z
+  .string()
+  .min(1)
+  .max(2000)
+  .meta({ title: 'Formula', description: 'A formula (specs §8.9).' });
 
 /** A lang key such as `type.character`, or literal text when no lang file has the key. */
-export const text = z.string().min(1).max(500);
+export const text = z.string().min(1).max(500).meta({ title: 'Text' });
 
 /** Extra CSS classes; plugin CSS is scoped (specs §8.6). */
-export const cssClass = z.string().max(200);
+export const cssClass = z.string().max(200).meta({ title: 'CSS classes' });
 
 /** Lets editors find the JSON Schema of a file. */
 export const schemaUrl = { $schema: z.string().optional() };

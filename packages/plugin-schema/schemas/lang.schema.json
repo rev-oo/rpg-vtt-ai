@@ -9,5 +9,6 @@
   },
   "additionalProperties": {
     "type": "string"
-  }
+  },
+  "description": "Texts by lang key, such as `\"field.str\": \"Strength\"`. The file name is the locale."
 }

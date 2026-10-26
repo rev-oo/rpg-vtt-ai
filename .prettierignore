@@ -8,3 +8,4 @@ node_modules/
 pnpm-lock.yaml
 packages/plugin-schema/schemas/
 apps/server/drizzle/
+docs/plugin-reference.md

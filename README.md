@@ -100,6 +100,8 @@ On a fresh instance the app opens the setup screen. Creating a table needs an en
 
 ### Writing plugins
 
+The [plugin authoring guide](docs/plugin-authoring.md) walks through building a system from an empty folder, then covers the format file by file. Every key of every file is in the generated [plugin file reference](docs/plugin-reference.md).
+
 `vtt-plugin` (from `packages/plugin-cli`) checks, previews and packs a plugin folder:
 
 ```bash

@@ -9,7 +9,9 @@
     "title": {
       "type": "string",
       "minLength": 1,
-      "maxLength": 500
+      "maxLength": 500,
+      "title": "Text",
+      "description": "A lang key or literal text."
     },
     "rows": {
       "type": "array",
@@ -19,27 +21,33 @@
           "label": {
             "type": "string",
             "minLength": 1,
-            "maxLength": 500
+            "maxLength": 500,
+            "title": "Text",
+            "description": "A lang key or literal text."
           },
           "value": {
             "type": "string",
             "minLength": 1,
             "maxLength": 2000,
-            "description": "A formula (specs §8.9)."
+            "title": "Formula",
+            "description": "Reads `@total`, `@roll.expression`, `@roll.resolved` and the entity's data. It cannot roll dice."
           },
           "class": {
             "type": "string",
-            "maxLength": 200
+            "maxLength": 200,
+            "title": "CSS classes"
           }
         },
         "required": [
           "label",
           "value"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "title": "Card row"
       }
     },
     "outcome": {
+      "description": "Shows the recipe's outcome.",
       "type": "boolean"
     }
   },
@@ -47,5 +55,6 @@
     "title",
     "rows"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "description": "How a recipe roll shows in chat."
 }

@@ -91,6 +91,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-23 | T-0701 security review: 6 fixes, 5 accepted risks (`docs/security-review.md`). ADR-042 added.                                                                                                                            |
 | 2026-10-25 | PR #13 merged (T-0701). T-0702: e2e on Chromium, Firefox and WebKit; Firefox plugin-loading and phone chat fixes. ADR-043 added.                                                                                         |
 | 2026-10-25 | PR #14 merged (T-0702). T-0703: Docker image, compose and Caddy examples; the server serves the web app; 304 policy and counter-step race fixed. ADR-044 added.                                                          |
+| 2026-10-26 | PR #15 merged (T-0703); live-sheet flake fixed (PR #16). T-0704: plugin authoring guide, generated file reference, tutorial test. ADR-045 added.                                                                         |
 
 ---
 
@@ -1344,10 +1345,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 
     Two bugs were fixed on the way: a 304 brought the data policy to a cached page, and concurrent first counter steps could lose one (ADR-044).
 
-- [ ] **T-0704 · Authoring guide and API docs**
+- [~] **T-0704 · Authoring guide and API docs**
   - **Deps:** T-0410, T-0411
   - **Do:** `docs/plugin-authoring.md` covering the full format, a "build your first plugin" tutorial, and generated schema reference.
   - **Done when:** a developer unfamiliar with the project can build a minimal plugin from the guide alone (verified by a reader test).
+  - **Note:** the guide describes the format as 0.1.0 runs it, which differs from §8 in places (ADR-045). `docs/plugin-reference.md` is generated from the plugin schemas by `pnpm build`, and a test fails when it is stale. `packages/plugin-cli/test/tutorial.test.ts` follows the tutorial step by step and validates, rolls and packs its plugin. The reader test is pending.
 
 - [ ] **T-0705 · Release 0.1.0**
   - **Deps:** T-0701, T-0702, T-0703, T-0704
@@ -1477,6 +1479,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted |
 | ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted |
 | ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted |
+| ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
