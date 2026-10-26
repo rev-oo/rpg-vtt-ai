@@ -81,7 +81,8 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await expect(hp(ownerSheet)).toHaveValue('10');
     const minus = (sheet: typeof gmSheet) =>
       sheet.getByRole('button', { name: 'Decrease Hit points' }).click();
-    await Promise.all([minus(ownerSheet), minus(gmSheet), minus(ownerSheet)]);
+    // One person steps twice while another steps at the same time.
+    await Promise.all([minus(ownerSheet).then(() => minus(ownerSheet)), minus(gmSheet)]);
     for (const sheet of [ownerSheet, gmSheet, watcherSheet])
       await expect(hp(sheet)).toHaveValue('7');
   });
@@ -140,9 +141,13 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await biography(ownerSheet).press('End');
     await biography(gmSheet).click();
     await biography(gmSheet).press('Home');
+    // The first letter shows the caret took: a remote edit arriving before the editor read
+    // the Home key could otherwise put it back at the end.
+    await biography(gmSheet).pressSequentially('A');
+    await expect(biography(ownerSheet)).toHaveText('ABorn in Elm.');
     await Promise.all([
       biography(ownerSheet).pressSequentially(' Raised by wolves.', { delay: 30 }),
-      biography(gmSheet).pressSequentially('Ayla. ', { delay: 30 }),
+      biography(gmSheet).pressSequentially('yla. ', { delay: 30 }),
     ]);
     for (const sheet of [ownerSheet, gmSheet]) {
       await expect(biography(sheet)).toHaveText('Ayla. Born in Elm. Raised by wolves.');

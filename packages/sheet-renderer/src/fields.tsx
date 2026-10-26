@@ -103,7 +103,7 @@ function FieldShell({
   const presence = usePresence(path);
   return (
     <div
-      className={cn(`vtt-${node.type} flex min-w-0 flex-col gap-1`, node.class)}
+      className={cn(`vtt-${node.type} relative flex min-w-0 flex-col gap-1`, node.class)}
       data-field={node.path}
       style={presence.style}
       {...presence.handlers}

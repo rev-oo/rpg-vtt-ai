@@ -434,6 +434,8 @@ describe('presence (FR-SHEET-02)', () => {
     const shell = strength.closest('[data-field]');
     expect(shell).toHaveStyle({ outline: '2px solid rgb(200, 0, 0)' });
     expect(within(shell as HTMLElement).getByText('Lena')).toBeInTheDocument();
+    // Badges take no room and let clicks through, so controls never move under a pointer.
+    expect(shell?.querySelector('[data-presence]')).toHaveClass('absolute', 'pointer-events-none');
     const row = screen.getByLabelText('Skill').closest('[data-field]');
     expect(within(row as HTMLElement).getByText('Lena')).toBeInTheDocument();
     const hp = screen.getByLabelText('Hit points').closest('[data-field]');

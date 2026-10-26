@@ -51,11 +51,18 @@ export function usePresence(path: FieldPath): {
   };
 }
 
-/** The name badges of the viewers in a field. */
+/**
+ * The name badges of the viewers in a field, over the top right of the field. They take no
+ * room and let clicks through: badges come and go as others move between fields, and
+ * controls moving under someone's pointer would lose their clicks.
+ */
 export function PresenceBadges({ users }: { users: readonly PresenceUser[] }): ReactElement | null {
   if (users.length === 0) return null;
   return (
-    <span className="vtt-presence flex flex-wrap gap-1" data-presence="">
+    <span
+      className="vtt-presence pointer-events-none absolute top-0 right-0 flex flex-wrap justify-end gap-1"
+      data-presence=""
+    >
       {users.map((user) => (
         <span
           key={user.id}
