@@ -93,6 +93,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-25 | PR #14 merged (T-0702). T-0703: Docker image, compose and Caddy examples; the server serves the web app; 304 policy and counter-step race fixed. ADR-044 added.                                                          |
 | 2026-10-26 | PR #15 merged (T-0703); live-sheet flake fixed (PR #16). T-0704: plugin authoring guide, generated file reference, tutorial test. ADR-045 added.                                                                         |
 | 2026-10-26 | PR #17 merged (T-0704). Spec brought in line with the code and ADRs: §4.1–4.3, §5, §6.2–6.4, §8 (as built in 0.1.0), §9.2, §9.7, §10.1–10.2, §13.                                                                        |
+| 2026-10-26 | PR #18 merged (spec refresh). T-0705 prepared: version 0.1.0, changelog, release job. ADR-046 added.                                                                                                                     |
 
 ---
 
@@ -327,6 +328,7 @@ These are **mandatory requirements**, not preferences. They are implemented in m
   6. `pnpm build`
   7. `pnpm e2e` (Playwright, on main and release branches)
   8. Docker image: build the compose example and run `docker/smoke-test.sh` (every push and PR, ADR-044)
+  9. Release, on `v*` tags only: push the image to `ghcr.io/rev-oo/rpg-vtt-ai` and create the GitHub release from `CHANGELOG.md` (ADR-046)
 - A PR cannot merge unless CI is green.
 
 ### 6.5 Editor and tooling
@@ -1382,6 +1384,7 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Deps:** T-0701, T-0702, T-0703, T-0704
   - **Do:** Changelog, version bump, tag, Docker image published, release notes.
   - **Done when:** tag `v0.1.0` exists and CI publishes the image.
+  - **Note:** every package is at `0.1.0`, `CHANGELOG.md` has the release notes, and CI's `release` job publishes the image and the GitHub release when a `v*` tag passes every check (ADR-046). The tag goes on main once this PR is merged.
 
 ### V1 — Post-MVP
 
@@ -1507,6 +1510,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted |
 | ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted |
 | ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted |
+| ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
