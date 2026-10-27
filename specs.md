@@ -1,6 +1,6 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 0.1.0 released (2026-10-27); planning 0.2.0 · **Created:** 2026-10-19 · **Last updated:** 2026-10-27 · **Owner:** TBD
+> **Status:** 0.1.0 released (2026-10-27); planning 0.2.0 · **Created:** 2026-10-19 · **Last updated:** 2026-10-27
 > **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. The MVP's task notes and change log are in [`docs/history/mvp.md`](docs/history/mvp.md).
 
 ---
@@ -33,10 +33,11 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                         |
-| ---------- | ---------------------------------------------------------------------------------------------- |
-| 2026-10-27 | MVP task lists and change log moved to `docs/history/mvp.md`. Spec reshaped for post-MVP work. |
-| 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.             |
+| Date       | Change                                                                                                                                                                        |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-27 | MVP task lists and change log moved to `docs/history/mvp.md`. Spec reshaped for post-MVP work.                                                                                |
+| 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.                                                                                            |
+| 2026-10-27 | §8 shortened to the design and planned parts; the format is documented in the authoring guide and the generated reference (ADR-045). §8.14 added for `combat.json` and packs. |
 
 ---
 
@@ -419,7 +420,7 @@ Out of scope for MVP and v1. Captured here so the data model stays compatible:
 
 ## 8. Plugin System
 
-The plugin authoring guide (`docs/plugin-authoring.md`) describes the format as built, and `docs/plugin-reference.md` lists every key; it is generated from the Zod schemas (ADR-045). Where this section and those documents differ, they are right.
+The plugin format is documented for authors in the [plugin authoring guide](docs/plugin-authoring.md) and in the [plugin file reference](docs/plugin-reference.md), which is generated from the Zod schemas. Both are authoritative (ADR-045): the guide's tutorial is tested, and the reference cannot go stale. This section keeps the design: principles, the folder layout, and the parts that are planned but not built (§8.10, §8.14). For the format itself it summarises and links. Subsection numbers are stable because code cites them.
 
 ### 8.1 Principles
 
@@ -439,16 +440,16 @@ my-system/
 ├─ sheets/<name>.json       layout trees (referenced by types)
 ├─ rolls.json               roll recipes and outcomes (optional)
 ├─ dice.json                custom dice (optional)
-├─ combat.json              initiative formula and ordering (v1, optional; validated, not used yet)
+├─ combat.json              initiative formula and ordering (optional; validated, used from M9, §8.14)
 ├─ settings.json            per-table options (optional)
 ├─ cards/<name>.json        chat card templates (optional)
 ├─ lang/<locale>.json       translations, English required if any lang file exists
 ├─ styles/<name>.css        scoped CSS (optional)
-├─ packs/<name>.json        compendium packs (v1, optional)
+├─ packs/<name>.json        compendium packs (optional; from M10, §8.14)
 └─ code/                    optional custom behaviour
-   ├─ shared.ts             pure functions usable in formulas (runs on client and server)
+   ├─ shared.ts             pure functions usable in formulas, client and server (from M8)
    ├─ client.tsx            custom layout nodes and card renderers
-   └─ server.ts             roll handlers, lifecycle hooks (v1)
+   └─ server.ts             roll handlers, lifecycle hooks (from M8)
 ```
 
 Code entries are TypeScript sources in the plugin folder for development, but the plugin CLI (`vtt-plugin pack`) **compiles them to ES modules** (`code/*.js`; no `.d.ts`, ADR-026) and the packed plugin is what the server loads. The server never compiles TypeScript at runtime.
@@ -457,194 +458,42 @@ Code entries are TypeScript sources in the plugin folder for development, but th
 
 ### 8.3 Manifest (`plugin.json`)
 
-```json
-{
-  "$schema": "https://<host>/schemas/plugin.schema.json",
-  "id": "tiny-d20",
-  "name": "Tiny D20",
-  "version": "1.0.0",
-  "kind": "system",
-  "coreApi": "^0.1.0",
-  "author": "…",
-  "license": "MIT",
-  "description": "…",
-  "hasCode": false,
-  "locales": ["en", "pt-BR"],
-  "defaultLocale": "en"
-}
-```
-
-Rules:
-
-- `id`: lowercase kebab-case, unique on the instance, immutable once tables exist. A scanned plugin's folder must be named after it; installs name the folder (ADR-026).
-- `kind`: `system` in v1. `module` reserved for future non-system plugins.
-- `hasCode` must match the presence of `code/`. The validator checks this.
-- `coreApi` must include the server's core API version (`0.1.0`), else the plugin is listed but cannot be enabled (FR-PLUGIN-03).
-- `defaultLocale` must be one of `locales`. Texts fall back to it, then to the first locale, then to `en`.
+The manifest names the plugin (`id`, `name`, `version`), declares the core API range it supports (`coreApi`), whether it has code (`hasCode`), and its languages (`locales`, `defaultLocale`). `kind` is `system`; `module` is reserved for future non-system plugins. Rules: [guide, The manifest](docs/plugin-authoring.md#the-manifest); keys: [reference, Plugin manifest](docs/plugin-reference.md#plugin).
 
 ### 8.4 Actor and item types
 
-```json
-{
-  "$schema": "…/actor-type.schema.json",
-  "label": "type.character",
-  "controlledBy": "player",
-  "sheet": "character",
-  "schema": {
-    "type": "object",
-    "properties": {
-      "str": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
-      "hp": {
-        "type": "object",
-        "properties": {
-          "value": { "type": "integer", "default": 10, "x-counter": true },
-          "max": { "type": "integer", "default": 10 }
-        }
-      },
-      "skills": {
-        "type": "array",
-        "x-kind": "collection",
-        "items": {
-          "type": "object",
-          "properties": {
-            "name": { "type": "string" },
-            "rank": { "type": "integer", "default": 0 }
-          }
-        }
-      },
-      "notes": { "type": "string", "x-kind": "longText" },
-      "gmNotes": { "type": "string", "x-kind": "longText", "x-layer": "secret" }
-    }
-  },
-  "derived": {
-    "strMod": "floor((@str - 10) / 2)"
-  }
-}
-```
-
-Rules for the schema subset:
-
-- Supported keywords: `type` (string, integer, number, boolean, object, array), `properties`, `items`, `default`, `enum`, `minimum`, `maximum`, `minLength`, `maxLength`, `required`, `description`.
-- Unsupported keywords (`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `patternProperties`, `if`/`then`/`else`) are rejected by the validator with a clear message. Composition is added in a later `coreApi` version.
-- Field names are identifiers. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total` or `roll`, which formulas reserve (ADR-019).
-- `default` must fit its field. A field without one starts empty (`''`, `0`, `false`, `[]`); an array with `x-kind: collection` may list default rows (ADR-023).
-- `x-kind` values: `longText` (Yjs `Y.Text`, plain text), `collection` (id-keyed map, see §9.4), `richText` (Yjs `Y.XmlFragment` edited with TipTap; its JSON value is its plain text, ADR-037), `image` (URL string with preview).
-- `x-counter: true` marks a number as adjustable with `adjust` deltas.
-- `x-layer: "secret"` moves the field to the secret layer (GM and assistant only).
-- `x-kind` and `x-layer` combine; `x-layer` works on any field.
-- `controlledBy` is required on actor types and not allowed on item types.
-- `derived` maps names to formulas without dice. Derived values are never stored, and cycles are rejected.
+A type file declares the entity's data as a subset of JSON Schema, derived values (formulas without dice, never stored), its sheet, and for actors who may create it (`controlledBy`). `x-` annotations choose how the core stores each field, which is what the live document model (§9) builds on: `x-kind` (`longText`, `richText`, `collection`, `image`), `x-counter` (§9.5) and `x-layer: "secret"` (§9.3). Rules: [guide, Actor and item types](docs/plugin-authoring.md#actor-and-item-types); keys: [reference, Actor type](docs/plugin-reference.md#actor-type) and [Item type](docs/plugin-reference.md#item-type).
 
 ### 8.5 Sheets (layout JSON)
 
-A sheet file holds one tree of nodes under `layout`: `{ "layout": { "type": "column", … } }`. Each node has `type`, optional `class`, optional `visibleIf`, and type-specific props.
-
-| Node            | Props                                                                        | Notes                                                                          |
-| --------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `row`           | `children`, `gap` (`none`, `sm`, `md`, `lg`), `wrap`                         | Horizontal flex                                                                |
-| `column`        | `children`, `gap`                                                            | Vertical flex                                                                  |
-| `grid`          | `children`, `columns` (1–12)                                                 | Up to `columns` columns, fewer once one would be narrower than 7rem            |
-| `tabs`          | `tabs: [{ label, children }]`                                                | Label is a lang key                                                            |
-| `section`       | `title`, `children`, `collapsible`                                           | Titled group                                                                   |
-| `field`         | `path`, `label`, `input` (`text`, `number`, `checkbox`, `select`, `counter`) | Core renders with presence and validation; the input must fit the field's type |
-| `longText`      | `path`, `label`                                                              | Collaborative text editor for `x-kind: longText` and `richText` (rich: TipTap) |
-| `list`          | `path`, `item` (child layout), `addLabel`                                    | Renders a collection with add, remove, reorder                                 |
-| `rollButton`    | `roll`, `args`, `label`                                                      | Triggers a roll recipe on the server                                           |
-| `derived`       | `key`, `label`, `format` (`integer`, `signed`, `decimal`)                    | Displays a derived value (ADR-019)                                             |
-| `image`         | `path`, `size` (`sm`, `md`, `lg`)                                            | Shows a picture from a URL field                                               |
-| `text`          | `text` (lang key or literal)                                                 | Static text                                                                    |
-| `custom:<name>` | `props`                                                                      | Calls a custom node from `code/client.tsx`, which receives `props`             |
-
-Field `path` uses dot notation for objects. Inside `list`, `path` is relative to the row, and `@row.id` is available in `args`.
-
-`visibleIf` uses the formula language and can reference `@derived.*`, `@str`, etc. Hidden secret fields are never sent to unauthorised users regardless of `visibleIf`. Containers render even when everything in them is secret, and no formula can tell who is viewing, so a GM-only tab still shows its title to players.
+A sheet is a tree of built-in nodes (containers, fields, lists, roll buttons, derived values, text, images) plus `custom:<name>` nodes from plugin code. `visibleIf` hides nodes with a formula, but secrecy is enforced by the server, not by layout: secret fields never reach players (§9.3). Nodes: [guide, Sheets](docs/plugin-authoring.md#sheets); keys: [reference, Sheet layout](docs/plugin-reference.md#sheet).
 
 ### 8.6 Scoped CSS
 
-Processed by the plugin loader using PostCSS at load time (and cached on disk):
-
-- Every selector is prefixed with `[data-plugin="<id>"]`. `:root` is rewritten to that scope, so `--vtt-*` tokens can be overridden locally.
-- All rules are placed in `@layer plugin`, so core styles win predictably unless a plugin intentionally uses higher-specificity selectors within its layer.
-- `@keyframes` names are prefixed with the plugin id.
-- `@import` and external `url()` are removed. `@font-face` may only reference files inside the plugin folder.
-- Each sheet root gets `contain: layout paint` so it cannot escape its container.
-- Forbidden properties or selectors (`position: fixed` on `html`/`body`, `:root` changes to `z-index` on app chrome, `@page`) are stripped with a validation warning.
-- The loader rejects CSS files larger than 256 KB.
-
-```css
-/* styles/sheet.css */
-:root {
-  --vtt-accent: #8a2be2;
-}
-.vitals {
-  display: flex;
-  gap: 0.5rem;
-}
-.vitals [data-field='hp.value'] input {
-  font-size: 1.5rem;
-}
-```
+The server scopes plugin stylesheets with PostCSS (in `plugin-schema`, ADR-021) and caches the result under `DATA_DIR/cache`: selectors are prefixed with `[data-plugin="<id>"]`, rules go in `@layer plugin`, sheets get `contain: layout paint`, and anything that could reach outside the plugin is removed with a warning. Rules and styling hooks: [guide, Styles](docs/plugin-authoring.md#styles).
 
 ### 8.7 Rolls
 
-`rolls.json` maps names to recipes:
-
-```json
-{
-  "skill": {
-    "label": "roll.skill",
-    "formula": "1d20 + @derived.strMod + @skills[@args.id].rank",
-    "outcomes": [
-      { "when": "@total >= 15", "label": "outcome.success", "class": "ok" },
-      { "label": "outcome.failure", "class": "fail" }
-    ],
-    "card": "skill"
-  },
-  "attack": { "handler": "attack" }
-}
-```
-
-- `formula` uses the dice grammar and `@` references. It is evaluated on the server against the actor's current state.
-- `outcomes` are evaluated in order; the first matching `when` wins; a missing `when` is a fallback.
-- `card` references `cards/<name>.json`.
-- `handler` references an exported function in `code/server.ts`. It receives a restricted context (see §8.10). Not run in 0.1.0: rolling a handler recipe fails with `handler_recipe`.
-- A `rollButton` passes `args` (formulas, numbers or booleans), read as `@args.*`. The validator cannot know which arguments a recipe needs, so a missing one fails only when rolled.
-- Outcomes and cards also read `@total` and `@roll.expression`, `@roll.resolved`, `@roll.total`. An outcome's `class` styles it in chat.
+`rolls.json` holds recipes: a formula rolled on the server against the entity's current data, ordered outcomes, and an optional chat card. Buttons pass arguments as `@args.*`. A `handler` recipe calls a function in `code/server` instead (§8.10); it fails with `handler_recipe` until M8 (T-0809). Rules: [guide, Rolls](docs/plugin-authoring.md#rolls); keys: [reference, Roll recipes](docs/plugin-reference.md#rolls).
 
 ### 8.8 Custom dice
 
-`dice.json`:
-
-```json
-{
-  "dF": {
-    "faces": ["-", "-", " ", " ", "+", "+"],
-    "values": { "-": -1, " ": 0, "+": 1 },
-    "label": "dice.fate"
-  }
-}
-```
-
-Custom dice are used in formulas as `dF`; names are `d` followed by capitals or digits (ADR-017). A face is a number, a label whose number comes from `values`, or `{ label, value }` (ADR-019), and the result is the face's number. Count-based pools use the core `cs` operator. Result mapping for display is defined in `cards`.
+`dice.json` declares named dice (`dF`) with equally likely faces, each a number or a label with a number (ADR-017, ADR-019). [Guide, Custom dice](docs/plugin-authoring.md#custom-dice); [reference, Custom dice](docs/plugin-reference.md#dice).
 
 ### 8.9 Formula language
 
-**Grammar (summary):**
+One language serves derived values, `visibleIf`, roll formulas, outcomes, arguments and card rows (ADR-017):
 
-- Literals: integers, decimals, strings (`'…'`), booleans (`true`, `false`).
-- References: `@name`, `@derived.name`, `@args.key`, `@row.key`, `@name.sub.field`, `@collection[@args.id].field`, `@collection[*].field` (aggregate).
-- Operators: `+ - * / %`, comparisons (`< <= > >= == !=`), logical (`and or not`), ternary (`cond ? a : b`).
-- Functions (fixed whitelist): `floor`, `ceil`, `round`, `min`, `max`, `abs`, `sum`, `count`, `if`, `clamp`, plus any `shared` functions a plugin declares in `code/shared.ts`.
-- Dice terms: `NdS`, `NdS!`, `NdSr<v`, `NdSkh<k>`, `NdSkl<k>`, `NdSdh<k>`, `NdSdl<k>`, `NdScs>=<v>`, `NdScf<=<v>`, custom dice names.
+- A hand-written Pratt parser builds an AST that is evaluated directly. Never `eval`, never `new Function`.
+- **Pure** mode (no dice) runs on both sides, for derived values and conditions. **Rolling** mode allows dice and runs only on the server, with an injected RNG.
+- Functions come from a fixed whitelist. Shared plugin functions (§8.10) join it in M8.
+- Formulas are checked when the plugin is validated; evaluation has a step limit.
 
-**Evaluation:**
-
-- Parsed to an AST with a hand-written or generated (Chevrotain/Peggy) parser. Never `eval`, never `new Function`.
-- Two evaluation modes: **pure** (no dice, used for derived values and conditions, runs on both sides) and **rolling** (dice allowed, server only, requires an injected RNG).
-- Type checking happens at plugin validation time where possible; runtime errors produce a readable message with the source location.
-- Evaluation has a step limit (default 10,000 nodes) to prevent runaway work.
+Syntax, references, operators, functions and dice: [guide, Formulas](docs/plugin-authoring.md#formulas).
 
 ### 8.10 Code entries
+
+Planned shape of all three entries:
 
 ```ts
 // code/shared.ts
@@ -680,7 +529,7 @@ export default defineServer({
 });
 ```
 
-**Status in 0.1.0:** only `code/client` is loaded, with `defineClient` and the hooks below (ADR-025). `defineShared` and `defineServer` do not exist yet; the examples above show the planned shape.
+**Status:** 0.1.0 loads only `code/client`, with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025; [guide, Plugin code](docs/plugin-authoring.md#plugin-code)). `defineShared` and `defineServer` are built in M8 (T-0809), once Q13 decides how server code is contained.
 
 Rules:
 
@@ -692,55 +541,22 @@ Rules:
 
 ### 8.11 Chat cards
 
-`cards/skill.json`:
-
-```json
-{
-  "title": "card.skill.title",
-  "rows": [
-    { "label": "card.roll", "value": "@roll.expression" },
-    { "label": "card.total", "value": "@total", "class": "total" }
-  ],
-  "outcome": true
-}
-```
-
-Cards are rendered by the core from JSON; custom card components in `code/client.tsx` override them by name.
+A card lays out a recipe's roll in chat with formula rows that read the roll; a client component of the same name replaces it. [Guide, Chat cards](docs/plugin-authoring.md#chat-cards); [reference, Chat card](docs/plugin-reference.md#card).
 
 ### 8.12 Settings
 
-`settings.json` defines per-table options rendered by the core as a form:
-
-```json
-{
-  "critFumble": {
-    "type": "boolean",
-    "default": true,
-    "label": "setting.critFumble"
-  },
-  "startingHp": {
-    "type": "integer",
-    "default": 10,
-    "minimum": 1,
-    "label": "setting.startingHp"
-  }
-}
-```
-
-A setting is a `boolean`, `integer`, `number` or `string` (optionally with `enum`), with a `default`, a `label` and an optional `description`. Values are stored on the table, set by the GM on the table settings page, and read in formulas as `@settings.<name>` (ADR-039).
+`settings.json` declares per-table options (house rules) that the GM sets on the table settings page and formulas read as `@settings.<name>` (ADR-039). [Guide, Table settings](docs/plugin-authoring.md#table-settings); [reference, Settings](docs/plugin-reference.md#settings).
 
 ### 8.13 Plugin validation and CLI
 
-`vtt-plugin` (from `packages/plugin-cli`):
+The server runs the same validation as `vtt-plugin validate` on install and on rescan. The CLI (`packages/plugin-cli`) validates, previews (`dev`), packs to `.vttplugin` archives (ADR-026) and emits JSON Schemas. It is not published; authors run it from a build of this repository (ADR-045, Q15). [Guide, Checking, previewing and installing](docs/plugin-authoring.md#checking-previewing-and-installing).
 
-- `vtt-plugin validate <dir>`: checks manifest, all JSON files against plugin schemas, formula syntax and references (`@` paths exist in the schema), CSS rules, lang key coverage, and `hasCode` consistency. Exits 1 on errors and 2 on bad usage. It does not check the folder name.
-- `vtt-plugin dev <dir> [--port <n>]`: starts a local preview server that renders the plugin's sheets with an in-memory store and the type defaults, with read-only and GM-view switches, rolls, and reload on save.
-- `vtt-plugin pack <dir> [--out <file>]`: compiles `code/` to ES modules, minifies CSS, validates the result, and writes `<id>-<version>.vttplugin` (a zip; earlier archives in the folder are left out). Admins install it from the plugin admin page (`POST /plugins/install`, ADR-026).
-- `vtt-plugin schema [--out <dir>]`: emits the JSON Schemas used by editors.
+### 8.14 Planned plugin files
 
-The CLI is not published yet: authors run it from a build of this repository (ADR-045).
+Reserved in 0.1.0 and built in M9 and M10:
 
-The server runs the same validation on install and on rescan.
+- **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. The validator already checks it ([reference, Combat](docs/plugin-reference.md#combat)); nothing uses it yet. A code hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
+- **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Not validated or read in 0.1.0.
 
 ---
 
