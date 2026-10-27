@@ -279,6 +279,8 @@ export const ptBR: Messages = {
   'plugin.componentFailed': 'O componente de plugin “{name}” não pôde ser exibido.',
   'plugin.clientFailed':
     'O código do sistema não pôde ser carregado, então algumas partes estão faltando: {detail}',
+  'plugin.sharedFailed':
+    'O código compartilhado do sistema não pôde ser carregado, então os valores que o usam não podem ser calculados: {detail}',
 
   'journal.title': 'Diário',
   'journal.search': 'Buscar no diário',

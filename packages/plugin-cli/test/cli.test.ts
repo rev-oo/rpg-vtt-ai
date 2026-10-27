@@ -109,12 +109,14 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     const file = path.join(temp, 'out.vttplugin');
     const result = await run('pack', dir, '--out', file);
     expect(result.code).toBe(0);
-    expect(result.out).toMatch(/^Packed e2e-code 1\.0\.0: 8 files/);
+    expect(result.out).toMatch(/^Packed e2e-code 1\.0\.0: 10 files/);
 
     const files = readZip(await readFile(file), ARCHIVE_LIMITS);
     expect([...files.keys()]).toEqual([
       'cards/check.json',
       'code/client.js',
+      'code/server.js',
+      'code/shared.js',
       'lang/en.json',
       'plugin.json',
       'rolls.json',
@@ -145,6 +147,32 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     } finally {
       process.chdir(cwd);
     }
+  });
+
+  it('bundles the SDK into shared and server code, which run without node_modules (ADR-047)', async () => {
+    const dir = await tsxPlugin();
+    // The TypeScript sources replace the fixture's plain modules.
+    await rm(path.join(dir, 'code', 'shared.js'));
+    await rm(path.join(dir, 'code', 'server.js'));
+    await writeFile(
+      path.join(dir, 'code', 'shared.ts'),
+      `import { defineShared } from '@vtt/sdk';\nexport default defineShared({ functions: { twice: (x) => (typeof x === 'number' ? x * 2 : 0) } });\n`,
+    );
+    await writeFile(
+      path.join(dir, 'code', 'server.ts'),
+      `import { defineServer } from '@vtt/sdk';\nexport default defineServer({ handlers: { hit: async ({ ctx }) => { await ctx.chat.post({ text: 'hit' }); } } });\n`,
+    );
+    const file = path.join(temp, 'code.vttplugin');
+    expect((await run('pack', dir, '--out', file)).code).toBe(0);
+    const files = readZip(await readFile(file), ARCHIVE_LIMITS);
+    for (const entry of ['code/shared.js', 'code/server.js']) {
+      const code = String(files.get(entry));
+      expect(code).not.toContain('@vtt/sdk');
+      expect(code).toMatch(/export\s*\{/);
+    }
+    expect(String(files.get('code/shared.js'))).toContain('twice');
+    // Client code still takes the SDK from the page (ADR-025).
+    expect(String(files.get('code/client.js'))).toContain('from"@vtt/sdk/client"');
   });
 
   it.each(['tiny-d20', 'tiny-pool'])('validates and packs the reference plugin %s', async (id) => {

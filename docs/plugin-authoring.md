@@ -9,7 +9,7 @@ This guide has two parts:
 
 Every key of every file is listed in the [plugin file reference](plugin-reference.md), which is generated from the schemas the server validates with. Two finished plugins live in [`plugins/`](../plugins): `tiny-pool` (JSON only) and `tiny-d20` (with a custom sheet node in code).
 
-> **What 0.1.0 runs.** JSON files, scoped CSS and client code (`code/client`) all work. `code/shared` and `code/server` are packed but **not run yet**, so plugins cannot add formula functions or roll handlers. Rolls defined by a `handler`, and calls to functions other than the [built-ins](#functions), fail when rolled. `combat.json` and `packs/` are reserved for later versions.
+> **What runs.** JSON files, scoped CSS and all three kinds of [plugin code](#plugin-code) work: `code/client` in the browser, `code/shared` in both, and `code/server` on the server. `combat.json` and `packs/` are reserved for later versions.
 
 ## Contents
 
@@ -798,6 +798,8 @@ Types are strict: nothing converts silently, so `@str + 'x'` and `if(1, …)` ar
 | `clamp(x, low, high)`                       | `x` kept between `low` and `high`             |
 | `if(cond, a, b)`                            | The same as `cond ? a : b`                    |
 
+A plugin can add its own functions in [`code/shared`](#shared-code).
+
 #### Dice
 
 Dice belong only in roll formulas (recipes); anywhere else they are an error.
@@ -840,6 +842,7 @@ A formula is at most 2,000 characters and is checked when the plugin is validate
 - `formula` is rolled on the server against the entity's current data. Rolls use a cryptographically secure random source, so players cannot predict or forge them.
 - `outcomes` are checked in order. The first whose `when` is true wins, and one without `when` always matches. `class` styles the outcome in chat.
 - `card` shows the roll with a [chat card](#chat-cards).
+- A recipe can instead name a handler, `{ "handler": "attack" }`, which [server code](#server-code) runs.
 - A `rollButton` passes `args`, each a formula, number or `true`/`false`. The recipe reads them as `@args.<name>`. The validator cannot tell which arguments a recipe needs, so it does not check them: a button that leaves one out, or misspells it, validates, and its roll fails with an error naming the missing reference. Give every button of a recipe the same argument names.
 
 ### Custom dice
@@ -956,10 +959,60 @@ Card components get `{ card, rolls, speaker, translate }`.
 
 Rules:
 
-- **Imports.** Code may import `react`, `react/jsx-runtime` and `@vtt/sdk/client`; the app provides them, so they are not bundled. Anything else you import is bundled into `code/client.js` by `vtt-plugin pack`. The server only loads the packed `.js`, so a plugin with code must be packed (or its `code/client.js` built) before an instance can run it.
+- **Imports.** Client code may import `react`, `react/jsx-runtime` and `@vtt/sdk/client`; the app provides them, so they are not bundled. Anything else you import, `@vtt/sdk` included, is bundled into the `.js` files by `vtt-plugin pack`. The server only loads the packed `.js`, so a plugin with code must be packed before an instance can run it.
 - **No side channels.** Custom nodes read and write through the hooks. They should not open sockets or call the API.
 - **Trust.** Code runs in every player's browser with their rights. That is why admins must acknowledge code when they enable a plugin, and why a replaced plugin with code starts disabled again.
-- **Types.** The SDK is not published yet. To get type checking for plugin code, keep the plugin in this repository's `plugins/` folder, as `tiny-d20` does.
+- **Types.** The SDK is not published. To get type checking for plugin code, keep the plugin in this repository's `plugins/` folder, as `tiny-d20` does.
+
+#### Shared code
+
+`code/shared.ts` adds functions that formulas call like the [built-ins](#functions), in derived values, rolls and `visibleIf`:
+
+```ts
+import { defineShared } from '@vtt/sdk';
+
+export default defineShared({
+  functions: {
+    carryCapacity: (str) => (typeof str === 'number' ? str * 15 : 0),
+  },
+});
+```
+
+A function gets the formula's values (numbers, text, booleans or lists) and returns a number, text or boolean. It runs in two places: in each viewer's browser for sheets, and on the server for rolls. Keep it pure, so both get the same answer, and quick: on the server, one that takes longer than 100 ms fails the formula. A function that throws fails the formula with an error naming it. Shared code cannot import `react` or the client SDK, and the browser loads it as it is, so it must not use Node modules either.
+
+#### Server code
+
+`code/server.ts` holds the handlers of `handler` recipes. A handler runs on the server when someone rolls the recipe, acting as that person:
+
+```ts
+import { defineServer } from '@vtt/sdk';
+
+export default defineServer({
+  handlers: {
+    attack: async ({ ctx, actor, args }) => {
+      const hit = await ctx.roll('1d20 + @derived.strMod');
+      await ctx.chat.post({ text: `${actor.name} attacks`, rolls: [hit] });
+    },
+  },
+});
+```
+
+It gets the rolling `actor` (`id`, `name`, `type`, `data`), the button's `args`, and `ctx`:
+
+| `ctx`                            | Does                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `roll(formula)`                  | Rolls against the actor, as a typed roll would, with the plugin's functions, dice and `@args`                                         |
+| `chat.post({ text, rolls })`     | Posts a message as the roll's speaker, to its audience. `rolls` must come from `ctx.roll` in the same handler. At most 10 per handler |
+| `actors.get(id)`                 | An actor of the table, as the roller may see it, or `null`                                                                            |
+| `actors.adjust(id, path, delta)` | Adds `delta` to a counter (`x-counter`) of an actor the roller owns, within its bounds, and returns the new value                     |
+| `log(message, data?)`            | Writes to the server log                                                                                                              |
+
+Rules:
+
+- **Post something.** A handler must post at least one message; the first answers the roll. One that posts nothing fails.
+- **Time.** A handler may take 5 seconds in all. One that takes longer is stopped, and the roll fails.
+- **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log.
+- **Isolation.** Each plugin's shared and server code runs in a worker thread of its own, with no database or file access beyond `ctx`. A crash or a loop stops that worker, never the server; the next roll starts a new one. Hooks (`defineServer({ hooks })`) are accepted but not called yet.
 
 ## Checking, previewing and installing
 
@@ -982,7 +1035,7 @@ It checks:
 
 ### Preview
 
-`vtt-plugin dev <dir> [--port <n>]` renders each type's sheet with its defaults, in memory. Pick the type to show, switch on **Read-only** to see what observers see, or **GM view** to show the secret layer, roll recipes, and edit freely; nothing is saved. Every saved file reloads the page.
+`vtt-plugin dev <dir> [--port <n>]` renders each type's sheet with its defaults, in memory. Pick the type to show, switch on **Read-only** to see what observers see, or **GM view** to show the secret layer, roll recipes, and edit freely; nothing is saved. Formulas call your `code/shared` functions. `handler` recipes need a server, so they fail in the preview. Every saved file reloads the page.
 
 ### Packing
 

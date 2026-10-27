@@ -10,6 +10,7 @@ import type { RawData, WebSocket } from 'ws';
 
 import {
   actorLayerAccess,
+  documentName,
   journalAccess,
   parseDocumentName,
   type DocumentAccess,
@@ -36,6 +37,7 @@ import {
   type DefinitionOf,
 } from '../domain/documents.js';
 import { isSystemWritable } from '../domain/entities.js';
+import type { AdjustCounter } from '../domain/rolls.js';
 import { findMembership, findTable } from '../domain/tables.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
@@ -420,4 +422,29 @@ export function liveDataOf(
 ): (actor: Actor) => Record<string, unknown> | undefined {
   return (actor) =>
     liveActorData(db, actor, definition, (name) => collab.hocuspocus.documents.get(name));
+}
+
+/**
+ * Steps a counter of an actor's document for plugin server code (ADR-047), through a direct
+ * connection, so open sheets see the change at once. The caller checks who may do it.
+ */
+export function adjustActorCounter(
+  { collab, db }: Pick<AppContext, 'collab' | 'db'>,
+  definition: DefinitionOf,
+): AdjustCounter {
+  return async (actor, layer, path, delta) => {
+    if (layer === 'secret' && !hasSecretLayer(db, actor, definition)) return undefined;
+    const ref: DocumentRef = { kind: 'actor', id: actor.id, layer };
+    const connection = await collab.hocuspocus.openDirectConnection(documentName(ref));
+    try {
+      let value: number | undefined;
+      await connection.transact((document) => {
+        const origin: TransactionOrigin = { source: 'local' };
+        value = adjustDocument(db, ref, document, { path, delta }, { definition, origin })?.value;
+      });
+      return value;
+    } finally {
+      await connection.disconnect();
+    }
+  };
 }

@@ -11,6 +11,8 @@ declare module 'virtual:vtt-plugin' {
     css: string;
     /** The URL of `code/client.*`, if any. */
     client: string | null;
+    /** The URL of `code/shared.*`, if any. */
+    shared: string | null;
   };
   export default plugin;
 }

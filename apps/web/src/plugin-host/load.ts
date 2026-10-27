@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react';
 import { z } from 'zod';
 
+import type { FormulaFunction } from '@vtt/formula';
 import { pluginDefinitionSchema, type PluginDefinition } from '@vtt/plugin-schema';
 import type { CardProps, ClientDefinition, NodeProps } from '@vtt/sdk/client';
 
@@ -15,6 +16,10 @@ export interface LoadedSystem {
   client: ClientDefinition | null;
   /** Why the client code did not load; the sheet then shows notices for custom nodes. */
   clientError: string | null;
+  /** The functions of `code/shared.js`, which formulas call (ADR-047). */
+  functions: Readonly<Record<string, FormulaFunction>>;
+  /** Why the shared code did not load; formulas calling it then fail. */
+  sharedError: string | null;
 }
 
 const component = z.custom<ComponentType>(
@@ -27,6 +32,27 @@ const clientModule = z.object({
     cards: z.record(z.string(), component).optional(),
   }),
 });
+
+/** The default export of `code/shared.js`: `defineShared({ functions })`. */
+const sharedModule = z.object({
+  default: z.object({
+    functions: z
+      .record(
+        z.string(),
+        z.custom<FormulaFunction>((value) => typeof value === 'function'),
+      )
+      .optional(),
+  }),
+});
+
+/** The functions of a loaded `code/shared.js` module, checked like any external input. */
+export function sharedFunctions(loaded: unknown): Readonly<Record<string, FormulaFunction>> {
+  const parsed = sharedModule.safeParse(loaded);
+  if (!parsed.success) {
+    throw new Error('code/shared.js must export defineShared({ functions }) by default');
+  }
+  return parsed.data.default.functions ?? {};
+}
 
 /** Adds a plugin's scoped stylesheets to the page, once each (ADR-021). */
 function addStyles(urls: readonly string[]): void {
@@ -70,7 +96,26 @@ async function load(id: string): Promise<LoadedSystem> {
       clientError = error instanceof Error ? error.message : String(error);
     }
   }
-  return { id, name: system.name, version: system.version, definition, client, clientError };
+  let functions: Readonly<Record<string, FormulaFunction>> = {};
+  let sharedError: string | null = null;
+  if (system.shared) {
+    try {
+      const url = `${system.shared}?v=${encodeURIComponent(system.version)}`;
+      functions = sharedFunctions(await import(/* @vite-ignore */ url));
+    } catch (error) {
+      sharedError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  return {
+    id,
+    name: system.name,
+    version: system.version,
+    definition,
+    client,
+    clientError,
+    functions,
+    sharedError,
+  };
 }
 
 const cache = new Map<string, Promise<LoadedSystem>>();

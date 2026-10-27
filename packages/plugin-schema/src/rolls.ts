@@ -34,7 +34,9 @@ export const formulaRecipeSchema = z
 export const handlerRecipeSchema = z
   .strictObject({
     label: text.optional(),
-    handler: name.describe('A handler in `code/server`. Not run yet: rolling it fails.'),
+    handler: name.describe(
+      'A handler in `code/server`, run on the server when the recipe is rolled.',
+    ),
   })
   .meta({ title: 'Handler recipe' });
 

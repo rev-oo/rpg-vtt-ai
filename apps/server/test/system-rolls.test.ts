@@ -99,6 +99,7 @@ describe('GET /systems/:id (T-0409)', () => {
       name: 'Tiny D20',
       styles: ['/plugins/tiny-d20/styles/sheet.css'],
       client: null,
+      shared: null,
     });
     const definition = pluginDefinitionSchema.parse(system.definition);
     expect(Object.keys(definition.actorTypes)).toEqual(['character', 'npc']);

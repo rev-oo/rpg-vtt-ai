@@ -48,11 +48,11 @@ export function useTableSystem(table: TableView): TableSystem {
     if (!table.systemAvailable) return { status: 'unavailable' };
     if (state?.key !== key) return { status: 'loading' };
     if ('error' in state) return { status: 'error', error: state.error };
-    const { definition } = state.system;
+    const { definition, functions } = state.system;
     return {
       status: 'ready',
       system: state.system,
-      rules: createRules(definition, { settings: table.settings }),
+      rules: createRules(definition, { settings: table.settings, functions }),
       translate: systemTranslator(definition, LOCALE),
     };
   }, [state, key, table.systemAvailable, table.settings]);

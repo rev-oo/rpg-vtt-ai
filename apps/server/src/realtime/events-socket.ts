@@ -13,13 +13,14 @@ import {
 } from '@vtt/shared/api';
 
 import { sendChatMessage } from '../domain/chat.js';
-import { sendRollMessage } from '../domain/rolls.js';
+import { sendRollMessages } from '../domain/rolls.js';
 import { findMembership } from '../domain/tables.js';
 import { AppError, notFound } from '../errors.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
+import { rollOptions } from '../http/roll-options.js';
 
-import { liveDataOf, MAX_COLLAB_MESSAGE_BYTES } from './collab.js';
+import { MAX_COLLAB_MESSAGE_BYTES } from './collab.js';
 import { EventHub, SESSION_ENDED, type Connection } from './hub.js';
 import { membersOf, publishChatMessage } from './notify.js';
 import { upgradeGuard } from './upgrade.js';
@@ -61,17 +62,9 @@ export async function registerEvents(
 }
 
 /** `/ws/events`: session-authenticated on upgrade, one JSON envelope per message. */
-export function eventsSocket({
-  app,
-  db,
-  config,
-  sessions,
-  events,
-  now,
-  rng,
-  plugins,
-  collab,
-}: AppContext): void {
+export function eventsSocket(context: AppContext): void {
+  const { app, db, config, sessions, events, now } = context;
+  const rolls = rollOptions(context);
   app.get(
     '/ws/events',
     {
@@ -100,6 +93,9 @@ export function eventsSocket({
       socket.on('close', () => {
         events.remove(connection);
       });
+      // Rolls may run plugin code (ADR-047), so handling is async; a socket's messages still
+      // run one after another, in the order they came.
+      let queue = Promise.resolve();
       socket.on('message', (data, isBinary) => {
         if (byteLength(data) > MAX_CLIENT_MESSAGE_BYTES) {
           socket.close(MESSAGE_TOO_BIG, 'message too big');
@@ -114,20 +110,22 @@ export function eventsSocket({
         const reply = new Replies(events, connection);
         const event = parseEvent(data, isBinary, reply);
         if (!event) return;
-        try {
-          handle(event);
-          if (event.id) reply.ack(event.id);
-        } catch (error) {
-          if (error instanceof AppError) {
-            reply.error(error.code, error.message, event.id);
-          } else {
-            request.log.error({ err: error }, 'events socket handler failed');
-            reply.error('internal_error', 'Something went wrong.', event.id);
+        queue = queue.then(async () => {
+          try {
+            await handle(event);
+            if (event.id) reply.ack(event.id);
+          } catch (error) {
+            if (error instanceof AppError) {
+              reply.error(error.code, error.message, event.id);
+            } else {
+              request.log.error({ err: error }, 'events socket handler failed');
+              reply.error('internal_error', 'Something went wrong.', event.id);
+            }
           }
-        }
+        });
       });
 
-      function handle(event: ClientEvent): void {
+      async function handle(event: ClientEvent): Promise<void> {
         switch (event.type) {
           case 'subscribe': {
             if (!findMembership(db, event.tableId, connection.userId))
@@ -153,18 +151,13 @@ export function eventsSocket({
           case 'roll.request': {
             const membership = findMembership(db, event.tableId, connection.userId);
             if (!membership) throw notFound('Table not found.');
-            const row = sendRollMessage(
+            const rows = await sendRollMessages(
               db,
               { tableId: event.tableId, userId: connection.userId, role: membership.role },
               event.payload,
-              {
-                now: now(),
-                rng,
-                definition: (id) => plugins.definition(id),
-                liveData: liveDataOf({ collab, db }, (id) => plugins.definition(id)),
-              },
+              rolls,
             );
-            publishChatMessage(events, row);
+            for (const row of rows) publishChatMessage(events, row);
             return;
           }
           case 'presence.ping':

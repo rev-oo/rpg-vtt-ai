@@ -9,5 +9,5 @@
       "hp": { "type": "integer", "default": 7 }
     }
   },
-  "derived": { "mod": "@might - 2" }
+  "derived": { "mod": "half(@might)" }
 }

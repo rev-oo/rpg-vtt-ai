@@ -275,6 +275,8 @@ export const en = {
   'plugin.componentFailed': 'The plugin component “{name}” failed to show.',
   'plugin.clientFailed':
     'The system’s code could not be loaded, so some parts are missing: {detail}',
+  'plugin.sharedFailed':
+    'The system’s shared code could not be loaded, so values that use it cannot be worked out: {detail}',
 
   'journal.title': 'Journal',
   'journal.search': 'Search the journal',

@@ -226,7 +226,15 @@ function MessageItem({
       {message.kind === 'card' ? (
         <CardMessage message={message} />
       ) : message.kind === 'roll' && message.rolls.length > 0 ? (
-        message.rolls.map((roll, index) => <RollView key={index} roll={roll} />)
+        <>
+          {/* A typed roll's text is its formula, which the roll shows; plugin code may add more. */}
+          {message.text !== '' && message.text !== message.rolls[0]?.expression && (
+            <p className="break-words whitespace-pre-wrap">{message.text}</p>
+          )}
+          {message.rolls.map((roll, index) => (
+            <RollView key={index} roll={roll} />
+          ))}
+        </>
       ) : (
         <p className="break-words whitespace-pre-wrap">{message.text}</p>
       )}

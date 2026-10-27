@@ -8,7 +8,7 @@ import { createMemoryStore } from '@vtt/sheet-renderer';
 
 import { setCsrfToken } from '../src/api/client.js';
 import type { LiveSheet } from '../src/collab/use-live-sheet.js';
-import { clearLoadedSystems, systemTranslator } from '../src/plugin-host/load.js';
+import { clearLoadedSystems, sharedFunctions, systemTranslator } from '../src/plugin-host/load.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
@@ -130,6 +130,7 @@ const SYSTEM = {
     definition: DEFINITION,
     styles: ['/plugins/tiny-d20/styles/sheet.css'],
     client: null,
+    shared: null as string | null,
   },
 };
 
@@ -158,7 +159,10 @@ const CARD_MESSAGE: ChatMessage = {
   createdAt: '2026-10-20T12:00:00.000Z',
 };
 
-function openTable(path: string, { role = 'gm', systemAvailable = true } = {}) {
+function openTable(
+  path: string,
+  { role = 'gm', systemAvailable = true, system = SYSTEM, messages = [CARD_MESSAGE] } = {},
+) {
   fakeWebSocket();
   if (!collab.sheet) liveData();
   const api = fakeApi({
@@ -169,8 +173,8 @@ function openTable(path: string, { role = 'gm', systemAvailable = true } = {}) {
     'GET /tables/t1/actors': { body: { actors: [{ ...HERO, system: { str: 13 } }] } },
     'GET /tables/t1/actors?trash=live': { body: { actors: [HERO] } },
     'GET /tables/t1/types': { body: TYPES },
-    'GET /tables/t1/messages': { body: { messages: [CARD_MESSAGE], nextCursor: null } },
-    'GET /systems/tiny-d20': { body: SYSTEM },
+    'GET /tables/t1/messages': { body: { messages, nextCursor: null } },
+    'GET /systems/tiny-d20': { body: system },
     'POST /tables/t1/rolls': { status: 201, body: { message: CARD_MESSAGE } },
   });
   renderApp(path);
@@ -262,5 +266,54 @@ describe('plugin host (T-0409)', () => {
       'Plain text',
     ]);
     expect(systemTranslator(DEFINITION, 'fr')('card.total')).toBe('Total');
+  });
+
+  it('works out derived values with the plugin’s shared functions (T-0809)', async () => {
+    const npc = DEFINITION.actorTypes.npc;
+    if (!npc) throw new Error('fixture');
+    const definition: PluginDefinition = {
+      ...DEFINITION,
+      actorTypes: { npc: { ...npc, derived: { power: 'twice(@str)' } } },
+      sheets: {
+        npc: { layout: { type: 'derived', key: 'power', label: 'Power' } },
+      },
+    };
+    openTable('/tables/t1/actors/a1', {
+      system: {
+        // Served from the project root, as the server serves plugin files.
+        system: { ...SYSTEM.system, definition, shared: '/test/fixtures/shared.js' },
+      },
+    });
+    // The live sheet holds str 13 (see liveData).
+    expect(await screen.findByText('26')).toBeInTheDocument();
+  });
+
+  it('checks the default export of code/shared.js', () => {
+    const twice = (x: unknown) => Number(x) * 2;
+    expect(sharedFunctions({ default: { functions: { twice } } })).toEqual({ twice });
+    expect(sharedFunctions({ default: {} })).toEqual({});
+    expect(() => sharedFunctions({ default: { functions: { twice: 2 } } })).toThrow('defineShared');
+    expect(() => sharedFunctions({})).toThrow('defineShared');
+  });
+
+  it('shows the text plugin code posts with its rolls (ADR-047)', async () => {
+    const roll = { expression: '1d1 + 2', resolved: '1d1 + 2', total: 3, dice: [] };
+    openTable('/tables/t1', {
+      messages: [
+        {
+          ...CARD_MESSAGE,
+          id: 'm2',
+          kind: 'roll',
+          card: null,
+          text: 'Ayla strikes',
+          rolls: [roll],
+        },
+        { ...CARD_MESSAGE, id: 'm3', kind: 'roll', card: null, text: '1d1 + 2', rolls: [roll] },
+      ],
+    });
+    const messages = await log();
+    expect(await within(messages).findByText('Ayla strikes')).toBeInTheDocument();
+    // A typed roll's text is its formula, shown once by the roll itself.
+    expect(within(messages).getAllByText('1d1 + 2')).toHaveLength(2);
   });
 });

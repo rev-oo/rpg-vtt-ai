@@ -18,6 +18,8 @@ import type { Db } from '../db/client.js';
 import { plugins } from '../db/schema.js';
 import { conflict, unprocessable } from '../errors.js';
 
+import { PluginCodeRuntime, type LoadedCode } from './code-runtime.js';
+
 export interface RegistryOptions {
   db: Db;
   /** `DATA_DIR/plugins`. */
@@ -62,10 +64,13 @@ function statusOf(issues: readonly PluginIssue[]): PluginStatus {
 export class PluginRegistry {
   readonly #options: RegistryOptions;
   readonly #definitions = new Map<string, PluginDefinition>();
+  readonly #codeEntries = new Map<string, string[]>();
+  readonly #code: PluginCodeRuntime;
   #queue: Promise<unknown> = Promise.resolve();
 
   constructor(options: RegistryOptions) {
     this.#options = options;
+    this.#code = new PluginCodeRuntime({ dir: options.dir, logger: options.logger });
   }
 
   /** The folder plugins are scanned from (`DATA_DIR/plugins`). */
@@ -76,6 +81,20 @@ export class PluginRegistry {
   /** The parsed files of a ready plugin, as of the last scan. */
   definition(id: string): PluginDefinition | undefined {
     return this.#definitions.get(id);
+  }
+
+  /**
+   * The shared and server code of a ready plugin, loaded into its worker on first use
+   * (ADR-047); `undefined` when it has none. Rejects when the code fails to load.
+   */
+  code(id: string): Promise<LoadedCode | undefined> {
+    const entries = this.#codeEntries.get(id);
+    return entries ? this.#code.load(id, entries) : Promise.resolve(undefined);
+  }
+
+  /** Stops every plugin worker, as the server shuts down. */
+  close(): Promise<void> {
+    return this.#code.reset();
   }
 
   /** Rescans the folder. Scans run one at a time; a second call waits for the first. */
@@ -203,9 +222,13 @@ export class PluginRegistry {
     });
 
     this.#definitions.clear();
+    this.#codeEntries.clear();
+    // Code may have changed with the files: workers start again on next use.
+    await this.#code.reset();
     for (const plugin of scanned) {
       if (plugin.status === 'ready' && plugin.definition) {
         this.#definitions.set(plugin.id, plugin.definition);
+        this.#codeEntries.set(plugin.id, plugin.codeEntries);
       }
       const errors = plugin.issues.filter((issue) => issue.severity === 'error').length;
       logger.info({ plugin: plugin.id, status: plugin.status, errors }, 'plugin scanned');

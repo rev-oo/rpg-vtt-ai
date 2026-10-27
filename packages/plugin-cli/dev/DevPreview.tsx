@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactElement } from 'react';
 
-import { seededRng, type Value } from '@vtt/formula';
+import { seededRng, type FormulaFunction, type Value } from '@vtt/formula';
 import { chatCardView, createRules, type RecipeResult } from '@vtt/plugin-engine';
 import { describePluginIssue, type PluginDefinition, type PluginIssue } from '@vtt/plugin-schema';
 import type { CardProps, ClientDefinition } from '@vtt/sdk/client';
@@ -15,6 +15,7 @@ export interface DevPlugin {
   issues: PluginIssue[];
   css: string;
   client: string | null;
+  shared: string | null;
 }
 
 interface Choice {
@@ -54,13 +55,61 @@ function useClient(url: string | null): { client: ClientDefinition | null; error
   return state;
 }
 
+type Functions = Readonly<Record<string, FormulaFunction>>;
+
+/** The functions of `code/shared.*`, whose default export is `defineShared({ functions })`. */
+function sharedFunctions(loaded: unknown): Functions | null {
+  if (typeof loaded !== 'object' || loaded === null || !('default' in loaded)) return null;
+  const definition: unknown = loaded.default;
+  if (typeof definition !== 'object' || definition === null) return null;
+  const functions: unknown = 'functions' in definition ? definition.functions : {};
+  if (typeof functions !== 'object' || functions === null) return null;
+  const entries: [string, unknown][] = Object.entries(functions);
+  const callable = entries.filter((entry): entry is [string, FormulaFunction] => {
+    return typeof entry[1] === 'function';
+  });
+  return callable.length === entries.length ? Object.fromEntries(callable) : null;
+}
+
+/** Loads `code/shared.*` through the dev server, so formulas can call its functions. */
+function useShared(url: string | null): { functions: Functions; error: string | null } {
+  const [state, setState] = useState<{ functions: Functions; error: string | null }>({
+    functions: {},
+    error: null,
+  });
+  useEffect(() => {
+    if (!url) return;
+    let current = true;
+    import(/* @vite-ignore */ url).then(
+      (loaded: unknown) => {
+        if (!current) return;
+        const functions = sharedFunctions(loaded);
+        setState(
+          functions
+            ? { functions, error: null }
+            : { functions: {}, error: 'code/shared must export defineShared({ … }) by default' },
+        );
+      },
+      (error: unknown) => {
+        if (current) setState({ functions: {}, error: String(error) });
+      },
+    );
+    return () => {
+      current = false;
+    };
+  }, [url]);
+  return state;
+}
+
 /**
  * One plugin's sheets against an in-memory store (`vtt-plugin dev`, §8.13), with its English
- * texts, scoped CSS and client code. Rolls run in the browser with the plugin engine.
+ * texts, scoped CSS, client code and shared functions. Rolls run in the browser with the
+ * plugin engine; `handler` recipes need the server, so they fail here.
  */
 export function DevPreview({ plugin }: { plugin: DevPlugin }): ReactElement {
   const { definition } = plugin;
   const { client, error: clientError } = useClient(plugin.client);
+  const { functions, error: sharedError } = useShared(plugin.shared);
   const choices: Choice[] = definition
     ? [
         ...Object.keys(definition.actorTypes).map((type) => ({ kind: 'actor' as const, type })),
@@ -73,7 +122,10 @@ export function DevPreview({ plugin }: { plugin: DevPlugin }): ReactElement {
   const [secret, setSecret] = useState(true);
   const [rolls, setRolls] = useState<RecipeResult[]>([]);
 
-  const rules = useMemo(() => (definition ? createRules(definition) : undefined), [definition]);
+  const rules = useMemo(
+    () => (definition ? createRules(definition, { functions }) : undefined),
+    [definition, functions],
+  );
   const selected = choice ? `${choice.kind}:${choice.type}` : '';
   const store = useMemo(() => {
     const [kind, name] = selected.split(':');
@@ -171,6 +223,7 @@ export function DevPreview({ plugin }: { plugin: DevPlugin }): ReactElement {
         </Alert>
       )}
       {clientError && <Alert tone="error">{clientError}</Alert>}
+      {sharedError && <Alert tone="error">{sharedError}</Alert>}
 
       {definition && rules && type && store && choice && (
         <Card>
@@ -186,6 +239,7 @@ export function DevPreview({ plugin }: { plugin: DevPlugin }): ReactElement {
             type={type}
             store={store}
             settings={rules.settings}
+            functions={functions}
             readOnly={readOnly}
             secret={secret}
             translate={translate}

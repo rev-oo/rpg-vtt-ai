@@ -110,6 +110,8 @@ export const systemDefinitionResponseSchema = z.object({
     styles: z.array(z.string()),
     /** `code/client.js`, when the plugin has one (specs §8.10). */
     client: z.string().nullable(),
+    /** `code/shared.js`, whose functions formulas call in the browser too (ADR-047). */
+    shared: z.string().nullable(),
   }),
 });
 export type SystemDefinitionResponse = z.infer<typeof systemDefinitionResponseSchema>;
