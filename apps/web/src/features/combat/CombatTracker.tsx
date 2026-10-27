@@ -7,6 +7,7 @@ import { Alert, Button, cn, Select, TextField } from '@vtt/ui';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { useSystem } from '../../plugin-host/system-context.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 
 interface CombatTrackerProps {
@@ -24,6 +25,10 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
   const [encounter, setEncounter] = useState<EncounterView | null | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const runs = canRunCombat(table.role);
+  const system = useSystem();
+  // The system's combat.json rolls initiative (FR-COMBAT-02); otherwise the GM types it.
+  const rolls =
+    system.status === 'ready' && system.system.definition.combat?.initiative !== undefined;
 
   const refresh = useCallback(() => {
     api.getEncounter(table.id).then(
@@ -75,6 +80,15 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
         </h2>
         {runs && encounter && (
           <div className="flex flex-wrap gap-1">
+            {rolls && encounter.combatants.some((c) => c.initiative === null) && (
+              <Button
+                onClick={() => {
+                  change(() => api.rollInitiative(table.id));
+                }}
+              >
+                {t('combat.rollInitiative')}
+              </Button>
+            )}
             {encounter.round === 0 ? (
               <Button
                 variant="primary"

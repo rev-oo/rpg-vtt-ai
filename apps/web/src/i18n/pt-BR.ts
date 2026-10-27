@@ -285,6 +285,7 @@ export const ptBR: Messages = {
   'combat.title': 'Combate',
   'combat.round': 'Rodada {round}',
   'combat.create': 'Iniciar um encontro',
+  'combat.rollInitiative': 'Rolar iniciativa',
   'combat.start': 'Começar',
   'combat.next': 'Próximo turno',
   'combat.previous': 'Turno anterior',

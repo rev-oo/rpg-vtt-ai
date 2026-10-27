@@ -264,6 +264,9 @@ export const api = {
     encounterChange(tableId, 'PATCH', `/combatants/${combatantId}`, input),
   removeCombatant: (tableId: string, combatantId: string): Promise<EncounterView | null> =>
     encounterChange(tableId, 'DELETE', `/combatants/${combatantId}`),
+  /** Rolls the system's initiative for those without one (FR-COMBAT-02). */
+  rollInitiative: (tableId: string): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'POST', '/initiative', {}),
   startEncounter: (tableId: string): Promise<EncounterView | null> =>
     encounterChange(tableId, 'POST', '/start'),
   moveTurn: (tableId: string, direction: 'next' | 'previous'): Promise<EncounterView | null> =>

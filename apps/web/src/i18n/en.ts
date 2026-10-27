@@ -281,6 +281,7 @@ export const en = {
   'combat.title': 'Combat',
   'combat.round': 'Round {round}',
   'combat.create': 'Start an encounter',
+  'combat.rollInitiative': 'Roll initiative',
   'combat.start': 'Begin',
   'combat.next': 'Next turn',
   'combat.previous': 'Previous turn',
