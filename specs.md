@@ -19,13 +19,13 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Done        | 100%     |
-| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
+| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | In progress | 33%      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M11
-- **Next task:** `T-0811`
+- **Next task:** `T-0812`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -47,6 +47,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0806 done (ADR-053): sheet history keeps 50 snapshots per actor document, restored in place by owners and GMs.                                                              |
 | 2026-10-27 | T-0807 done (ADR-054): GMs and assistants archive a table, read-only everywhere until unarchived.                                                                             |
 | 2026-10-27 | T-0808 done (ADR-055): scheduled backups via `BACKUP_DIR`, keeping the newest N. M10 done.                                                                                    |
+| 2026-10-27 | T-0811 done (ADR-056): the image is built and smoke-tested natively on amd64 and arm64; releases tag both in one manifest.                                                    |
 
 ---
 
@@ -281,7 +282,7 @@ These are **mandatory requirements**, not preferences. They are implemented in m
   6. `pnpm build`
   7. `pnpm e2e` (Playwright, on main and release branches)
   8. Docker image: build the compose example and run `docker/smoke-test.sh` (every push and PR, ADR-044)
-  9. Release, on `v*` tags only: push the image to `ghcr.io/rev-oo/rpg-vtt-ai` and create the GitHub release from `CHANGELOG.md` (ADR-046)
+  9. Release, on `v*` tags only: build the image on amd64 and arm64 runners, push both under one tag to `ghcr.io/rev-oo/rpg-vtt-ai`, and create the GitHub release from `CHANGELOG.md` (ADR-046, ADR-056)
 - A PR cannot merge unless CI is green.
 
 ### 6.5 Editor and tooling
@@ -824,10 +825,11 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
 
 Independent tasks from the known limitations of 0.1.0. The CLI and SDK stay unpublished (Q15).
 
-- [ ] **T-0811 · arm64 image**
+- [x] **T-0811 · arm64 image**
   - **Deps:** none
   - **Do:** The release job builds `linux/amd64` and `linux/arm64` into one manifest. CI smoke-tests the arm64 image on an arm64 runner.
   - **Done when:** the next release's image runs on arm64 and passes `docker/smoke-test.sh`.
+  - **Note:** done as ADR-056. Each architecture is built natively, on `ubuntu-latest` and `ubuntu-24.04-arm`, and smoke-tested on every push. The release merges the two digests into one tag. Confirm on the 0.2.0 release that the published tag holds both platforms; the release job checks it.
 
 - [ ] **T-0812 · List pagination**
   - **Deps:** none
@@ -967,6 +969,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted |
 | ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted |
 | ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted |
+| ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
