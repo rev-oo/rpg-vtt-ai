@@ -78,6 +78,20 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
       {plugin.description && <p>{plugin.description}</p>}
       {hint && <p className="text-sm text-muted">{t(hint)}</p>}
 
+      {/* Admins see what code a plugin runs before and after enabling it (FR-PLUGIN-06). */}
+      {plugin.codeEntries.length > 0 && (
+        <details>
+          <summary className="cursor-pointer text-sm font-semibold">
+            {t('plugins.codeEntries')}
+          </summary>
+          <ul className="mt-2 list-disc pl-5 font-mono text-sm">
+            {plugin.codeEntries.map((entry) => (
+              <li key={entry}>{entry}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {plugin.issues.length > 0 && (
         <details open={errors > 0}>
           <summary className="cursor-pointer text-sm font-semibold">

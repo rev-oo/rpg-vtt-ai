@@ -404,7 +404,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `label` | [text](#text) |  |  |
-| `handler` | [name](#name) | yes | A handler in `code/server`. Not run yet: rolling it fails. |
+| `handler` | [name](#name) | yes | A handler in `code/server`, run on the server when the recipe is rolled. |
 
 <a id="rolls-outcome"></a>
 

@@ -140,12 +140,16 @@ export function PluginSheet({
       {system.clientError && (
         <Alert tone="error">{t('plugin.clientFailed', { detail: system.clientError })}</Alert>
       )}
+      {system.sharedError && (
+        <Alert tone="error">{t('plugin.sharedFailed', { detail: system.sharedError })}</Alert>
+      )}
       <Sheet
         pluginId={system.id}
         layout={layout}
         type={type}
         store={store}
         settings={rules.settings}
+        functions={system.functions}
         readOnly={readOnly}
         secret={secret}
         translate={translate}

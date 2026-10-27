@@ -16,6 +16,7 @@ const RESOLVED = `\0${VIRTUAL}`;
 /** Modules plugin code takes from the page instead of its own folder (ADR-025). */
 const SHARED = /^(?:react|react-dom|@vtt\/sdk)(?:\/.*)?$/;
 const CLIENT_ENTRY = /^code\/client\.(?:[cm]?[jt]sx?)$/;
+const SHARED_ENTRY = /^code\/shared\.(?:[cm]?[jt]s)$/;
 
 /** The CLI's package folder, from `src/` in tests or `dist/src/` when built. */
 function packageRoot(): string {
@@ -24,23 +25,27 @@ function packageRoot(): string {
   return dir;
 }
 
-/** The page's view of the plugin: validated, with scoped CSS and its client entry. */
+/** The page's view of the plugin: validated, with scoped CSS and its client and shared entries. */
 export async function previewModule(dir: string): Promise<string> {
   const checked = await checkPlugin(dir);
   const id = checked.manifest?.id ?? path.basename(dir);
   const css = (checked.plugin?.styles ?? [])
     .map((file) => scopeCss(checked.files.get(file) ?? '', { pluginId: id, file }).css)
     .join('\n');
-  const client = [...checked.files.keys()].find((file) => CLIENT_ENTRY.test(file));
+  const files = [...checked.files.keys()];
+  const served = (entry: RegExp): string | null => {
+    const file = files.find((name) => entry.test(name));
+    return file === undefined
+      ? null
+      : `/@fs/${path.join(dir, file).split(path.sep).join('/').replace(/^\//, '')}`;
+  };
   const data = {
     id,
     definition: checked.errors > 0 ? null : (checked.plugin ?? null),
     issues: checked.issues,
     css,
-    client:
-      client === undefined
-        ? null
-        : `/@fs/${path.join(dir, client).split(path.sep).join('/').replace(/^\//, '')}`,
+    client: served(CLIENT_ENTRY),
+    shared: served(SHARED_ENTRY),
   };
   return `export default ${JSON.stringify(data)};`;
 }

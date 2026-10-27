@@ -1,4 +1,5 @@
 import { readFile, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import path from 'node:path';
 
 import { transform as transformCss } from 'lightningcss';
@@ -15,17 +16,26 @@ import { checkPlugin, printIssues } from './validate.js';
 const ENTRY = /^code\/(client|server|shared)\.(?:[cm]?[jt]sx?)$/;
 /** Source files under `code/` that are bundled into the entries instead of shipped. */
 const SOURCE = /^code\/.+\.(?:[cm]?[jt]sx?|json)$/;
-/** What plugin code gets from the app instead of bundling it (ADR-025). */
+/** What client code gets from the app's import map instead of bundling it (ADR-025). */
 const SHARED = /^(?:react|react-dom|@vtt\/sdk)(?:\/.*)?$/;
+/**
+ * Shared and server code run where there is no `node_modules`, so this CLI's own copy of the
+ * SDK is bundled into them (ADR-047).
+ */
+const SDK = createRequire(import.meta.url).resolve('@vtt/sdk');
 const STYLESHEET = /^styles\/[^/]+\.css$/;
 
 /** Compiles one code entry into a single ES module. */
 async function compile(dir: string, file: string): Promise<Buffer> {
+  const client = file.startsWith('code/client.');
+  // Browsers load `code/shared` too, so it targets neither side.
+  const platform = client ? 'browser' : file.startsWith('code/shared.') ? 'neutral' : 'node';
   const bundle = await rolldown({
     input: path.join(dir, file),
     cwd: dir,
-    platform: file.startsWith('code/client.') ? 'browser' : 'node',
-    external: (id) => SHARED.test(id) || id.startsWith('node:'),
+    platform,
+    external: (id) => (client && SHARED.test(id)) || id.startsWith('node:'),
+    ...(!client && { resolve: { alias: { '@vtt/sdk': SDK } } }),
     transform: { jsx: 'react-jsx' },
     logLevel: 'silent',
   });

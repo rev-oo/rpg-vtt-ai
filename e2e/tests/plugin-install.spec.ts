@@ -48,6 +48,9 @@ test('admins install and replace a packed plugin', async ({ browser }) => {
     await card.getByRole('button', { name: 'Enable' }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Enable with code' }).click();
     await expect(card.getByText('Enabled', { exact: true })).toBeVisible();
+    // The card keeps listing the code it runs (FR-PLUGIN-06).
+    await card.getByText('Code files').click();
+    await expect(card.getByText('code/server.js')).toBeVisible();
   });
 
   await test.step('replace it after confirming, which disables its code again', async () => {

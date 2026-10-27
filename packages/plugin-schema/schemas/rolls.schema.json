@@ -86,7 +86,7 @@
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
             "title": "Name",
-            "description": "A handler in `code/server`. Not run yet: rolling it fails."
+            "description": "A handler in `code/server`, run on the server when the recipe is rolled."
           }
         },
         "required": [

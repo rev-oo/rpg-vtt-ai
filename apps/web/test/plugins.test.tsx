@@ -139,6 +139,16 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     expect(card('Tiny d20').getByText('Disabled')).toBeInTheDocument();
   });
 
+  it('lists the code files of a plugin with code (FR-PLUGIN-06, T-0809)', async () => {
+    adminApi();
+    renderApp('/admin/plugins');
+    await screen.findByRole('heading', { name: 'Coded' });
+    await userEvent.click(card('Coded').getByText('Code files'));
+    expect(card('Coded').getByText('code/server.js')).toBeVisible();
+    expect(card('Coded').getByText('code/client.js')).toBeVisible();
+    expect(card('Tiny d20').queryByText('Code files')).not.toBeInTheDocument();
+  });
+
   it('asks before enabling a plugin with code', async () => {
     const { calls } = adminApi({
       'POST /plugins/coded/enable': { body: { plugin: { ...CODED, enabled: true } } },

@@ -16,7 +16,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                                                                                        | Release | Status      | Progress |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
-| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Not started | 0%       |
+| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | In progress | 50%      |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Not started | 0%       |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
@@ -25,7 +25,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M8
-- **Next task:** `T-0809` (needs Q13 decided first)
+- **Next task:** `T-0804` (slash commands and server hooks)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -38,6 +38,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | MVP task lists and change log moved to `docs/history/mvp.md`. Spec reshaped for post-MVP work.                                                                                |
 | 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.                                                                                            |
 | 2026-10-27 | §8 shortened to the design and planned parts; the format is documented in the authoring guide and the generated reference (ADR-045). §8.14 added for `combat.json` and packs. |
+| 2026-10-27 | Q13 decided (ADR-047): plugin shared and server code run in a worker thread per plugin. T-0809 done: shared functions in formulas on both sides, handler recipes with `ctx`.  |
 
 ---
 
@@ -474,7 +475,7 @@ The server scopes plugin stylesheets with PostCSS (in `plugin-schema`, ADR-021) 
 
 ### 8.7 Rolls
 
-`rolls.json` holds recipes: a formula rolled on the server against the entity's current data, ordered outcomes, and an optional chat card. Buttons pass arguments as `@args.*`. A `handler` recipe calls a function in `code/server` instead (§8.10); it fails with `handler_recipe` until M8 (T-0809). Rules: [guide, Rolls](docs/plugin-authoring.md#rolls); keys: [reference, Roll recipes](docs/plugin-reference.md#rolls).
+`rolls.json` holds recipes: a formula rolled on the server against the entity's current data, ordered outcomes, and an optional chat card. Buttons pass arguments as `@args.*`. A `handler` recipe calls a function in `code/server` instead (§8.10, ADR-047). Rules: [guide, Rolls](docs/plugin-authoring.md#rolls); keys: [reference, Roll recipes](docs/plugin-reference.md#rolls).
 
 ### 8.8 Custom dice
 
@@ -529,11 +530,11 @@ export default defineServer({
 });
 ```
 
-**Status:** 0.1.0 loads only `code/client`, with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025; [guide, Plugin code](docs/plugin-authoring.md#plugin-code)). `defineShared` and `defineServer` are built in M8 (T-0809), once Q13 decides how server code is contained.
+**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Hooks are accepted but not called before M9. In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 Rules:
 
-- Server code receives a restricted `ctx` with: `roll`, `chat.post`, `actors.get`, `actors.adjust` (validated writes only), `log`. It has no database handle and no filesystem access.
+- Server code receives a restricted `ctx` with: `roll`, `chat.post`, `actors.get`, `actors.adjust` (validated writes only), `log`. It acts with the roller's rights, and has no database handle and no filesystem access.
 - Client code receives only `@vtt/sdk/client` hooks (`useField`, `useDerived`, `useActor`, `useTranslate`). It cannot open sockets or call arbitrary APIs. It imports `react`, `react/jsx-runtime` and `@vtt/sdk/client` by name; the app's import map resolves them to its own copies (ADR-025).
 - Shared code is pure and must pass the same lint boundaries as `packages/formula`.
 - Custom nodes must be pure rendering: they read via hooks and write via `useField` setters.
@@ -729,7 +730,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
 
 0.1.0 runs only `code/client` (ADR-025). M8 runs the other two entries, so handler recipes, custom formula functions and server hooks work.
 
-- [ ] **T-0809 · Run plugin shared and server code**
+- [x] **T-0809 · Run plugin shared and server code**
   - **Deps:** none (needs Q13)
   - **Do:**
     - Add `defineShared({ functions })` and `defineServer({ handlers, hooks })` to `@vtt/sdk`, with the shapes in §8.10.
@@ -740,7 +741,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
     - The admin plugin page lists each plugin's code entry points (FR-PLUGIN-06).
   - **Done when:**
     - A fixture plugin's shared function gives the same derived value on the server and in the web sheet.
-    - A handler recipe rolls and posts a card.
+    - A handler recipe rolls and posts its rolls to the chat (as `roll` messages, ADR-047).
     - Tests show `ctx` offers nothing beyond §8.10, and a failing handler leaves the server serving.
     - §8.7, §8.10 and `docs/plugin-authoring.md` describe the new entries, and the tutorial test still passes.
   - **Covers:** FR-PLUGIN-08, §8.7, §8.10
@@ -867,7 +868,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema?                                                          | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025)                                  |
 | Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                                                                               | T-0601                | **Decided:** later in M6, with T-0602 and T-0603; T-0601 is the server side (ADR-038)                                                           |
 | Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                                                                               | T-0604                | **Decided:** an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)                                             |
-| Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | T-0809                | A worker thread per plugin, with a time limit per call and `ctx` calls passed as messages                                                       |
+| Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | T-0809                | **Decided:** a worker thread per plugin, with time limits for functions and handlers, and `ctx` calls passed as messages (ADR-047)              |
 | Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | T-0801                | Rows and events: turns are GM-driven, so live co-editing adds little                                                                            |
 | Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | —                     | **Decided:** no. Plugin authors build them from this repository (ADR-045)                                                                       |
 
@@ -940,6 +941,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted |
 | ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted |
 | ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted |
+| ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

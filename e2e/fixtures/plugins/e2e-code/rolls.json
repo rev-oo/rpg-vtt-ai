@@ -7,5 +7,6 @@
       { "label": "outcome.failure", "class": "fail" }
     ],
     "card": "check"
-  }
+  },
+  "strike": { "label": "roll.strike", "handler": "strike" }
 }

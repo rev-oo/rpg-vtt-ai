@@ -49,6 +49,7 @@ export function systemRoutes({ app, db, plugins: registry }: AppContext): void {
         definition: { ...definition },
         styles: definition.styles.map((file) => base + file),
         client: plugin.codeEntries.includes('code/client.js') ? `${base}code/client.js` : null,
+        shared: plugin.codeEntries.includes('code/shared.js') ? `${base}code/shared.js` : null,
       },
     };
   });

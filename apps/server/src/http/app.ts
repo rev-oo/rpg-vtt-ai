@@ -188,6 +188,7 @@ export async function buildApp({
   if (webDir !== undefined) await registerWebApp(app, webDir);
 
   scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
+  app.addHook('onClose', () => plugins.close());
 
   return app;
 }
