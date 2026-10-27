@@ -221,6 +221,7 @@ export const en = {
   'pluginIssue.unknown_die': 'Unknown die “{name}”; declare it in dice.json.',
   'pluginIssue.dice_not_allowed': 'Dice can only be used in roll formulas.',
   'pluginIssue.derived_cycle': 'Derived values depend on each other: {cycle}.',
+  'pluginIssue.duplicate_id': 'Another entry already has the id “{id}”.',
   'pluginIssue.missing_target': 'There is no {target} named “{name}”.',
   'pluginIssue.unknown_field': '“{field}” is not a field of {scope}.',
   'pluginIssue.field_mismatch': '“{field}” must be {expected} here.',
