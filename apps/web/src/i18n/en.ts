@@ -221,6 +221,7 @@ export const en = {
   'pluginIssue.unknown_die': 'Unknown die “{name}”; declare it in dice.json.',
   'pluginIssue.dice_not_allowed': 'Dice can only be used in roll formulas.',
   'pluginIssue.derived_cycle': 'Derived values depend on each other: {cycle}.',
+  'pluginIssue.duplicate_id': 'Another entry already has the id “{id}”.',
   'pluginIssue.missing_target': 'There is no {target} named “{name}”.',
   'pluginIssue.unknown_field': '“{field}” is not a field of {scope}.',
   'pluginIssue.field_mismatch': '“{field}” must be {expected} here.',
@@ -277,6 +278,14 @@ export const en = {
     'The system’s code could not be loaded, so some parts are missing: {detail}',
   'plugin.sharedFailed':
     'The system’s shared code could not be loaded, so values that use it cannot be worked out: {detail}',
+
+  'compendium.title': 'Compendium',
+  'compendium.none': 'The system has no compendium packs.',
+  'compendium.contents': '{actors} actors, {items} items · {imported} in this table',
+  'compendium.import': 'Import',
+  'compendium.importMissing': 'Import the rest',
+  'compendium.importOf': 'Import {name}',
+  'compendium.imported': 'Imported {created}; {skipped} were already in the table.',
 
   'combat.title': 'Combat',
   'combat.round': 'Round {round}',

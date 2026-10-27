@@ -12,6 +12,7 @@ import * as setup from '../../src/routes/setup.js';
 import * as tableActor from '../../src/routes/table-actor.js';
 import * as tableActors from '../../src/routes/table-actors.js';
 import * as tableItems from '../../src/routes/table-items.js';
+import * as tableSettings from '../../src/routes/table-settings.js';
 import * as table from '../../src/routes/table.js';
 import * as tables from '../../src/routes/tables.js';
 import { invalidateSession } from '../../src/shell/session.js';
@@ -69,6 +70,7 @@ const Stub = createRoutesStub([
                   tableItems.clientLoader({ ...args, params: tableParams(args) }),
                 ),
               },
+              { path: 'settings', Component: tableSettings.default },
             ],
           },
           { path: 'account', Component: account.default },

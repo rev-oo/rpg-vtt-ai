@@ -9,6 +9,7 @@ import { Alert, Button, TextField } from '@vtt/ui';
 import { ApiError } from '../api/client.js';
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
+import { Compendium } from '../features/settings/Compendium.js';
 import { houseRuleErrors, type SettingValues } from '../features/settings/house-rules.js';
 import { HouseRules } from '../features/settings/HouseRules.js';
 import { useTableData } from '../features/table/table-data.js';
@@ -21,7 +22,12 @@ const { name: nameSchema, description: descriptionSchema } = createTableBody.sha
 export default function TableSettingsRoute(): ReactElement {
   const { table } = useTableData();
   if (!canManageTable(table.role)) return <Navigate to={`/tables/${table.id}`} replace />;
-  return <TableSettingsForm key={table.id} table={table} />;
+  return (
+    <div className="flex flex-col gap-8">
+      <TableSettingsForm key={table.id} table={table} />
+      <Compendium table={table} />
+    </div>
+  );
 }
 
 function TableSettingsForm({ table }: { table: TableView }): ReactElement {

@@ -121,3 +121,32 @@ export function collectionRows(value: unknown): CollectionRow[] {
     .map(([id, row]) => ({ ...row, id, sort: typeof row.sort === 'string' ? row.sort : '' }))
     .sort((a, b) => (a.sort === b.sort ? (a.id < b.id ? -1 : 1) : a.sort < b.sort ? -1 : 1));
 }
+
+/**
+ * A pack entry's data as an entity stores it (ADR-051): collections written as lists of rows
+ * become rows keyed `p0`, `p1`… with sort keys, at every depth. Other values are kept; the
+ * defaults fill in the rest when the entity's document loads.
+ */
+export function packData(
+  field: FieldSchema | undefined,
+  value: Readonly<Record<string, unknown>>,
+): Record<string, unknown> {
+  const data: Record<string, unknown> = {};
+  for (const [name, current] of Object.entries(value)) {
+    const child = field?.properties?.[name];
+    if (child && isCollection(child) && Array.isArray(current)) {
+      const keys = sortKeys(current.length);
+      data[name] = Object.fromEntries(
+        current.map((row: unknown, index) => [
+          `p${String(index)}`,
+          { ...(isRecord(row) ? packData(child.items, row) : {}), sort: keys[index] ?? '' },
+        ]),
+      );
+    } else if (child?.type === 'object' && isRecord(current)) {
+      data[name] = packData(child, current);
+    } else {
+      data[name] = cloneJson(current);
+    }
+  }
+  return data;
+}

@@ -35,6 +35,7 @@ import { inviteRoutes } from './routes/invites.js';
 import { itemRoutes } from './routes/items.js';
 import { journalRoutes } from './routes/journal.js';
 import { memberRoutes } from './routes/members.js';
+import { packRoutes } from './routes/packs.js';
 import { pluginAssetRoutes } from './routes/plugin-assets.js';
 import { pluginRoutes } from './routes/plugins.js';
 import { rollRoutes } from './routes/rolls.js';
@@ -185,6 +186,7 @@ export async function buildApp({
   chatRoutes(context);
   rollRoutes(context);
   combatRoutes(context);
+  packRoutes(context);
   eventsSocket(context);
   collabSocket(context);
   if (webDir !== undefined) await registerWebApp(app, webDir);

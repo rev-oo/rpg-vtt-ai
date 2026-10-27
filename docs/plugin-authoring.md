@@ -9,7 +9,7 @@ This guide has two parts:
 
 Every key of every file is listed in the [plugin file reference](plugin-reference.md), which is generated from the schemas the server validates with. Two finished plugins live in [`plugins/`](../plugins): `tiny-pool` (JSON only) and `tiny-d20` (with a custom sheet node in code).
 
-> **What runs.** JSON files, scoped CSS and all three kinds of [plugin code](#plugin-code) work: `code/client` in the browser, `code/shared` in both, and `code/server` on the server. `packs/` is reserved for a later version.
+> **What runs.** JSON files, scoped CSS and all three kinds of [plugin code](#plugin-code) work: `code/client` in the browser, `code/shared` in both, and `code/server` on the server.
 
 ## Contents
 
@@ -25,6 +25,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Custom dice](#custom-dice)
   - [Chat cards](#chat-cards)
   - [Combat](#combat)
+  - [Compendium packs](#compendium-packs)
   - [Table settings](#table-settings)
   - [Translations](#translations)
   - [Styles](#styles)
@@ -652,6 +653,7 @@ my-system/
 ├─ cards/<name>.json        how recipe rolls show in chat
 ├─ settings.json            options each table can change
 ├─ combat.json              initiative for the combat tracker
+├─ packs/<name>.json        compendium packs GMs import
 ├─ lang/<locale>.json       translations; English is required once any exist
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
@@ -899,6 +901,27 @@ Each row's `value` is a formula that can read the roll (`@total`, `@roll.*`), th
 | `sideBased`      | The side with the best roll acts first, then the other, each highest first; players win a tie |
 
 Combatants without initiative go last, and ties go in the order they were added. A combatant's side is its actor type's `controlledBy`; free-form combatants are on the GM's side. Server code can [order the turns](#combat-hooks) instead.
+
+### Compendium packs
+
+A pack holds ready-made actors and items of the plugin's own types. GMs import it into a table from the table settings:
+
+```json
+{
+  "label": "pack.bestiary",
+  "entries": [
+    { "id": "goblin", "kind": "actor", "type": "npc", "name": "Goblin", "data": { "str": 8 } },
+    { "id": "club", "kind": "item", "type": "weapon", "name": "Club", "data": { "damage": "1d6" } }
+  ]
+}
+```
+
+- **`id`** is a [name](plugin-reference.md#name), unique in the pack. Keep it the same across versions: importing again skips the entries the table already has, by id, including ones in the trash. New entries of a later version are added; entries already imported are not changed.
+- **`kind`** is `actor` or `item`, and **`type`** one of the plugin's types of that kind.
+- **`data`** is checked against the type's schema, like defaults; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.
+- **`label`** names the pack for GMs; a lang key or text.
+
+Actors are imported as the GM's, so players see them only once the GM shares them. Items go to the table's library. A pack may hold 1,000 entries.
 
 ### Table settings
 

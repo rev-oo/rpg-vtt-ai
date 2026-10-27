@@ -22,6 +22,11 @@ export function canArchiveTable(role: TableRole): boolean {
   return isGmLike(role);
 }
 
+/** Importing the system's compendium packs into the table (FR-PLUGIN-09). */
+export function canImportPacks(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
 /** Running the table's encounter (FR-COMBAT-01). */
 export function canRunCombat(role: TableRole): boolean {
   return isGmLike(role);

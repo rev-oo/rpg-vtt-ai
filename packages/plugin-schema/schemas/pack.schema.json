@@ -1,0 +1,74 @@
+{
+  "title": "Compendium pack (packs/<name>.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "title": "Text",
+      "description": "What GMs see; a lang key or text."
+    },
+    "entries": {
+      "maxItems": 1000,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Name",
+            "description": "Stable within the pack: importing again skips entries already imported, by this id."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "actor",
+              "item"
+            ],
+            "description": "An actor or an item."
+          },
+          "type": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Name",
+            "description": "An actor or item type of this plugin."
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "The name it gets in the table."
+          },
+          "data": {
+            "description": "Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "type",
+          "name"
+        ],
+        "additionalProperties": false,
+        "description": "A compendium entry."
+      }
+    }
+  },
+  "required": [
+    "label",
+    "entries"
+  ],
+  "additionalProperties": false,
+  "description": "A compendium pack: actors and items GMs import into a table."
+}

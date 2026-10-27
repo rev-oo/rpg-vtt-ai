@@ -18,14 +18,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 20%      |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M10
-- **Next task:** `T-0803`
+- **Next task:** `T-0805`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -42,6 +42,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0804 done (ADR-048): plugin slash commands, with `ctx.fail`; calling server hooks moves to T-0802. M8 done.                                                                 |
 | 2026-10-27 | Q14 decided (ADR-049): encounters are rows refetched on `combat.updated`. T-0801 done: combat tracker with hidden combatants.                                                 |
 | 2026-10-27 | T-0802 done (ADR-050): initiative from `combat.json`, `desc`/`asc`/`sideBased` ordering, the `orderCombatants` and `onTurnStart` hooks. M9 done.                              |
+| 2026-10-27 | T-0803 done (ADR-051): compendium packs are validated, listed and imported once into a table.                                                                                 |
 
 ---
 
@@ -391,7 +392,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.    | MVP      | 0.1.0                        |
 | FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.             | MVP      | 0.1.0                        |
 | FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                       | MVP      | 0.1.0 (`code/client`); 0.2.0 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       | M10                          |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       | 0.2.0                        |
 | FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                           | v1       | 0.2.0                        |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
@@ -449,7 +450,7 @@ my-system/
 ├─ cards/<name>.json        chat card templates (optional)
 ├─ lang/<locale>.json       translations, English required if any lang file exists
 ├─ styles/<name>.css        scoped CSS (optional)
-├─ packs/<name>.json        compendium packs (optional; from M10, §8.14)
+├─ packs/<name>.json        compendium packs (optional; §8.14)
 └─ code/                    optional custom behaviour
    ├─ shared.ts             pure functions usable in formulas, client and server (from M8)
    ├─ client.tsx            custom layout nodes and card renderers
@@ -557,10 +558,10 @@ The server runs the same validation as `vtt-plugin validate` on install and on r
 
 ### 8.14 Planned plugin files
 
-Reserved in 0.1.0; `combat.json` is built in M9, packs come in M10:
+Reserved in 0.1.0 and built in 0.2.0:
 
 - **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. Built in T-0802 (ADR-050): [guide, Combat](docs/plugin-authoring.md#combat). An `orderCombatants` hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
-- **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Not validated or read in 0.1.0.
+- **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Built in T-0803 (ADR-051): [guide, Compendium packs](docs/plugin-authoring.md#compendium-packs).
 
 ---
 
@@ -779,11 +780,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
 
 ### M10 — Content and table life cycle (0.2.0)
 
-- [ ] **T-0803 · Compendium packs import**
+- [x] **T-0803 · Compendium packs import**
   - **Deps:** none
   - **Do:** Validate `packs/*.json` (entries of the plugin's own actor and item types). GMs import a pack into the table library. Re-importing does not duplicate entries.
   - **Done when:** a reference plugin ships a pack; importing creates its items; an invalid pack is reported with file and JSON path; re-import is idempotent.
   - **Covers:** FR-PLUGIN-09
+  - **Note:** done as ADR-051. Imported entries become the table's actors and library items; `pack_ref` makes re-import skip them. The Compendium section is on the table settings page.
 
 - [ ] **T-0805 · Chat message edit and delete**
   - **Deps:** none
@@ -951,6 +953,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted |
 | ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted |
 | ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted |
+| ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

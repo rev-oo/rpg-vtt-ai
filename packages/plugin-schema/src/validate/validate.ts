@@ -10,12 +10,13 @@ import type { Die } from '../dice.js';
 import { PLUGIN_FILES, type PluginFileKind, pluginFileKind } from '../json-schema.js';
 import type { Lang } from '../lang.js';
 import type { Manifest } from '../manifest.js';
+import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
 import type { Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
-import { checkDataSchema } from './data.js';
+import { checkData, checkDataSchema } from './data.js';
 import { checkFormula, findCycle, type FormulaRules, type FormulaScope } from './formulas.js';
 import type { JsonPath, PluginIssue } from './issues.js';
 import { shapeIssues } from './shape.js';
@@ -31,6 +32,8 @@ export interface PluginDefinition {
   cards: Record<string, Card>;
   settings: Record<string, Setting>;
   combat?: Combat | undefined;
+  /** Compendium packs by name (ADR-051). The server keeps them; browsers do not get them. */
+  packs?: Record<string, Pack> | undefined;
   /** Translations by locale. */
   lang: Record<string, Lang>;
   /** Paths of `styles/*.css`, in order. */
@@ -52,6 +55,7 @@ const LIST_PATH: Record<string, { kind: PluginFileKind; of: string }> = {
   'types/items/': { kind: 'item-type', of: 'type' },
   'sheets/': { kind: 'sheet', of: 'sheet' },
   'cards/': { kind: 'card', of: 'card' },
+  'packs/': { kind: 'pack', of: 'pack' },
 };
 
 const baseName = (path: string): string => path.slice(path.lastIndexOf('/') + 1, -'.json'.length);
@@ -131,6 +135,7 @@ export function validatePlugin(
     'item-type': new Set(),
     sheet: new Set(),
     card: new Set(),
+    pack: new Set(),
   };
   const paths = [...files.keys()].sort();
   for (const path of paths) {
@@ -212,6 +217,7 @@ export function validatePlugin(
   const actorTypes = many<ActorType>('types/actors/');
   const itemTypes = many<ItemType>('types/items/');
   const combat = one('combat.json') as Combat | undefined;
+  const packs = many<Pack>('packs/');
 
   for (const [file, keys, pattern, of] of [
     ['rolls.json', Object.keys(rolls), NAME, 'roll'],
@@ -486,6 +492,30 @@ export function validatePlugin(
       formula(combat.initiative, scope, true, 'combat.json', ['initiative']);
   }
 
+  // Packs: entries of the plugin's own types, with data that fits them (ADR-051).
+  for (const [packName, pack] of Object.entries(packs)) {
+    const file = `packs/${packName}.json`;
+    useText(pack.label, file, ['label']);
+    const ids = new Set<string>();
+    pack.entries.forEach((entry, index) => {
+      const path = ['entries', index];
+      if (ids.has(entry.id)) error('duplicate_id', file, [...path, 'id'], { id: entry.id });
+      ids.add(entry.id);
+      const declared = entry.kind === 'actor' ? actorTypes : itemTypes;
+      const type = Object.hasOwn(declared, entry.type) ? declared[entry.type] : undefined;
+      if (!type) {
+        error('missing_target', file, [...path, 'type'], {
+          target: `${entry.kind} type`,
+          name: entry.type,
+        });
+        return;
+      }
+      checkData(type.schema, entry.data ?? {}, [...path, 'data'], (code, at, params) => {
+        error(code, file, at, params);
+      });
+    });
+  }
+
   // 6. Styles: the same scoping the server applies (§8.6).
   const styles = paths.filter((path) => /^styles\/[^/]+\.css$/.test(path));
   for (const path of styles) {
@@ -543,6 +573,7 @@ export function validatePlugin(
           cards,
           settings,
           combat,
+          ...(Object.keys(packs).length > 0 && { packs: withoutSchemaUrl(packs) }),
           lang,
           styles,
         }

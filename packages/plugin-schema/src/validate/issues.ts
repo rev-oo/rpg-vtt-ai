@@ -27,6 +27,8 @@ export const PLUGIN_ISSUE_CODES = [
   'invalid_default',
   'invalid_annotation',
   'reserved_name',
+  // Packs
+  'duplicate_id',
   // Formulas
   'invalid_formula',
   'unknown_reference',
@@ -117,6 +119,7 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   unknown_node: (x) => `Unknown sheet node "${p(x, 'type')}"`,
   invalid_default: (x) => `The default does not fit the field: ${p(x, 'reason')}`,
   invalid_annotation: (x) => `${p(x, 'key')} cannot be used on a field of type ${p(x, 'type')}`,
+  duplicate_id: (x) => `Another entry already has the id "${p(x, 'id')}"`,
   reserved_name: (x) => `"${p(x, 'name')}" is reserved for formulas and cannot name a field`,
   invalid_formula: (x) =>
     `Invalid formula: ${p(x, 'detail')} (line ${p(x, 'line')}, column ${p(x, 'column')})`,

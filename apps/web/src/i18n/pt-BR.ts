@@ -224,6 +224,7 @@ export const ptBR: Messages = {
   'pluginIssue.unknown_die': 'Dado desconhecido “{name}”; declare-o em dice.json.',
   'pluginIssue.dice_not_allowed': 'Dados só podem ser usados em fórmulas de rolagem.',
   'pluginIssue.derived_cycle': 'Valores derivados dependem uns dos outros: {cycle}.',
+  'pluginIssue.duplicate_id': 'Outra entrada já tem o id “{id}”.',
   'pluginIssue.missing_target': 'Não há {target} chamado “{name}”.',
   'pluginIssue.unknown_field': '“{field}” não é um campo de {scope}.',
   'pluginIssue.field_mismatch': '“{field}” precisa ser {expected} aqui.',
@@ -281,6 +282,14 @@ export const ptBR: Messages = {
     'O código do sistema não pôde ser carregado, então algumas partes estão faltando: {detail}',
   'plugin.sharedFailed':
     'O código compartilhado do sistema não pôde ser carregado, então os valores que o usam não podem ser calculados: {detail}',
+
+  'compendium.title': 'Compêndio',
+  'compendium.none': 'O sistema não tem pacotes de compêndio.',
+  'compendium.contents': '{actors} atores, {items} itens · {imported} nesta mesa',
+  'compendium.import': 'Importar',
+  'compendium.importMissing': 'Importar o restante',
+  'compendium.importOf': 'Importar {name}',
+  'compendium.imported': '{created} importados; {skipped} já estavam na mesa.',
 
   'combat.title': 'Combate',
   'combat.round': 'Rodada {round}',

@@ -198,11 +198,16 @@ export const actors = sqliteTable(
     /** Plugin version the data was written with (§9.7). */
     dataVersion: text('data_version').notNull(),
     createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
+    /** The pack entry it was imported from, `<plugin>:<pack>:<entry>` (ADR-051). */
+    packRef: text('pack_ref'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     softDeletedAt: softDeletedAt(),
   },
-  (t) => [index('actors_table_id_idx').on(t.tableId, t.softDeletedAt)],
+  (t) => [
+    index('actors_table_id_idx').on(t.tableId, t.softDeletedAt),
+    index('actors_pack_ref_idx').on(t.tableId, t.packRef),
+  ],
 );
 
 /**
@@ -225,6 +230,8 @@ export const items = sqliteTable(
     imageUrl: text('image_url'),
     system: systemData(),
     dataVersion: text('data_version').notNull(),
+    /** The pack entry it was imported from, `<plugin>:<pack>:<entry>` (ADR-051). */
+    packRef: text('pack_ref'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
     softDeletedAt: softDeletedAt(),
@@ -232,6 +239,7 @@ export const items = sqliteTable(
   (t) => [
     index('items_table_id_idx').on(t.tableId, t.softDeletedAt),
     index('items_actor_id_idx').on(t.actorId),
+    index('items_pack_ref_idx').on(t.tableId, t.packRef),
   ],
 );
 
