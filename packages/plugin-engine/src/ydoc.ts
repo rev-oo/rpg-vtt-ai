@@ -320,3 +320,42 @@ export function adjustCounter(
   parent.set(key, value);
   return { value, clamped: value !== start + delta };
 }
+
+/** Whether two plain values hold the same JSON. */
+const sameValue = (a: unknown, b: unknown) => a === b || JSON.stringify(a) === JSON.stringify(b);
+
+/**
+ * Makes `target` hold what `source` holds, for sheet history (FR-SHEET-11, ADR-053). Maps,
+ * texts and rich texts already in `target` are kept and their content replaced, so editors
+ * bound to them stay bound; other shared types are copied. Keys `source` lacks are removed.
+ * Into an empty map of a fresh document, this makes a copy without the edit history.
+ */
+export function copyInto(target: Y.Map<unknown>, source: Y.Map<unknown>): void {
+  for (const key of [...target.keys()]) {
+    if (!source.has(key)) target.delete(key);
+  }
+  for (const [key, value] of source.entries()) {
+    const current = target.get(key);
+    if (value instanceof Y.Map && current instanceof Y.Map) {
+      copyInto(current, value);
+    } else if (value instanceof Y.Text && current instanceof Y.Text) {
+      const delta = value.toDelta() as unknown[];
+      if (!sameValue(current.toDelta(), delta)) {
+        current.delete(0, current.length);
+        current.applyDelta(delta);
+      }
+    } else if (value instanceof Y.XmlFragment && current instanceof Y.XmlFragment) {
+      if (current.toJSON() !== value.toJSON()) {
+        current.delete(0, current.length);
+        current.insert(
+          0,
+          value.toArray().map((node) => node.clone() as Y.XmlElement | Y.XmlText),
+        );
+      }
+    } else if (value instanceof Y.AbstractType) {
+      target.set(key, value.clone());
+    } else if (!sameValue(current, value)) {
+      target.set(key, value);
+    }
+  }
+}

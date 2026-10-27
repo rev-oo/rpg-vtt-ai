@@ -12,6 +12,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - **Initiative.** Systems with a `combat.json` roll initiative for every combatant from the tracker, into the chat, and order turns highest first, lowest first, or side by side. `tiny-d20` and `tiny-pool` roll initiative. Server code can order the turns with an `orderCombatants` hook and act at each turn's start with `onTurnStart`.
 - **Compendium packs.** Plugins can ship `packs/*.json` of ready-made actors and items, checked against their types. GMs import a pack from the table settings; importing again adds only what the table does not have yet. `tiny-d20` ships a bestiary.
 - **Chat edits and deletes.** Authors can edit or delete their text messages for 5 minutes, and GMs can delete any message. Changes show live to everyone who saw the message; edited messages are marked.
+- **Sheet history.** A sheet's owners and GMs can open its history and restore how it was: a copy is kept every few minutes while it changes, the last 50 of each. Restoring changes the sheet for everyone at once, and can be undone. GM-only data has its own history, for GMs.
 
 ## [0.1.0] - 2026-10-26
 

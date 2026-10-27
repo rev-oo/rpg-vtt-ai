@@ -8,6 +8,7 @@ import {
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RawData, WebSocket } from 'ws';
 
+import { copyInto } from '@vtt/plugin-engine';
 import {
   actorLayerAccess,
   documentName,
@@ -29,6 +30,7 @@ import type { Actor } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
 import {
   adjustDocument,
+  DATA_MAP,
   hasSecretLayer,
   liveActorData,
   loadDocument,
@@ -37,6 +39,7 @@ import {
   type DefinitionOf,
 } from '../domain/documents.js';
 import { isSystemWritable } from '../domain/entities.js';
+import { decodeSnapshot, recordSnapshot, type SnapshotRow } from '../domain/history.js';
 import type { AdjustCounter } from '../domain/rolls.js';
 import { findMembership, findTable } from '../domain/tables.js';
 import type { AppContext } from '../http/app.js';
@@ -447,4 +450,31 @@ export function adjustActorCounter(
       await connection.disconnect();
     }
   };
+}
+
+/**
+ * Puts a sheet history snapshot back into its actor document (FR-SHEET-11, ADR-053), through
+ * a direct connection, so open sheets change at once. What it replaces is kept as a snapshot
+ * first, so a restore can be undone. The caller checks who may do it.
+ */
+export async function restoreActorSnapshot(
+  { collab, db }: Pick<AppContext, 'collab' | 'db'>,
+  snapshot: SnapshotRow,
+  now: Date,
+): Promise<void> {
+  const ref: DocumentRef = { kind: 'actor', id: snapshot.actorId, layer: snapshot.layer };
+  const connection = await collab.hocuspocus.openDirectConnection(documentName(ref));
+  const saved = decodeSnapshot(snapshot.state);
+  try {
+    await connection.transact((document) => {
+      const data = document.getMap(DATA_MAP);
+      recordSnapshot(db, { actorId: snapshot.actorId, layer: snapshot.layer }, data, now, {
+        force: true,
+      });
+      copyInto(data, saved.data);
+    });
+  } finally {
+    saved.doc.destroy();
+    await connection.disconnect();
+  }
 }

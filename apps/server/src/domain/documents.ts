@@ -23,6 +23,7 @@ import type { DbOrTx } from '../db/client.js';
 import { findActor, type Actor } from '../db/repositories/index.js';
 import { actors, ydocs } from '../db/schema.js';
 
+import { recordSnapshot } from './history.js';
 import { findTable } from './tables.js';
 
 /** The validated definition of a system plugin, from the registry (ADR-020). */
@@ -214,7 +215,8 @@ export function storeDocument(
       })
       .onConflictDoUpdate({ target: ydocs.name, set: { state, updatedAt: now } })
       .run();
-    if (!owner) return;
+    if (!owner || ref.kind !== 'actor') return;
+    recordSnapshot(tx, { actorId: owner.id, layer: ref.layer }, doc.getMap(DATA_MAP), now);
 
     const system = joinLayers(tx, owner, definition, (name) =>
       name === documentName(ref) ? doc : live(name),

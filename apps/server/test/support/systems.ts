@@ -34,7 +34,12 @@ export async function systemsDir(ids: readonly string[]): Promise<string> {
 export async function startWithSystems(
   dataDir: string,
   ids: readonly string[],
-  options: { db?: TestApp['db']; admin?: Client; collabTiming?: CollabTiming } = {},
+  options: {
+    db?: TestApp['db'];
+    admin?: Client;
+    collabTiming?: CollabTiming;
+    now?: () => Date;
+  } = {},
 ): Promise<{ t: TestApp; gm: Client }> {
   const { admin, ...rest } = options;
   const t = await createTestApp({ env: { DATA_DIR: dataDir }, ...rest });
