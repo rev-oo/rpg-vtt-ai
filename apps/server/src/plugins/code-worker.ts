@@ -57,8 +57,8 @@ async function load(url: string | null, keys: readonly string[]): Promise<Record
 }
 
 let functions: Exports = {};
-/** Runnable server code: `handlers` for recipes and `commands` for slash commands. */
-const runnable: Record<string, Exports> = { handler: {}, command: {} };
+/** Runnable server code: `handlers` for recipes, `commands` and combat `hooks`. */
+const runnable: Record<string, Exports> = { handler: {}, command: {}, hook: {} };
 
 /** Pending `ctx` calls of running handlers, by sequence number. */
 const pending = new Map<
@@ -122,7 +122,7 @@ port.on(
       | {
           type: 'handle';
           call: number;
-          kind: 'handler' | 'command';
+          kind: 'handler' | 'command' | 'hook';
           name: string;
           input: Record<string, unknown>;
         }
@@ -150,8 +150,17 @@ port.on(
     Promise.resolve()
       .then(() => handler({ ...input, ctx: contextFor(call) }))
       .then(
-        () => {
-          port.postMessage({ type: 'handled', call, ok: true });
+        (value: unknown) => {
+          try {
+            port.postMessage({ type: 'handled', call, ok: true, value });
+          } catch {
+            port.postMessage({
+              type: 'handled',
+              call,
+              ok: false,
+              error: 'the result cannot be sent',
+            });
+          }
         },
         (error: unknown) => {
           port.postMessage({
@@ -172,12 +181,13 @@ try {
   functions = shared.functions ?? {};
   runnable.handler = server.handlers ?? {};
   runnable.command = server.commands ?? {};
+  runnable.hook = server.hooks ?? {};
   port.postMessage({
     type: 'ready',
     functions: Object.keys(functions),
     handlers: Object.keys(runnable.handler),
     commands: Object.keys(runnable.command),
-    hooks: Object.keys(server.hooks ?? {}),
+    hooks: Object.keys(runnable.hook),
   });
 } catch (error) {
   port.postMessage({ type: 'failed', error: message(error) });

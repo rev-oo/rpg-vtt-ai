@@ -1,0 +1,1 @@
+ALTER TABLE `combatants` ADD `position` integer;

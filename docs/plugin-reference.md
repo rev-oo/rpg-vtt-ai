@@ -555,13 +555,13 @@ Text, or a choice with `enum`.
 
 ## Combat (combat.json)
 
-Initiative for the combat tracker. Checked, but not used until the tracker ships.
+Initiative for the combat tracker.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
-| `initiative` | [formula](#formula) |  | What each combatant rolls for initiative. |
-| `order` | one of `"desc"`, `"asc"`, `"sideBased"` |  |  |
+| `initiative` | [formula](#formula) |  | What each combatant rolls for initiative, against its actor’s data. Free-form combatants roll without data. |
+| `order` | one of `"desc"`, `"asc"`, `"sideBased"` |  | Turn order: highest first (`desc`, the default), lowest first (`asc`), or `sideBased`: the side with the best roll acts first, then the other, each highest first. A side is the actor type’s `controlledBy`; free-form combatants are on the GM’s side. An `orderCombatants` hook replaces the rule. |
 
 <a id="lang"></a>
 

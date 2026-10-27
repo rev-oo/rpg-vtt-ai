@@ -10,7 +10,7 @@ import { BUILT_IN_COMMANDS, COMMAND_NAME } from '@vtt/shared/api';
 
 // Runs plugin `code/shared` and `code/server` in a worker thread per plugin (ADR-047, Q13).
 //
-// Messages, main → worker: `handle` (run a handler or command), `ctx-reply` (answer to a ctx call).
+// Messages, main → worker: `handle` (run a handler, command or hook), `ctx-reply` (answer to a ctx call).
 // Worker → main: `ready` / `failed` (after loading), `ctx` (a ctx call), `handled`, `log`.
 // Shared functions are called synchronously over `syncPort`: the main thread posts the call and
 // waits on a shared flag, which the worker sets once its answer is on the port.
@@ -36,8 +36,8 @@ export class PluginCodeError extends Error {
   }
 }
 
-/** Server code a member can run: a recipe's handler or a slash command (ADR-048). */
-export type CodeKind = 'handler' | 'command';
+/** Server code: a recipe's handler, a slash command (ADR-048) or a combat hook (ADR-050). */
+export type CodeKind = 'handler' | 'command' | 'hook';
 
 /** What a handler's `ctx` calls do, answered on the main thread for the roll's sender. */
 export type HandlerHost = (method: string, args: readonly unknown[]) => Promise<unknown>;
@@ -47,26 +47,31 @@ export interface LoadedCode {
   readonly handlers: readonly string[];
   /** Slash commands with valid names that are not built in (ADR-048). */
   readonly commands: readonly string[];
-  /** Runs a handler or command; rejects with `PluginCodeError` when it fails or takes too long. */
+  readonly hooks: readonly string[];
+  /**
+   * Runs a handler, command or hook, resolving to what it returned; rejects with
+   * `PluginCodeError` when it fails or takes too long.
+   */
   handle(
     kind: CodeKind,
     name: string,
     input: Readonly<Record<string, unknown>>,
     host: HandlerHost,
-  ): Promise<void>;
+  ): Promise<unknown>;
 }
 
 interface Ready {
   functions: string[];
   handlers: string[];
   commands: string[];
+  hooks: string[];
 }
 
 type WorkerMessage =
   | { type: 'ready'; functions: string[]; handlers: string[]; commands: string[]; hooks: string[] }
   | { type: 'failed'; error: string }
   | { type: 'ctx'; call: number; seq: number; method: string; args: unknown[] }
-  | { type: 'handled'; call: number; ok: boolean; error?: string; shown?: boolean }
+  | { type: 'handled'; call: number; ok: boolean; value?: unknown; error?: string; shown?: boolean }
   | { type: 'log'; text: string; data: unknown };
 
 /** The worker's source next to this file: built `.js`, or `.ts` when tests run the sources. */
@@ -88,10 +93,15 @@ class PluginWorker implements LoadedCode {
   readonly functions: Readonly<Record<string, FormulaFunction>>;
   readonly handlers: readonly string[];
   readonly commands: readonly string[];
+  readonly hooks: readonly string[];
   #calls = 0;
   readonly #running = new Map<
     number,
-    { resolve: () => void; reject: (error: PluginCodeError) => void; host: HandlerHost }
+    {
+      resolve: (value: unknown) => void;
+      reject: (error: PluginCodeError) => void;
+      host: HandlerHost;
+    }
   >();
 
   constructor(
@@ -112,6 +122,7 @@ class PluginWorker implements LoadedCode {
       logger.warn({ commands: refused }, 'plugin commands ignored: invalid or built-in names');
     }
     this.commands = commands;
+    this.hooks = ready.hooks;
     worker.on('message', (message: WorkerMessage) => {
       this.#receive(message);
     });
@@ -140,7 +151,7 @@ class PluginWorker implements LoadedCode {
     name: string,
     input: Readonly<Record<string, unknown>>,
     host: HandlerHost,
-  ): Promise<void> {
+  ): Promise<unknown> {
     this.#calls += 1;
     const call = this.#calls;
     return new Promise((resolve, reject) => {
@@ -152,9 +163,9 @@ class PluginWorker implements LoadedCode {
         this.#running.delete(call);
       };
       this.#running.set(call, {
-        resolve: () => {
+        resolve: (value) => {
           settle();
-          resolve();
+          resolve(value);
         },
         reject: (error) => {
           settle();
@@ -182,7 +193,7 @@ class PluginWorker implements LoadedCode {
     switch (message.type) {
       case 'handled': {
         const running = this.#running.get(message.call);
-        if (message.ok) running?.resolve();
+        if (message.ok) running?.resolve(message.value);
         else {
           const error = message.error ?? 'failed';
           running?.reject(new PluginCodeError('handler_failed', error, message.shown === true));
@@ -323,7 +334,12 @@ export class PluginCodeRuntime {
           return;
         }
         log.info(
-          { functions: message.functions, handlers: message.handlers, commands: message.commands },
+          {
+            functions: message.functions,
+            handlers: message.handlers,
+            commands: message.commands,
+            hooks: message.hooks,
+          },
           'plugin code loaded',
         );
         loaded = new PluginWorker(worker, { port: channel.port1, flag }, message, stop, log);

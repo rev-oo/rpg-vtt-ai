@@ -375,15 +375,89 @@ export async function sendCommandMessages(
 async function runCode(
   db: DbOrTx,
   prepared: Prepared,
-  call: {
-    kind: CodeKind;
-    name: string;
-    input: Readonly<Record<string, Value>> | string;
-    code: LoadedCode;
-    functions: Readonly<Record<string, FormulaFunction>>;
-  },
-  { now, rng, logger, adjust }: RollOptions,
+  call: CodeCall,
+  options: RollOptions,
 ): Promise<PostedMessages> {
+  const run = await runServerCode(db, prepared, call, options);
+  const what = call.kind === 'command' ? `/${call.name}` : 'The roll’s plugin code';
+  if (run.error) {
+    // What failed stays in the server log, unless the plugin failed on purpose (`ctx.fail`).
+    const { error } = run;
+    const shown = error.shown
+      ? error.message
+      : error.code === 'handler_timeout'
+        ? `${what} took too long.`
+        : `${what} failed.`;
+    // Messages it posted before failing stay posted.
+    if (run.posted.length === 0) throw unprocessable(error.code, shown);
+  }
+  const [first, ...rest] = run.posted;
+  if (!first) throw unprocessable('handler_no_message', `${what} posted nothing.`);
+  return [first, ...rest];
+}
+
+interface CodeCall {
+  kind: CodeKind;
+  name: string;
+  /** A recipe's arguments, which formulas read as `@args`, or a command's text. */
+  input: Readonly<Record<string, Value>> | string;
+  /** More input for hooks, next to `actor` and `args`. */
+  extra?: Readonly<Record<string, unknown>>;
+  code: LoadedCode;
+  functions: Readonly<Record<string, FormulaFunction>>;
+}
+
+/** What server code did: the messages it posted, and what it returned or how it failed. */
+export interface CodeRun {
+  posted: ChatMessageRow[];
+  value: unknown;
+  error: PluginCodeError | undefined;
+}
+
+/**
+ * Runs a combat hook of the table's system as `sender` (ADR-050), speaking as `target.actorId`
+ * to its audience. `undefined` when the system has no such hook or its code cannot load;
+ * failures are logged and returned, never thrown, so combat goes on without the hook.
+ */
+export async function runHook(
+  db: DbOrTx,
+  sender: { tableId: string; userId: string; role: TableRole },
+  target: MessageTarget,
+  hook: { name: string; input: Readonly<Record<string, unknown>> },
+  options: RollOptions,
+): Promise<CodeRun | undefined> {
+  const prepared = prepare(db, sender, target, options);
+  const { table, plugin } = prepared;
+  if (!table || !plugin || !options.code) return undefined;
+  let code: LoadedCode | undefined;
+  try {
+    code = await options.code(table.systemId);
+  } catch (error) {
+    options.logger.warn({ err: error, plugin: table.systemId }, 'plugin code unavailable');
+    return undefined;
+  }
+  if (!code?.hooks.includes(hook.name)) return undefined;
+  return runServerCode(
+    db,
+    prepared,
+    {
+      kind: 'hook',
+      name: hook.name,
+      input: {},
+      extra: hook.input,
+      code,
+      functions: code.functions,
+    },
+    options,
+  );
+}
+
+async function runServerCode(
+  db: DbOrTx,
+  prepared: Prepared,
+  call: CodeCall,
+  { now, rng, logger, adjust }: RollOptions,
+): Promise<CodeRun> {
   const { subject, message, actor, plugin, table } = prepared;
   if (!plugin || !table)
     throw unprocessable('system_unavailable', 'The table’s system cannot run code.');
@@ -477,27 +551,17 @@ async function runCode(
     }
   };
 
-  const what = call.kind === 'command' ? `/${call.name}` : 'The roll’s plugin code';
   try {
-    await code.handle(
+    const value = await code.handle(
       call.kind,
       call.name,
-      { actor: actor && view(actor), args: call.input },
+      { ...call.extra, actor: actor && view(actor), args: call.input },
       host,
     );
+    return { posted, value, error: undefined };
   } catch (error) {
     if (!(error instanceof PluginCodeError)) throw error;
     log.warn({ reason: error.message, code: error.code }, 'plugin code failed');
-    // What failed stays in the server log, unless the plugin failed on purpose (`ctx.fail`).
-    const shown = error.shown
-      ? error.message
-      : error.code === 'handler_timeout'
-        ? `${what} took too long.`
-        : `${what} failed.`;
-    // Messages it posted before failing stay posted.
-    if (posted.length === 0) throw unprocessable(error.code, shown);
+    return { posted, value: undefined, error };
   }
-  const [first, ...rest] = posted;
-  if (!first) throw unprocessable('handler_no_message', `${what} posted nothing.`);
-  return [first, ...rest];
 }

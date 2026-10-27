@@ -290,6 +290,8 @@ export const combatants = sqliteTable(
     hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
     /** Adding order, which breaks ties. */
     sort: integer('sort').notNull(),
+    /** Place in the turn order, set after every change (ADR-050); `null` until then. */
+    position: integer('position'),
     createdAt: createdAt(),
   },
   (t) => [index('combatants_encounter_id_idx').on(t.encounterId)],
