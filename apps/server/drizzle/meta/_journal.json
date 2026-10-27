@@ -64,6 +64,13 @@
       "when": 1793124752934,
       "tag": "0008_chat_edits",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793126754095,
+      "tag": "0009_sheet_history",
+      "breakpoints": true
     }
   ]
 }

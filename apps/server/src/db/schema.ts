@@ -338,6 +338,28 @@ export const chatMessages = sqliteTable(
  * Binary Yjs state of the collaborative documents (specs §9.1, §9.6), keyed by document name.
  * Each row belongs to its actor or journal entry and goes with it when it is purged.
  */
+/**
+ * Sheet history (FR-SHEET-11, ADR-053): copies of an actor document's data without its edit
+ * history, taken on store at most every few minutes; the newest 50 per document are kept.
+ */
+export const actorSnapshots = sqliteTable(
+  'actor_snapshots',
+  {
+    /** Taking order; several snapshots can share a millisecond. */
+    seq: integer('seq').primaryKey({ autoIncrement: true }),
+    id: text('id').notNull().unique(),
+    actorId: text('actor_id')
+      .notNull()
+      .references(() => actors.id, { onDelete: 'cascade' }),
+    /** Which document: secret snapshots are GM-only, as the secret document is (§9.3). */
+    layer: text('layer', { enum: ['main', 'secret'] }).notNull(),
+    /** A Yjs update holding the `data` map alone. */
+    state: blob('state', { mode: 'buffer' }).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('actor_snapshots_actor_idx').on(t.actorId, t.layer, t.seq)],
+);
+
 export const ydocs = sqliteTable(
   'ydocs',
   {
