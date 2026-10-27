@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
-| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Not started | 0%       |
+| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | In progress | 50%      |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
@@ -25,7 +25,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M9
-- **Next task:** `T-0801` (needs Q14, the combat model, decided first)
+- **Next task:** `T-0802`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -40,6 +40,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | §8 shortened to the design and planned parts; the format is documented in the authoring guide and the generated reference (ADR-045). §8.14 added for `combat.json` and packs. |
 | 2026-10-27 | Q13 decided (ADR-047): plugin shared and server code run in a worker thread per plugin. T-0809 done: shared functions in formulas on both sides, handler recipes with `ctx`.  |
 | 2026-10-27 | T-0804 done (ADR-048): plugin slash commands, with `ctx.fail`; calling server hooks moves to T-0802. M8 done.                                                                 |
+| 2026-10-27 | Q14 decided (ADR-049): encounters are rows refetched on `combat.updated`. T-0801 done: combat tracker with hidden combatants.                                                 |
 
 ---
 
@@ -396,10 +397,10 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 | ID           | Requirement                                                                                                                      | Priority | Status |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| FR-COMBAT-01 | GM creates an encounter, adds combatants (actors or free-form entries), and runs initiative.                                     | v1       | M9     |
+| FR-COMBAT-01 | GM creates an encounter, adds combatants (actors or free-form entries), and runs initiative.                                     | v1       | 0.2.0  |
 | FR-COMBAT-02 | Initiative is rolled using the plugin's `combat.json` formula, with ordering rule `desc`, `asc`, or `sideBased`, or a code hook. | v1       | M9     |
-| FR-COMBAT-03 | Turn advance and round counter are broadcast to all members.                                                                     | v1       | M9     |
-| FR-COMBAT-04 | Combatant visibility respects actor ownership and hidden status.                                                                 | v1       | M9     |
+| FR-COMBAT-03 | Turn advance and round counter are broadcast to all members.                                                                     | v1       | 0.2.0  |
+| FR-COMBAT-04 | Combatant visibility respects actor ownership and hidden status.                                                                 | v1       | 0.2.0  |
 
 ### 7.10 Settings and administration (`FR-ADMIN`)
 
@@ -664,7 +665,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `ack`, `error`. `combat.updated` comes with combat (v1). A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `combat.updated` (ADR-049), `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -756,7 +757,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
 
 ### M9 — Combat (0.2.0)
 
-- [ ] **T-0801 · Combat tracker (rules, endpoints, UI)**
+- [x] **T-0801 · Combat tracker (rules, endpoints, UI)**
   - **Deps:** none (needs Q14)
   - **Do:**
     - Encounters per table, stored as decided in Q14. Combatants are actors or free-form entries.
@@ -766,6 +767,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
     - Combatants follow actor visibility (FR-ENT-03), and hidden combatants are never sent to players.
   - **Done when:** the GM runs an encounter through two rounds; other members see each change within 500 ms; a wire-level test shows hidden combatants never reach players; e2e covers a round.
   - **Covers:** FR-COMBAT-01, FR-COMBAT-03, FR-COMBAT-04
+  - **Note:** done as ADR-049. Initiative is typed by the GM until T-0802 rolls it.
 
 - [ ] **T-0802 · Initiative and combat.json**
   - **Deps:** T-0801; T-0809 for the code hook
@@ -871,7 +873,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                                                                               | T-0601                | **Decided:** later in M6, with T-0602 and T-0603; T-0601 is the server side (ADR-038)                                                           |
 | Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                                                                               | T-0604                | **Decided:** an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)                                             |
 | Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | T-0809                | **Decided:** a worker thread per plugin, with time limits for functions and handlers, and `ctx` calls passed as messages (ADR-047)              |
-| Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | T-0801                | Rows and events: turns are GM-driven, so live co-editing adds little                                                                            |
+| Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | T-0801                | **Decided:** rows and events: turns are GM-driven, so live co-editing adds little (ADR-049)                                                     |
 | Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | —                     | **Decided:** no. Plugin authors build them from this repository (ADR-045)                                                                       |
 
 ---
@@ -945,6 +947,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted |
 | ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted |
 | ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted |
+| ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

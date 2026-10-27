@@ -6,6 +6,7 @@ import {
   type AnySQLiteColumn,
   integer,
   primaryKey,
+  real,
   sqliteTable,
   text,
   uniqueIndex,
@@ -254,6 +255,44 @@ export const journalEntries = sqliteTable(
     softDeletedAt: softDeletedAt(),
   },
   (t) => [index('journal_entries_table_id_idx').on(t.tableId, t.softDeletedAt)],
+);
+
+/**
+ * A table's encounter (FR-COMBAT-01, ADR-049). A table has at most one; ending it deletes it.
+ * `round` is 0 until it starts; `currentId` is the combatant whose turn it is.
+ */
+export const encounters = sqliteTable('encounters', {
+  id: text('id').primaryKey(),
+  tableId: text('table_id')
+    .notNull()
+    .unique()
+    .references(() => gameTables.id, { onDelete: 'cascade' }),
+  round: integer('round').notNull().default(0),
+  currentId: text('current_id'),
+  createdAt: createdAt(),
+  updatedAt: updatedAt(),
+});
+
+/**
+ * One side of an encounter: an actor of the table, or a free-form entry without one
+ * (FR-COMBAT-01). Hidden combatants reach only GMs and assistants (FR-COMBAT-04).
+ */
+export const combatants = sqliteTable(
+  'combatants',
+  {
+    id: text('id').primaryKey(),
+    encounterId: text('encounter_id')
+      .notNull()
+      .references(() => encounters.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id').references(() => actors.id, { onDelete: 'set null' }),
+    name: text('name').notNull(),
+    initiative: real('initiative'),
+    hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+    /** Adding order, which breaks ties. */
+    sort: integer('sort').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('combatants_encounter_id_idx').on(t.encounterId)],
 );
 
 export const chatMessages = sqliteTable(
