@@ -22,15 +22,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M4    | Plugin system: loader, validator, CSS scoping, sheet renderer | Done        | 100%     | —      |
 | M5    | Live sheets (CRDT): Yjs sync, presence, observer mode         | Done        | 100%     | —      |
 | M6    | Journal, members, table settings, plugin admin                | Done        | 100%     | —      |
-| M7    | Reference plugins & hardening (e2e, Docker, docs)             | In progress | 80%      | —      |
-| MVP   | **Release 0.1.0 (self-hosted)**                               | Not started | 0%       | —      |
+| M7    | Reference plugins & hardening (e2e, Docker, docs)             | Done        | 100%     | —      |
+| MVP   | **Release 0.1.0 (self-hosted)**                               | Done        | 100%     | —      |
 | V1    | Combat tracker, compendium, plugin code hooks polish          | Not started | 0%       | —      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import   | Not started | 0%       | —      |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M7
-- **Next task:** `T-0705`
+- **Active milestone:** V1 (not started; MVP released as 0.1.0)
+- **Next task:** `T-0801`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -94,6 +94,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | 2026-10-26 | PR #15 merged (T-0703); live-sheet flake fixed (PR #16). T-0704: plugin authoring guide, generated file reference, tutorial test. ADR-045 added.                                                                         |
 | 2026-10-26 | PR #17 merged (T-0704). Spec brought in line with the code and ADRs: §4.1–4.3, §5, §6.2–6.4, §8 (as built in 0.1.0), §9.2, §9.7, §10.1–10.2, §13.                                                                        |
 | 2026-10-26 | PR #18 merged (spec refresh). T-0705 prepared: version 0.1.0, changelog, release job. ADR-046 added.                                                                                                                     |
+| 2026-10-27 | PR #19 merged; `v0.1.0` tagged and released (image on GHCR, GitHub release). T-0705 done. M7 and MVP signed off as done. Playwright browser install limited to 5 minutes in CI.                                          |
 
 ---
 
@@ -1380,11 +1381,11 @@ Tasks are written so an agent can pick one up without extra context. Each task h
   - **Done when:** a developer unfamiliar with the project can build a minimal plugin from the guide alone (verified by a reader test).
   - **Note:** the guide describes the format as 0.1.0 runs it, which differs from §8 in places (ADR-045). `docs/plugin-reference.md` is generated from the plugin schemas by `pnpm build`, and a test fails when it is stale. `packages/plugin-cli/test/tutorial.test.ts` follows the tutorial step by step and validates, rolls and packs its plugin. Reader tests: a fresh agent given only the guide and the reference built and packed a different system (2026-10-26); its findings were fixed, including `pack` taking in old archives. The user's own reader test of the tutorial passed too.
 
-- [ ] **T-0705 · Release 0.1.0**
+- [x] **T-0705 · Release 0.1.0**
   - **Deps:** T-0701, T-0702, T-0703, T-0704
   - **Do:** Changelog, version bump, tag, Docker image published, release notes.
   - **Done when:** tag `v0.1.0` exists and CI publishes the image.
-  - **Note:** every package is at `0.1.0`, `CHANGELOG.md` has the release notes, and CI's `release` job publishes the image and the GitHub release when a `v*` tag passes every check (ADR-046). The tag goes on main once this PR is merged.
+  - **Note:** every package is at `0.1.0`, `CHANGELOG.md` has the release notes, and CI's `release` job publishes the image and the GitHub release when a `v*` tag passes every check (ADR-046). `v0.1.0` was tagged on main (7a99f31) on 2026-10-27; CI published `ghcr.io/rev-oo/rpg-vtt-ai:0.1.0` (public) and the [GitHub release](https://github.com/rev-oo/rpg-vtt-ai/releases/tag/v0.1.0). The first run on the tag hung installing the Playwright browsers and was re-run, so that step now has a time limit.
 
 ### V1 — Post-MVP
 
