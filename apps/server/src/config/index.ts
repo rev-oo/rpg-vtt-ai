@@ -2,7 +2,8 @@ import path from 'node:path';
 
 import { z } from 'zod';
 
-const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const DAY_MS = 24 * HOUR_MS;
 
 const LOG_LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
@@ -28,6 +29,12 @@ const envSchema = z.object({
   LOG_LEVEL: unsetIfEmpty(z.enum(LOG_LEVELS).default('info')),
   /** Days a deleted actor, item or journal entry can be restored (FR-ENT-04, Q6). Default: 30. */
   SOFT_DELETE_RETENTION_DAYS: unsetIfEmpty(z.coerce.number().int().min(1).max(3650).default(30)),
+  /** Where scheduled backups go (FR-ADMIN-05, ADR-055). Unset: no scheduled backups. */
+  BACKUP_DIR: unsetIfEmpty(z.string().optional()),
+  /** Hours between scheduled backups. Default: 24. */
+  BACKUP_INTERVAL_HOURS: unsetIfEmpty(z.coerce.number().int().min(1).max(8760).default(24)),
+  /** How many scheduled backups to keep; older ones are removed. Default: 7. */
+  BACKUP_KEEP: unsetIfEmpty(z.coerce.number().int().min(1).max(1000).default(7)),
   /** The built web app (`apps/web/build/client`). Default: that folder, if it was built. */
   WEB_DIR: unsetIfEmpty(z.string().optional()),
   /**
@@ -56,6 +63,16 @@ export interface Config {
   softDeleteRetentionMs: number;
   /** Absolute path of the built web app to serve, if set. */
   webDir: string | undefined;
+  /** Scheduled backups, when `BACKUP_DIR` is set. */
+  backup: BackupSchedule | undefined;
+}
+
+export interface BackupSchedule {
+  /** Absolute path of the folder backups are written into. */
+  dir: string;
+  intervalMs: number;
+  /** How many of the newest backups stay. */
+  keep: number;
 }
 
 export class ConfigError extends Error {
@@ -78,5 +95,13 @@ export function loadConfig(env: Readonly<Record<string, string | undefined>>): C
     trustProxy: parsed.TRUST_PROXY,
     softDeleteRetentionMs: parsed.SOFT_DELETE_RETENTION_DAYS * DAY_MS,
     webDir: parsed.WEB_DIR === undefined ? undefined : path.resolve(parsed.WEB_DIR),
+    backup:
+      parsed.BACKUP_DIR === undefined
+        ? undefined
+        : {
+            dir: path.resolve(parsed.BACKUP_DIR),
+            intervalMs: parsed.BACKUP_INTERVAL_HOURS * HOUR_MS,
+            keep: parsed.BACKUP_KEEP,
+          },
   };
 }

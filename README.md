@@ -87,6 +87,9 @@ The server is configured with environment variables:
 | `TRUST_PROXY`                | `false`                 | Proxy hops to trust behind a reverse proxy, usually `1` (see below)           |
 | `SOFT_DELETE_RETENTION_DAYS` | `30`                    | Days a deleted actor, item or journal entry can still be restored             |
 | `WEB_DIR`                    | `apps/web/build/client` | The built web app to serve; when set, it must hold `index.html`               |
+| `BACKUP_DIR`                 | unset                   | Turns on scheduled backups into this folder; see [backups](docs/backup.md)    |
+| `BACKUP_INTERVAL_HOURS`      | `24`                    | Hours between scheduled backups                                               |
+| `BACKUP_KEEP`                | `7`                     | Scheduled backups kept; older ones are removed                                |
 
 Behind a reverse proxy, set `TRUST_PROXY` to the number of proxies in front of the server (`1` for a single Caddy or Traefik), so login and sign-up limits count the real client address. `true` trusts every `X-Forwarded-For` entry, which a client can write itself, so it can dodge those limits.
 

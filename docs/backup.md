@@ -27,7 +27,31 @@ sqlite3 /srv/vtt/data/vtt.sqlite "VACUUM INTO '/srv/backups/vtt.sqlite'"
 cp -r /srv/vtt/data/plugins /srv/backups/
 ```
 
-Keep backups somewhere other than the server's disk. Scheduled backups come later (T-0808); until then, run the command from cron or a systemd timer.
+Keep backups somewhere other than the server's disk.
+
+## Scheduled backups
+
+The server can take the same backups on a schedule. Set `BACKUP_DIR` to turn them on:
+
+| Variable                | Default | Meaning                                                     |
+| ----------------------- | ------- | ----------------------------------------------------------- |
+| `BACKUP_DIR`            | unset   | Folder scheduled backups go into; unset, there are none     |
+| `BACKUP_INTERVAL_HOURS` | `24`    | Hours between backups, at least 1                           |
+| `BACKUP_KEEP`           | `7`     | How many backups to keep; older ones are removed after each |
+
+- The first backup is taken when the server starts if the folder has none; after that, whenever the newest one is `BACKUP_INTERVAL_HOURS` old. The server checks every 15 minutes and reads the folder each time, so restarting it does not reset the schedule, and backups you take with `pnpm backup` into the same folder count too.
+- Only folders named `vtt-backup-<time>` are counted and removed; anything else in `BACKUP_DIR` is left alone.
+- A failed backup is logged as an error and tried again at the next check.
+- Requests wait while a backup runs, which takes a moment for a large database.
+
+With Docker, mount a second volume for the backups:
+
+```bash
+docker run -d -p 3000:3000 -v vtt-data:/data -v /srv/vtt-backups:/backups \
+  -e BACKUP_DIR=/backups -e PUBLIC_URL=https://vtt.example.com ghcr.io/rev-oo/rpg-vtt-ai:0.2.0
+```
+
+The backups are still on the server's machine: copy `BACKUP_DIR` elsewhere too, for example with a nightly `rsync`.
 
 ## Restoring
 
