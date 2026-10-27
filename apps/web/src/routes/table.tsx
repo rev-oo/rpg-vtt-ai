@@ -16,6 +16,7 @@ import { ApiError } from '../api/client.js';
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { ChatPanel } from '../features/chat/ChatPanel.js';
+import { CombatTracker } from '../features/combat/CombatTracker.js';
 import { DicePane } from '../features/table/DicePane.js';
 import type { TableData, TableLoaderData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
@@ -174,18 +175,21 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
         )}
         <div
           className={cn(
-            'h-[70vh] shrink-0 lg:h-full lg:w-96',
+            'flex h-[70vh] shrink-0 flex-col gap-3 lg:h-full lg:w-96',
             onSheet && 'max-md:h-[calc(100dvh-10rem)]',
             !shown('chat') && 'max-md:hidden',
           )}
         >
-          <ChatPanel
-            table={table}
-            members={members}
-            userId={userId}
-            speakers={actors.filter((actor) => actor.access === 'owner')}
-            initialPage={chat}
-          />
+          <CombatTracker table={table} actors={actors} />
+          <div className="min-h-0 flex-1">
+            <ChatPanel
+              table={table}
+              members={members}
+              userId={userId}
+              speakers={actors.filter((actor) => actor.access === 'owner')}
+              initialPage={chat}
+            />
+          </div>
         </div>
       </div>
       {onSheet && (

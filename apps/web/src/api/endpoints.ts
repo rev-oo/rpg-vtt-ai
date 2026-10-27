@@ -51,7 +51,11 @@ import {
   type ChangePasswordInput,
   type ChatMessage,
   type ChatSendInput,
+  type CombatantCreateInput,
+  type CombatantUpdateInput,
   type CommandRequestInput,
+  encounterResponseSchema,
+  type EncounterView,
   type RollRequestInput,
   type CreateTableInput,
   type GameSystem,
@@ -66,6 +70,17 @@ import {
 } from '@vtt/shared/api';
 
 import { request, requestNoContent, upload } from './client.js';
+
+/** A change to the table's encounter, answered with the encounter as the caller sees it. */
+async function encounterChange(
+  tableId: string,
+  method: 'POST' | 'PATCH' | 'DELETE',
+  path: string,
+  body?: unknown,
+): Promise<EncounterView | null> {
+  const url = `/tables/${tableId}/encounter${path}`;
+  return (await request(method, url, encounterResponseSchema, body)).encounter;
+}
 
 export const api = {
   setupStatus: async (): Promise<boolean> =>
@@ -230,6 +245,30 @@ export const api = {
   sendChat: async (tableId: string, input: ChatSendInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/messages`, chatMessageResponseSchema, input))
       .message,
+  /** The table's encounter as the caller may see it, or `null` (FR-COMBAT-01, 04). */
+  getEncounter: async (tableId: string): Promise<EncounterView | null> =>
+    (await request('GET', `/tables/${tableId}/encounter`, encounterResponseSchema)).encounter,
+
+  /** Combat changes for GMs and assistants; each answers with the encounter (ADR-049). */
+  createEncounter: (tableId: string): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'POST', ''),
+  endEncounter: (tableId: string): Promise<void> =>
+    requestNoContent('DELETE', `/tables/${tableId}/encounter`),
+  addCombatant: (tableId: string, input: CombatantCreateInput): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'POST', '/combatants', input),
+  updateCombatant: (
+    tableId: string,
+    combatantId: string,
+    input: CombatantUpdateInput,
+  ): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'PATCH', `/combatants/${combatantId}`, input),
+  removeCombatant: (tableId: string, combatantId: string): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'DELETE', `/combatants/${combatantId}`),
+  startEncounter: (tableId: string): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'POST', '/start'),
+  moveTurn: (tableId: string, direction: 'next' | 'previous'): Promise<EncounterView | null> =>
+    encounterChange(tableId, 'POST', '/turn', { direction }),
+
   /** Runs a slash command of the table's system; it answers like a roll (FR-PLUGIN-10). */
   command: async (tableId: string, input: CommandRequestInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/commands`, chatMessageResponseSchema, input))
