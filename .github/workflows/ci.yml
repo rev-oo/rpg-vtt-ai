@@ -45,7 +45,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # The download has hung on some runners; failing fast lets the run be retried.
       - name: Install Playwright browsers
+        timeout-minutes: 5
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/v')
         run: pnpm --filter @vtt/e2e exec playwright install --with-deps chromium firefox webkit
 
