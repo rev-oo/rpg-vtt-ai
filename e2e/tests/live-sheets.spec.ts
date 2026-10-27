@@ -183,6 +183,32 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await expect(again.getByRole('textbox', { name: 'Hit points', exact: true })).toHaveValue('7');
   });
 
+  await test.step('restoring the sheet history reaches open sheets (T-0806)', async () => {
+    // The first store, once Strength was 14, took a snapshot.
+    await expect
+      .poll(async () => {
+        const res = await owner.context.request.get(`/api/v1/actors/${actor.id}/history`);
+        const { snapshots } = (await res.json()) as { snapshots: unknown[] };
+        return snapshots.length;
+      })
+      .toBeGreaterThan(0);
+    await ownerSheet.getByLabel('Strength').fill('18');
+    await expect(gmSheet.getByLabel('Strength')).toHaveValue('18');
+
+    const page = ownerSheet.page();
+    await page.getByRole('button', { name: 'History' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Sheet history' });
+    await dialog
+      .getByRole('button', { name: /^Restore / })
+      .last()
+      .click();
+    await expect(dialog.getByRole('status')).toContainText('Restored the sheet');
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    for (const sheet of [ownerSheet, gmSheet, watcherSheet]) {
+      await expect(sheet.getByLabel('Strength')).toHaveValue('14');
+    }
+  });
+
   await test.step('a removed member loses the open sheet within 2 s (T-0512)', async () => {
     await expect(watcherSheet.getByLabel('Strength')).toBeVisible();
     await remove(gm, `/tables/${table.id}/members/${watcher.userId}`);

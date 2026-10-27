@@ -23,8 +23,10 @@ import {
   type UpdateJournalInput,
   type UpdateMemberInput,
   type UpdateTableInput,
+  actorHistoryResponseSchema,
   actorResponseSchema,
   actorsResponseSchema,
+  type ActorSnapshot,
   itemResponseSchema,
   itemsResponseSchema,
   tableTypesSchema,
@@ -254,6 +256,11 @@ export const api = {
     (await request('PATCH', `/messages/${messageId}`, chatMessageResponseSchema, { text })).message,
   deleteChat: (messageId: string): Promise<void> =>
     requestNoContent('DELETE', `/messages/${messageId}`),
+  /** The actor's sheet history the caller may restore, newest first (FR-SHEET-11). */
+  actorHistory: async (actorId: string): Promise<ActorSnapshot[]> =>
+    (await request('GET', `/actors/${actorId}/history`, actorHistoryResponseSchema)).snapshots,
+  restoreSnapshot: (actorId: string, snapshotId: string): Promise<void> =>
+    requestNoContent('POST', `/actors/${actorId}/history/${snapshotId}/restore`),
   /** The system's compendium packs, for GMs and assistants (FR-PLUGIN-09). */
   listPacks: async (tableId: string): Promise<PackSummary[]> =>
     (await request('GET', `/tables/${tableId}/packs`, packsResponseSchema)).packs,

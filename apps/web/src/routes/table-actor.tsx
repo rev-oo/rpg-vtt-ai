@@ -12,6 +12,7 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { useSheetPresence } from '../collab/presence.js';
 import { useLiveSheet } from '../collab/use-live-sheet.js';
+import { SheetHistory } from '../features/entities/SheetHistory.js';
 import { useTableData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
 import { entityType } from '../plugin-host/entity-type.js';
@@ -74,9 +75,12 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="sheet-title">
-      <h2 id="sheet-title" className="text-xl font-semibold">
-        {actor.name}
-      </h2>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="sheet-title" className="text-xl font-semibold">
+          {actor.name}
+        </h2>
+        {host.status === 'ready' && actor.access === 'owner' && <SheetHistory actorId={actor.id} />}
+      </div>
       {host.status === 'loading' && <p className="text-muted">{t('sheet.loading')}</p>}
       {host.status === 'unavailable' && <Alert tone="info">{t('sheet.unavailable')}</Alert>}
       {host.status === 'error' && (

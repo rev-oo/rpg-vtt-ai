@@ -4,6 +4,7 @@ import * as Y from 'yjs';
 import type { FieldSchema } from '@vtt/plugin-schema';
 
 import {
+  copyInto,
   documentLayout,
   mergeLayers,
   plainText,
@@ -203,5 +204,57 @@ describe('JSON ↔ Yjs mapping (specs §9.2, T-0504)', () => {
     const plain = documentLayout({ type: 'object', properties: { level: { type: 'integer' } } });
     expect(splitLayers(plain, { level: 1 })).toEqual({ main: { level: 1 }, secret: undefined });
     expect(mergeLayers({ level: 1 }, undefined)).toEqual({ level: 1 });
+  });
+});
+
+describe('copyInto() (ADR-053)', () => {
+  function sheet() {
+    const doc = new Y.Doc();
+    const map = doc.getMap('data');
+    doc.transact(() => {
+      map.set('str', 12);
+      map.set('tags', ['a']);
+      const notes = new Y.Text();
+      map.set('notes', notes);
+      notes.insert(0, 'old notes');
+      const bio = new Y.XmlFragment();
+      map.set('bio', bio);
+      const p = new Y.XmlElement('paragraph');
+      p.insert(0, [new Y.XmlText('old bio')]);
+      bio.insert(0, [p]);
+      const rows = new Y.Map();
+      map.set('skills', rows);
+      const row = new Y.Map();
+      rows.set('r1', row);
+      row.set('name', 'Climb');
+      map.set('gone', true);
+    });
+    return { doc, map };
+  }
+
+  it('copies a document without its history, and puts it back in place', () => {
+    const live = sheet();
+    const copy = new Y.Doc();
+    copyInto(copy.getMap('data'), live.map);
+    expect(copy.getMap('data').toJSON()).toEqual(live.map.toJSON());
+
+    // The sheet moves on; restoring the copy brings it back.
+    const notes = live.map.get('notes') as Y.Text;
+    const bio = live.map.get('bio') as Y.XmlFragment;
+    live.doc.transact(() => {
+      live.map.set('str', 3);
+      live.map.delete('gone');
+      live.map.set('extra', 1);
+      notes.insert(notes.length, ' and new');
+      bio.delete(0, bio.length);
+      (live.map.get('skills') as Y.Map<unknown>).set('r2', new Y.Map());
+    });
+    copyInto(live.map, copy.getMap('data'));
+    expect(live.map.toJSON()).toEqual(copy.getMap('data').toJSON());
+    expect(live.map.get('extra')).toBeUndefined();
+    // Editors bound to the texts keep them.
+    expect(live.map.get('notes')).toBe(notes);
+    expect(live.map.get('bio')).toBe(bio);
+    expect(bio.toJSON()).toContain('old bio');
   });
 });

@@ -177,6 +177,15 @@ function openTable(
     'GET /tables/t1/messages': { body: { messages, nextCursor: null } },
     'GET /systems/tiny-d20': { body: system },
     'POST /tables/t1/rolls': { status: 201, body: { message: CARD_MESSAGE } },
+    'GET /actors/a1/history': {
+      body: {
+        snapshots: [
+          { id: 's2', layer: 'secret', createdAt: '2026-10-20T12:05:00.000Z' },
+          { id: 's1', layer: 'main', createdAt: '2026-10-20T12:00:00.000Z' },
+        ],
+      },
+    },
+    'POST /actors/a1/history/s1/restore': { status: 204 },
   });
   renderApp(path);
   return api;
@@ -213,6 +222,20 @@ describe('plugin host (T-0409)', () => {
       recipe: { name: 'attack', args: {} },
       actorId: 'a1',
     });
+  });
+
+  it('lists the sheet history and restores a snapshot (T-0806)', async () => {
+    const { calls } = openTable('/tables/t1/actors/a1');
+    await userEvent.click(await screen.findByRole('button', { name: 'History' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Sheet history' });
+    const restores = await within(dialog).findAllByRole('button', { name: /^Restore / });
+    expect(restores).toHaveLength(2);
+    expect(within(dialog).getByText('GM data')).toBeInTheDocument();
+    await userEvent.click(restores[1] ?? dialog);
+    expect(await within(dialog).findByRole('status')).toHaveTextContent(
+      /^Restored the sheet as it was at /,
+    );
+    expect(calls.some((c) => c.method === 'POST' && c.path.endsWith('/s1/restore'))).toBe(true);
   });
 
   it('hides secret fields and roll buttons from spectators', async () => {

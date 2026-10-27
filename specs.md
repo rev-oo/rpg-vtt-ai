@@ -18,14 +18,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 40%      |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 60%      |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M10
-- **Next task:** `T-0806`
+- **Next task:** `T-0807`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -44,6 +44,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0802 done (ADR-050): initiative from `combat.json`, `desc`/`asc`/`sideBased` ordering, the `orderCombatants` and `onTurnStart` hooks. M9 done.                              |
 | 2026-10-27 | T-0803 done (ADR-051): compendium packs are validated, listed and imported once into a table.                                                                                 |
 | 2026-10-27 | T-0805 done (ADR-052): authors edit or delete their text messages for 5 minutes; GMs delete any message.                                                                      |
+| 2026-10-27 | T-0806 done (ADR-053): sheet history keeps 50 snapshots per actor document, restored in place by owners and GMs.                                                              |
 
 ---
 
@@ -346,7 +347,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-SHEET-08 | Counter fields support server-applied deltas (`adjust`) so concurrent "−3 HP" actions are not overwritten.                                                                                  | MVP      | 0.1.0  |
 | FR-SHEET-09 | Field-level validation runs on input and again on the server before persist. Invalid values are rejected or clamped per the field's rule and reported to the editor.                        | MVP      | 0.1.0  |
 | FR-SHEET-10 | Sheets render on phone-width viewports (≥ 360 px) with no horizontal page scroll.                                                                                                           | MVP      | 0.1.0  |
-| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery.                                                                                                                   | v1       | M10    |
+| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery.                                                                                                                   | v1       | 0.2.0  |
 
 ### 7.5 Chat and rolls (`FR-CHAT`)
 
@@ -625,6 +626,7 @@ Notes:
 - Each store writes the full binary state to `ydocs` and refreshes the `system` JSON projection in the same transaction.
 - The projection is what listings, the combat tracker, and search read. Rolls read the live document, not the projection, to avoid stale values.
 - Documents are unloaded from memory after 60 s with no connections, after storing.
+- A store also keeps a copy of an actor document for its sheet history, at most every 5 minutes; the newest 50 per document stay (FR-SHEET-11, ADR-053).
 
 ### 9.7 Validation and repair
 
@@ -645,23 +647,23 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                                                                                              |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                         |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                              |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                  |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                                                        |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                            |
-| Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040) |
-| Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                                          |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                             |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                           |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                            |
-| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                               |
-| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                     |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026)                          |
-| Health          | `GET /api/health`                                                                                                                                                     |
+| Group           | Endpoints (illustrative)                                                                                                                                                                                          |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                                                                     |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                                                                          |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                                                              |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                                                                                                    |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                                                                        |
+| Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040)                                             |
+| Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                                                            |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`, `GET /actors/:id/history`, `POST /actors/:id/history/:snapshotId/restore` (ADR-053) |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                         |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                       |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
+| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
+| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026)                                                                      |
+| Health          | `GET /api/health`                                                                                                                                                                                                 |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
@@ -795,11 +797,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Covers:** FR-CHAT-09
   - **Note:** done as ADR-052. Deletes are permanent, after a confirm in the web. A message the caller cannot see answers 404.
 
-- [ ] **T-0806 · Sheet history snapshots**
+- [x] **T-0806 · Sheet history snapshots**
   - **Deps:** none
   - **Do:** Keep the last 50 snapshots per actor, taken on store at most once per few minutes. Owners and GMs list them and restore one; restoring changes the live document for everyone.
   - **Done when:** snapshot count and rotation are tested; a restore reaches open sheets; secret-layer snapshots stay GM-only.
   - **Covers:** FR-SHEET-11
+  - **Note:** done as ADR-053. Snapshots are kept per document (main and secret, 50 each), every 5 minutes at most and only on change. A restore keeps the state it replaces first.
 
 - [ ] **T-0807 · Table archive**
   - **Deps:** none
@@ -957,6 +960,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted |
 | ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted |
 | ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted |
+| ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
