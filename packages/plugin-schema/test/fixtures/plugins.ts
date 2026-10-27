@@ -181,6 +181,58 @@ export const CASES: FixtureCase[] = [
     issues: ['error unknown_reference combat.json $.initiative'],
   },
   {
+    name: 'a pack whose entries fit their types',
+    change: (f: PluginFixture): void => {
+      f['packs/heroes.json'] = {
+        label: 'Heroes',
+        entries: [
+          {
+            id: 'ayla',
+            kind: 'actor',
+            type: 'hero',
+            name: 'Ayla',
+            data: { str: 14, hp: { value: 3 }, skills: [{ name: 'Climb', rank: 2 }] },
+          },
+          { id: 'bo', kind: 'actor', type: 'hero', name: 'Bo' },
+        ],
+      };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'a pack with bad entries, reported by JSON path (T-0803)',
+    change: (f: PluginFixture): void => {
+      f['packs/bad.json'] = {
+        label: 'pack.bad',
+        entries: [
+          {
+            id: 'a',
+            kind: 'actor',
+            type: 'hero',
+            name: 'A',
+            data: { str: 99, hp: { value: 'x' }, skills: [{ rank: 1.5 }], wings: true },
+          },
+          { id: 'a', kind: 'item', type: 'hero', name: 'B' },
+        ],
+      };
+      f['packs/broken.json'] = { label: 'Broken', entries: [{ id: 'x', kind: 'spell' }] };
+    },
+    issues: [
+      'error invalid_value packs/bad.json $.entries[0].data.str',
+      'error invalid_value packs/bad.json $.entries[0].data.hp.value',
+      'error invalid_value packs/bad.json $.entries[0].data.skills[0].rank',
+      'error unknown_key packs/bad.json $.entries[0].data.wings',
+      'error duplicate_id packs/bad.json $.entries[1].id',
+      'error missing_target packs/bad.json $.entries[1].type',
+      'error missing_lang_key packs/bad.json $.label',
+      'warning missing_lang_key packs/bad.json $.label',
+      'error invalid_value packs/broken.json $.entries[0].kind',
+      'error missing_key packs/broken.json $.entries[0].type',
+      'error missing_key packs/broken.json $.entries[0].name',
+    ],
+  },
+  {
     name: 'a missing required key',
     change: (f: PluginFixture): void => {
       delete hero(f).controlledBy;
@@ -433,10 +485,10 @@ export const CASES: FixtureCase[] = [
   {
     name: 'files the format does not know',
     change: (f: PluginFixture): void => {
-      f['packs/monsters.json'] = [];
+      f['notes/monsters.json'] = [];
       f['art/portrait.png'] = '';
     },
-    issues: ['warning unknown_file packs/monsters.json $'],
+    issues: ['warning unknown_file notes/monsters.json $'],
     valid: true,
   },
 ];

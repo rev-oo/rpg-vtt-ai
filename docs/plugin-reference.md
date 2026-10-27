@@ -13,6 +13,7 @@ Every file a plugin may contain, with each key it accepts. This page is generate
 - [Chat card (cards/<name>.json)](#card)
 - [Table settings (settings.json)](#settings)
 - [Combat (combat.json)](#combat)
+- [Compendium pack (packs/<name>.json)](#pack)
 - [Translations (lang/<locale>.json)](#lang)
 
 ## Value types
@@ -562,6 +563,32 @@ Initiative for the combat tracker.
 | `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
 | `initiative` | [formula](#formula) |  | What each combatant rolls for initiative, against its actor’s data. Free-form combatants roll without data. |
 | `order` | one of `"desc"`, `"asc"`, `"sideBased"` |  | Turn order: highest first (`desc`, the default), lowest first (`asc`), or `sideBased`: the side with the best roll acts first, then the other, each highest first. A side is the actor type’s `controlledBy`; free-form combatants are on the GM’s side. An `orderCombatants` hook replaces the rule. |
+
+<a id="pack"></a>
+
+## Compendium pack (packs/<name>.json)
+
+A compendium pack: actors and items GMs import into a table.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
+| `label` | [text](#text) | yes | What GMs see; a lang key or text. |
+| `entries` | list of [`entries`](#pack-entries) (at most 1000 items) | yes |  |
+
+<a id="pack-entries"></a>
+
+### `entries`
+
+A compendium entry.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `id` | [name](#name) | yes | Stable within the pack: importing again skips entries already imported, by this id. |
+| `kind` | one of `"actor"`, `"item"` | yes | An actor or an item. |
+| `type` | [name](#name) | yes | An actor or item type of this plugin. |
+| `name` | text (1–100 characters) | yes | The name it gets in the table. |
+| `data` | map from text to any JSON value |  | Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults. |
 
 <a id="lang"></a>
 

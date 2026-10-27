@@ -283,6 +283,14 @@ export const ptBR: Messages = {
   'plugin.sharedFailed':
     'O código compartilhado do sistema não pôde ser carregado, então os valores que o usam não podem ser calculados: {detail}',
 
+  'compendium.title': 'Compêndio',
+  'compendium.none': 'O sistema não tem pacotes de compêndio.',
+  'compendium.contents': '{actors} atores, {items} itens · {imported} nesta mesa',
+  'compendium.import': 'Importar',
+  'compendium.importMissing': 'Importar o restante',
+  'compendium.importOf': 'Importar {name}',
+  'compendium.imported': '{created} importados; {skipped} já estavam na mesa.',
+
   'combat.title': 'Combate',
   'combat.round': 'Rodada {round}',
   'combat.create': 'Iniciar um encontro',

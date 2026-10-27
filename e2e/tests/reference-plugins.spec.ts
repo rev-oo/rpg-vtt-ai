@@ -237,6 +237,20 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     expect(order.join(' ')).toMatch(/Goblin/);
   });
 
+  await test.step('the GM imports the bestiary pack once (T-0803)', async () => {
+    const gmPage = await gm.context.newPage();
+    await gmPage.goto(`/tables/${table.id}/settings`);
+    const importButton = gmPage.getByRole('button', { name: 'Import Bestiary' });
+    await expect(gmPage.getByText('2 actors, 2 items · 0 in this table')).toBeVisible();
+    await importButton.click();
+    await expect(gmPage.getByText('Imported 4; 0 were already in the table.')).toBeVisible();
+    await expect(gmPage.getByText('2 actors, 2 items · 4 in this table')).toBeVisible();
+    await expect(importButton).toBeDisabled();
+    await gmPage.getByRole('link', { name: 'Items' }).click();
+    await expect(gmPage.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
+    await expect(gmPage.getByRole('heading', { name: 'Shortsword' })).toBeVisible();
+  });
+
   expect(errors).toEqual([]);
   await gm.context.close();
   await player.context.close();

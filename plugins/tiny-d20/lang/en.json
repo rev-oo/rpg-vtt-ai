@@ -32,5 +32,6 @@
   "card.roll": "Roll",
   "card.total": "Total",
   "setting.critFumble": "Critical hits and fumbles",
-  "setting.startingHp": "Starting hit points"
+  "setting.startingHp": "Starting hit points",
+  "pack.bestiary": "Bestiary"
 }

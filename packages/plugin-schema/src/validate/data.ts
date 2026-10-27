@@ -75,3 +75,39 @@ export function checkDataSchema(schema: FieldSchema, add: Add): void {
   }
   checkField(schema, ['schema'], add);
 }
+
+/**
+ * Checks entity data written by hand, such as a pack entry's, against its type's schema
+ * (ADR-051): types, bounds and enums like defaults, unknown keys, and collections given as
+ * lists of rows. What it leaves out takes the defaults, so nothing is required.
+ */
+export function checkData(field: FieldSchema, value: unknown, path: JsonPath, add: Add): void {
+  if (field.type === 'object') {
+    if (!isRecord(value)) {
+      add('invalid_value', path, { reason: 'type', expected: 'object' });
+      return;
+    }
+    for (const [key, child] of Object.entries(value)) {
+      const declared = field.properties && Object.hasOwn(field.properties, key);
+      const property = declared ? field.properties?.[key] : undefined;
+      if (!property) add('unknown_key', [...path, key], { key });
+      else checkData(property, child, [...path, key], add);
+    }
+    return;
+  }
+  if (field.type === 'array') {
+    if (!Array.isArray(value)) {
+      add('invalid_value', path, { reason: 'type', expected: 'array' });
+      return;
+    }
+    const { items } = field;
+    if (items) {
+      value.forEach((item: unknown, index) => {
+        checkData(items, item, [...path, index], add);
+      });
+    }
+    return;
+  }
+  const problem = defaultProblem(field, value);
+  if (problem) add('invalid_value', path, problem);
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/pack.schema.json",
+  "label": "pack.bestiary",
+  "entries": [
+    {
+      "id": "goblin",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Goblin",
+      "data": { "str": 8, "dex": 14, "hp": { "value": 7, "max": 7 } }
+    },
+    {
+      "id": "ogre",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Ogre",
+      "data": {
+        "str": 19,
+        "dex": 8,
+        "hp": { "value": 30, "max": 30 },
+        "gmNotes": "Hates bright light."
+      }
+    },
+    { "id": "shortsword", "kind": "item", "type": "weapon", "name": "Shortsword" },
+    {
+      "id": "greatclub",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Greatclub",
+      "data": { "damage": "2d8", "bonus": 1 }
+    }
+  ]
+}

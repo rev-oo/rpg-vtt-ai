@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
+import type { FieldSchema } from '@vtt/plugin-schema';
+
 import {
   collectionRows,
   defaultValue,
+  packData,
   sortKeyBetween,
   sortKeys,
   withDefaults,
@@ -112,5 +115,47 @@ describe('collectionRows() (specs §9.4)', () => {
     expect(rows.map((row) => row.id)).toEqual(['unsorted', 'a', 'c', 'b']);
     expect(rows[1]).toEqual({ id: 'a', name: 'A', sort: 'a1' });
     expect(collectionRows('nope')).toEqual([]);
+  });
+});
+
+describe('packData() (ADR-051)', () => {
+  const schema: FieldSchema = {
+    type: 'object',
+    properties: {
+      str: { type: 'integer' },
+      gear: {
+        type: 'object',
+        properties: {
+          bags: {
+            type: 'array',
+            'x-kind': 'collection',
+            items: { type: 'object', properties: { name: { type: 'string' } } },
+          },
+        },
+      },
+      tags: { type: 'array', items: { type: 'string' } },
+    },
+  };
+
+  it('stores collections written as lists as keyed rows in order, at any depth', () => {
+    const data = packData(schema, {
+      str: 3,
+      gear: { bags: [{ name: 'a' }, { name: 'b' }] },
+      tags: ['x'],
+    });
+    expect(data).toEqual({
+      str: 3,
+      gear: {
+        bags: {
+          p0: { name: 'a', sort: expect.any(String) as unknown },
+          p1: { name: 'b', sort: expect.any(String) as unknown },
+        },
+      },
+      tags: ['x'],
+    });
+    expect(collectionRows((data.gear as Record<string, unknown>).bags).map((r) => r.name)).toEqual([
+      'a',
+      'b',
+    ]);
   });
 });

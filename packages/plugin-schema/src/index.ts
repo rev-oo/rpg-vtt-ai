@@ -5,6 +5,7 @@ export * from './dice.js';
 export * from './json-schema.js';
 export * from './lang.js';
 export * from './manifest.js';
+export * from './packs.js';
 export * from './rolls.js';
 export * from './settings.js';
 export * from './sheet.js';

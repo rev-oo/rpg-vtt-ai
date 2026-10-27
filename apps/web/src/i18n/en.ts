@@ -279,6 +279,14 @@ export const en = {
   'plugin.sharedFailed':
     'The system’s shared code could not be loaded, so values that use it cannot be worked out: {detail}',
 
+  'compendium.title': 'Compendium',
+  'compendium.none': 'The system has no compendium packs.',
+  'compendium.contents': '{actors} actors, {items} items · {imported} in this table',
+  'compendium.import': 'Import',
+  'compendium.importMissing': 'Import the rest',
+  'compendium.importOf': 'Import {name}',
+  'compendium.imported': 'Imported {created}; {skipped} were already in the table.',
+
   'combat.title': 'Combat',
   'combat.round': 'Round {round}',
   'combat.create': 'Start an encounter',

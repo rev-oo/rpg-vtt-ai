@@ -5,6 +5,7 @@ import { combatSchema } from './combat.js';
 import { diceSchema } from './dice.js';
 import { langSchema } from './lang.js';
 import { manifestSchema } from './manifest.js';
+import { packSchema } from './packs.js';
 import { rollsSchema } from './rolls.js';
 import { settingsSchema } from './settings.js';
 import { sheetSchema } from './sheet.js';
@@ -21,6 +22,7 @@ export const PLUGIN_FILES = {
   card: { schema: cardSchema, title: 'Chat card (cards/<name>.json)' },
   settings: { schema: settingsSchema, title: 'Table settings (settings.json)' },
   combat: { schema: combatSchema, title: 'Combat (combat.json)' },
+  pack: { schema: packSchema, title: 'Compendium pack (packs/<name>.json)' },
   lang: { schema: langSchema, title: 'Translations (lang/<locale>.json)' },
 } as const;
 export type PluginFileKind = keyof typeof PLUGIN_FILES;
@@ -35,6 +37,7 @@ const FILE_PATTERNS: readonly (readonly [RegExp, PluginFileKind])[] = [
   [/^cards\/[^/]+\.json$/, 'card'],
   [/^settings\.json$/, 'settings'],
   [/^combat\.json$/, 'combat'],
+  [/^packs\/[^/]+\.json$/, 'pack'],
   [/^lang\/[^/]+\.json$/, 'lang'],
 ];
 

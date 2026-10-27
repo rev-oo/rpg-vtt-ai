@@ -59,15 +59,19 @@ describe('pluginFileKind', () => {
     ['cards/skill.json', 'card'],
     ['settings.json', 'settings'],
     ['combat.json', 'combat'],
+    ['packs/monsters.json', 'pack'],
     ['lang/pt-BR.json', 'lang'],
   ])('reads %s as %s', (path, kind) => {
     expect(pluginFileKind(path)).toBe(kind);
   });
 
-  it.each(['packs/monsters.json', 'types/actors/deep/x.json', 'sheets/a.css', 'Plugin.json'])(
-    'has no kind for %s',
-    (path) => {
-      expect(pluginFileKind(path)).toBeUndefined();
-    },
-  );
+  it.each([
+    'notes/monsters.json',
+    'packs/deep/x.json',
+    'types/actors/deep/x.json',
+    'sheets/a.css',
+    'Plugin.json',
+  ])('has no kind for %s', (path) => {
+    expect(pluginFileKind(path)).toBeUndefined();
+  });
 });
