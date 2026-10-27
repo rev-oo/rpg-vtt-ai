@@ -13,14 +13,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.1 Milestone overview
 
-| ID    | Milestone                                                                                                                        | Release     | Status      | Progress |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------- | -------- |
-| M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0       | Done        | 100%     |
-| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0       | Not started | 0%       |
-| M9    | Combat tracker and initiative                                                                                                    | 0.3.0       | Not started | 0%       |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.4.0       | Not started | 0%       |
-| M11   | Distribution and operations: npm packages, arm64 image, pagination, version warnings                                             | Any release | Not started | 0%       |
-| LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —           | Not planned | —        |
+| ID    | Milestone                                                                                                                        | Release | Status      | Progress |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
+| M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
+| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Not started | 0%       |
+| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Not started | 0%       |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
+| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
+| LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
@@ -36,6 +36,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | Date       | Change                                                                                         |
 | ---------- | ---------------------------------------------------------------------------------------------- |
 | 2026-10-27 | MVP task lists and change log moved to `docs/history/mvp.md`. Spec reshaped for post-MVP work. |
+| 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.             |
 
 ---
 
@@ -934,7 +935,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Done when:** a reference plugin's command posts a message for its caller; audience rules hold (whispered and GM-only results stay filtered); e2e covers one command.
   - **Covers:** FR-PLUGIN-10
 
-### M9 — Combat (0.3.0)
+### M9 — Combat (0.2.0)
 
 - [ ] **T-0801 · Combat tracker (rules, endpoints, UI)**
   - **Deps:** none (needs Q14)
@@ -953,7 +954,7 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Done when:** each ordering rule is unit-tested, including ties; both reference plugins roll initiative in e2e; the hook runs once per turn in a test.
   - **Covers:** FR-COMBAT-02
 
-### M10 — Content and table life cycle (0.4.0)
+### M10 — Content and table life cycle (0.2.0)
 
 - [ ] **T-0803 · Compendium packs import**
   - **Deps:** none
@@ -985,14 +986,9 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Done when:** a test with fake timers shows backups written on schedule and old ones removed; `docs/backup.md` documents the settings.
   - **Covers:** FR-ADMIN-05 (automated part)
 
-### M11 — Distribution and operations (any release)
+### M11 — Operations (0.2.0)
 
-Independent tasks from the known limitations of 0.1.0. Each can ship in whichever release is next.
-
-- [ ] **T-0810 · Publish the plugin CLI and SDK to npm**
-  - **Deps:** none (needs Q15)
-  - **Do:** Publish `vtt-plugin` and `@vtt/sdk` from the release job, versioned with the app. The guide's setup uses the published packages instead of a build of this repository (ADR-045).
-  - **Done when:** on a clean machine, `npx <cli> validate` works on the tutorial plugin, and a plugin's `code/client.tsx` type-checks against the published SDK.
+Independent tasks from the known limitations of 0.1.0. The CLI and SDK stay unpublished (Q15).
 
 - [ ] **T-0811 · arm64 image**
   - **Deps:** none
@@ -1057,7 +1053,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                                                                               | T-0604                | **Decided:** an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)                                             |
 | Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | T-0809                | A worker thread per plugin, with a time limit per call and `ctx` calls passed as messages                                                       |
 | Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | T-0801                | Rows and events: turns are GM-driven, so live co-editing adds little                                                                            |
-| Q15 | npm names for the CLI and SDK: a scope (needs an npm organisation) or unscoped names?                                                                                                                             | T-0810                | A scope matching the project's eventual name                                                                                                    |
+| Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | —                     | **Decided:** no. Plugin authors build them from this repository (ADR-045)                                                                       |
 
 ---
 
