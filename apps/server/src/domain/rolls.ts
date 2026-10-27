@@ -41,7 +41,7 @@ import { forbidden, unprocessable } from '../errors.js';
 import { PluginCodeError, type CodeKind, type LoadedCode } from '../plugins/code-runtime.js';
 
 import { recipientsFor, speakerFor } from './chat.js';
-import { actorAccess, dataFilter, requireWritableSystem, type DataFilter } from './entities.js';
+import { actorAccess, dataFilter, requireWritableTable, type DataFilter } from './entities.js';
 import { findTable } from './tables.js';
 
 export type RollRequest = z.output<typeof rollRequestBody>;
@@ -149,7 +149,7 @@ function prepare(
   const subject: Subject = { userId: sender.userId, role: sender.role };
   return db.transaction((tx) => {
     const table = findTable(tx, sender.tableId);
-    if (table) requireWritableSystem(tx, table);
+    if (table) requireWritableTable(tx, table);
     const spoken = speakerFor(tx, sender.tableId, subject, input.actorId);
     // Rolls read the live sheet, not the projection, which lags by the store debounce.
     const actor = spoken.actor && {

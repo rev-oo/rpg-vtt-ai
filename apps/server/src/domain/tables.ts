@@ -40,6 +40,7 @@ export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): Tabl
     playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
     systemAvailable: plugin ? isAvailable(plugin) : false,
     createdAt: table.createdAt.toISOString(),
+    archivedAt: table.archivedAt?.toISOString() ?? null,
     role,
   };
 }

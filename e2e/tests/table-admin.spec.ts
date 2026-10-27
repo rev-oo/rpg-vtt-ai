@@ -216,6 +216,43 @@ test('house rules change derived values on open sheets', async ({ browser }) => 
   await expect(maxHp).toHaveText('22');
 });
 
+// T-0807 (FR-TABLE-06): archiving makes the table read-only for its members at once, and
+// the table list marks it.
+test('an archived table is read-only until unarchived', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  const pia = await createPlayer(browser, gm, 'rowan', 'Rowan');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Old Campaign',
+    systemId: 'e2e-system',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(pia, `/invites/${token}/accept`);
+
+  const page = await openTab(pia, table.id, '');
+  const composer = page.getByLabel('Message', { exact: true });
+  await expect(composer).toBeVisible();
+
+  const settings = await openTab(gm, table.id, '/settings');
+  await settings.getByRole('button', { name: 'Archive table' }).click();
+  await expect(page.getByText('This table is archived: it is read-only.')).toBeVisible();
+  await expect(page.getByText('The table is archived: the chat is read-only.')).toBeVisible();
+  await expect(composer).toBeHidden();
+
+  await settings.goto('/');
+  const card = settings.getByRole('listitem').filter({ hasText: 'Old Campaign' });
+  await expect(card).toContainText('Archived');
+
+  await settings.goto(`/tables/${table.id}/settings`);
+  await settings.getByRole('button', { name: 'Unarchive table' }).click();
+  await expect(page.getByText('This table is archived: it is read-only.')).toBeHidden();
+  await composer.fill('Back again');
+  await composer.press('Enter');
+  await expect(page.getByRole('log', { name: 'Messages' })).toContainText('Back again');
+  for (const who of [gm, pia]) await who.context.close();
+});
+
 // T-0606: a Portuguese browser gets the pt-BR catalogue, and the page hydrates cleanly.
 test('the app speaks the browser’s language', async ({ browser }) => {
   const context = await browser.newContext({ locale: 'pt-BR' });

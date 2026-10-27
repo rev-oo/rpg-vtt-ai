@@ -208,7 +208,9 @@ export function ChatPanel({
           {notice}
         </p>
       )}
-      {me && canSendChat(me.role) ? (
+      {table.archivedAt !== null ? (
+        <p className="text-sm text-muted">{t('chat.archived')}</p>
+      ) : me && canSendChat(me.role) ? (
         <Composer
           tableId={table.id}
           members={members}

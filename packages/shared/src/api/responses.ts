@@ -39,6 +39,8 @@ export const tableSchema = z.object({
   /** Whether the system plugin is enabled and ready; without it the table is read-only. */
   systemAvailable: z.boolean(),
   createdAt: z.string(),
+  /** When the table was archived; archived tables are read-only (FR-TABLE-06). */
+  archivedAt: z.string().nullable(),
   role: z.enum(TABLE_ROLES),
 });
 export type TableView = z.infer<typeof tableSchema>;

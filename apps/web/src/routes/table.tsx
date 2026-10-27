@@ -138,6 +138,7 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             </p>
             {table.description && <p>{table.description}</p>}
           </div>
+          {table.archivedAt !== null && <Alert tone="info">{t('table.archived')}</Alert>}
           {system.status === 'unavailable' && (
             <Alert tone="info">{t('table.readOnly', { name: table.systemName })}</Alert>
           )}

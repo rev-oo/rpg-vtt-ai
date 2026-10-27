@@ -11,6 +11,7 @@ const MESSAGES: Partial<Record<string, MessageKey>> = {
   invalid_recipient: 'chat.invalidRecipient',
   invalid_archive: 'plugins.invalidArchive',
   invalid_plugin: 'plugins.invalidPlugin',
+  table_archived: 'table.archivedError',
 };
 
 /** A user-facing message for a failed request. */

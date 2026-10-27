@@ -137,6 +137,8 @@ export const gameTables = sqliteTable(
       .default(false),
     createdBy: text('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: createdAt(),
+    /** Set while the table is archived: read-only for everyone (FR-TABLE-06, ADR-054). */
+    archivedAt: timestamp('archived_at'),
   },
   (t) => [index('game_tables_system_id_idx').on(t.systemId)],
 );

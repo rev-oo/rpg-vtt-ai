@@ -17,7 +17,7 @@ import {
   updateJournalEntry,
   type Retention,
 } from '../../db/repositories/index.js';
-import { requireWritableSystem } from '../../domain/entities.js';
+import { requireWritableTable } from '../../domain/entities.js';
 import { journalEntryAccess, toJournalView } from '../../domain/journal.js';
 import { conflict, forbidden, gone, notFound } from '../../errors.js';
 import { publishJournalChanged } from '../../realtime/notify.js';
@@ -56,7 +56,7 @@ export function journalRoutes({ app, db, config, events, now }: AppContext): voi
     const { id } = parseInput(idParams, request.params);
     const { table, membership } = requireMember(db, request, id, canCreateJournal);
     const body = parseInput(createJournalBody, request.body);
-    requireWritableSystem(db, table);
+    requireWritableTable(db, table);
 
     const entry = createJournalEntry(
       db,

@@ -18,14 +18,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 60%      |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 80%      |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M10
-- **Next task:** `T-0807`
+- **Next task:** `T-0808`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -45,6 +45,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0803 done (ADR-051): compendium packs are validated, listed and imported once into a table.                                                                                 |
 | 2026-10-27 | T-0805 done (ADR-052): authors edit or delete their text messages for 5 minutes; GMs delete any message.                                                                      |
 | 2026-10-27 | T-0806 done (ADR-053): sheet history keeps 50 snapshots per actor document, restored in place by owners and GMs.                                                              |
+| 2026-10-27 | T-0807 done (ADR-054): GMs and assistants archive a table, read-only everywhere until unarchived.                                                                             |
 
 ---
 
@@ -316,7 +317,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-TABLE-03 | GMs invite users by generating a table invite link with a role (`player`, `spectator`, `assistant`). Links can expire and be revoked. | MVP      | 0.1.0  |
 | FR-TABLE-04 | GMs change member roles and remove members. Removing a member keeps their characters, which become unowned.                           | MVP      | 0.1.0  |
 | FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                           | MVP      | 0.1.0  |
-| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                   | v1       | M10    |
+| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                   | v1       | 0.2.0  |
 | FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                         | MVP      | 0.1.0  |
 
 ### 7.3 Actors and items (`FR-ENT`)
@@ -652,7 +653,7 @@ Key resource groups:
 | Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                                                                     |
 | Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                                                                          |
 | Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                                                              |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`                                                                                                                    |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`, `POST /tables/:id/archive`, `POST /tables/:id/unarchive` (ADR-054)                                                |
 | Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                                                                        |
 | Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040)                                             |
 | Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                                                            |
@@ -804,11 +805,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Covers:** FR-SHEET-11
   - **Note:** done as ADR-053. Snapshots are kept per document (main and secret, 50 each), every 5 minutes at most and only on change. A restore keeps the state it replaces first.
 
-- [ ] **T-0807 · Table archive**
+- [x] **T-0807 · Table archive**
   - **Deps:** none
   - **Do:** GMs and assistants archive a table and unarchive it. An archived table is read-only everywhere: REST writes, chat, rolls and collaborative documents.
   - **Done when:** tests show each write path rejected while archived and allowed again after unarchiving; the table list marks archived tables.
   - **Covers:** FR-TABLE-06
+  - **Note:** done as ADR-054. The archive shares the read-only check of an unavailable system and also stops chat, settings, roles and invites. Removing members and revoking invites stay allowed.
 
 - [ ] **T-0808 · Automated backups**
   - **Deps:** none
@@ -961,6 +963,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted |
 | ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted |
 | ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted |
+| ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

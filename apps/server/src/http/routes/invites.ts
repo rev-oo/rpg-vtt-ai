@@ -6,7 +6,8 @@ import { createInviteBody, signupBody, type InviteView } from '@vtt/shared/api';
 
 import { gameTables, invites, members } from '../../db/schema.js';
 import { generateId, generateToken, hashToken } from '../../domain/auth/tokens.js';
-import { findMembership, toTableView } from '../../domain/tables.js';
+import { requireUnarchived } from '../../domain/entities.js';
+import { findMembership, findTable, toTableView } from '../../domain/tables.js';
 import { insertUser, prepareUser, toPublicUser } from '../../domain/users.js';
 import { AppError, gone, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -61,6 +62,9 @@ export function inviteRoutes({
     if (invite.expiresAt && invite.expiresAt <= now()) {
       throw gone('invite_expired', 'This invite link has expired.');
     }
+    // Nobody joins an archived table (ADR-054).
+    const table = findTable(db, invite.tableId);
+    if (table) requireUnarchived(table);
     return invite;
   };
 
@@ -79,7 +83,8 @@ export function inviteRoutes({
 
   app.post('/api/v1/tables/:id/invites', (request, reply) => {
     const { id } = parseInput(tableParams, request.params);
-    const { membership } = requireMember(db, request, id, canManageInvites);
+    const { membership, table } = requireMember(db, request, id, canManageInvites);
+    requireUnarchived(table);
     const { role, expiresInSeconds } = parseInput(createInviteBody, request.body);
 
     const token = generateToken();

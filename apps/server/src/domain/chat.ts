@@ -25,7 +25,8 @@ import {
 import { members, users } from '../db/schema.js';
 import { badRequest, forbidden, notFound, unprocessable } from '../errors.js';
 
-import { actorAccess } from './entities.js';
+import { actorAccess, requireUnarchived } from './entities.js';
+import { findTable } from './tables.js';
 
 export type ChatSend = z.output<typeof chatSendBody>;
 
@@ -78,6 +79,8 @@ export function sendChatMessage(
 ): ChatMessageRow {
   if (!canSendChat(sender.role)) throw forbidden('Spectators cannot post in chat.');
   const subject: Subject = { userId: sender.userId, role: sender.role };
+  const table = findTable(db, sender.tableId);
+  if (table) requireUnarchived(table);
 
   return db.transaction((tx) =>
     createChatMessage(

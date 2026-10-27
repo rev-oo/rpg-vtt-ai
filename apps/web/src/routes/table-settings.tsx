@@ -9,6 +9,7 @@ import { Alert, Button, TextField } from '@vtt/ui';
 import { ApiError } from '../api/client.js';
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
+import { ArchiveTable } from '../features/settings/ArchiveTable.js';
 import { Compendium } from '../features/settings/Compendium.js';
 import { houseRuleErrors, type SettingValues } from '../features/settings/house-rules.js';
 import { HouseRules } from '../features/settings/HouseRules.js';
@@ -26,6 +27,7 @@ export default function TableSettingsRoute(): ReactElement {
     <div className="flex flex-col gap-8">
       <TableSettingsForm key={table.id} table={table} />
       <Compendium table={table} />
+      <ArchiveTable table={table} />
     </div>
   );
 }

@@ -117,6 +117,27 @@ describe('table page', () => {
     );
   });
 
+  it('marks archived tables in the list (T-0807)', async () => {
+    fakeWebSocket();
+    fakeApi({
+      'GET /setup/status': { body: { needsSetup: false } },
+      'GET /me': { body: SESSION },
+      'GET /tables': {
+        body: {
+          tables: [
+            TABLE,
+            { ...TABLE, id: 't2', name: 'Old Campaign', archivedAt: '2026-10-01T00:00:00.000Z' },
+          ],
+        },
+      },
+    });
+    renderApp('/');
+    const old = await screen.findByRole('link', { name: 'Old Campaign' });
+    expect(old.closest('li')).toHaveTextContent('Archived');
+    const current = screen.getByRole('link', { name: 'Crimson Throne' });
+    expect(current.closest('li')).not.toHaveTextContent('Archived');
+  });
+
   it('explains a table that cannot be opened', async () => {
     fakeWebSocket();
     fakeApi({

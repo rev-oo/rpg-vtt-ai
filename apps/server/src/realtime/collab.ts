@@ -38,7 +38,7 @@ import {
   storeDocument,
   type DefinitionOf,
 } from '../domain/documents.js';
-import { isSystemWritable } from '../domain/entities.js';
+import { isTableWritable } from '../domain/entities.js';
 import { decodeSnapshot, recordSnapshot, type SnapshotRow } from '../domain/history.js';
 import type { AdjustCounter } from '../domain/rolls.js';
 import { findMembership, findTable } from '../domain/tables.js';
@@ -73,7 +73,7 @@ function entityAccess(db: DbOrTx, userId: string, tableId: string, grant: Grant)
   const access = grant({ userId, role: member.role });
   if (access !== 'write') return access;
   const table = findTable(db, tableId);
-  return table && isSystemWritable(db, table) ? 'write' : 'read';
+  return table && isTableWritable(db, table) ? 'write' : 'read';
 }
 
 /**
