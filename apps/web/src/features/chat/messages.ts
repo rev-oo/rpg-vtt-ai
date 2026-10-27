@@ -24,3 +24,11 @@ export function mergeMessages(
   if (added.length === 0) return [...current];
   return [...current, ...added].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
+
+/** Puts an edited message in place of the one shown, if it is shown (FR-CHAT-09). */
+export function replaceMessage(
+  current: readonly ChatMessage[],
+  edited: ChatMessage,
+): ChatMessage[] {
+  return current.map((m) => (m.id === edited.id ? edited : m));
+}

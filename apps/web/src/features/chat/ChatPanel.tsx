@@ -9,8 +9,20 @@ import {
   type ReactElement,
 } from 'react';
 
-import { canSendChat, type Audience } from '@vtt/shared';
-import type { ActorView, ChatMessage, MemberView, TableView } from '@vtt/shared/api';
+import {
+  canDeleteMessage,
+  canEditMessage,
+  canSendChat,
+  type Audience,
+  type Subject,
+} from '@vtt/shared';
+import {
+  MAX_CHAT_TEXT,
+  type ActorView,
+  type ChatMessage,
+  type MemberView,
+  type TableView,
+} from '@vtt/shared/api';
 import { Alert, Button, Select } from '@vtt/ui';
 
 import { ApiError } from '../../api/client.js';
@@ -21,7 +33,7 @@ import { CardMessage } from '../../plugin-host/CardMessage.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 
 import { parseChatInput } from './commands.js';
-import { mergeMessages, type ChatPage } from './messages.js';
+import { mergeMessages, replaceMessage, type ChatPage } from './messages.js';
 import { RollView } from './RollView.js';
 
 export interface ChatPanelProps {
@@ -69,6 +81,14 @@ export function ChatPanel({
   const status = useTableEvents(table.id, {
     onEvent: (event) => {
       if (event.type === 'chat.message') add([event.payload.message]);
+      if (event.type === 'chat.updated') {
+        const edited = event.payload.message;
+        setMessages((current) => replaceMessage(current, edited));
+      }
+      if (event.type === 'chat.deleted') {
+        const { id } = event.payload;
+        setMessages((current) => current.filter((m) => m.id !== id));
+      }
     },
     // Messages sent while the socket was down come from history; older pages already shown
     // stay as they are.
@@ -126,6 +146,8 @@ export function ChatPanel({
 
   const names = new Map(members.map((m) => [m.userId, m.displayName]));
   const me = members.find((m) => m.userId === userId);
+  const subject: Subject | null = me ? { userId, role: me.role } : null;
+  const now = useNow();
 
   return (
     <section
@@ -162,7 +184,20 @@ export function ChatPanel({
         {messages.length === 0 && <p className="text-sm text-muted">{t('chat.empty')}</p>}
         <ol className="flex list-none flex-col gap-2 p-0">
           {messages.map((message) => (
-            <MessageItem key={message.id} message={message} names={names} />
+            <MessageItem
+              key={message.id}
+              message={message}
+              names={names}
+              subject={subject}
+              now={now}
+              onEdited={(edited) => {
+                setMessages((current) => replaceMessage(current, edited));
+              }}
+              onDeleted={(id) => {
+                setMessages((current) => current.filter((m) => m.id !== id));
+              }}
+              onError={setError}
+            />
           ))}
         </ol>
       </div>
@@ -196,13 +231,74 @@ export function ChatPanel({
   );
 }
 
+/** The time, moved on every 15 seconds so the edit and delete buttons go when their 5 minutes do. */
+function useNow(): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 15_000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
+  return now;
+}
+
+interface MessageItemProps {
+  message: ChatMessage;
+  names: ReadonlyMap<string, string>;
+  /** The viewer, or `null` when they are not a member. */
+  subject: Subject | null;
+  now: number;
+  onEdited: (message: ChatMessage) => void;
+  onDeleted: (id: string) => void;
+  onError: (error: string | null) => void;
+}
+
 function MessageItem({
   message,
   names,
-}: {
-  message: ChatMessage;
-  names: ReadonlyMap<string, string>;
-}): ReactElement {
+  subject,
+  now,
+  onEdited,
+  onDeleted,
+  onError,
+}: MessageItemProps): ReactElement {
+  const [editing, setEditing] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [draft, setDraft] = useState(message.text);
+  const [busy, setBusy] = useState(false);
+  const authorship = {
+    senderId: message.senderId,
+    kind: message.kind,
+    sentAt: Date.parse(message.createdAt),
+  };
+  const mayEdit = subject !== null && canEditMessage(subject, authorship, now);
+  const mayDelete = subject !== null && canDeleteMessage(subject, authorship, now);
+
+  const run = async (action: () => Promise<void>) => {
+    setBusy(true);
+    try {
+      await action();
+      onError(null);
+    } catch (e) {
+      onError(errorMessage(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+  const save = () =>
+    run(async () => {
+      onEdited(await api.editChat(message.id, draft));
+      setEditing(false);
+    });
+  const remove = () =>
+    run(async () => {
+      await api.deleteChat(message.id);
+      onDeleted(message.id);
+    });
+
   const time = new Date(message.createdAt).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
@@ -223,8 +319,85 @@ function MessageItem({
         {message.audience === 'gm' && (
           <span className="rounded-full bg-info-soft px-2 text-xs">{t('chat.gmOnly')}</span>
         )}
+        {message.editedAt && <span className="text-xs text-muted">{t('chat.edited')}</span>}
+        {(mayEdit || mayDelete) && !editing && (
+          <span className="ml-auto flex gap-1">
+            {confirming ? (
+              <>
+                <Button variant="ghost" disabled={busy} onClick={() => void remove()}>
+                  {t('chat.confirmDelete')}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setConfirming(false);
+                  }}
+                >
+                  {t('chat.cancel')}
+                </Button>
+              </>
+            ) : (
+              <>
+                {mayEdit && (
+                  <Button
+                    variant="ghost"
+                    aria-label={t('chat.editMessage')}
+                    onClick={() => {
+                      setDraft(message.text);
+                      setEditing(true);
+                    }}
+                  >
+                    {t('chat.edit')}
+                  </Button>
+                )}
+                {mayDelete && (
+                  <Button
+                    variant="ghost"
+                    aria-label={t('chat.deleteMessage')}
+                    onClick={() => {
+                      setConfirming(true);
+                    }}
+                  >
+                    {t('chat.delete')}
+                  </Button>
+                )}
+              </>
+            )}
+          </span>
+        )}
       </div>
-      {message.kind === 'card' ? (
+      {editing ? (
+        <form
+          className="flex flex-col gap-1"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void save();
+          }}
+        >
+          <textarea
+            aria-label={t('chat.editMessage')}
+            className="rounded-lg border border-line bg-surface p-1"
+            value={draft}
+            maxLength={MAX_CHAT_TEXT}
+            onChange={(e) => {
+              setDraft(e.target.value);
+            }}
+          />
+          <span className="flex gap-1">
+            <Button type="submit" disabled={busy || draft.trim() === ''}>
+              {t('chat.save')}
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setEditing(false);
+              }}
+            >
+              {t('chat.cancel')}
+            </Button>
+          </span>
+        </form>
+      ) : message.kind === 'card' ? (
         <CardMessage message={message} />
       ) : message.kind === 'roll' && message.rolls.length > 0 ? (
         <>
