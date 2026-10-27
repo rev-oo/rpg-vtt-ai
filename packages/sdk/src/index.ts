@@ -79,10 +79,45 @@ export interface CommandInput {
 
 export type Command = (input: CommandInput) => Promise<void> | void;
 
-/** Hooks are checked but not called yet; combat (M9) calls them. */
-export type Hook = (
-  input: { ctx: ServerContext } & Record<string, unknown>,
-) => Promise<void> | void;
+/** A combatant as combat hooks see it (ADR-050). */
+export interface HookCombatant {
+  id: string;
+  name: string;
+  initiative: number | null;
+  /** Only GMs and assistants see hidden combatants. */
+  hidden: boolean;
+  /** The actor type's `controlledBy`; free-form combatants are on the GM's side. */
+  side: 'player' | 'gm';
+  /** Adding order. */
+  sort: number;
+  actor: HandlerActor | null;
+}
+
+/**
+ * Called when the turn passes to a combatant: on start and on "next turn", not when the GM
+ * steps back. It acts as the GM, speaking as the combatant's actor; `ctx.roll` reads its data.
+ */
+export type TurnStartHook = (input: {
+  ctx: ServerContext;
+  combatant: HookCombatant;
+  actor: HandlerActor | null;
+  round: number;
+}) => Promise<void> | void;
+
+/**
+ * Orders the encounter after every change, replacing `combat.json`'s `order`: returns every
+ * combatant's id once, in turn order. Any other answer is ignored with a warning in the log.
+ */
+export type OrderCombatantsHook = (input: {
+  ctx: ServerContext;
+  combatants: readonly HookCombatant[];
+}) => Promise<readonly string[]> | readonly string[];
+
+/** Combat hooks (ADR-050). */
+export interface Hooks {
+  onTurnStart?: TurnStartHook;
+  orderCombatants?: OrderCombatantsHook;
+}
 
 /** The default export of `code/server`. */
 export interface ServerDefinition {
@@ -90,7 +125,7 @@ export interface ServerDefinition {
   handlers?: Readonly<Record<string, Handler>>;
   /** Slash commands, by name: lower-case letters, digits, `-` and `_` (ADR-048). */
   commands?: Readonly<Record<string, Command>>;
-  hooks?: Readonly<Record<string, Hook>>;
+  hooks?: Hooks;
 }
 
 /** Declares the handlers, commands and hooks of `code/server`. */

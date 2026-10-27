@@ -61,3 +61,12 @@ export type CombatantUpdateInput = z.input<typeof combatantUpdateBody>;
 /** `POST /tables/:id/encounter/turn`: moves the turn; past the last combatant, a new round. */
 export const turnBody = z.object({ direction: z.enum(['next', 'previous']) });
 export type TurnInput = z.input<typeof turnBody>;
+
+/**
+ * `POST /tables/:id/encounter/initiative`: rolls the system's initiative (FR-COMBAT-02) for
+ * these combatants, or for every one without initiative.
+ */
+export const initiativeBody = z.object({
+  combatantIds: z.array(z.string().min(1).max(64)).max(200).optional(),
+});
+export type InitiativeInput = z.input<typeof initiativeBody>;

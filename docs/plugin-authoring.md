@@ -9,7 +9,7 @@ This guide has two parts:
 
 Every key of every file is listed in the [plugin file reference](plugin-reference.md), which is generated from the schemas the server validates with. Two finished plugins live in [`plugins/`](../plugins): `tiny-pool` (JSON only) and `tiny-d20` (with a custom sheet node in code).
 
-> **What runs.** JSON files, scoped CSS and all three kinds of [plugin code](#plugin-code) work: `code/client` in the browser, `code/shared` in both, and `code/server` on the server. `combat.json` and `packs/` are reserved for later versions.
+> **What runs.** JSON files, scoped CSS and all three kinds of [plugin code](#plugin-code) work: `code/client` in the browser, `code/shared` in both, and `code/server` on the server. `packs/` is reserved for a later version.
 
 ## Contents
 
@@ -24,6 +24,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Rolls](#rolls)
   - [Custom dice](#custom-dice)
   - [Chat cards](#chat-cards)
+  - [Combat](#combat)
   - [Table settings](#table-settings)
   - [Translations](#translations)
   - [Styles](#styles)
@@ -650,6 +651,7 @@ my-system/
 ├─ dice.json                custom dice
 ├─ cards/<name>.json        how recipe rolls show in chat
 ├─ settings.json            options each table can change
+├─ combat.json              initiative for the combat tracker
 ├─ lang/<locale>.json       translations; English is required once any exist
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
@@ -878,6 +880,26 @@ A card in `cards/<name>.json` lays out a recipe's roll in chat:
 
 Each row's `value` is a formula that can read the roll (`@total`, `@roll.*`), the entity's data and `@args`. `outcome: true` shows the recipe's outcome. A component of the same name in `code/client` replaces the card's rendering.
 
+### Combat
+
+`combat.json` lets the GM roll initiative in the combat tracker:
+
+```json
+{ "initiative": "1d20 + @derived.dexMod", "order": "desc" }
+```
+
+`initiative` is a formula each combatant rolls against its actor's data, with the plugin's functions and dice. Each roll goes to the chat; a hidden combatant's goes to the GM only. Free-form combatants roll without data, so a formula that reads data skips them, and the GM types their initiative.
+
+`order` is the turn order:
+
+| `order`          | Turn order                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------- |
+| `desc` (default) | Highest initiative first                                                                      |
+| `asc`            | Lowest first                                                                                  |
+| `sideBased`      | The side with the best roll acts first, then the other, each highest first; players win a tie |
+
+Combatants without initiative go last, and ties go in the order they were added. A combatant's side is its actor type's `controlledBy`; free-form combatants are on the GM's side. Server code can [order the turns](#combat-hooks) instead.
+
 ### Table settings
 
 `settings.json` declares house rules that each table's GM sets on the table settings page. Formulas read them as `@settings.<name>`:
@@ -1013,7 +1035,7 @@ Rules:
 - **Post something.** A handler must post at least one message; the first answers the roll. One that posts nothing fails.
 - **Time.** A handler may take 5 seconds in all. One that takes longer is stopped, and the roll fails.
 - **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log. Use `ctx.fail` for a message players should read.
-- **Isolation.** Each plugin's shared and server code runs in a worker thread of its own, with no database or file access beyond `ctx`. A crash or a loop stops that worker, never the server; the next roll starts a new one. Hooks (`defineServer({ hooks })`) are accepted but not called yet.
+- **Isolation.** Each plugin's shared and server code runs in a worker thread of its own, with no database or file access beyond `ctx`. A crash or a loop stops that worker, never the server; the next roll starts a new one.
 
 #### Slash commands
 
@@ -1036,6 +1058,28 @@ export default defineServer({
 A command gets `ctx`, the `actor` the player speaks as (or `null`), and `args`, the text after its name. It follows the rules of handlers, and posts to the audience chosen in the chat. `ctx.roll` rolls against the speaking actor, or with no data when there is none.
 
 Names are lower-case letters, digits, `-` and `_`, starting with a letter. `/r` and `/gmr` are the chat's own and cannot be replaced. A command the system does not have answers "Unknown command", as any other does. This is how `tiny-d20`'s `/check` works.
+
+#### Combat hooks
+
+Two hooks take part in combat:
+
+```ts
+export default defineServer({
+  hooks: {
+    onTurnStart: async ({ ctx, combatant, round }) => {
+      if (combatant.actor) await ctx.actors.adjust(combatant.actor.id, 'hp', 1);
+      await ctx.chat.post({ text: `${combatant.name} starts turn ${round}` });
+    },
+    orderCombatants: ({ combatants }) =>
+      [...combatants].sort((a, b) => (b.initiative ?? -1) - (a.initiative ?? -1)).map((c) => c.id),
+  },
+});
+```
+
+- **`onTurnStart`** runs when the turn passes to a combatant: when the encounter begins and on each "next turn", not when the GM steps back. It acts as the GM, speaking as the combatant's actor, so `ctx.roll` reads that actor (`actor` is passed too). What it posts reaches only the GM and assistants when the combatant is hidden.
+- **`orderCombatants`** runs after every change to the encounter and returns every combatant's id once, in turn order. It replaces [`combat.json`'s `order`](#combat). Any other answer is ignored, with a warning in the server log.
+
+Each combatant has `id`, `name`, `initiative` (or `null`), `hidden`, `side` (`player` or `gm`), `sort` (adding order) and `actor` (`id`, `name`, `type`, `data`, or `null` for a free-form one). Hooks follow the rules of handlers, except that they need not post. A hook that fails is logged, and combat goes on without it.
 
 ## Checking, previewing and installing
 

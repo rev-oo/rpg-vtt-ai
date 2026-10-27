@@ -17,15 +17,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
-| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | In progress | 50%      |
+| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M9
-- **Next task:** `T-0802`
+- **Active milestone:** M10
+- **Next task:** `T-0803`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -41,6 +41,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | Q13 decided (ADR-047): plugin shared and server code run in a worker thread per plugin. T-0809 done: shared functions in formulas on both sides, handler recipes with `ctx`.  |
 | 2026-10-27 | T-0804 done (ADR-048): plugin slash commands, with `ctx.fail`; calling server hooks moves to T-0802. M8 done.                                                                 |
 | 2026-10-27 | Q14 decided (ADR-049): encounters are rows refetched on `combat.updated`. T-0801 done: combat tracker with hidden combatants.                                                 |
+| 2026-10-27 | T-0802 done (ADR-050): initiative from `combat.json`, `desc`/`asc`/`sideBased` ordering, the `orderCombatants` and `onTurnStart` hooks. M9 done.                              |
 
 ---
 
@@ -398,7 +399,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | ID           | Requirement                                                                                                                      | Priority | Status |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
 | FR-COMBAT-01 | GM creates an encounter, adds combatants (actors or free-form entries), and runs initiative.                                     | v1       | 0.2.0  |
-| FR-COMBAT-02 | Initiative is rolled using the plugin's `combat.json` formula, with ordering rule `desc`, `asc`, or `sideBased`, or a code hook. | v1       | M9     |
+| FR-COMBAT-02 | Initiative is rolled using the plugin's `combat.json` formula, with ordering rule `desc`, `asc`, or `sideBased`, or a code hook. | v1       | 0.2.0  |
 | FR-COMBAT-03 | Turn advance and round counter are broadcast to all members.                                                                     | v1       | 0.2.0  |
 | FR-COMBAT-04 | Combatant visibility respects actor ownership and hidden status.                                                                 | v1       | 0.2.0  |
 
@@ -532,7 +533,7 @@ export default defineServer({
 });
 ```
 
-**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Hooks are accepted but not called before M9. In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
+**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 Rules:
 
@@ -556,9 +557,9 @@ The server runs the same validation as `vtt-plugin validate` on install and on r
 
 ### 8.14 Planned plugin files
 
-Reserved in 0.1.0 and built in M9 and M10:
+Reserved in 0.1.0; `combat.json` is built in M9, packs come in M10:
 
-- **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. The validator already checks it ([reference, Combat](docs/plugin-reference.md#combat)); nothing uses it yet. A code hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
+- **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. Built in T-0802 (ADR-050): [guide, Combat](docs/plugin-authoring.md#combat). An `orderCombatants` hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
 - **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Not validated or read in 0.1.0.
 
 ---
@@ -769,11 +770,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Covers:** FR-COMBAT-01, FR-COMBAT-03, FR-COMBAT-04
   - **Note:** done as ADR-049. Initiative is typed by the GM until T-0802 rolls it.
 
-- [ ] **T-0802 · Initiative and combat.json**
+- [x] **T-0802 · Initiative and combat.json**
   - **Deps:** T-0801; T-0809 for the code hook
   - **Do:** Roll initiative with the plugin's `combat.json` formula and order combatants by `desc`, `asc` or `sideBased`. Call the `onTurnStart` server hook when a plugin has one. Both reference plugins get a `combat.json`.
   - **Done when:** each ordering rule is unit-tested, including ties; both reference plugins roll initiative in e2e; the hook runs once per turn in a test.
   - **Covers:** FR-COMBAT-02
+  - **Note:** done as ADR-050. Sides are the actor type's `controlledBy`; `orderCombatants` is the ordering hook. Initiative rolls are chat messages.
 
 ### M10 — Content and table life cycle (0.2.0)
 
@@ -948,6 +950,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted |
 | ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted |
 | ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted |
+| ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

@@ -43,6 +43,13 @@
       "when": 1793117756747,
       "tag": "0005_combat",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793119733424,
+      "tag": "0006_combat_order",
+      "breakpoints": true
     }
   ]
 }

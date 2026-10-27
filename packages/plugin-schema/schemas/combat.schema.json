@@ -7,13 +7,14 @@
       "type": "string"
     },
     "initiative": {
-      "description": "What each combatant rolls for initiative.",
+      "description": "What each combatant rolls for initiative, against its actor’s data. Free-form combatants roll without data.",
       "type": "string",
       "minLength": 1,
       "maxLength": 2000,
       "title": "Formula"
     },
     "order": {
+      "description": "Turn order: highest first (`desc`, the default), lowest first (`asc`), or `sideBased`: the side with the best roll acts first, then the other, each highest first. A side is the actor type’s `controlledBy`; free-form combatants are on the GM’s side. An `orderCombatants` hook replaces the rule.",
       "type": "string",
       "enum": [
         "desc",
@@ -23,5 +24,5 @@
     }
   },
   "additionalProperties": false,
-  "description": "Initiative for the combat tracker. Checked, but not used until the tracker ships."
+  "description": "Initiative for the combat tracker."
 }

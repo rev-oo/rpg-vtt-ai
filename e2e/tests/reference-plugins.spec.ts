@@ -54,6 +54,32 @@ function recordTraffic(page: Page): () => Promise<Buffer> {
   };
 }
 
+/**
+ * The GM puts actors in an encounter and rolls the system's combat.json initiative
+ * (T-0802): every combatant gets a number, and each roll is in the chat.
+ */
+async function rollsInitiative(
+  page: Page,
+  gm: SignedIn,
+  tableId: string,
+  combatants: object[],
+  formula: string,
+): Promise<string[]> {
+  await post(gm, `/tables/${tableId}/encounter`);
+  for (const combatant of combatants) {
+    await post(gm, `/tables/${tableId}/encounter/combatants`, combatant);
+  }
+  await page.goto(`/tables/${tableId}`);
+  await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  const rows = page.getByRole('list', { name: 'Turn order' }).getByRole('listitem');
+  await expect(rows).toHaveCount(combatants.length);
+  await page.getByRole('button', { name: 'Roll initiative' }).click();
+  await expect(page.getByRole('button', { name: 'Roll initiative' })).toBeHidden();
+  for (const row of await rows.all()) await expect(row).toHaveText(/^-?\d+/);
+  await expect(page.getByRole('log', { name: 'Messages' })).toContainText(formula);
+  return rows.allTextContents();
+}
+
 async function openSheet(page: Page, tableId: string, name: string): Promise<void> {
   await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
@@ -93,6 +119,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
   const received = recordTraffic(page);
   await openSheet(page, table.id, 'Ayla');
   const sheet = page.locator('[data-plugin="tiny-d20"]');
+  let goblinId = '';
 
   await test.step('fields, defaults and derived values in the plugin language', async () => {
     await expect(sheet.getByLabel('Strength')).toHaveValue('16');
@@ -183,6 +210,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
       type: 'npc',
       name: 'Goblin',
     });
+    goblinId = npc.id;
     setActorData(npc.id, { str: 8, gmNotes: 'Flees at 2 HP' });
     const gmPage = await gm.context.newPage();
     await openSheet(gmPage, table.id, 'Goblin');
@@ -194,6 +222,19 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
       .locator('[data-plugin="tiny-d20"]')
       .last();
     await expect(card.locator('dd').first()).toHaveText(/^1d20 \+ -1$/);
+  });
+
+  await test.step('combat.json rolls initiative for the hero and the goblin (T-0802)', async () => {
+    const combatPage = await gm.context.newPage();
+    const order = await rollsInitiative(
+      combatPage,
+      gm,
+      table.id,
+      [{ actorId: actor.id }, { actorId: goblinId }],
+      '1d20 + @derived.dexMod',
+    );
+    expect(order.join(' ')).toMatch(/Ayla/);
+    expect(order.join(' ')).toMatch(/Goblin/);
   });
 
   expect(errors).toEqual([]);
@@ -229,5 +270,15 @@ test('tiny-pool works without code', async ({ browser }) => {
   await sheet.getByRole('button', { name: 'Fate roll' }).click();
   await expect(log.getByText(/^Fate roll: 4dF \+ 3 = -?\d$/)).toBeVisible();
   await expect(log.getByRole('list', { name: 'Dice of 4dF' })).toBeVisible();
+
+  // sideBased: Brask rolls 1d6 + 2, at least 3, so the players' side acts first (T-0802).
+  const order = await rollsInitiative(
+    page,
+    gm,
+    table.id,
+    [{ actorId: actor.id }, { name: 'Shade', initiative: 3 }],
+    '1d6 + @wits',
+  );
+  expect(order.map((row) => row.replace(/^\d+/, '').slice(0, 5))).toEqual(['Brask', 'Shade']);
   await gm.context.close();
 });

@@ -2,9 +2,11 @@ import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { PluginDefinition } from '@vtt/plugin-schema';
 import type { EncounterView } from '@vtt/shared/api';
 
 import { setCsrfToken } from '../src/api/client.js';
+import { clearLoadedSystems } from '../src/plugin-host/load.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
@@ -15,6 +17,7 @@ import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 // T-0801 (FR-COMBAT-01, 03, 04): the combat tracker beside the chat.
 
 afterEach(() => {
+  clearLoadedSystems();
   closeEventsClient();
   vi.unstubAllGlobals();
   setCsrfToken(null);
@@ -28,6 +31,39 @@ const ENCOUNTER: EncounterView = {
     { id: 'c1', actorId: null, name: 'Goblin', initiative: 15, hidden: false },
     { id: 'c2', actorId: HERO.id, name: 'Goblin King', initiative: 12, hidden: true },
   ],
+};
+
+/** A system with nothing but an initiative formula. */
+const SYSTEM = {
+  system: {
+    id: 'tiny-d20',
+    name: 'Tiny d20',
+    version: '1.0.0',
+    definition: {
+      manifest: {
+        id: 'tiny-d20',
+        name: 'Tiny d20',
+        version: '1.0.0',
+        kind: 'system',
+        coreApi: '^0.1.0',
+        hasCode: false,
+        locales: ['en'],
+      },
+      actorTypes: {},
+      itemTypes: {},
+      sheets: {},
+      rolls: {},
+      dice: {},
+      cards: {},
+      settings: {},
+      lang: { en: {} },
+      styles: [],
+      combat: { initiative: '1d20' },
+    } satisfies PluginDefinition,
+    styles: [],
+    client: null,
+    shared: null,
+  },
 };
 
 function openTable(
@@ -120,6 +156,30 @@ describe('combat tracker', () => {
     expect(calls.find((c) => c.path === '/tables/t1/encounter/turn')?.body).toEqual({
       direction: 'next',
     });
+  });
+
+  it('rolls initiative when the system has a formula (FR-COMBAT-02)', async () => {
+    const unrolled: EncounterView = {
+      ...ENCOUNTER,
+      round: 0,
+      currentId: null,
+      combatants: ENCOUNTER.combatants.map((c) => ({ ...c, initiative: null })),
+    };
+    const { calls } = openTable('gm', () => unrolled, {
+      'GET /systems/tiny-d20': { body: SYSTEM },
+      'POST /tables/t1/encounter/initiative': { body: { encounter: ENCOUNTER } },
+    });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Roll initiative' }));
+    await waitFor(() => {
+      expect(order()).toEqual([
+        expect.stringMatching(/^15Goblin/),
+        expect.stringMatching(/^12Goblin King/),
+      ]);
+    });
+    expect(calls.some((c) => c.path === '/tables/t1/encounter/initiative')).toBe(true);
+    // Everyone has initiative now.
+    expect(screen.queryByRole('button', { name: 'Roll initiative' })).not.toBeInTheDocument();
   });
 
   it('offers the GM to start an encounter', async () => {

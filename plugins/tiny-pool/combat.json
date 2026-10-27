@@ -1,0 +1,5 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/combat.schema.json",
+  "initiative": "1d6 + @wits",
+  "order": "sideBased"
+}
