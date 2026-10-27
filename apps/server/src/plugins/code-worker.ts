@@ -23,6 +23,10 @@ const flag = new Int32Array(setup.syncState);
 const message = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
 
+/** The name of errors thrown by `ctx.fail`, whose message the caller sees (ADR-048). */
+const SHOWN = 'PluginFailure';
+const shown = (error: unknown): boolean => error instanceof Error && error.name === SHOWN;
+
 /** `definition[key]`, which must be an object of functions when present. */
 function callables(definition: Record<string, unknown>, key: string, file: string): Exports {
   const value = definition[key];
@@ -53,7 +57,8 @@ async function load(url: string | null, keys: readonly string[]): Promise<Record
 }
 
 let functions: Exports = {};
-let handlers: Exports = {};
+/** Runnable server code: `handlers` for recipes and `commands` for slash commands. */
+const runnable: Record<string, Exports> = { handler: {}, command: {} };
 
 /** Pending `ctx` calls of running handlers, by sequence number. */
 const pending = new Map<
@@ -83,6 +88,11 @@ function contextFor(call: number): unknown {
     log: (text: unknown, data: unknown) => {
       port?.postMessage({ type: 'log', text: String(text), data: data ?? null });
     },
+    fail: (text: unknown): never => {
+      const error = new Error(String(text));
+      error.name = SHOWN;
+      throw error;
+    },
   };
 }
 
@@ -109,7 +119,13 @@ port.on(
   'message',
   (
     msg:
-      | { type: 'handle'; call: number; name: string; input: Record<string, unknown> }
+      | {
+          type: 'handle';
+          call: number;
+          kind: 'handler' | 'command';
+          name: string;
+          input: Record<string, unknown>;
+        }
       | { type: 'ctx-reply'; seq: number; ok: boolean; value?: unknown; error?: string },
   ) => {
     if (msg.type === 'ctx-reply') {
@@ -119,14 +135,15 @@ port.on(
       else waiting?.reject(new Error(msg.error ?? 'failed'));
       return;
     }
-    const { call, name, input } = msg;
-    const handler = Object.hasOwn(handlers, name) ? handlers[name] : undefined;
+    const { call, kind, name, input } = msg;
+    const code = runnable[kind] ?? {};
+    const handler = Object.hasOwn(code, name) ? code[name] : undefined;
     if (!handler) {
       port.postMessage({
         type: 'handled',
         call,
         ok: false,
-        error: `there is no handler "${name}"`,
+        error: `there is no ${kind} "${name}"`,
       });
       return;
     }
@@ -137,7 +154,13 @@ port.on(
           port.postMessage({ type: 'handled', call, ok: true });
         },
         (error: unknown) => {
-          port.postMessage({ type: 'handled', call, ok: false, error: message(error) });
+          port.postMessage({
+            type: 'handled',
+            call,
+            ok: false,
+            error: message(error),
+            shown: shown(error),
+          });
         },
       );
   },
@@ -145,13 +168,15 @@ port.on(
 
 try {
   const shared = await load(setup.shared, ['functions']);
-  const server = await load(setup.server, ['handlers', 'hooks']);
+  const server = await load(setup.server, ['handlers', 'commands', 'hooks']);
   functions = shared.functions ?? {};
-  handlers = server.handlers ?? {};
+  runnable.handler = server.handlers ?? {};
+  runnable.command = server.commands ?? {};
   port.postMessage({
     type: 'ready',
     functions: Object.keys(functions),
-    handlers: Object.keys(handlers),
+    handlers: Object.keys(runnable.handler),
+    commands: Object.keys(runnable.command),
     hooks: Object.keys(server.hooks ?? {}),
   });
 } catch (error) {

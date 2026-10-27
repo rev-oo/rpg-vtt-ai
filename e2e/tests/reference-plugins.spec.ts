@@ -124,6 +124,20 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(card.locator('dd').first()).toHaveText(/^1d20 \+ .+ \+ 4$/);
   });
 
+  await test.step('the /check command runs tiny-d20’s server code (T-0804)', async () => {
+    const log = page.getByRole('log', { name: 'Messages' });
+    const message = page.getByLabel('Message', { exact: true });
+    await message.fill('/check');
+    await message.press('Enter');
+    await expect(page.getByRole('alert')).toHaveText('Use /check str or /check dex.');
+    await page.getByLabel('Speak as').selectOption({ label: 'Ayla' });
+    await message.fill('/check str');
+    await message.press('Enter');
+    await expect(log.getByText('Ayla: Strength check')).toBeVisible();
+    await expect(log.getByText('1d20 + @derived.strMod → 1d20 + 3')).toBeVisible();
+    await expect(message).toHaveValue('');
+  });
+
   await test.step('players do not see the secret layer; the GM does', async () => {
     await sheet.getByRole('tab', { name: 'Notes' }).click();
     await expect(sheet.getByRole('textbox', { name: 'Notes', exact: true })).toBeVisible();

@@ -1006,13 +1006,36 @@ It gets the rolling `actor` (`id`, `name`, `type`, `data`), the button's `args`,
 | `actors.get(id)`                 | An actor of the table, as the roller may see it, or `null`                                                                            |
 | `actors.adjust(id, path, delta)` | Adds `delta` to a counter (`x-counter`) of an actor the roller owns, within its bounds, and returns the new value                     |
 | `log(message, data?)`            | Writes to the server log                                                                                                              |
+| `fail(message)`                  | Stops the code and shows `message` to the person who rolled, for instance to say what is missing                                      |
 
 Rules:
 
 - **Post something.** A handler must post at least one message; the first answers the roll. One that posts nothing fails.
 - **Time.** A handler may take 5 seconds in all. One that takes longer is stopped, and the roll fails.
-- **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log.
+- **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log. Use `ctx.fail` for a message players should read.
 - **Isolation.** Each plugin's shared and server code runs in a worker thread of its own, with no database or file access beyond `ctx`. A crash or a loop stops that worker, never the server; the next roll starts a new one. Hooks (`defineServer({ hooks })`) are accepted but not called yet.
+
+#### Slash commands
+
+`code/server` can also add chat commands. Players type `/name` and some text; the server runs the command with the table's system:
+
+```ts
+export default defineServer({
+  commands: {
+    check: async ({ ctx, actor, args }) => {
+      const ability = args.trim().toLowerCase();
+      if (ability !== 'str' && ability !== 'dex') return ctx.fail('Use /check str or /check dex.');
+      if (!actor) return ctx.fail('Speak as a character to use /check.');
+      const roll = await ctx.roll(`1d20 + @derived.${ability}Mod`);
+      await ctx.chat.post({ text: `${actor.name} checks ${ability}`, rolls: [roll] });
+    },
+  },
+});
+```
+
+A command gets `ctx`, the `actor` the player speaks as (or `null`), and `args`, the text after its name. It follows the rules of handlers, and posts to the audience chosen in the chat. `ctx.roll` rolls against the speaking actor, or with no data when there is none.
+
+Names are lower-case letters, digits, `-` and `_`, starting with a letter. `/r` and `/gmr` are the chat's own and cannot be replaced. A command the system does not have answers "Unknown command", as any other does. This is how `tiny-d20`'s `/check` works.
 
 ## Checking, previewing and installing
 

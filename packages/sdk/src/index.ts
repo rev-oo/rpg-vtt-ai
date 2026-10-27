@@ -53,6 +53,8 @@ export interface ServerContext {
     adjust(id: string, path: string, delta: number): Promise<number>;
   };
   log(message: string, data?: Readonly<Record<string, unknown>>): void;
+  /** Stops the code with a message the caller sees, such as how to use a command. */
+  fail(message: string): never;
 }
 
 /** What a `handler` recipe receives. */
@@ -66,6 +68,17 @@ export interface HandlerInput {
 
 export type Handler = (input: HandlerInput) => Promise<void> | void;
 
+/** What a slash command gets: `/name args` typed by a member (ADR-048). */
+export interface CommandInput {
+  ctx: ServerContext;
+  /** The actor the member speaks as, if any. */
+  actor: HandlerActor | null;
+  /** The text after the command's name. */
+  args: string;
+}
+
+export type Command = (input: CommandInput) => Promise<void> | void;
+
 /** Hooks are checked but not called yet; combat (M9) calls them. */
 export type Hook = (
   input: { ctx: ServerContext } & Record<string, unknown>,
@@ -75,10 +88,12 @@ export type Hook = (
 export interface ServerDefinition {
   /** Run by `handler` recipes in `rolls.json`, by name. */
   handlers?: Readonly<Record<string, Handler>>;
+  /** Slash commands, by name: lower-case letters, digits, `-` and `_` (ADR-048). */
+  commands?: Readonly<Record<string, Command>>;
   hooks?: Readonly<Record<string, Hook>>;
 }
 
-/** Declares the handlers and hooks of `code/server`. */
+/** Declares the handlers, commands and hooks of `code/server`. */
 export function defineServer<const T extends ServerDefinition>(definition: T): T {
   return definition;
 }

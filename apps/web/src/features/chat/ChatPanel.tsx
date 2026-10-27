@@ -13,6 +13,7 @@ import { canSendChat, type Audience } from '@vtt/shared';
 import type { ActorView, ChatMessage, MemberView, TableView } from '@vtt/shared/api';
 import { Alert, Button, Select } from '@vtt/ui';
 
+import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
@@ -287,6 +288,7 @@ function Composer({
         case 'empty':
           return;
         case 'roll':
+        case 'command':
           break;
         case 'usage':
           onNotice(t('chat.rollUsage', { command: input.command }));
@@ -312,10 +314,17 @@ function Composer({
         const message =
           input.kind === 'roll'
             ? await api.roll(tableId, { formula: input.formula, ...target })
-            : await api.sendChat(tableId, { text: input.text, ...target });
+            : input.kind === 'command'
+              ? await api.command(tableId, { name: input.name, args: input.args, ...target })
+              : await api.sendChat(tableId, { text: input.text, ...target });
         formApi.setFieldValue('text', '');
         onSent(message);
       } catch (e) {
+        // A command the system lacks reads like a built-in one the chat does not know.
+        if (e instanceof ApiError && e.code === 'unknown_command' && input.kind === 'command') {
+          onNotice(t('chat.unknownCommand', { command: `/${input.name}` }));
+          return;
+        }
         onError(errorMessage(e));
       }
     },

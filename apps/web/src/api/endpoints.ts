@@ -51,6 +51,7 @@ import {
   type ChangePasswordInput,
   type ChatMessage,
   type ChatSendInput,
+  type CommandRequestInput,
   type RollRequestInput,
   type CreateTableInput,
   type GameSystem,
@@ -229,6 +230,11 @@ export const api = {
   sendChat: async (tableId: string, input: ChatSendInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/messages`, chatMessageResponseSchema, input))
       .message,
+  /** Runs a slash command of the table's system; it answers like a roll (FR-PLUGIN-10). */
+  command: async (tableId: string, input: CommandRequestInput): Promise<ChatMessage> =>
+    (await request('POST', `/tables/${tableId}/commands`, chatMessageResponseSchema, input))
+      .message,
+
   /** Rolls a typed formula; the result arrives as a roll message (FR-CHAT-03, 08). */
   roll: async (tableId: string, input: RollRequestInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/rolls`, chatMessageResponseSchema, input)).message,

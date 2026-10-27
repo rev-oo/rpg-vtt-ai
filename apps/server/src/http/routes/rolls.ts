@@ -1,9 +1,9 @@
 import { z } from 'zod';
 
-import { rollRequestBody } from '@vtt/shared/api';
+import { commandRequestBody, rollRequestBody } from '@vtt/shared/api';
 
 import { toChatMessage } from '../../domain/chat.js';
-import { sendRollMessages } from '../../domain/rolls.js';
+import { sendCommandMessages, sendRollMessages } from '../../domain/rolls.js';
 import { publishChatMessage } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
@@ -25,6 +25,21 @@ export function rollRoutes(context: AppContext): void {
     const { membership } = requireMember(db, request, id);
     const body = parseInput(rollRequestBody, request.body);
     const rows = await sendRollMessages(
+      db,
+      { tableId: id, userId: membership.userId, role: membership.role },
+      body,
+      options,
+    );
+    for (const row of rows) publishChatMessage(events, row);
+    return reply.code(201).send({ message: toChatMessage(rows[0]) });
+  });
+
+  /** A slash command of the table's system (FR-PLUGIN-10, ADR-048); answered like a roll. */
+  app.post('/api/v1/tables/:id/commands', async (request, reply) => {
+    const { id } = parseInput(idParams, request.params);
+    const { membership } = requireMember(db, request, id);
+    const body = parseInput(commandRequestBody, request.body);
+    const rows = await sendCommandMessages(
       db,
       { tableId: id, userId: membership.userId, role: membership.role },
       body,

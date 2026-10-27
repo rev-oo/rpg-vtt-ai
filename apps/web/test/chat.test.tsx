@@ -232,6 +232,13 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
           return { status: 201, body: { message: rolled(formula, 7) } };
         },
         'POST /tables/t1/messages': { status: 201, body: { message: message('/r is literal') } },
+        'POST /tables/t1/commands': (body) =>
+          (body as { name: string }).name === 'greet'
+            ? { status: 201, body: { message: message('Ana greets you') } }
+            : {
+                status: 422,
+                body: { error: { code: 'unknown_command', message: 'There is no command.' } },
+              },
       },
     });
     const user = userEvent.setup();
@@ -257,6 +264,9 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     await user.type(input, '/r 2d6{Enter}');
     await user.selectOptions(screen.getByLabelText('Send to'), 'Everyone');
     await user.type(input, '//r is literal{Enter}');
+    // Other commands are the table system's (FR-PLUGIN-10).
+    await user.type(input, '/greet you{Enter}');
+    expect(await screen.findByText('Ana greets you')).toBeVisible();
 
     await waitFor(() => {
       expect(posts()).toEqual([
@@ -265,12 +275,20 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
           { formula: '1d20 + 2', audience: 'gm', recipientIds: [], actorId: null },
         ],
         [
+          '/tables/t1/commands',
+          { name: 'dance', args: '', audience: 'public', recipientIds: [], actorId: null },
+        ],
+        [
           '/tables/t1/rolls',
           { formula: '2d6', audience: 'whisper', recipientIds: ['u2'], actorId: null },
         ],
         [
           '/tables/t1/messages',
           { text: '/r is literal', audience: 'public', recipientIds: [], actorId: null },
+        ],
+        [
+          '/tables/t1/commands',
+          { name: 'greet', args: 'you', audience: 'public', recipientIds: [], actorId: null },
         ],
       ]);
     });
