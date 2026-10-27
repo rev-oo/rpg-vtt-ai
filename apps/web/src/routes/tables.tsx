@@ -57,6 +57,11 @@ export default function TablesRoute({ loaderData }: Route.ComponentProps): React
                   <span className="rounded-full bg-info-soft px-2 font-semibold text-fg">
                     {t(`tables.role.${table.role}`)}
                   </span>
+                  {table.archivedAt !== null && (
+                    <span className="rounded-full bg-canvas px-2 font-semibold text-fg">
+                      {t('tables.archived')}
+                    </span>
+                  )}
                   <span>
                     {t('tables.system', { name: table.systemName, version: table.systemVersion })}
                   </span>

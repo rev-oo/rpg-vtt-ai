@@ -133,6 +133,16 @@ export const api = {
   updateTable: async (tableId: string, input: UpdateTableInput): Promise<TableView> =>
     (await request('PATCH', `/tables/${tableId}`, tableResponseSchema, input)).table,
 
+  /** Archives the table, read-only for everyone, or unarchives it (FR-TABLE-06). */
+  setTableArchived: async (tableId: string, archived: boolean): Promise<TableView> =>
+    (
+      await request(
+        'POST',
+        `/tables/${tableId}/${archived ? 'archive' : 'unarchive'}`,
+        tableResponseSchema,
+      )
+    ).table,
+
   listMembers: async (tableId: string): Promise<MemberView[]> =>
     (await request('GET', `/tables/${tableId}/members`, membersResponseSchema)).members,
 

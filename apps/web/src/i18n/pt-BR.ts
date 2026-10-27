@@ -138,6 +138,17 @@ export const ptBR: Messages = {
   'chat.whisperTo': 'Sussurro para {names}',
   'chat.gmOnly': 'Só o mestre',
   'chat.formerMember': 'ex-membro',
+  'archive.title': 'Arquivar',
+  'archive.help':
+    'Uma mesa arquivada fica somente leitura para todos: nada pode ser alterado, enviado ou rolado, e ninguém pode entrar. Você pode desarquivá-la a qualquer momento.',
+  'archive.archivedHelp':
+    'Esta mesa está arquivada e somente leitura. Desarquive-a para jogar de novo.',
+  'archive.archive': 'Arquivar mesa',
+  'archive.unarchive': 'Desarquivar mesa',
+  'table.archived': 'Esta mesa está arquivada: ela é somente leitura.',
+  'table.archivedError': 'Esta mesa está arquivada, então é somente leitura.',
+  'tables.archived': 'Arquivada',
+  'chat.archived': 'A mesa está arquivada: o chat é somente leitura.',
   'history.open': 'Histórico',
   'history.title': 'Histórico da ficha',
   'history.help':

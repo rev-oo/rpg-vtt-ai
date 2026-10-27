@@ -1,5 +1,7 @@
 import { vi } from 'vitest';
 
+import type { TableView } from '@vtt/shared/api';
+
 export interface FakeResponse {
   status?: number;
   body?: unknown;
@@ -61,7 +63,7 @@ export const UNAUTHENTICATED: FakeResponse = {
   body: { error: { code: 'unauthenticated', message: 'Authentication required.' } },
 };
 
-export const TABLE = {
+export const TABLE: TableView = {
   id: 't1',
   name: 'Crimson Throne',
   description: 'Weekly game',
