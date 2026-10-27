@@ -22,6 +22,11 @@ export function canArchiveTable(role: TableRole): boolean {
   return isGmLike(role);
 }
 
+/** Running the table's encounter (FR-COMBAT-01). */
+export function canRunCombat(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
 /** GM-only chat, secret rolls and secret sheet fields (FR-SHEET-04, FR-CHAT-02). */
 export function canSeeGmContent(role: TableRole): boolean {
   return isGmLike(role);
