@@ -14,6 +14,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - **Chat edits and deletes.** Authors can edit or delete their text messages for 5 minutes, and GMs can delete any message. Changes show live to everyone who saw the message; edited messages are marked.
 - **Sheet history.** A sheet's owners and GMs can open its history and restore how it was: a copy is kept every few minutes while it changes, the last 50 of each. Restoring changes the sheet for everyone at once, and can be undone. GM-only data has its own history, for GMs.
 - **Table archive.** GMs can archive a table from its settings. An archived table is read-only for everyone (no edits, chat, rolls or new members) until it is unarchived, and the table list marks it.
+- **Scheduled backups.** Set `BACKUP_DIR` and the server backs itself up every `BACKUP_INTERVAL_HOURS` (24 by default), keeping the newest `BACKUP_KEEP` (7). See `docs/backup.md`.
 
 ## [0.1.0] - 2026-10-26
 

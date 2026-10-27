@@ -26,6 +26,7 @@ import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
 
 import { registerAuth } from './auth.js';
+import { scheduleBackups } from './backups.js';
 import { actorRoutes } from './routes/actors.js';
 import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
@@ -194,6 +195,7 @@ export async function buildApp({
   if (webDir !== undefined) await registerWebApp(app, webDir);
 
   scheduleTrashPurge(app, { db, retentionMs: config.softDeleteRetentionMs, now });
+  scheduleBackups(app, { dataDir: config.dataDir, backup: config.backup, now });
   app.addHook('onClose', () => plugins.close());
 
   return app;

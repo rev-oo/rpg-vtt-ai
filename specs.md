@@ -18,14 +18,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 80%      |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Done        | 100%     |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M10
-- **Next task:** `T-0808`
+- **Active milestone:** M11
+- **Next task:** `T-0811`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -46,6 +46,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0805 done (ADR-052): authors edit or delete their text messages for 5 minutes; GMs delete any message.                                                                      |
 | 2026-10-27 | T-0806 done (ADR-053): sheet history keeps 50 snapshots per actor document, restored in place by owners and GMs.                                                              |
 | 2026-10-27 | T-0807 done (ADR-054): GMs and assistants archive a table, read-only everywhere until unarchived.                                                                             |
+| 2026-10-27 | T-0808 done (ADR-055): scheduled backups via `BACKUP_DIR`, keeping the newest N. M10 done.                                                                                    |
 
 ---
 
@@ -415,7 +416,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-ADMIN-02 | Plugin admin page: list, enable, disable, rescan, view validation errors.                                                         | MVP                        | 0.1.0                             |
 | FR-ADMIN-03 | Health endpoint `/api/health` reports DB status and plugin load status.                                                           | MVP                        | 0.1.0                             |
 | FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`.                                     | MVP                        | 0.1.0                             |
-| FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) | 0.1.0 (doc); M10 (automated)      |
+| FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) | 0.1.0 (doc); 0.2.0 (automated)    |
 
 ### 7.11 Maps and assets — LATER
 
@@ -812,11 +813,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Covers:** FR-TABLE-06
   - **Note:** done as ADR-054. The archive shares the read-only check of an unavailable system and also stops chat, settings, roles and invites. Removing members and revoking invites stay allowed.
 
-- [ ] **T-0808 · Automated backups**
+- [x] **T-0808 · Automated backups**
   - **Deps:** none
   - **Do:** An environment variable schedules backups with the existing backup command (`apps/server/src/cli/backup.ts`), keeping the last N.
   - **Done when:** a test with fake timers shows backups written on schedule and old ones removed; `docs/backup.md` documents the settings.
   - **Covers:** FR-ADMIN-05 (automated part)
+  - **Note:** done as ADR-055. `BACKUP_DIR`, `BACKUP_INTERVAL_HOURS` and `BACKUP_KEEP`. The server checks every 15 minutes whether the newest backup is an interval old, so restarts keep the schedule.
 
 ### M11 — Operations (0.2.0)
 
@@ -964,6 +966,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted |
 | ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted |
 | ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted |
+| ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
