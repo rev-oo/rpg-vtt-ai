@@ -10,6 +10,8 @@
 
 services:
   vtt:
+    # To run a release instead of building, delete `build` and set the image to a published
+    # version, e.g. ghcr.io/rev-oo/rpg-vtt-ai:0.1.0, then run `docker compose up -d`.
     build:
       context: ..
       dockerfile: docker/Dockerfile

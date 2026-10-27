@@ -32,7 +32,13 @@ TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (R
 
 ## Running with Docker
 
-To run an instance, build the image with the example compose file:
+Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.1.0`, `0.1`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. To run one:
+
+```bash
+docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.1.0
+```
+
+To build the image from a checkout instead, use the example compose file:
 
 ```bash
 docker compose -f docker/docker-compose.example.yml up -d --build
