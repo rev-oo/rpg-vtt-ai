@@ -12,6 +12,7 @@ import {
   sendChatMessage,
   toChatMessage,
 } from '../../domain/chat.js';
+import { requireUnarchived } from '../../domain/entities.js';
 import { notFound } from '../../errors.js';
 import {
   publishChatDeleted,
@@ -66,9 +67,10 @@ export function chatRoutes({ app, db, events, now }: AppContext): void {
   const messageOf = (request: Parameters<typeof requireMember>[1], id: string) => {
     const row = findChatMessage(db, id);
     if (!row) throw notFound('Message not found.');
-    const { membership } = requireMember(db, request, row.tableId);
+    const { membership, table } = requireMember(db, request, row.tableId);
     const subject = { userId: membership.userId, role: membership.role };
     requireVisibleMessage(subject, row);
+    requireUnarchived(table);
     return { subject, row };
   };
 

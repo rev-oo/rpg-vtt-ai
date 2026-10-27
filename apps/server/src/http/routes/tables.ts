@@ -1,13 +1,14 @@
 import { asc, eq } from 'drizzle-orm';
+import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
 import { settingsIssues, type SettingIssue } from '@vtt/plugin-engine';
-import { canManageTable } from '@vtt/shared';
+import { canArchiveTable, canManageTable } from '@vtt/shared';
 import { createTableBody, updateTableBody, type TableTypes } from '@vtt/shared/api';
 
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
-import { requireWritableSystem, systemTypes } from '../../domain/entities.js';
+import { requireUnarchived, requireWritableTable, systemTypes } from '../../domain/entities.js';
 import { isAvailable } from '../../domain/plugins.js';
 import { toTableView } from '../../domain/tables.js';
 import { badRequest, unprocessable } from '../../errors.js';
@@ -40,7 +41,7 @@ function settingMessage({ reason }: SettingIssue): string {
  * Table creation, listing and settings (FR-TABLE-01, 02, 07). Settings are the house rules of
  * the table's system (`settings.json`, FR-ADMIN-04) and must fit them.
  */
-export function tableRoutes({ app, db, events, plugins: registry }: AppContext): void {
+export function tableRoutes({ app, db, events, now, plugins: registry }: AppContext): void {
   /** Refuses settings the system does not define or whose values do not fit (specs §8.12). */
   const checkSettings = (systemId: string, settings: Record<string, unknown>) => {
     const issues = settingsIssues(registry.definition(systemId)?.settings ?? {}, settings);
@@ -127,9 +128,10 @@ export function tableRoutes({ app, db, events, plugins: registry }: AppContext):
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id, canManageTable);
     const body = parseInput(updateTableBody, request.body);
+    requireUnarchived(table);
     if (body.settings) {
       // House rules need the system that defines them (FR-PLUGIN-07).
-      requireWritableSystem(db, table);
+      requireWritableTable(db, table);
       checkSettings(table.systemId, body.settings);
     }
     const updated = db.update(gameTables).set(body).where(eq(gameTables.id, id)).returning().get();
@@ -137,4 +139,24 @@ export function tableRoutes({ app, db, events, plugins: registry }: AppContext):
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
     return { table: toTableView(db, updated, membership.role) };
   });
+
+  /**
+   * Archives or unarchives the table (FR-TABLE-06, ADR-054). Open documents turn read-only, or
+   * writable again, on the recheck after the request; clients refetch on `table.updated`.
+   */
+  const setArchived = (archived: boolean) => (request: FastifyRequest) => {
+    const { id } = parseInput(tableIdParams, request.params);
+    const { table, membership } = requireMember(db, request, id, canArchiveTable);
+    const archivedAt = archived ? (table.archivedAt ?? now()) : null;
+    const updated = db
+      .update(gameTables)
+      .set({ archivedAt })
+      .where(eq(gameTables.id, id))
+      .returning()
+      .get();
+    events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
+    return { table: toTableView(db, updated, membership.role) };
+  };
+  app.post('/api/v1/tables/:id/archive', setArchived(true));
+  app.post('/api/v1/tables/:id/unarchive', setArchived(false));
 }

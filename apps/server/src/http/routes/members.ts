@@ -7,7 +7,7 @@ import { updateMemberBody, type MemberView } from '@vtt/shared/api';
 import type { DbOrTx } from '../../db/client.js';
 import { findActor, removeEntityOwner } from '../../db/repositories/index.js';
 import { members, users } from '../../db/schema.js';
-import { actorAccess } from '../../domain/entities.js';
+import { actorAccess, requireUnarchived } from '../../domain/entities.js';
 import { findMembership, type Member } from '../../domain/tables.js';
 import { badRequest, conflict, forbidden, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -72,7 +72,8 @@ export function memberRoutes({ app, db }: AppContext): void {
 
   app.patch('/api/v1/tables/:id/members/:userId', (request) => {
     const { id, userId } = parseInput(memberParams, request.params);
-    const { membership } = requireMember(db, request, id);
+    const { membership, table } = requireMember(db, request, id);
+    requireUnarchived(table);
     const body = parseInput(updateMemberBody, request.body);
     const target = findTarget(id, userId);
     const isSelf = target.userId === membership.userId;

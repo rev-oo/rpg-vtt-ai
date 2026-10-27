@@ -124,8 +124,12 @@ export function systemTypes(db: DbOrTx, table: GameTable): SystemTypes {
   return plugin;
 }
 
-/** Whether the table's system plugin is available, so its entities may change (FR-PLUGIN-07). */
-export function isSystemWritable(db: DbOrTx, table: GameTable): boolean {
+/**
+ * Whether the table's entities may change: it is not archived (FR-TABLE-06) and its system
+ * plugin is available (FR-PLUGIN-07).
+ */
+export function isTableWritable(db: DbOrTx, table: GameTable): boolean {
+  if (table.archivedAt) return false;
   const plugin = db
     .select({ enabled: plugins.enabled, status: plugins.status })
     .from(plugins)
@@ -135,11 +139,23 @@ export function isSystemWritable(db: DbOrTx, table: GameTable): boolean {
 }
 
 /**
- * Tables of a disabled, broken or removed system are read-only (FR-PLUGIN-07): entity
- * changes and rolls fail with 409 `table_read_only`. Members can still read and chat.
+ * Archived tables are read-only for everyone (FR-TABLE-06, ADR-054): every change fails with
+ * 409 `table_archived`, until a GM or assistant unarchives the table.
  */
-export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
-  if (!isSystemWritable(db, table)) {
+export function requireUnarchived(table: GameTable): void {
+  if (table.archivedAt) {
+    throw conflict('table_archived', 'The table is archived, so it is read-only.');
+  }
+}
+
+/**
+ * Archived tables, and tables of a disabled, broken or removed system, are read-only:
+ * entity changes and rolls fail with 409 `table_archived` or `table_read_only`
+ * (FR-PLUGIN-07). Members of a table whose system is unavailable can still chat.
+ */
+export function requireWritableTable(db: DbOrTx, table: GameTable): void {
+  requireUnarchived(table);
+  if (!isTableWritable(db, table)) {
     throw conflict(
       'table_read_only',
       "The table's system plugin is disabled or unavailable, so the table is read-only.",
@@ -149,7 +165,7 @@ export function requireWritableSystem(db: DbOrTx, table: GameTable): void {
 
 /** The types of a table's system, for creating entities; the table must be writable. */
 export function writableSystemTypes(db: DbOrTx, table: GameTable): SystemTypes {
-  requireWritableSystem(db, table);
+  requireWritableTable(db, table);
   return systemTypes(db, table);
 }
 

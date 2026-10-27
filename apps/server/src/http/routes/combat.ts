@@ -24,7 +24,7 @@ import {
   toEncounterView,
   updateCombatant,
 } from '../../domain/combat.js';
-import { requireWritableSystem } from '../../domain/entities.js';
+import { requireWritableTable } from '../../domain/entities.js';
 import { publishChatMessage } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
@@ -48,7 +48,7 @@ export function combatRoutes(context: AppContext): void {
   const running = (request: Parameters<typeof requireMember>[1]) => {
     const { id } = parseInput(idParams, request.params);
     const access = requireMember(db, request, id, canRunCombat);
-    requireWritableSystem(db, access.table);
+    requireWritableTable(db, access.table);
     const { userId, role } = access.membership;
     return { id, ...access, runner: { tableId: id, userId, role } };
   };

@@ -1,0 +1,1 @@
+ALTER TABLE `game_tables` ADD `archived_at` integer;

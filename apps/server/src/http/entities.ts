@@ -14,7 +14,7 @@ import {
 import {
   actorAccess,
   itemAccess,
-  requireWritableSystem,
+  requireWritableTable,
   type EntityAccess,
 } from '../domain/entities.js';
 import { journalEntryAccess } from '../domain/journal.js';
@@ -65,7 +65,7 @@ export function requireActor(
   const access = context && actorAccess(context.subject, actor);
   if (!actor || !context || !access) throw notFound('Actor not found.');
   if (edit && access !== 'owner') throw forbidden();
-  if (edit) requireWritableSystem(db, context.table);
+  if (edit) requireWritableTable(db, context.table);
   return { ...context, actor, access };
 }
 
@@ -91,7 +91,7 @@ export function requireItem(
   const access = context && !orphaned ? itemAccess(context.subject, actor) : null;
   if (!item || !context || !access) throw notFound('Item not found.');
   if (edit && access !== 'owner') throw forbidden();
-  if (edit) requireWritableSystem(db, context.table);
+  if (edit) requireWritableTable(db, context.table);
   return { ...context, item, actor, access };
 }
 
@@ -115,6 +115,6 @@ export function requireJournalEntry(
   const access = context && journalEntryAccess(context.subject, entry);
   if (!entry || !context || !access) throw notFound('Journal entry not found.');
   if (edit && access !== 'owner') throw forbidden();
-  if (edit) requireWritableSystem(db, context.table);
+  if (edit) requireWritableTable(db, context.table);
   return { ...context, entry, access };
 }

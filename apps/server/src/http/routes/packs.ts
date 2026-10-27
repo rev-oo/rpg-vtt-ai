@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { canImportPacks } from '@vtt/shared';
 import type { PackImportResponse } from '@vtt/shared/api';
 
-import { requireWritableSystem } from '../../domain/entities.js';
+import { requireWritableTable } from '../../domain/entities.js';
 import { importPack, listPacks } from '../../domain/packs.js';
 import { unprocessable } from '../../errors.js';
 import { publishActorChanged, publishItemChanged } from '../../realtime/notify.js';
@@ -21,7 +21,7 @@ const packParams = z.object({ id: z.uuid(), name: z.string().min(1).max(64) });
 export function packRoutes({ app, db, events, now, plugins }: AppContext): void {
   const systemOf = (request: Parameters<typeof requireMember>[1], id: string) => {
     const access = requireMember(db, request, id, canImportPacks);
-    requireWritableSystem(db, access.table);
+    requireWritableTable(db, access.table);
     const plugin = plugins.definition(access.table.systemId);
     if (!plugin) throw unprocessable('system_unavailable', 'The table’s system is unavailable.');
     return { ...access, plugin };

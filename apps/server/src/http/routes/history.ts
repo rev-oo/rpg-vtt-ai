@@ -4,7 +4,7 @@ import { ACTOR_LAYERS, actorLayerAccess, type ActorLayer } from '@vtt/shared';
 import type { ActorHistoryResponse } from '@vtt/shared/api';
 
 import { hasSecretLayer } from '../../domain/documents.js';
-import { requireWritableSystem } from '../../domain/entities.js';
+import { requireWritableTable } from '../../domain/entities.js';
 import { findSnapshot, listSnapshots } from '../../domain/history.js';
 import { forbidden, notFound } from '../../errors.js';
 import { restoreActorSnapshot } from '../../realtime/collab.js';
@@ -53,7 +53,7 @@ export function historyRoutes(context: AppContext): void {
     const snapshot = findSnapshot(db, id, snapshotId);
     // Another layer's snapshot does not exist for the caller.
     if (!snapshot || !layers.includes(snapshot.layer)) throw notFound('Snapshot not found.');
-    requireWritableSystem(db, table);
+    requireWritableTable(db, table);
     await restoreActorSnapshot(context, snapshot, now());
     return reply.code(204).send();
   });

@@ -175,6 +175,7 @@ describe('responses', () => {
       settings: {},
       playersMayCreateAnyActorType: false,
       systemAvailable: true,
+      archivedAt: null,
       createdAt: '2026-10-20T00:00:00.000Z',
       role: 'gm',
     };

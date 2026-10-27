@@ -71,6 +71,7 @@ export const TABLE = {
   settings: {},
   playersMayCreateAnyActorType: false,
   systemAvailable: true,
+  archivedAt: null,
   role: 'gm',
   createdAt: '2026-10-19T00:00:00.000Z',
 };
