@@ -60,3 +60,28 @@ export function listChatMessages(
     .limit(limit)
     .all();
 }
+
+/** A message by its id. */
+export function findChatMessage(db: DbOrTx, id: string): ChatMessageRow | undefined {
+  return db.select().from(chatMessages).where(eq(chatMessages.id, id)).get();
+}
+
+/** Replaces a message's text and marks it edited. */
+export function updateChatMessageText(
+  db: DbOrTx,
+  id: string,
+  text: string,
+  now: Date,
+): ChatMessageRow | undefined {
+  return db
+    .update(chatMessages)
+    .set({ text, editedAt: now })
+    .where(eq(chatMessages.id, id))
+    .returning()
+    .get();
+}
+
+/** Removes a message for good. */
+export function deleteChatMessage(db: DbOrTx, id: string): void {
+  db.delete(chatMessages).where(eq(chatMessages.id, id)).run();
+}

@@ -83,6 +83,20 @@ export const serverEventSchema = z.discriminatedUnion('type', [
     tableId: z.string(),
     payload: z.object({ message: chatMessageSchema }),
   }),
+  /** A message was edited; it reaches the message's audience (FR-CHAT-09, ADR-052). */
+  z.object({
+    ...serverBase,
+    type: z.literal('chat.updated'),
+    tableId: z.string(),
+    payload: z.object({ message: chatMessageSchema }),
+  }),
+  /** A message was deleted; it reaches the message's audience (FR-CHAT-09, ADR-052). */
+  z.object({
+    ...serverBase,
+    type: z.literal('chat.deleted'),
+    tableId: z.string(),
+    payload: z.object({ id: z.string() }),
+  }),
   /** The table's encounter changed; clients refetch it (FR-COMBAT-03, ADR-049). */
   z.object({
     ...serverBase,

@@ -149,8 +149,14 @@ export const chatMessageSchema = z.object({
   /** Set on `card` messages. */
   card: recipeCardSchema.nullable(),
   createdAt: z.string(),
+  /** When the author last edited it; `null` if never (FR-CHAT-09). */
+  editedAt: z.string().nullable(),
 });
 export type ChatMessage = z.infer<typeof chatMessageSchema>;
+
+/** `PATCH /messages/:id`: the author's new text (FR-CHAT-09). */
+export const chatEditBody = z.object({ text: z.string().trim().min(1).max(MAX_CHAT_TEXT) });
+export type ChatEditInput = z.input<typeof chatEditBody>;
 
 export const chatMessageResponseSchema = z.object({ message: chatMessageSchema });
 export const chatHistoryResponseSchema = z.object({

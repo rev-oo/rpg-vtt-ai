@@ -1,0 +1,1 @@
+ALTER TABLE `chat_messages` ADD `edited_at` integer;

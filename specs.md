@@ -18,14 +18,14 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 20%      |
+| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | In progress | 40%      |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M10
-- **Next task:** `T-0805`
+- **Next task:** `T-0806`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -43,6 +43,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | Q14 decided (ADR-049): encounters are rows refetched on `combat.updated`. T-0801 done: combat tracker with hidden combatants.                                                 |
 | 2026-10-27 | T-0802 done (ADR-050): initiative from `combat.json`, `desc`/`asc`/`sideBased` ordering, the `orderCombatants` and `onTurnStart` hooks. M9 done.                              |
 | 2026-10-27 | T-0803 done (ADR-051): compendium packs are validated, listed and imported once into a table.                                                                                 |
+| 2026-10-27 | T-0805 done (ADR-052): authors edit or delete their text messages for 5 minutes; GMs delete any message.                                                                      |
 
 ---
 
@@ -359,7 +360,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-CHAT-06 | Card messages render through a plugin-defined template. If the template is missing (plugin disabled), the message falls back to plain text.                        | MVP      | 0.1.0  |
 | FR-CHAT-07 | Chat history loads in pages of 50 with infinite scroll.                                                                                                            | MVP      | 0.1.0  |
 | FR-CHAT-08 | Users can type dice formulas directly (`/r 2d6+3`, `/gmr 1d20`). Supported only for system-agnostic dice grammar; plugin commands are v1.                          | MVP      | 0.1.0  |
-| FR-CHAT-09 | Messages can be edited or deleted by their author within 5 minutes; GMs can delete any message.                                                                    | v1       | M10    |
+| FR-CHAT-09 | Messages can be edited or deleted by their author within 5 minutes; GMs can delete any message.                                                                    | v1       | 0.2.0  |
 
 ### 7.6 Journal (`FR-JOURNAL`)
 
@@ -656,7 +657,7 @@ Key resource groups:
 | Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`                                          |
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                             |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                           |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`                                                                                                      |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                            |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                               |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                     |
 | Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026)                          |
@@ -667,7 +668,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `entity.changed`, `table.updated` (ADR-039), `combat.updated` (ADR-049), `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `chat.updated` and `chat.deleted` (ADR-052), `entity.changed`, `table.updated` (ADR-039), `combat.updated` (ADR-049), `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -787,11 +788,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
   - **Covers:** FR-PLUGIN-09
   - **Note:** done as ADR-051. Imported entries become the table's actors and library items; `pack_ref` makes re-import skip them. The Compendium section is on the table settings page.
 
-- [ ] **T-0805 · Chat message edit and delete**
+- [x] **T-0805 · Chat message edit and delete**
   - **Deps:** none
   - **Do:** Authors edit or delete their own text messages within 5 minutes; GMs delete any message. Roll and card messages cannot be edited. Changes go out as events to the same audience as the message.
   - **Done when:** allow and deny tests for each rule; an edit reaches other clients live; a deleted whisper is gone for its recipients too.
   - **Covers:** FR-CHAT-09
+  - **Note:** done as ADR-052. Deletes are permanent, after a confirm in the web. A message the caller cannot see answers 404.
 
 - [ ] **T-0806 · Sheet history snapshots**
   - **Deps:** none
@@ -954,6 +956,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted |
 | ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted |
 | ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted |
+| ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

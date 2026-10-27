@@ -249,6 +249,11 @@ export const api = {
   sendChat: async (tableId: string, input: ChatSendInput): Promise<ChatMessage> =>
     (await request('POST', `/tables/${tableId}/messages`, chatMessageResponseSchema, input))
       .message,
+  /** The author's new text (FR-CHAT-09). */
+  editChat: async (messageId: string, text: string): Promise<ChatMessage> =>
+    (await request('PATCH', `/messages/${messageId}`, chatMessageResponseSchema, { text })).message,
+  deleteChat: (messageId: string): Promise<void> =>
+    requestNoContent('DELETE', `/messages/${messageId}`),
   /** The system's compendium packs, for GMs and assistants (FR-PLUGIN-09). */
   listPacks: async (tableId: string): Promise<PackSummary[]> =>
     (await request('GET', `/tables/${tableId}/packs`, packsResponseSchema)).packs,

@@ -39,6 +39,24 @@ export function publishChatMessage(hub: EventHub, row: ChatMessageRow): void {
   );
 }
 
+/** An edited message goes to its audience, as the message did (FR-CHAT-09, ADR-052). */
+export function publishChatUpdated(hub: EventHub, row: ChatMessageRow): void {
+  hub.publish(
+    row.tableId,
+    { type: 'chat.updated', tableId: row.tableId, payload: { message: toChatMessage(row) } },
+    (subject) => canSeeAudience(subject, messageAudience(row)),
+  );
+}
+
+/** A deleted message's audience drops it, so a whisper goes for its recipients too. */
+export function publishChatDeleted(hub: EventHub, row: ChatMessageRow): void {
+  hub.publish(
+    row.tableId,
+    { type: 'chat.deleted', tableId: row.tableId, payload: { id: row.id } },
+    (subject) => canSeeAudience(subject, messageAudience(row)),
+  );
+}
+
 /**
  * Tells the members who can see an actor that it changed (FR-ENT-07). Pass the ownership it
  * had before an update, so members who just lost access also refresh.

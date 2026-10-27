@@ -33,6 +33,7 @@ function message(text: string, extra: Partial<ChatMessage> = {}): ChatMessage {
     rolls: [],
     card: null,
     createdAt: new Date(Date.UTC(2026, 9, 20, 12, 0, seq)).toISOString(),
+    editedAt: null,
     ...extra,
   };
 }
@@ -442,5 +443,82 @@ describe('live updates and history (FR-CHAT-07, §10.2)', () => {
     expect(
       await screen.findByText('Your session ended. Log in again to keep chatting.'),
     ).toBeVisible();
+  });
+});
+
+describe('editing and deleting messages (T-0805, FR-CHAT-09)', () => {
+  /** A message the viewer, Alice, sent just now. */
+  const mine = (text: string) =>
+    message(text, {
+      senderId: USER.id,
+      speaker: { name: 'Alice', actorId: null, imageUrl: null },
+      createdAt: new Date().toISOString(),
+    });
+
+  it('lets the author edit their recent text message', async () => {
+    const own = mine('helo');
+    const edited = { ...own, text: 'hello', editedAt: new Date().toISOString() };
+    const { calls } = openTable({
+      role: 'player',
+      history: page([own, message('old')]),
+      handlers: { [`PATCH /messages/${own.id}`]: { body: { message: edited } } },
+    });
+    const user = userEvent.setup();
+
+    const buttons = await screen.findAllByRole('button', { name: 'Edit message' });
+    // Only Alice's recent message; Bob's is not hers.
+    expect(buttons).toHaveLength(1);
+    await user.click(buttons[0] ?? log());
+    const box = within(log()).getByRole('textbox', { name: 'Edit message' });
+    await user.clear(box);
+    await user.type(box, 'hello');
+    await user.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => {
+      expect(texts()).toEqual(['old', 'hello']);
+    });
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ text: 'hello' });
+    expect(within(log()).getAllByRole('listitem')[1]).toHaveTextContent('(edited)');
+  });
+
+  it('lets a GM delete any message after confirming', async () => {
+    const old = message('rude');
+    const { calls } = openTable({
+      history: page([old]),
+      handlers: { [`DELETE /messages/${old.id}`]: { status: 204 } },
+    });
+    const user = userEvent.setup();
+
+    expect(await screen.findByText('rude')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit message' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Delete message' }));
+    await user.click(screen.getByRole('button', { name: 'Delete for everyone' }));
+    await waitFor(() => {
+      expect(texts()).toEqual([]);
+    });
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(true);
+  });
+
+  it('shows others’ edits and deletes live', async () => {
+    const first = message('first');
+    const second = message('second');
+    const { sockets } = openTable({ role: 'player', history: page([first, second]) });
+    const socket = await connected(sockets);
+
+    socket.receive(
+      serverEvent({
+        type: 'chat.updated',
+        tableId: 't1',
+        payload: { message: { ...first, text: 'first!', editedAt: new Date().toISOString() } },
+      }),
+    );
+    socket.receive(
+      serverEvent({ type: 'chat.deleted', tableId: 't1', payload: { id: second.id } }),
+    );
+    await waitFor(() => {
+      expect(texts()).toEqual(['first!']);
+    });
+    // Players may not change others' messages.
+    expect(screen.queryByRole('button', { name: 'Delete message' })).not.toBeInTheDocument();
   });
 });

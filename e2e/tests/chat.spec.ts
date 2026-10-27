@@ -73,5 +73,28 @@ test('chat audiences between a GM and two players', async ({ browser }) => {
     await expect(log(gmPage)).not.toContainText('Psst, Carol');
   });
 
+  // T-0805 (FR-CHAT-09): edits and deletes reach the message's audience live.
+  const item = (page: Page, text: string) =>
+    log(page).getByRole('listitem').filter({ hasText: text });
+
+  await test.step('an edit reaches the others live', async () => {
+    await item(bobPage, 'Last call').getByRole('button', { name: 'Edit message' }).click();
+    await item(bobPage, 'Last call').getByRole('textbox').fill('Last call, really');
+    await bobPage.getByRole('button', { name: 'Save' }).click();
+    for (const page of [gmPage, carolPage]) {
+      await expect(item(page, 'Last call, really')).toContainText('(edited)');
+    }
+  });
+
+  await test.step('a deleted whisper is gone for its recipient too', async () => {
+    await item(bobPage, 'Psst, Carol').getByRole('button', { name: 'Delete message' }).click();
+    await bobPage.getByRole('button', { name: 'Delete for everyone' }).click();
+    await expect(log(bobPage)).not.toContainText('Psst, Carol');
+    await expect(log(carolPage)).not.toContainText('Psst, Carol');
+    await carolPage.reload();
+    await expect(log(carolPage)).toContainText('Last call, really');
+    await expect(log(carolPage)).not.toContainText('Psst, Carol');
+  });
+
   for (const who of [gm, bob, carol]) await who.context.close();
 });

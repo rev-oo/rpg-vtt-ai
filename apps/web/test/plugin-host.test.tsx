@@ -157,6 +157,7 @@ const CARD_MESSAGE: ChatMessage = {
     },
   },
   createdAt: '2026-10-20T12:00:00.000Z',
+  editedAt: null,
 };
 
 function openTable(
