@@ -65,6 +65,26 @@ export const rollRequestBody = z
   .refine(hasRecipients, whisperRule);
 export type RollRequestInput = z.input<typeof rollRequestBody>;
 
+/** Slash commands the chat handles itself; plugins cannot declare them (FR-CHAT-08). */
+export const BUILT_IN_COMMANDS = ['r', 'gmr'] as const;
+
+/** A slash command's name, as typed after the `/`. */
+export const COMMAND_NAME = /^[a-z][a-z0-9_-]{0,31}$/;
+
+/**
+ * `POST /tables/:id/commands`: a slash command of the table's system (FR-PLUGIN-10, ADR-048).
+ * `args` is the text after the name; the plugin's server code reads it. The audience and
+ * speaker work as for rolls.
+ */
+export const commandRequestBody = z
+  .object({
+    name: z.string().regex(COMMAND_NAME),
+    args: z.string().trim().max(MAX_CHAT_TEXT).default(''),
+    ...messageTarget,
+  })
+  .refine(hasRecipients, whisperRule);
+export type CommandRequestInput = z.input<typeof commandRequestBody>;
+
 /** One row of a resolved chat card (specs §8.11). */
 export const cardRowSchema = z.object({
   label: z.string(),

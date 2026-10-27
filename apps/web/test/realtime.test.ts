@@ -30,7 +30,9 @@ describe('chat commands (FR-CHAT-08)', () => {
     ['/gmr 1d20', { kind: 'roll', formula: '1d20', audience: 'gm' }],
     ['/r', { kind: 'usage', command: '/r' }],
     ['/GMR', { kind: 'usage', command: '/gmr' }],
-    ['/toString 1', { kind: 'unknown', command: '/toString' }],
+    ['/Check str  dex', { kind: 'command', name: 'check', args: 'str dex' }],
+    ['/toString', { kind: 'command', name: 'tostring', args: '' }],
+    ['/da.nce', { kind: 'unknown', command: '/da.nce' }],
     ['/ hi', { kind: 'unknown', command: '/' }],
   ])('%j', (input, expected) => {
     expect(parseChatInput(input)).toEqual(expected);

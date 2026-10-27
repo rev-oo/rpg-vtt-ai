@@ -181,9 +181,43 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     const file = path.join(temp, `${id}.vttplugin`);
     expect((await run('pack', dir, '--out', file)).code).toBe(0);
     const files = readZip(await readFile(file), ARCHIVE_LIMITS);
-    // tiny-d20 ships its compiled hpBar node; tiny-pool has no code at all (T-0411, T-0412).
+    // tiny-d20 ships its hpBar node and /check command; tiny-pool has no code (T-0411, T-0412).
     expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual(
-      id === 'tiny-d20' ? ['code/client.js'] : [],
+      id === 'tiny-d20' ? ['code/client.js', 'code/server.js'] : [],
+    );
+  });
+
+  it('packs tiny-d20’s /check command into code that runs on its own (T-0804)', async () => {
+    const file = path.join(temp, 'tiny-d20.vttplugin');
+    expect((await run('pack', path.join(REPO, 'plugins', 'tiny-d20'), '--out', file)).code).toBe(0);
+    const server = path.join(temp, 'server.mjs');
+    await writeFile(
+      server,
+      readZip(await readFile(file), ARCHIVE_LIMITS).get('code/server.js') ?? '',
+    );
+    const { default: definition } = (await import(server)) as {
+      default: { commands: Record<string, (input: unknown) => Promise<void>> };
+    };
+    const posts: unknown[] = [];
+    const ctx = {
+      roll: (formula: string) => Promise.resolve({ formula, total: 12, ref: 1 }),
+      chat: { post: (post: unknown) => Promise.resolve(void posts.push(post)) },
+      fail: (message: string) => {
+        throw new Error(message);
+      },
+    };
+    const check = definition.commands.check;
+    if (!check) throw new Error('no /check');
+    await check({ ctx, actor: { name: 'Ayla' }, args: ' DEX ' });
+    expect(posts).toEqual([
+      {
+        text: 'Ayla: Dexterity check',
+        rolls: [{ formula: '1d20 + @derived.dexMod', total: 12, ref: 1 }],
+      },
+    ]);
+    await expect(check({ ctx, actor: null, args: 'str' })).rejects.toThrow('Speak as a character');
+    await expect(check({ ctx, actor: { name: 'Ayla' }, args: 'wis' })).rejects.toThrow(
+      'Use /check str or /check dex.',
     );
   });
 

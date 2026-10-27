@@ -122,7 +122,7 @@ describe('plugin code runtime (T-0809, ADR-047)', () => {
       if (method === 'get') return Promise.reject(new Error('no such actor'));
       return Promise.resolve(undefined);
     };
-    await code?.handle('attack', { actor: { name: 'Ana' }, args: { bonus: 3 } }, host);
+    await code?.handle('handler', 'attack', { actor: { name: 'Ana' }, args: { bonus: 3 } }, host);
     expect(calls).toEqual([
       ['roll', ['1d20 + 3']],
       ['post', [{ text: 'Ana attacks', rolls: [{ total: 17, ref: 1 }] }]],
@@ -136,15 +136,17 @@ describe('plugin code runtime (T-0809, ADR-047)', () => {
     const entries = await plugin('srv', { 'code/server.js': SERVER });
     const code = await runtime.load('srv', entries);
     const host: HandlerHost = () => Promise.reject(new Error('no such actor'));
-    await expect(code?.handle('broken', {}, host)).rejects.toMatchObject({
+    await expect(code?.handle('handler', 'broken', {}, host)).rejects.toMatchObject({
       code: 'handler_failed',
       message: 'the handler broke',
     });
-    await expect(code?.handle('asksBadly', {}, host)).rejects.toMatchObject({
+    await expect(code?.handle('handler', 'asksBadly', {}, host)).rejects.toMatchObject({
       code: 'handler_failed',
       message: 'no such actor',
     });
-    await expect(code?.handle('nothing', {}, host)).rejects.toBeInstanceOf(PluginCodeError);
+    await expect(code?.handle('handler', 'nothing', {}, host)).rejects.toBeInstanceOf(
+      PluginCodeError,
+    );
   });
 
   it('refuses code whose default export has the wrong shape', async () => {
@@ -222,6 +224,17 @@ const CODED = {
       await ctx.chat.post({ rolls: [{ ref: 1, total: 999 }] });
     },
   },
+  commands: {
+    greet: async ({ ctx, actor, args }) => {
+      if (args === '') ctx.fail('Use /greet <name>.');
+      await ctx.chat.post({ text: (actor ? actor.name : 'someone') + ' greets ' + args });
+    },
+    dice: async ({ ctx }) => {
+      const result = await ctx.roll('1d1 + twice(2)');
+      await ctx.chat.post({ rolls: [result] });
+    },
+    r: async ({ ctx }) => { await ctx.chat.post({ text: 'not the built-in' }); },
+  },
 };
 `,
 };
@@ -230,6 +243,7 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
   let app: TestApp;
   let gm: Client;
   let bob: { client: Client; userId: string };
+  let carol: { client: Client; userId: string };
   let tableId = '';
   let heroId = '';
 
@@ -256,6 +270,8 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
     tableId = (await createTable(app.app, gm, { systemId: 'coded' })).id;
     bob = await createUserClient(app.app, gm, 'bob');
     app.db.insert(members).values({ tableId, userId: bob.userId, role: 'player' }).run();
+    carol = await createUserClient(app.app, gm, 'carol');
+    app.db.insert(members).values({ tableId, userId: carol.userId, role: 'player' }).run();
     const res = await call(bob.client, 'POST', `/tables/${tableId}/actors`, {
       type: 'hero',
       name: 'Bo',
@@ -284,10 +300,12 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
       actorId: heroId,
       recipe: { name, args },
     });
-  const history = async () =>
-    (await call(bob.client, 'GET', `/tables/${tableId}/messages`)).json<{
+  const history = async (client = bob.client) =>
+    (await call(client, 'GET', `/tables/${tableId}/messages`)).json<{
       messages: ChatMessage[];
     }>().messages;
+  const command = (name: string, args: string, target: Record<string, unknown> = {}) =>
+    call(bob.client, 'POST', `/tables/${tableId}/commands`, { name, args, ...target });
 
   it('rolls formulas and derived values with shared functions', async () => {
     const res = await recipe('check');
@@ -349,5 +367,61 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
     const res = await recipe('hang');
     expect(res.json<{ error: { code: string } }>().error.code).toBe('handler_timeout');
     expect((await recipe('strike', { bonus: 0 })).statusCode).toBe(201);
+  });
+
+  describe('slash commands (T-0804, ADR-048)', () => {
+    it('posts as the caller and their actor', async () => {
+      const res = await command('greet', 'the table', { actorId: heroId });
+      expect(res.statusCode).toBe(201);
+      expect(res.json<{ message: ChatMessage }>().message).toMatchObject({
+        kind: 'text',
+        text: 'Bo greets the table',
+        senderId: bob.userId,
+        speaker: { name: 'Bo', actorId: heroId },
+      });
+      const plain = await command('greet', 'everyone');
+      expect(plain.json<{ message: ChatMessage }>().message).toMatchObject({
+        text: 'someone greets everyone',
+        speaker: { name: 'bob', actorId: null },
+      });
+    });
+
+    it('rolls without an actor, with the shared functions', async () => {
+      const res = await command('dice', '');
+      expect(res.json<{ message: ChatMessage }>().message).toMatchObject({
+        kind: 'roll',
+        rolls: [{ total: 5 }],
+      });
+    });
+
+    it('keeps whispered and GM-only results to their audience', async () => {
+      await command('greet', 'quietly', { audience: 'whisper', recipientIds: [carol.userId] });
+      await command('greet', 'in secret', { audience: 'gm' });
+      const texts = async (client: Client) => (await history(client)).map((m) => m.text);
+      expect(await texts(bob.client)).toEqual([
+        'someone greets in secret',
+        'someone greets quietly',
+      ]);
+      expect(await texts(carol.client)).toEqual(['someone greets quietly']);
+      expect(await texts(gm)).toEqual(['someone greets in secret']);
+    });
+
+    it('shows the caller what ctx.fail says', async () => {
+      const res = await command('greet', '');
+      expect(res.statusCode).toBe(422);
+      expect(res.json<{ error: { code: string; message: string } }>().error).toEqual({
+        code: 'handler_failed',
+        message: 'Use /greet <name>.',
+      });
+    });
+
+    it('answers unknown_command for names the system lacks or that are built in', async () => {
+      for (const name of ['nope', 'r']) {
+        const res = await command(name, 'x');
+        expect(res.statusCode).toBe(422);
+        expect(res.json<{ error: { code: string } }>().error.code).toBe('unknown_command');
+      }
+      expect(await history()).toEqual([]);
+    });
   });
 });

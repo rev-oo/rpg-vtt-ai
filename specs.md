@@ -16,7 +16,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ID    | Milestone                                                                                                                        | Release | Status      | Progress |
 | ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
-| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | In progress | 50%      |
+| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Not started | 0%       |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Not started | 0%       |
 | M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Not started | 0%       |
@@ -24,8 +24,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M8
-- **Next task:** `T-0804` (slash commands and server hooks)
+- **Active milestone:** M9
+- **Next task:** `T-0801` (needs Q14, the combat model, decided first)
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -39,6 +39,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.                                                                                            |
 | 2026-10-27 | §8 shortened to the design and planned parts; the format is documented in the authoring guide and the generated reference (ADR-045). §8.14 added for `combat.json` and packs. |
 | 2026-10-27 | Q13 decided (ADR-047): plugin shared and server code run in a worker thread per plugin. T-0809 done: shared functions in formulas on both sides, handler recipes with `ctx`.  |
+| 2026-10-27 | T-0804 done (ADR-048): plugin slash commands, with `ctx.fail`; calling server hooks moves to T-0802. M8 done.                                                                 |
 
 ---
 
@@ -378,18 +379,18 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                | Priority | Status                         |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------ |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed. | MVP      | 0.1.0                          |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path. | MVP      | 0.1.0                          |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                  | MVP      | 0.1.0                          |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                             | MVP      | 0.1.0                          |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                    | MVP      | 0.1.0                          |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.    | MVP      | 0.1.0                          |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.             | MVP      | 0.1.0                          |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                       | MVP      | 0.1.0 (`code/client` only); M8 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       | M10                            |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                           | v1       | M8                             |
+| ID           | Requirement                                                                                                                | Priority | Status                       |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed. | MVP      | 0.1.0                        |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path. | MVP      | 0.1.0                        |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                  | MVP      | 0.1.0                        |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                             | MVP      | 0.1.0                        |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                    | MVP      | 0.1.0                        |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.    | MVP      | 0.1.0                        |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.             | MVP      | 0.1.0                        |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                       | MVP      | 0.1.0 (`code/client`); 0.2.0 |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       | M10                          |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                           | v1       | 0.2.0                        |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -746,11 +747,12 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
     - §8.7, §8.10 and `docs/plugin-authoring.md` describe the new entries, and the tutorial test still passes.
   - **Covers:** FR-PLUGIN-08, §8.7, §8.10
 
-- [ ] **T-0804 · Plugin slash commands and server hooks**
+- [x] **T-0804 · Plugin slash commands and server hooks**
   - **Deps:** T-0809
   - **Do:** Plugins declare slash commands in `code/server` (`/name args`), handled on the server for the table's system. Unknown commands answer with an error, as built-in ones do.
   - **Done when:** a reference plugin's command posts a message for its caller; audience rules hold (whispered and GM-only results stay filtered); e2e covers one command.
   - **Covers:** FR-PLUGIN-10
+  - **Note:** done as ADR-048 (`tiny-d20`'s `/check`). Server hooks are declared but called by combat, so calling them moves to T-0802.
 
 ### M9 — Combat (0.2.0)
 
@@ -942,6 +944,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted |
 | ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted |
 | ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted |
+| ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

@@ -6,17 +6,18 @@ import { MessageChannel, receiveMessageOnPort, Worker } from 'node:worker_thread
 import type { FastifyBaseLogger } from 'fastify';
 
 import type { FormulaFunction } from '@vtt/formula';
+import { BUILT_IN_COMMANDS, COMMAND_NAME } from '@vtt/shared/api';
 
 // Runs plugin `code/shared` and `code/server` in a worker thread per plugin (ADR-047, Q13).
 //
-// Messages, main → worker: `handle` (run a handler), `ctx-reply` (answer to a ctx call).
+// Messages, main → worker: `handle` (run a handler or command), `ctx-reply` (answer to a ctx call).
 // Worker → main: `ready` / `failed` (after loading), `ctx` (a ctx call), `handled`, `log`.
 // Shared functions are called synchronously over `syncPort`: the main thread posts the call and
 // waits on a shared flag, which the worker sets once its answer is on the port.
 
 /** How long a shared function may run before its worker is stopped. */
 export const FUNCTION_TIME_LIMIT_MS = 100;
-/** How long a handler may run in total, `ctx` calls included. */
+/** How long a handler or command may run in total, `ctx` calls included. */
 export const HANDLER_TIME_LIMIT_MS = 5000;
 const STARTUP_TIME_LIMIT_MS = 5000;
 const HEAP_LIMIT_MB = 64;
@@ -27,11 +28,16 @@ export class PluginCodeError extends Error {
   constructor(
     readonly code: CodeErrorCode,
     message: string,
+    /** The plugin failed on purpose with `ctx.fail`, so the caller may see `message`. */
+    readonly shown = false,
   ) {
     super(message);
     this.name = 'PluginCodeError';
   }
 }
+
+/** Server code a member can run: a recipe's handler or a slash command (ADR-048). */
+export type CodeKind = 'handler' | 'command';
 
 /** What a handler's `ctx` calls do, answered on the main thread for the roll's sender. */
 export type HandlerHost = (method: string, args: readonly unknown[]) => Promise<unknown>;
@@ -39,26 +45,39 @@ export type HandlerHost = (method: string, args: readonly unknown[]) => Promise<
 export interface LoadedCode {
   readonly functions: Readonly<Record<string, FormulaFunction>>;
   readonly handlers: readonly string[];
-  /** Runs a handler; rejects with `PluginCodeError` when it fails or takes too long. */
-  handle(name: string, input: Readonly<Record<string, unknown>>, host: HandlerHost): Promise<void>;
+  /** Slash commands with valid names that are not built in (ADR-048). */
+  readonly commands: readonly string[];
+  /** Runs a handler or command; rejects with `PluginCodeError` when it fails or takes too long. */
+  handle(
+    kind: CodeKind,
+    name: string,
+    input: Readonly<Record<string, unknown>>,
+    host: HandlerHost,
+  ): Promise<void>;
 }
 
 interface Ready {
   functions: string[];
   handlers: string[];
+  commands: string[];
 }
 
 type WorkerMessage =
-  | { type: 'ready'; functions: string[]; handlers: string[]; hooks: string[] }
+  | { type: 'ready'; functions: string[]; handlers: string[]; commands: string[]; hooks: string[] }
   | { type: 'failed'; error: string }
   | { type: 'ctx'; call: number; seq: number; method: string; args: unknown[] }
-  | { type: 'handled'; call: number; ok: boolean; error?: string }
+  | { type: 'handled'; call: number; ok: boolean; error?: string; shown?: boolean }
   | { type: 'log'; text: string; data: unknown };
 
 /** The worker's source next to this file: built `.js`, or `.ts` when tests run the sources. */
 function workerUrl(): URL {
   const built = new URL('./code-worker.js', import.meta.url);
   return existsSync(built) ? built : new URL('./code-worker.ts', import.meta.url);
+}
+
+/** `items` split into those that pass `test` and those that do not. */
+function partition<T>(items: readonly T[], test: (item: T) => boolean): [T[], T[]] {
+  return [items.filter(test), items.filter((item) => !test(item))];
 }
 
 const errorText = (error: unknown): string =>
@@ -68,6 +87,7 @@ const errorText = (error: unknown): string =>
 class PluginWorker implements LoadedCode {
   readonly functions: Readonly<Record<string, FormulaFunction>>;
   readonly handlers: readonly string[];
+  readonly commands: readonly string[];
   #calls = 0;
   readonly #running = new Map<
     number,
@@ -83,6 +103,15 @@ class PluginWorker implements LoadedCode {
   ) {
     this.functions = Object.fromEntries(ready.functions.map((name) => [name, this.#call(name)]));
     this.handlers = ready.handlers;
+    const builtIn: readonly string[] = BUILT_IN_COMMANDS;
+    const [commands, refused] = partition(
+      ready.commands,
+      (name) => COMMAND_NAME.test(name) && !builtIn.includes(name),
+    );
+    if (refused.length > 0) {
+      logger.warn({ commands: refused }, 'plugin commands ignored: invalid or built-in names');
+    }
+    this.commands = commands;
     worker.on('message', (message: WorkerMessage) => {
       this.#receive(message);
     });
@@ -106,12 +135,17 @@ class PluginWorker implements LoadedCode {
     };
   }
 
-  handle(name: string, input: Readonly<Record<string, unknown>>, host: HandlerHost): Promise<void> {
+  handle(
+    kind: CodeKind,
+    name: string,
+    input: Readonly<Record<string, unknown>>,
+    host: HandlerHost,
+  ): Promise<void> {
     this.#calls += 1;
     const call = this.#calls;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
-        this.stop(`the handler "${name}" took longer than ${String(HANDLER_TIME_LIMIT_MS)} ms`);
+        this.stop(`the ${kind} "${name}" took longer than ${String(HANDLER_TIME_LIMIT_MS)} ms`);
       }, HANDLER_TIME_LIMIT_MS);
       const settle = () => {
         clearTimeout(timer);
@@ -128,7 +162,7 @@ class PluginWorker implements LoadedCode {
         },
         host,
       });
-      this.worker.postMessage({ type: 'handle', call, name, input });
+      this.worker.postMessage({ type: 'handle', call, kind, name, input });
     });
   }
 
@@ -149,7 +183,10 @@ class PluginWorker implements LoadedCode {
       case 'handled': {
         const running = this.#running.get(message.call);
         if (message.ok) running?.resolve();
-        else running?.reject(new PluginCodeError('handler_failed', message.error ?? 'failed'));
+        else {
+          const error = message.error ?? 'failed';
+          running?.reject(new PluginCodeError('handler_failed', error, message.shown === true));
+        }
         return;
       }
       case 'ctx': {
@@ -286,7 +323,7 @@ export class PluginCodeRuntime {
           return;
         }
         log.info(
-          { functions: message.functions, handlers: message.handlers },
+          { functions: message.functions, handlers: message.handlers, commands: message.commands },
           'plugin code loaded',
         );
         loaded = new PluginWorker(worker, { port: channel.port1, flag }, message, stop, log);
