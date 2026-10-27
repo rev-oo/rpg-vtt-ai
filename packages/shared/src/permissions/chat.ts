@@ -34,3 +34,36 @@ export function canSeeAudience(subject: Subject, message: MessageAudience): bool
       return isGmLike(subject.role);
   }
 }
+
+/** How long authors may edit or delete their messages (FR-CHAT-09). */
+export const CHAT_EDIT_WINDOW_MS = 5 * 60 * 1000;
+
+/** What decides who may change a message: its author, its kind and when it was sent. */
+export interface MessageAuthorship {
+  senderId: string | null;
+  /** Only `text` messages are the author's words; rolls and cards come from the server. */
+  kind: string;
+  /** Unix milliseconds. */
+  sentAt: number;
+}
+
+/** Authors edit their own text messages for 5 minutes (FR-CHAT-09, ADR-052). */
+export function canEditMessage(subject: Subject, message: MessageAuthorship, now: number): boolean {
+  return (
+    message.kind === 'text' &&
+    message.senderId === subject.userId &&
+    now - message.sentAt < CHAT_EDIT_WINDOW_MS
+  );
+}
+
+/**
+ * Authors delete what they may edit; GMs and assistants delete any message they can see
+ * (FR-CHAT-09, ADR-052).
+ */
+export function canDeleteMessage(
+  subject: Subject,
+  message: MessageAuthorship,
+  now: number,
+): boolean {
+  return isGmLike(subject.role) || canEditMessage(subject, message, now);
+}

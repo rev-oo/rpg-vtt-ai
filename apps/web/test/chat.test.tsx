@@ -33,6 +33,7 @@ function message(text: string, extra: Partial<ChatMessage> = {}): ChatMessage {
     rolls: [],
     card: null,
     createdAt: new Date(Date.UTC(2026, 9, 20, 12, 0, seq)).toISOString(),
+    editedAt: null,
     ...extra,
   };
 }

@@ -52,6 +52,7 @@ describe('mergeMessages', () => {
     rolls: [],
     card: null,
     createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, second)).toISOString(),
+    editedAt: null,
   });
 
   it('skips duplicates and keeps time order, ties in arrival order', () => {

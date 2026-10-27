@@ -1,18 +1,29 @@
 import { eq } from 'drizzle-orm';
 import type { z } from 'zod';
 
-import { canSendChat, type MessageAudience, type Subject, type TableRole } from '@vtt/shared';
+import {
+  canDeleteMessage,
+  canEditMessage,
+  canSeeAudience,
+  canSendChat,
+  type MessageAudience,
+  type MessageAuthorship,
+  type Subject,
+  type TableRole,
+} from '@vtt/shared';
 import type { ChatMessage, chatSendBody, Speaker } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
 import {
   createChatMessage,
+  deleteChatMessage,
   findActor,
+  updateChatMessageText,
   type Actor,
   type ChatMessageRow,
 } from '../db/repositories/index.js';
 import { members, users } from '../db/schema.js';
-import { badRequest, forbidden, unprocessable } from '../errors.js';
+import { badRequest, forbidden, notFound, unprocessable } from '../errors.js';
 
 import { actorAccess } from './entities.js';
 
@@ -31,6 +42,7 @@ export function toChatMessage(row: ChatMessageRow): ChatMessage {
     rolls: row.rolls,
     card: row.card ?? null,
     createdAt: row.createdAt.toISOString(),
+    editedAt: row.editedAt?.toISOString() ?? null,
   };
 }
 
@@ -138,4 +150,46 @@ function whisperRecipients(
     throw unprocessable('invalid_recipient', 'Whisper recipients must be other table members.');
   }
   return recipients;
+}
+
+/** Who may change a message, as the shared rules read it (FR-CHAT-09). */
+export const authorshipOf = (row: ChatMessageRow): MessageAuthorship => ({
+  senderId: row.senderId,
+  kind: row.kind,
+  sentAt: row.createdAt.getTime(),
+});
+
+/**
+ * Throws 404 unless the member may see the message, for editing or deleting it (ADR-052):
+ * others' whispers and, for players, GM-only messages answer as if they did not exist.
+ */
+export function requireVisibleMessage(subject: Subject, row: ChatMessageRow): void {
+  if (!canSeeAudience(subject, messageAudience(row))) throw notFound('Message not found.');
+}
+
+/** The author's new text, within 5 minutes of sending a text message (FR-CHAT-09). */
+export function editChatMessage(
+  db: DbOrTx,
+  subject: Subject,
+  row: ChatMessageRow,
+  text: string,
+  now: Date,
+): ChatMessageRow {
+  if (!canEditMessage(subject, authorshipOf(row), now.getTime())) {
+    throw forbidden('Only the author can edit a text message, within 5 minutes.');
+  }
+  return updateChatMessageText(db, row.id, text, now) ?? row;
+}
+
+/** Deletes a message: the author's within 5 minutes, or any by a GM or assistant. */
+export function removeChatMessage(
+  db: DbOrTx,
+  subject: Subject,
+  row: ChatMessageRow,
+  now: Date,
+): void {
+  if (!canDeleteMessage(subject, authorshipOf(row), now.getTime())) {
+    throw forbidden('Only the author, within 5 minutes, or a GM can delete this message.');
+  }
+  deleteChatMessage(db, row.id);
 }

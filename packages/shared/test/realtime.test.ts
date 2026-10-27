@@ -161,6 +161,7 @@ describe('events protocol (§10.2)', () => {
       rolls: [],
       card: null,
       createdAt: '2026-10-20T00:00:00.000Z',
+      editedAt: null,
     };
     for (const event of [
       { v: 1, id: 'e1', type: 'ack', payload: { replyTo: 'a1' } },
@@ -183,6 +184,14 @@ describe('events protocol (§10.2)', () => {
         payload: { kind: 'item', id: 'i1', change: 'restored', actorId: 'a1' },
       },
       { v: 1, id: 'e4', type: 'chat.message', tableId: TABLE, payload: { message } },
+      {
+        v: 1,
+        id: 'e5',
+        type: 'chat.updated',
+        tableId: TABLE,
+        payload: { message: { ...message, editedAt: '2026-10-20T00:01:00.000Z' } },
+      },
+      { v: 1, id: 'e6', type: 'chat.deleted', tableId: TABLE, payload: { id: 'm1' } },
     ]) {
       expect(serverEventSchema.safeParse(event).success).toBe(true);
     }

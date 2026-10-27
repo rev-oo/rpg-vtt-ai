@@ -328,6 +328,8 @@ export const chatMessages = sqliteTable(
     /** What a recipe roll resolved, on `card` messages (FR-CHAT-06, ADR-025). */
     card: text('card', { mode: 'json' }).$type<RecipeCard>(),
     createdAt: createdAt(),
+    /** Set when the author edits the text (FR-CHAT-09). */
+    editedAt: timestamp('edited_at'),
   },
   (t) => [index('chat_messages_history_idx').on(t.tableId, t.seq)],
 );

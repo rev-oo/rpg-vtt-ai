@@ -41,6 +41,7 @@ export interface TableSetup extends TestApp {
     payload?: Record<string, unknown>,
   ) => Promise<LightMyRequestResponse>;
   advanceDays: (days: number) => void;
+  advanceMs: (ms: number) => void;
 }
 
 /**
@@ -94,6 +95,9 @@ export async function setupTable({ rng }: { rng?: Rng } = {}): Promise<TableSetu
     call,
     advanceDays: (days: number) => {
       clock = new Date(clock.getTime() + days * DAY_MS);
+    },
+    advanceMs: (ms: number) => {
+      clock = new Date(clock.getTime() + ms);
     },
   };
 }
