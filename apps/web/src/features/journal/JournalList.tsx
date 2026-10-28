@@ -8,7 +8,8 @@ import { Alert, Button } from '@vtt/ui';
 import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
-import { EntityFilters } from '../entities/EntityFilters.js';
+import type { EntityFilters } from '../entities/filters.js';
+import { ListFilters } from '../entities/ListFilters.js';
 import { LoadMore } from '../entities/LoadMore.js';
 import { OwnershipDialog } from '../entities/OwnershipDialog.js';
 import { usePagedList } from '../entities/paging.js';
@@ -23,7 +24,8 @@ export interface JournalListProps {
   /** The page after the loader's, if any (ADR-057). */
   nextCursor: string | null;
   fetchPage: (cursor: string) => Promise<ListPage<JournalEntryView>>;
-  trash: boolean;
+  filters: EntityFilters;
+  onFilters: (filters: EntityFilters) => void;
   error: string | null;
 }
 
@@ -36,9 +38,11 @@ export function JournalList({
   entries: firstPage,
   nextCursor,
   fetchPage,
-  trash,
+  filters,
+  onFilters,
   error,
 }: JournalListProps): ReactElement {
+  const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
   const entries = paged.rows;
   const { table, members } = data;
@@ -65,7 +69,7 @@ export function JournalList({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex-1">
-          <EntityFilters searchLabel={t('journal.search')} />
+          <ListFilters searchLabel={t('journal.search')} value={filters} onChange={onFilters} />
         </div>
         {canCreateJournal(table.role) && (
           <Button

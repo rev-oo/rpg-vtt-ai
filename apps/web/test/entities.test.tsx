@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { setCsrfToken } from '../src/api/client.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
+import { findAlert } from './support/alerts.js';
 import { fakeApi, SESSION, TABLE, USER, type FakeResponse } from './support/fake-api.js';
 import { fakeWebSocket, serverEvent } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
@@ -98,7 +99,7 @@ describe('actor list (FR-ENT-01..04)', () => {
     expect(row('Bob the Brave').getByRole('button', { name: 'Ownership' })).toBeInTheDocument();
   });
 
-  it('filters by search, type and trash through the URL', async () => {
+  it('filters by search, type and trash, kept with the panel (ADR-059)', async () => {
     const { calls } = openTable('/tables/t1', {
       handlers: {
         'GET /tables/t1/actors?search=gob&trash=live&limit=50': {
@@ -123,11 +124,14 @@ describe('actor list (FR-ENT-01..04)', () => {
     expect(calls.map((c) => c.path)).toContain(
       '/tables/t1/actors?search=gob&type=npc&trash=restorable&limit=50',
     );
-    expect(screen.getByTestId('location')).toHaveTextContent('/tables/t1?q=gob&type=npc&trash=1');
+    const saved: unknown = JSON.parse(localStorage.getItem(`vtt:dock:${USER.id}:t1:desktop`) ?? '');
+    expect(saved).toMatchObject({
+      panels: { actors: { params: { filters: { search: 'gob', type: 'npc', trash: true } } } },
+    });
   });
 
   it('restores from the trash', async () => {
-    const { calls } = openTable('/tables/t1?trash=1', {
+    const { calls } = openTable('/tables/t1', {
       handlers: {
         'GET /tables/t1/actors?trash=restorable&limit=50': {
           body: { nextCursor: null, actors: [{ ...HERO, deletedAt: '2026-10-19T00:00:00.000Z' }] },
@@ -136,6 +140,7 @@ describe('actor list (FR-ENT-01..04)', () => {
       },
     });
     const user = userEvent.setup();
+    await user.click(await screen.findByLabelText('Show trash'));
     await user.click(await screen.findByRole('button', { name: 'Restore' }));
     expect(await screen.findByText('Goblin King was restored.')).toBeVisible();
     expect(calls.some((c) => c.method === 'POST' && c.path === '/actors/a1/restore')).toBe(true);
@@ -357,7 +362,7 @@ describe('item library (FR-ENT-05, 06)', () => {
   });
 
   it('deletes and restores library items', async () => {
-    const { calls } = openTable('/tables/t1/items?trash=1', {
+    const { calls } = openTable('/tables/t1/items', {
       handlers: {
         'GET /tables/t1/items?trash=restorable&limit=50': {
           body: { nextCursor: null, items: [SWORD] },
@@ -366,6 +371,7 @@ describe('item library (FR-ENT-05, 06)', () => {
       },
     });
     const user = userEvent.setup();
+    await user.click(await screen.findByLabelText('Show trash'));
     await user.click(await screen.findByRole('button', { name: 'Restore' }));
     expect(await screen.findByText('Sword was restored.')).toBeVisible();
     expect(calls.some((c) => c.path === '/items/i1/restore')).toBe(true);
@@ -379,7 +385,7 @@ describe('item library (FR-ENT-05, 06)', () => {
     });
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Delete' }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('No.');
+    expect(await findAlert()).toHaveTextContent('No.');
   });
 });
 

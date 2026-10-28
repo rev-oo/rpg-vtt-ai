@@ -1,5 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState, type ReactElement } from 'react';
-import { Link, useParams } from 'react-router';
+import { lazy, Suspense, useCallback, useId, useMemo, useState, type ReactElement } from 'react';
 
 import type { Value } from '@vtt/formula';
 import { documentLayout } from '@vtt/plugin-engine';
@@ -8,17 +7,18 @@ import type { ActorView, RollRequestInput, TableView } from '@vtt/shared/api';
 import type { RichTextProps } from '@vtt/sheet-renderer';
 import { Alert } from '@vtt/ui';
 
-import { api } from '../api/endpoints.js';
-import { errorMessage } from '../api/errors.js';
-import { useSheetPresence } from '../collab/presence.js';
-import { useLiveSheet } from '../collab/use-live-sheet.js';
-import { SheetHistory } from '../features/entities/SheetHistory.js';
-import { useTableData } from '../features/table/table-data.js';
-import { t } from '../i18n/index.js';
-import { entityType } from '../plugin-host/entity-type.js';
-import { PluginSheet } from '../plugin-host/PluginSheet.js';
-import { useSystem, type TableSystem } from '../plugin-host/system-context.js';
-import { useSession } from '../shell/use-session.js';
+import { api } from '../../api/endpoints.js';
+import { errorMessage } from '../../api/errors.js';
+import { useSheetPresence } from '../../collab/presence.js';
+import { useLiveSheet } from '../../collab/use-live-sheet.js';
+import { t } from '../../i18n/index.js';
+import { entityType } from '../../plugin-host/entity-type.js';
+import { PluginSheet } from '../../plugin-host/PluginSheet.js';
+import { useSystem, type TableSystem } from '../../plugin-host/system-context.js';
+import { useSession } from '../../shell/use-session.js';
+import { useTableData } from '../table/table-data.js';
+
+import { SheetHistory } from './SheetHistory.js';
 
 type RecipeArgs = NonNullable<RollRequestInput['recipe']>['args'];
 
@@ -32,25 +32,21 @@ function recipeArgs(args: Readonly<Record<string, Value>>): RecipeArgs | null {
   return sent;
 }
 
-/** An actor's live sheet (T-0409, T-0506): edited together over `/ws/collab`. */
-export default function TableActorRoute(): ReactElement {
-  const { actorId } = useParams();
+/** An actor's live sheet (T-0409, T-0506): edited together over `/ws/collab`; a workspace panel. */
+export function ActorSheetPanel({ actorId }: { actorId: string }): ReactElement {
   const { table, actors } = useTableData();
   const actor = actors.find((a) => a.id === actorId);
-  return (
-    <div className="flex flex-col gap-3">
-      <Link to={`/tables/${table.id}`}>{t('sheet.back')}</Link>
-      {actor ? (
-        <ActorSheet key={actor.id} table={table} actor={actor} />
-      ) : (
-        <Alert tone="error">{t('sheet.notFound')}</Alert>
-      )}
-    </div>
+  return actor ? (
+    <ActorSheet key={actor.id} table={table} actor={actor} />
+  ) : (
+    <Alert tone="error">{t('sheet.notFound')}</Alert>
   );
 }
 
 function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): ReactElement {
   const host = useSystem();
+  // Several sheets may be open at once.
+  const titleId = useId();
   const [status, setStatus] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -74,9 +70,9 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
   const mayRoll = actor.access === 'owner' && canSendChat(table.role);
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="sheet-title">
+    <section className="flex flex-col gap-3" aria-labelledby={titleId}>
       <div className="flex items-center justify-between gap-2">
-        <h2 id="sheet-title" className="text-xl font-semibold">
+        <h2 id={titleId} className="text-xl font-semibold">
           {actor.name}
         </h2>
         {host.status === 'ready' && actor.access === 'owner' && <SheetHistory actorId={actor.id} />}
@@ -120,7 +116,7 @@ type ReadySystem = Extract<TableSystem, { status: 'ready' }>;
 
 // The editor and ProseMirror load only for sheets with rich text (ADR-037).
 const RichTextEditor = lazy(() =>
-  import('../collab/RichTextEditor.js').then((module) => ({ default: module.RichTextEditor })),
+  import('../../collab/RichTextEditor.js').then((module) => ({ default: module.RichTextEditor })),
 );
 
 const NO_FIELDS = { main: {}, secret: undefined };

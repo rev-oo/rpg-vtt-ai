@@ -161,7 +161,7 @@ describe('system version (T-0813)', () => {
     expect(
       await screen.findByText('Tiny d20 1.0.0 is installed; this table plays 0.9.0.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('This table plays Tiny d20 0.9.0.')).toBeInTheDocument();
+    expect(await screen.findByText('This table plays Tiny d20 0.9.0.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Upgrade to 1.0.0' }));
     expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();

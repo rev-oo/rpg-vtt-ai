@@ -23,6 +23,31 @@ if (!Object.hasOwn(dialogProto, 'close')) {
   });
 }
 
+// jsdom does no layout, so nothing ever resizes; dockview (ADR-059) only needs the API.
+if (!('ResizeObserver' in globalThis)) {
+  globalThis.ResizeObserver = class {
+    observe = (): undefined => undefined;
+    unobserve = (): undefined => undefined;
+    disconnect = (): undefined => undefined;
+  };
+}
+
+// jsdom has no media queries; tests run on a desktop-sized screen unless they say otherwise.
+if (typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query: string): MediaQueryList => ({
+    matches: true,
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  });
+}
+
 afterEach(() => {
   cleanup();
+  // The workspace saves its layout per user and table (ADR-059).
+  localStorage.clear();
 });

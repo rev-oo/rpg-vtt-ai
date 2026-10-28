@@ -11,8 +11,9 @@ import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
-import { EntityFilters } from './EntityFilters.js';
 import { EntityRow } from './EntityRow.js';
+import type { EntityFilters } from './filters.js';
+import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { OwnershipDialog } from './OwnershipDialog.js';
 import { usePagedList } from './paging.js';
@@ -24,7 +25,8 @@ export interface ActorListProps {
   /** The page after the loader's, if any (ADR-057). */
   nextCursor: string | null;
   fetchPage: (cursor: string) => Promise<ListPage<ActorView>>;
-  trash: boolean;
+  filters: EntityFilters;
+  onFilters: (filters: EntityFilters) => void;
   error: string | null;
 }
 
@@ -34,9 +36,11 @@ export function ActorList({
   actors: firstPage,
   nextCursor,
   fetchPage,
-  trash,
+  filters,
+  onFilters,
   error,
 }: ActorListProps): ReactElement {
+  const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
   const actors = paged.rows;
   const { table, members, types } = data;
@@ -72,9 +76,11 @@ export function ActorList({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex-1">
-          <EntityFilters
+          <ListFilters
             searchLabel={t('actors.search')}
             types={types.actorTypes.map((a) => a.type)}
+            value={filters}
+            onChange={onFilters}
           />
         </div>
         {creatable.length > 0 && (
