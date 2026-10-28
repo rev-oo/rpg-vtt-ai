@@ -119,6 +119,7 @@ export const ptBR: Messages = {
   'chat.messages': 'Mensagens',
   'chat.empty': 'Nenhuma mensagem ainda.',
   'chat.loadOlder': 'Carregar mensagens anteriores',
+  'lists.loadMore': 'Carregar mais',
   'chat.connecting': 'Conectando…',
   'chat.reconnecting': 'Reconectando…',
   'chat.sessionEnded': 'Sua sessão terminou. Entre novamente para continuar no chat.',

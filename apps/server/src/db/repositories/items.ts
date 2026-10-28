@@ -4,6 +4,7 @@ import { generateId } from '../../domain/auth/tokens.js';
 import type { DbOrTx } from '../client.js';
 import { items } from '../schema.js';
 
+import { afterName, limitOf, type ListWindow } from './pages.js';
 import {
   containsText,
   expiredCondition,
@@ -60,6 +61,7 @@ export function listItems(
   tableId: string,
   filter: ItemFilter,
   retention: Retention,
+  window: ListWindow = {},
 ): Item[] {
   return db
     .select()
@@ -71,9 +73,11 @@ export function listItems(
         trashCondition(items.softDeletedAt, filter.trash ?? 'live', retention),
         filter.type === undefined ? undefined : eq(items.type, filter.type),
         filter.search ? containsText(items.name, filter.search) : undefined,
+        afterName(items.name, items.id, window.after),
       ),
     )
     .orderBy(asc(sql`lower(${items.name})`), asc(items.id))
+    .limit(limitOf(window))
     .all();
 }
 

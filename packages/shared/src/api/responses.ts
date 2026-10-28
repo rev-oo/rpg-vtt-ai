@@ -155,7 +155,10 @@ export const actorSchema = z.object({
   access: z.enum(ENTITY_ACCESS),
 });
 export type ActorView = z.infer<typeof actorSchema>;
-export const actorsResponseSchema = z.object({ actors: z.array(actorSchema) });
+/** `null` on the last page, and for whole lists (§10.1, ADR-057). */
+const nextCursor = z.string().nullable();
+
+export const actorsResponseSchema = z.object({ actors: z.array(actorSchema), nextCursor });
 export const actorResponseSchema = z.object({ actor: actorSchema });
 
 /** A library item (`actorId` null) or an item owned by an actor (FR-ENT-05). */
@@ -173,7 +176,7 @@ export const itemSchema = z.object({
   access: z.enum(ENTITY_ACCESS),
 });
 export type ItemView = z.infer<typeof itemSchema>;
-export const itemsResponseSchema = z.object({ items: z.array(itemSchema) });
+export const itemsResponseSchema = z.object({ items: z.array(itemSchema), nextCursor });
 export const itemResponseSchema = z.object({ item: itemSchema });
 
 /** A journal entry's metadata; its body is the collaborative document `journal:<id>:main`. */
@@ -188,7 +191,10 @@ export const journalEntrySchema = z.object({
   access: z.enum(ENTITY_ACCESS),
 });
 export type JournalEntryView = z.infer<typeof journalEntrySchema>;
-export const journalEntriesResponseSchema = z.object({ entries: z.array(journalEntrySchema) });
+export const journalEntriesResponseSchema = z.object({
+  entries: z.array(journalEntrySchema),
+  nextCursor,
+});
 export const journalEntryResponseSchema = z.object({ entry: journalEntrySchema });
 
 /** Every error is rendered as this envelope (specs §10.1). */

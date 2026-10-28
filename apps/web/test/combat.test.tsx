@@ -79,8 +79,8 @@ function openTable(
     'GET /tables/t1/members': {
       body: { members: MEMBERS.map((m) => (m.userId === USER.id ? { ...m, role } : m)) },
     },
-    'GET /tables/t1/actors': { body: { actors: [HERO] } },
-    'GET /tables/t1/actors?trash=live': { body: { actors: [HERO] } },
+    'GET /tables/t1/actors': { body: { nextCursor: null, actors: [HERO] } },
+    'GET /tables/t1/actors?trash=live&limit=50': { body: { nextCursor: null, actors: [HERO] } },
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
     'GET /tables/t1/encounter': () => ({ body: { encounter: encounter() } }),

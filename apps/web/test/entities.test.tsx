@@ -51,7 +51,7 @@ function openTable(
   { role = 'gm', handlers = {} }: { role?: string; handlers?: Handlers } = {},
 ) {
   const sockets = fakeWebSocket();
-  const actors = { body: { actors: [HERO, BOBS_HERO] } };
+  const actors = { body: { nextCursor: null, actors: [HERO, BOBS_HERO] } };
   const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
     'GET /me': { body: SESSION },
@@ -60,10 +60,10 @@ function openTable(
       body: { members: MEMBERS.map((m) => (m.userId === USER.id ? { ...m, role } : m)) },
     },
     'GET /tables/t1/actors': actors,
-    'GET /tables/t1/actors?trash=live': actors,
+    'GET /tables/t1/actors?trash=live&limit=50': actors,
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
-    'GET /tables/t1/items?trash=live': { body: { items: [SWORD] } },
+    'GET /tables/t1/items?trash=live&limit=50': { body: { nextCursor: null, items: [SWORD] } },
     ...handlers,
   });
   renderApp(path);
@@ -101,9 +101,15 @@ describe('actor list (FR-ENT-01..04)', () => {
   it('filters by search, type and trash through the URL', async () => {
     const { calls } = openTable('/tables/t1', {
       handlers: {
-        'GET /tables/t1/actors?search=gob&trash=live': { body: { actors: [HERO] } },
-        'GET /tables/t1/actors?search=gob&type=npc&trash=live': { body: { actors: [HERO] } },
-        'GET /tables/t1/actors?search=gob&type=npc&trash=restorable': { body: { actors: [] } },
+        'GET /tables/t1/actors?search=gob&trash=live&limit=50': {
+          body: { nextCursor: null, actors: [HERO] },
+        },
+        'GET /tables/t1/actors?search=gob&type=npc&trash=live&limit=50': {
+          body: { nextCursor: null, actors: [HERO] },
+        },
+        'GET /tables/t1/actors?search=gob&type=npc&trash=restorable&limit=50': {
+          body: { nextCursor: null, actors: [] },
+        },
       },
     });
     const user = userEvent.setup();
@@ -115,7 +121,7 @@ describe('actor list (FR-ENT-01..04)', () => {
     await user.click(screen.getByLabelText('Show trash'));
     expect(await screen.findByText('The trash is empty.')).toBeInTheDocument();
     expect(calls.map((c) => c.path)).toContain(
-      '/tables/t1/actors?search=gob&type=npc&trash=restorable',
+      '/tables/t1/actors?search=gob&type=npc&trash=restorable&limit=50',
     );
     expect(screen.getByTestId('location')).toHaveTextContent('/tables/t1?q=gob&type=npc&trash=1');
   });
@@ -123,8 +129,8 @@ describe('actor list (FR-ENT-01..04)', () => {
   it('restores from the trash', async () => {
     const { calls } = openTable('/tables/t1?trash=1', {
       handlers: {
-        'GET /tables/t1/actors?trash=restorable': {
-          body: { actors: [{ ...HERO, deletedAt: '2026-10-19T00:00:00.000Z' }] },
+        'GET /tables/t1/actors?trash=restorable&limit=50': {
+          body: { nextCursor: null, actors: [{ ...HERO, deletedAt: '2026-10-19T00:00:00.000Z' }] },
         },
         'POST /actors/a1/restore': { body: { actor: HERO } },
       },
@@ -136,16 +142,16 @@ describe('actor list (FR-ENT-01..04)', () => {
   });
 
   it('duplicates and deletes, then reloads the list', async () => {
-    let list: FakeResponse = { body: { actors: [HERO] } };
+    let list: FakeResponse = { body: { nextCursor: null, actors: [HERO] } };
     const { calls } = openTable('/tables/t1', {
       handlers: {
-        'GET /tables/t1/actors?trash=live': () => list,
+        'GET /tables/t1/actors?trash=live&limit=50': () => list,
         'POST /actors/a1/duplicate': () => {
-          list = { body: { actors: [HERO, actor('a3', 'Goblin King (copy)')] } };
+          list = { body: { nextCursor: null, actors: [HERO, actor('a3', 'Goblin King (copy)')] } };
           return { status: 201, body: { actor: actor('a3', 'Goblin King (copy)') } };
         },
         'DELETE /actors/a3': () => {
-          list = { body: { actors: [HERO] } };
+          list = { body: { nextCursor: null, actors: [HERO] } };
           return { status: 204 };
         },
       },
@@ -254,8 +260,10 @@ describe('actor list (FR-ENT-01..04)', () => {
   it("shows an actor's own items on demand (FR-ENT-05)", async () => {
     openTable('/tables/t1', {
       handlers: {
-        'GET /actors/a1/items': { body: { items: [{ ...SWORD, id: 'i9', actorId: 'a1' }] } },
-        'GET /actors/a2/items': { body: { items: [] } },
+        'GET /actors/a1/items': {
+          body: { nextCursor: null, items: [{ ...SWORD, id: 'i9', actorId: 'a1' }] },
+        },
+        'GET /actors/a2/items': { body: { nextCursor: null, items: [] } },
       },
     });
     const user = userEvent.setup();
@@ -266,9 +274,9 @@ describe('actor list (FR-ENT-01..04)', () => {
   });
 
   it('reloads when another member changes an entity (FR-ENT-07)', async () => {
-    let list: FakeResponse = { body: { actors: [HERO] } };
+    let list: FakeResponse = { body: { nextCursor: null, actors: [HERO] } };
     const { sockets } = openTable('/tables/t1', {
-      handlers: { 'GET /tables/t1/actors?trash=live': () => list },
+      handlers: { 'GET /tables/t1/actors?trash=live&limit=50': () => list },
     });
     await screen.findByRole('heading', { name: 'Goblin King' });
     await waitFor(() => {
@@ -277,7 +285,7 @@ describe('actor list (FR-ENT-01..04)', () => {
     const socket = sockets.at(-1);
     socket?.open();
 
-    list = { body: { actors: [HERO, BOBS_HERO] } };
+    list = { body: { nextCursor: null, actors: [HERO, BOBS_HERO] } };
     socket?.receive(
       serverEvent({
         type: 'entity.changed',
@@ -320,6 +328,7 @@ describe('item library (FR-ENT-05, 06)', () => {
       handlers: {
         'GET /tables/t1/actors': {
           body: {
+            nextCursor: null,
             actors: [
               { ...HERO, access: 'observer' },
               { ...BOBS_HERO, access: 'owner' },
@@ -350,7 +359,9 @@ describe('item library (FR-ENT-05, 06)', () => {
   it('deletes and restores library items', async () => {
     const { calls } = openTable('/tables/t1/items?trash=1', {
       handlers: {
-        'GET /tables/t1/items?trash=restorable': { body: { items: [SWORD] } },
+        'GET /tables/t1/items?trash=restorable&limit=50': {
+          body: { nextCursor: null, items: [SWORD] },
+        },
         'POST /items/i1/restore': { body: { item: SWORD } },
       },
     });
@@ -369,5 +380,63 @@ describe('item library (FR-ENT-05, 06)', () => {
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('No.');
+  });
+});
+
+describe('list pages (T-0812)', () => {
+  it('loads the pages after the first until the list ends', async () => {
+    const page = (cursor: string | null, ...names: string[]) => ({
+      body: { nextCursor: cursor, actors: names.map((name) => actor(`id-${name}`, name)) },
+    });
+    openTable('/tables/t1', {
+      handlers: {
+        'GET /tables/t1/actors?trash=live&limit=50': page('c1', 'Ant', 'Bat'),
+        'GET /tables/t1/actors?trash=live&limit=50&cursor=c1': page('c2', 'Cat'),
+        'GET /tables/t1/actors?trash=live&limit=50&cursor=c2': page(null, 'Dog'),
+      },
+    });
+    const user = userEvent.setup();
+    await screen.findByRole('heading', { name: 'Bat' });
+    expect(rowOf('Cat')).toBeUndefined();
+
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('heading', { name: 'Cat' });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('heading', { name: 'Dog' });
+    expect(within(actorList()).getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull();
+  });
+
+  it('starts over from the first page when the list reloads', async () => {
+    let first: FakeResponse = { body: { nextCursor: 'c1', actors: [actor('x1', 'Ant')] } };
+    const { sockets } = openTable('/tables/t1', {
+      handlers: {
+        'GET /tables/t1/actors?trash=live&limit=50': () => first,
+        'GET /tables/t1/actors?trash=live&limit=50&cursor=c1': {
+          body: { nextCursor: null, actors: [actor('x2', 'Bat')] },
+        },
+      },
+    });
+    const user = userEvent.setup();
+    await screen.findByRole('heading', { name: 'Ant' });
+    await user.click(screen.getByRole('button', { name: 'Load more' }));
+    await screen.findByRole('heading', { name: 'Bat' });
+
+    await waitFor(() => {
+      expect(sockets.length).toBeGreaterThan(0);
+    });
+    const socket = sockets.at(-1);
+    socket?.open();
+
+    first = { body: { nextCursor: null, actors: [actor('x1', 'Ant'), actor('x3', 'Eel')] } };
+    socket?.receive(
+      serverEvent({
+        type: 'entity.changed',
+        tableId: 't1',
+        payload: { kind: 'actor', id: 'x3', change: 'created', actorId: null },
+      }),
+    );
+    await screen.findByRole('heading', { name: 'Eel' });
+    expect(rowOf('Bat')).toBeUndefined();
   });
 });

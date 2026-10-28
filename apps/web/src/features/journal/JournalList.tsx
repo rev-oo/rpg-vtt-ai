@@ -5,11 +5,13 @@ import { canCreateJournal, canSetOwnership } from '@vtt/shared';
 import type { JournalEntryView } from '@vtt/shared/api';
 import { Alert, Button } from '@vtt/ui';
 
-import { api } from '../../api/endpoints.js';
+import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { EntityFilters } from '../entities/EntityFilters.js';
+import { LoadMore } from '../entities/LoadMore.js';
 import { OwnershipDialog } from '../entities/OwnershipDialog.js';
+import { usePagedList } from '../entities/paging.js';
 import type { TableData } from '../table/table-data.js';
 
 import { CreateJournalDialog } from './CreateJournalDialog.js';
@@ -18,6 +20,9 @@ export interface JournalListProps {
   data: TableData;
   /** The filtered list from the route loader. */
   entries: readonly JournalEntryView[];
+  /** The page after the loader's, if any (ADR-057). */
+  nextCursor: string | null;
+  fetchPage: (cursor: string) => Promise<ListPage<JournalEntryView>>;
   trash: boolean;
   error: string | null;
 }
@@ -26,7 +31,16 @@ export interface JournalListProps {
  * The table's journal (FR-JOURNAL-01..03). GMs and assistants create entries, which start
  * hidden, and reveal them when the players should read them.
  */
-export function JournalList({ data, entries, trash, error }: JournalListProps): ReactElement {
+export function JournalList({
+  data,
+  entries: firstPage,
+  nextCursor,
+  fetchPage,
+  trash,
+  error,
+}: JournalListProps): ReactElement {
+  const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const entries = paged.rows;
   const { table, members } = data;
   const revalidator = useRevalidator();
   const [creating, setCreating] = useState(false);
@@ -151,6 +165,8 @@ export function JournalList({ data, entries, trash, error }: JournalListProps): 
           </li>
         ))}
       </ul>
+      {paged.error && <Alert tone="error">{paged.error}</Alert>}
+      {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
 
       <CreateJournalDialog
         open={creating}

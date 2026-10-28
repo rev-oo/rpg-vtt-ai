@@ -112,3 +112,28 @@ test('actors and items between a GM and a player', async ({ browser }) => {
 
   for (const who of [gm, dana]) await who.context.close();
 });
+
+// T-0812: a list longer than one page loads the rest as the user scrolls (§10.1, ADR-057).
+test('long lists load more on scroll', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Crowded Table',
+    systemId: 'e2e-system',
+  });
+  const names = Array.from({ length: 120 }, (_, i) => `Goblin ${String(i).padStart(3, '0')}`);
+  for (const name of names) {
+    await post(gm, `/tables/${table.id}/actors`, { type: 'npc', name });
+  }
+
+  const page = await gm.context.newPage();
+  await page.goto(`/tables/${table.id}`);
+  const rows = page.getByRole('list', { name: 'Actors' }).getByRole('listitem');
+  await expect(rows).toHaveCount(50);
+  // Scrolling to the end loads each next page, until the list has no more.
+  await expect(async () => {
+    await rows.last().scrollIntoViewIfNeeded();
+    await expect(rows).toHaveCount(names.length, { timeout: 1000 });
+  }).toPass();
+  await expect(rows.last()).toContainText('Goblin 119');
+  await expect(page.getByRole('button', { name: 'Load more' })).toBeHidden();
+});

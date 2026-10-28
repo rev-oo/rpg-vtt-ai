@@ -5,7 +5,7 @@ import { canCreateActor, canSetOwnership } from '@vtt/shared';
 import type { ActorView, ItemView } from '@vtt/shared/api';
 import { Alert, Button } from '@vtt/ui';
 
-import { api } from '../../api/endpoints.js';
+import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
@@ -13,18 +13,32 @@ import type { TableData } from '../table/table-data.js';
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityFilters } from './EntityFilters.js';
 import { EntityRow } from './EntityRow.js';
+import { LoadMore } from './LoadMore.js';
 import { OwnershipDialog } from './OwnershipDialog.js';
+import { usePagedList } from './paging.js';
 
 export interface ActorListProps {
   data: TableData;
   /** The filtered list from the route loader. */
   actors: readonly ActorView[];
+  /** The page after the loader's, if any (ADR-057). */
+  nextCursor: string | null;
+  fetchPage: (cursor: string) => Promise<ListPage<ActorView>>;
   trash: boolean;
   error: string | null;
 }
 
 /** The table's actors (FR-ENT-01..04): search, filters, trash and the actions on each. */
-export function ActorList({ data, actors, trash, error }: ActorListProps): ReactElement {
+export function ActorList({
+  data,
+  actors: firstPage,
+  nextCursor,
+  fetchPage,
+  trash,
+  error,
+}: ActorListProps): ReactElement {
+  const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const actors = paged.rows;
   const { table, members, types } = data;
   const revalidator = useRevalidator();
   const [creating, setCreating] = useState(false);
@@ -155,6 +169,8 @@ export function ActorList({ data, actors, trash, error }: ActorListProps): React
           </EntityRow>
         ))}
       </ul>
+      {paged.error && <Alert tone="error">{paged.error}</Alert>}
+      {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
 
       <CreateEntityDialog
         open={creating}

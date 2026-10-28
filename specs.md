@@ -19,13 +19,13 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Done        | 100%     |
-| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | In progress | 33%      |
+| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | In progress | 67%      |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M11
-- **Next task:** `T-0812`
+- **Next task:** `T-0813`
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -48,6 +48,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0807 done (ADR-054): GMs and assistants archive a table, read-only everywhere until unarchived.                                                                             |
 | 2026-10-27 | T-0808 done (ADR-055): scheduled backups via `BACKUP_DIR`, keeping the newest N. M10 done.                                                                                    |
 | 2026-10-27 | T-0811 done (ADR-056): the image is built and smoke-tested natively on amd64 and arm64; releases tag both in one manifest.                                                    |
+| 2026-10-28 | T-0812 done (ADR-057): actor, item and journal lists page with cursors; the web tabs load more on scroll.                                                                     |
 
 ---
 
@@ -645,7 +646,7 @@ Notes:
 
 - Base path `/api/v1`. JSON bodies. Validated with Zod on entry.
 - Errors use `{ error: { code, message, details? } }` with stable `code` strings.
-- Lists are not paginated yet (ADR-015). Chat history pages backwards with `?before=…`.
+- Actor, item and journal lists page with `?limit=…&cursor=…` and answer `nextCursor`; without `limit` they return the whole list (ADR-057). Chat history pages backwards with `?before=…`.
 - Auth: session cookie. Mutating requests require a CSRF header (`X-CSRF-Token`) matched to the session.
 
 Key resource groups:
@@ -831,10 +832,11 @@ Independent tasks from the known limitations of 0.1.0. The CLI and SDK stay unpu
   - **Done when:** the next release's image runs on arm64 and passes `docker/smoke-test.sh`.
   - **Note:** done as ADR-056. Each architecture is built natively, on `ubuntu-latest` and `ubuntu-24.04-arm`, and smoke-tested on every push. The release merges the two digests into one tag. Confirm on the 0.2.0 release that the published tag holds both platforms; the release job checks it.
 
-- [ ] **T-0812 · List pagination**
+- [x] **T-0812 · List pagination**
   - **Deps:** none
   - **Do:** Cursor pagination for actor, item and journal lists (§10.1, ADR-015). The web lists load more on scroll.
   - **Done when:** endpoint tests cover cursors and limits; a table with more entries than one page lists all of them in the web.
+  - **Note:** done as ADR-057. Pages are keyset pages on `lower(name), id` with opaque cursors; the server fills each page with what the caller may see. The tabs load 50 at a time, the next page when the end of the list scrolls into view. The table loader still reads all actors.
 
 - [ ] **T-0813 · Data version warning**
   - **Deps:** none
@@ -970,6 +972,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted |
 | ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted |
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
+| ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

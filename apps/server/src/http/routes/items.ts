@@ -24,6 +24,7 @@ import { publishItemChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireActor, requireItem } from '../entities.js';
 import { requireMember } from '../membership.js';
+import { listPage, nameKey } from '../pages.js';
 import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
@@ -40,10 +41,17 @@ export function itemRoutes({ app, db, config, events, now, plugins }: AppContext
     const query = parseInput(entityListQuery, request.query);
     const access = canManageItemLibrary(membership.role) ? 'owner' : 'observer';
     // The trash lists what the caller could restore.
-    if (query.trash === 'restorable' && access !== 'owner') return { items: [] };
-    const items = listItems(db, id, { ...query, actorId: null }, retention());
+    if (query.trash === 'restorable' && access !== 'owner') return { items: [], nextCursor: null };
     const visible = visibleTo(table, membership);
-    return { items: items.map((item) => toItemView(item, access, visible)) };
+    const { views, nextCursor } = listPage(
+      {
+        fetch: (window) => listItems(db, id, { ...query, actorId: null }, retention(), window),
+        keyOf: (item) => nameKey(item.name, item.id),
+        view: (item) => toItemView(item, access, visible),
+      },
+      query,
+    );
+    return { items: views, nextCursor };
   });
 
   app.post('/api/v1/tables/:id/items', (request, reply) => {

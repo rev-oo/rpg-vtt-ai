@@ -24,6 +24,7 @@ import { publishJournalChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireJournalEntry } from '../entities.js';
 import { requireMember } from '../membership.js';
+import { listPage, nameKey } from '../pages.js';
 import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
@@ -43,13 +44,20 @@ export function journalRoutes({ app, db, config, events, now }: AppContext): voi
 
     // Hidden entries never leave the database for players (FR-JOURNAL-03).
     const filter = { ...query, includeHidden: isGmLike(membership.role) };
-    const entries = listJournalEntries(db, id, filter, retention()).flatMap((entry) => {
-      const access = journalEntryAccess(subject, entry);
-      // The trash lists what the caller could restore.
-      if (!access || (query.trash === 'restorable' && access !== 'owner')) return [];
-      return [toJournalView(entry, access)];
-    });
-    return { entries };
+    const { views, nextCursor } = listPage(
+      {
+        fetch: (window) => listJournalEntries(db, id, filter, retention(), window),
+        keyOf: (entry) => nameKey(entry.title, entry.id),
+        view: (entry) => {
+          const access = journalEntryAccess(subject, entry);
+          // The trash lists what the caller could restore.
+          if (!access || (query.trash === 'restorable' && access !== 'owner')) return undefined;
+          return toJournalView(entry, access);
+        },
+      },
+      query,
+    );
+    return { entries: views, nextCursor };
   });
 
   app.post('/api/v1/tables/:id/journal', (request, reply) => {
