@@ -26,6 +26,12 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 | M6        | Journal, members, table settings, plugin admin                                                     |
 | M7        | Reference plugins, hardening, Docker, docs → **v0.1.0**                                            |
 | M8–M11    | Plugin server code, combat, packs, chat edits, sheet history, archive, backups, arm64 → **v0.2.0** |
+| M12       | Full-page table workspace, compendium browser, item groups → 0.3.0                                 |
+| M13       | Asset uploads and manager → 0.4.0                                                                  |
+| M14       | Maps: scenes, tokens, fog of war → 0.5.0                                                           |
+| M15       | Plugin data migrations, client sandbox, server isolation → 0.6.0                                   |
+| M16       | System builder → 0.7.0                                                                             |
+| M17       | API freeze, upgrade guarantee, hardening → **1.0.0**                                               |
 
 ## Tech stack
 
