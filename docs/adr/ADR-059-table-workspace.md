@@ -1,4 +1,4 @@
-# ADR-059: The table is a dockview workspace; the URL names the active document
+# ADR-059: The table is a dockview workspace, and its URL stays on the table
 
 - **Status:** Accepted
 - **Date:** 2026-10-28
@@ -22,18 +22,18 @@ A first version with two fixed side panels (collapse and resize only) was built 
    Every panel can be closed, dragged into a tab strip, split to any side or floated. Pop-out browser windows are not offered. The **Panels** menu opens a closed panel, or brings an open one forward, near where the default layout keeps it. **Reset layout** restores the default.
 
 3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Combat sits on the right (384 px), above Chat and Dice as tabs.
-4. **The URL names the active document.**
-   - `/tables/:id/actors/:actorId`, `/journal/:entryId`, `/members` and `/settings` open that panel, or bring it forward. `/tables/:id` keeps whatever document the layout left active.
-   - Activating a document panel pushes its URL. Closing the document the URL names moves the URL to the next active document, or to the table.
-   - Tool panels leave the URL alone.
-   - The old list URLs `/items` and `/journal` open their list, then become `/tables/:id`.
+4. **The URL stays on the table.**
+   - Opening, switching or closing panels never changes the URL, which stays `/tables/:id`. The saved layout, not the URL, brings the open documents back after a reload.
+   - The lists' "Open" links open their document as a panel in place. They are still real links to `/tables/:id/actors/:actorId` and `/journal/:entryId`, so a new tab or window opens the document there.
+   - A link into the table opens its panel, or brings it forward, then the URL goes back to `/tables/:id`. This covers `/actors/:actorId`, `/journal/:entryId`, `/members`, `/settings` and the old list pages `/items` and `/journal`.
+   - The back button leaves the table, rather than stepping through the panels.
 
-   Links, reloads and the back button therefore work as before.
+   A first version pushed the active document's URL on every switch. The user found it noisy, and it was dropped.
 
 5. **Panels load their own data.** Lists load their first page (`usePanelList`, ADR-057). Journal entries and members' invites load in the panel. All of them load again whenever the table's data revalidates, so `entity.changed` events, resyncs and a GM hiding an entry reach open panels. Each open sheet keeps its own live connection.
 6. **Filters belong to their list.** Search, type and trash are kept in the list panel's dockview parameters and saved with the layout. Until now they were kept in the URL. They no longer are, because two lists open side by side would otherwise share one search.
 7. **Saved per browser.** `api.toJSON()` is stored in `localStorage` under `vtt:dock:<userId>:<tableId>:<desktop|phone>` after every layout change. A stored layout that fails to load is dropped for the default one. Blocked storage only means the layout is not kept.
-8. **Phones (<768 px)** use dockview too, with a separate layout. Every panel is a tab of one group, so each fills the screen. Dragging and floating are off. This replaces T-0511's bottom bar. Crossing 768 px remounts the workspace with the other layout.
+8. **Phones (<768 px)** use dockview too, with a separate layout, so a document opened on a phone is not open on the desktop. Every panel is a tab of one group, so each fills the screen. Dragging and floating are off. This replaces T-0511's bottom bar. Crossing 768 px remounts the workspace with the other layout.
 9. **Accessibility.**
    - dockview labels each group as a region and each panel as a `tabpanel` named after its tab.
    - Its tab strips take arrow keys, Home and End, Enter or Space (open) and Delete (close).

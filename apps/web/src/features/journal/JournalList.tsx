@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { Link, useRevalidator } from 'react-router';
+import { useRevalidator } from 'react-router';
 
 import { canCreateJournal, canSetOwnership } from '@vtt/shared';
 import type { JournalEntryView } from '@vtt/shared/api';
@@ -14,6 +14,8 @@ import { LoadMore } from '../entities/LoadMore.js';
 import { OwnershipDialog } from '../entities/OwnershipDialog.js';
 import { usePagedList } from '../entities/paging.js';
 import type { TableData } from '../table/table-data.js';
+import { DocumentLink } from '../workspace/DocumentLink.js';
+import { entryPanelId } from '../workspace/panel-ids.js';
 
 import { CreateJournalDialog } from './CreateJournalDialog.js';
 
@@ -121,13 +123,14 @@ export function JournalList({
                 </Button>
               ) : (
                 <>
-                  <Link
-                    to={`/tables/${table.id}/journal/${entry.id}`}
+                  <DocumentLink
+                    tableId={table.id}
+                    target={{ kind: 'entry', id: entryPanelId(entry.id), entryId: entry.id }}
                     className="self-center"
-                    aria-label={`${t('journal.open')}: ${entry.title}`}
+                    label={`${t('journal.open')}: ${entry.title}`}
                   >
                     {t('journal.open')}
-                  </Link>
+                  </DocumentLink>
                   {manages && (
                     <Button
                       onClick={() =>

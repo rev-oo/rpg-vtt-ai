@@ -55,12 +55,11 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await expect(log).toBeVisible();
   });
 
-  await test.step('two sheets open side by side, and the URL follows', async () => {
+  await test.step('two sheets open side by side; the URL stays on the table', async () => {
     await page.getByRole('link', { name: 'Open sheet: Wren' }).click();
     await expect(panel(page, 'Wren').getByLabel('Strength')).toBeVisible();
     await page.getByRole('link', { name: 'Open sheet: Goblin' }).click();
     await expect(panel(page, 'Goblin').getByLabel('Strength')).toBeVisible();
-    await expect(page).toHaveURL(/\/actors\/[^/]+$/);
     const content = await panel(page, 'Goblin').boundingBox();
     if (!content) throw new Error('the Goblin panel is not shown');
     await tab(page, 'Goblin').dragTo(panel(page, 'Goblin'), {
@@ -69,7 +68,7 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await expect(panel(page, 'Wren')).toBeVisible();
     await expect(panel(page, 'Goblin')).toBeVisible();
     await tab(page, 'Wren').click();
-    await expect(page).toHaveURL(new RegExp(`/tables/${table.id}/actors/`));
+    await expect(page).toHaveURL(new RegExp(`/tables/${table.id}$`));
     await expect(actors).toBeVisible();
   });
 

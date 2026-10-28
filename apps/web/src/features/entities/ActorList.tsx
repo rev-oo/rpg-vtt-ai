@@ -1,5 +1,5 @@
 import { useState, type ReactElement } from 'react';
-import { Link, useRevalidator } from 'react-router';
+import { useRevalidator } from 'react-router';
 
 import { canCreateActor, canSetOwnership } from '@vtt/shared';
 import type { ActorView, ItemView } from '@vtt/shared/api';
@@ -9,6 +9,8 @@ import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
+import { DocumentLink } from '../workspace/DocumentLink.js';
+import { sheetPanelId } from '../workspace/panel-ids.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
@@ -127,13 +129,14 @@ export function ActorList({
                 </Button>
               ) : (
                 <>
-                  <Link
-                    to={`/tables/${table.id}/actors/${actor.id}`}
+                  <DocumentLink
+                    tableId={table.id}
+                    target={{ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id }}
                     className="self-center"
-                    aria-label={`${t('sheet.open')}: ${actor.name}`}
+                    label={`${t('sheet.open')}: ${actor.name}`}
                   >
                     {t('sheet.open')}
-                  </Link>
+                  </DocumentLink>
                   {canDuplicate(actor) && (
                     <Button
                       onClick={() =>

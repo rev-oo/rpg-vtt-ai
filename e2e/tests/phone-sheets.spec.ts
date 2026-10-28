@@ -100,11 +100,12 @@ test('sheets on a phone', async ({ browser }) => {
     await expect(sheet.getByLabel('Strength')).toBeVisible();
   });
 
-  await test.step('from 768 px the desktop layout returns, with the sheet still open', async () => {
+  await test.step('from 768 px the desktop layout returns, as it was left there', async () => {
     await page.setViewportSize({ width: 1024, height: 740 });
     await expect(page.getByRole('list', { name: 'Actors' })).toBeVisible();
     await expect(log).toBeVisible();
-    await expect(sheet.getByLabel('Strength')).toBeVisible();
+    // Phones and desktops keep separate layouts (ADR-059).
+    await expect(sheet).toHaveCount(0);
   });
 
   expect(errors).toEqual([]);

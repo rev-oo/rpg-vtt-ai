@@ -4,13 +4,12 @@ import { DockviewReact, themeLight, type DockviewApi, type DockviewMessages } fr
 import {
   useEffect,
   useEffectEvent,
-  useLayoutEffect,
   useRef,
   useState,
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { canManageTable } from '@vtt/shared';
 import { Button, cn } from '@vtt/ui';
@@ -29,7 +28,7 @@ import {
   titleOf,
 } from './layout.js';
 import { PANEL_COMPONENTS } from './panel-components.js';
-import { pathOf, targetOf, type PagePanel, type ToolPanel } from './panel-ids.js';
+import { targetOf, type PagePanel, type PanelTarget, type ToolPanel } from './panel-ids.js';
 import { useDesktop } from './use-desktop.js';
 
 export interface WorkspaceProps {
@@ -78,35 +77,14 @@ const DOCK_MESSAGES: Partial<DockviewMessages> = {
 function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolean }): ReactElement {
   const { table } = data;
   const key = layoutKey(userId, table.id, phone);
-  const base = `/tables/${table.id}`;
   const [dock, setDock] = useState<DockviewApi | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
   const subpath = useParams()['*'] ?? '';
-  const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  // The URL follows the active document, and a URL opens its document (ADR-059).
-  const path = useRef(pathname);
-  useLayoutEffect(() => {
-    path.current = pathname;
-  }, [pathname]);
-  const go = (to: string, replace = false) => {
-    if (to === path.current) return;
-    path.current = to;
-    void navigate(to, { replace });
-  };
-
   const onActive = useEffectEvent((panelId: string | undefined) => {
-    if (panelId === undefined) return;
-    if (panelId.startsWith(ACTOR_PREFIX)) setDiceActorId(panelId.slice(ACTOR_PREFIX.length));
-    const to = pathOf(table.id, panelId);
-    if (to) go(to);
-  });
-  const onRemoved = useEffectEvent((api: DockviewApi, panelId: string) => {
-    if (pathOf(table.id, panelId) !== path.current) return;
-    const active = api.activePanel;
-    go((active && pathOf(table.id, active.id)) ?? base, true);
+    if (panelId?.startsWith(ACTOR_PREFIX)) setDiceActorId(panelId.slice(ACTOR_PREFIX.length));
   });
   useEffect(() => {
     if (!dock) return;
@@ -121,10 +99,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         onActive(event.panel?.id);
       }),
       dock.onDidAddPanel(listOpen),
-      dock.onDidRemovePanel((panel) => {
-        listOpen();
-        onRemoved(dock, panel.id);
-      }),
+      dock.onDidRemovePanel(listOpen),
       dock.onDidLayoutFromJSON(listOpen),
     ];
     listOpen();
@@ -133,20 +108,21 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     };
   }, [dock, key]);
 
+  const open = (api: DockviewApi, target: PanelTarget) => {
+    const title =
+      target.kind === 'sheet'
+        ? (data.actors.find((actor) => actor.id === target.actorId)?.name ?? t('workspace.sheet'))
+        : t('journal.title');
+    showTarget(api, target, phone, title);
+  };
+  // The URL stays on the table while panels change (ADR-059). A link into the table
+  // (`/actors/:id`, `/journal/:id`, `/members`, `/settings`, the old list pages) opens its
+  // panel, then the URL goes back to the table.
   const followUrl = useEffectEvent((api: DockviewApi) => {
+    if (subpath === '') return;
     const target = targetOf(subpath);
-    if (target) {
-      const title =
-        target.kind === 'sheet'
-          ? (data.actors.find((actor) => actor.id === target.actorId)?.name ?? t('workspace.sheet'))
-          : t('journal.title');
-      showTarget(api, target, phone, title);
-      if (target.kind === 'list') go(base, true);
-      return;
-    }
-    // The table itself shows the document left open; an unknown path, the table.
-    const active = api.activePanel;
-    go(subpath === '' ? ((active && pathOf(table.id, active.id)) ?? base) : base, true);
+    if (target) open(api, target);
+    void navigate(`/tables/${table.id}`, { replace: true });
   });
   useEffect(() => {
     if (dock) followUrl(dock);
@@ -159,6 +135,9 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         diceActorId,
         save: () => {
           if (dock) saveLayout(dock, key);
+        },
+        open: (target) => {
+          if (dock) open(dock, target);
         },
       }}
     >

@@ -40,7 +40,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
 | 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
-| 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; the URL names the active document; layouts saved per browser) (ADR-059).                     |
+| 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; the URL stays on the table; layouts saved per browser) (ADR-059).                            |
 
 ---
 
@@ -978,7 +978,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
 | ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
 | ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted |
-| ADR-059 | [The table is a dockview workspace; the URL names the active document](docs/adr/ADR-059-table-workspace.md)                                     | Accepted |
+| ADR-059 | [The table is a dockview workspace, and its URL stays on the table](docs/adr/ADR-059-table-workspace.md)                                        | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

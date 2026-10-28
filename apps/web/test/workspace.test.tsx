@@ -58,10 +58,12 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(tabs()).toEqual(['Actors', 'Items', 'Journal', 'Table', 'Combat', 'Chat', 'Dice']);
   });
 
-  it('opens the panel a URL names, and old list URLs open their list', async () => {
+  it('opens the panel a URL names, then goes back to the table URL', async () => {
     openTable('/tables/t1/members');
     expect(await panel('Members')).toBeInTheDocument();
-    expect(location()).toBe('/tables/t1/members');
+    await waitFor(() => {
+      expect(location()).toBe('/tables/t1');
+    });
     cleanup();
 
     openTable('/tables/t1/items');
@@ -71,20 +73,16 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     });
   });
 
-  it('follows the active document in the URL, and drops it when closed', async () => {
+  it('opens documents in place, leaving the URL on the table', async () => {
     openTable('/tables/t1');
     const user = userEvent.setup();
-    await panel('Table');
+    await user.click(await screen.findByRole('link', { name: 'Open sheet: Goblin King' }));
+    expect(tabs()).toContain('Goblin King');
     await user.click((await panelsMenu(user)).getByRole('button', { name: 'Members' }));
     expect(await panel('Members')).toBeInTheDocument();
-    await waitFor(() => {
-      expect(location()).toBe('/tables/t1/members');
-    });
     await user.click(screen.getByRole('button', { name: 'Close Members' }));
-    await waitFor(() => {
-      expect(location()).toBe('/tables/t1');
-    });
     expect(screen.queryByRole('tabpanel', { name: 'Members' })).toBeNull();
+    expect(location()).toBe('/tables/t1');
   });
 
   it('closes panels, reopens them from the menu and keeps the layout', async () => {
