@@ -64,20 +64,11 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
   if (encounter === undefined || (encounter === null && !runs)) return null;
 
   return (
-    <section
-      aria-labelledby="combat-title"
-      className="flex max-h-[45%] shrink-0 flex-col gap-2 overflow-y-auto rounded-lg border border-line bg-surface p-3"
-    >
+    <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="combat-title" className="font-semibold">
-          {t('combat.title')}
-          {encounter && encounter.round > 0 && ' '}
-          {encounter && encounter.round > 0 && (
-            <span className="ml-1 text-sm font-normal text-muted">
-              {t('combat.round', { round: encounter.round })}
-            </span>
-          )}
-        </h2>
+        {encounter && encounter.round > 0 && (
+          <p className="text-sm text-muted">{t('combat.round', { round: encounter.round })}</p>
+        )}
         {runs && encounter && (
           <div className="flex flex-wrap gap-1">
             {rolls && encounter.combatants.some((c) => c.initiative === null) && (
@@ -196,7 +187,7 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
           )}
         </>
       )}
-    </section>
+    </div>
   );
 }
 

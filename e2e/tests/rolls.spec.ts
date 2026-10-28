@@ -70,7 +70,10 @@ test('public and secret rolls between a GM and two players', async ({ browser })
     const input = erinPage.getByLabel('Message', { exact: true });
     await input.fill('/r 1d20 + str');
     await input.press('Enter');
-    await expect(erinPage.getByRole('alert')).toContainText('Unknown name "str"');
+    // dockview keeps an empty alert region of its own (ADR-059).
+    await expect(erinPage.getByRole('alert').filter({ hasText: /./ })).toContainText(
+      'Unknown name "str"',
+    );
     await expect(input).toHaveValue('/r 1d20 + str');
   });
 

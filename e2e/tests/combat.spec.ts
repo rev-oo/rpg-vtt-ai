@@ -59,8 +59,8 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
     ] as const;
     for (const [round, name] of expected) {
       await gmPage.getByRole('button', { name: 'Next turn' }).click();
-      const heading = playerPage.getByRole('heading', { name: /^Combat/ });
-      await expect(heading).toContainText(round, { timeout: 500 });
+      const combat = playerPage.getByRole('tabpanel', { name: 'Combat' });
+      await expect(combat.getByText(/^Round \d+$/)).toHaveText(round, { timeout: 500 });
       if (name) await expect(turn(playerPage)).toHaveText(new RegExp(name), { timeout: 500 });
       // The hidden combatant's turn: the player sees nobody's.
       else await expect(turn(playerPage)).toHaveCount(0, { timeout: 500 });
@@ -70,6 +70,8 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
 
   await test.step('ending the encounter removes it for the player', async () => {
     await gmPage.getByRole('button', { name: 'End encounter' }).click();
-    await expect(playerPage.getByRole('heading', { name: /^Combat/ })).toBeHidden();
+    await expect(
+      playerPage.getByRole('tabpanel', { name: 'Combat' }).getByText(/^Round/),
+    ).toBeHidden();
   });
 });

@@ -43,18 +43,19 @@ test('a GM upgrades the table, and older sheets show a notice', async ({ browser
   });
   const create = (name: string) =>
     post<{ actor: { id: string } }>(gm, `/tables/${table.id}/actors`, { type: 'npc', name });
-  const { actor: veteran } = await create('Veteran');
+  await create('Veteran');
   await installPlugin(gm, await pack('1.1.0'));
 
   const page = await gm.context.newPage();
   const notice = page.getByText(/This sheet was made with/);
-  const openSheet = async (id: string, name: string) => {
-    await page.goto(`/tables/${table.id}/actors/${id}`);
-    await expect(page.getByRole('heading', { name })).toBeVisible();
+  const openSheet = async (name: string) => {
+    await page.goto(`/tables/${table.id}`);
+    await page.getByRole('button', { name: `Open sheet: ${name}` }).click();
+    await expect(page.getByRole('tabpanel', { name }).getByRole('heading', { name })).toBeVisible();
   };
 
   await test.step('the table stays on its version until upgraded', async () => {
-    await openSheet(veteran.id, 'Veteran');
+    await openSheet('Veteran');
     await expect(
       page.getByText('Versioned System 1.1.0 is installed; this table plays 1.0.0.'),
     ).toBeVisible();
@@ -62,18 +63,18 @@ test('a GM upgrades the table, and older sheets show a notice', async ({ browser
   });
 
   await test.step('the GM upgrades it from the settings', async () => {
-    await page.getByRole('link', { name: 'Upgrade in settings' }).click();
+    await page.getByRole('button', { name: 'Upgrade in settings' }).click();
     await page.getByRole('button', { name: 'Upgrade to 1.1.0' }).click();
     await expect(page.getByText('This table plays Versioned System 1.1.0.')).toBeVisible();
   });
 
   await test.step('older sheets say so; new ones do not', async () => {
-    await openSheet(veteran.id, 'Veteran');
+    await openSheet('Veteran');
     await expect(notice).toHaveText(
       'This sheet was made with Versioned System 1.0.0; the table now uses 1.1.0. Fields that changed since may show their defaults.',
     );
-    const { actor: recruit } = await create('Recruit');
-    await openSheet(recruit.id, 'Recruit');
+    await create('Recruit');
+    await openSheet('Recruit');
     await expect(notice).toBeHidden();
   });
 });

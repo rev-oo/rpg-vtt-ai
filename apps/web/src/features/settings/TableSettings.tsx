@@ -1,29 +1,30 @@
 import { useState, type ReactElement } from 'react';
-import { Navigate, useRevalidator } from 'react-router';
+import { useRevalidator } from 'react-router';
 
 import { settingValues } from '@vtt/plugin-engine';
 import { canManageTable } from '@vtt/shared';
 import { createTableBody, validationDetailsSchema, type TableView } from '@vtt/shared/api';
 import { Alert, Button, TextField } from '@vtt/ui';
 
-import { ApiError } from '../api/client.js';
-import { api } from '../api/endpoints.js';
-import { errorMessage } from '../api/errors.js';
-import { ArchiveTable } from '../features/settings/ArchiveTable.js';
-import { Compendium } from '../features/settings/Compendium.js';
-import { houseRuleErrors, type SettingValues } from '../features/settings/house-rules.js';
-import { HouseRules } from '../features/settings/HouseRules.js';
-import { UpgradeSystem } from '../features/settings/UpgradeSystem.js';
-import { useTableData } from '../features/table/table-data.js';
-import { t } from '../i18n/index.js';
-import { useTableSystem } from '../plugin-host/system-context.js';
+import { ApiError } from '../../api/client.js';
+import { api } from '../../api/endpoints.js';
+import { errorMessage } from '../../api/errors.js';
+import { t } from '../../i18n/index.js';
+import { useTableSystem } from '../../plugin-host/system-context.js';
+import { useTableData } from '../table/table-data.js';
+
+import { ArchiveTable } from './ArchiveTable.js';
+import { Compendium } from './Compendium.js';
+import { houseRuleErrors, type SettingValues } from './house-rules.js';
+import { HouseRules } from './HouseRules.js';
+import { UpgradeSystem } from './UpgradeSystem.js';
 
 const { name: nameSchema, description: descriptionSchema } = createTableBody.shape;
 
-/** The table settings tab, GM only (FR-ADMIN-04, FR-TABLE-07). */
-export default function TableSettingsRoute(): ReactElement {
+/** The table settings panel, GM only (FR-ADMIN-04, FR-TABLE-07). */
+export function TableSettings(): ReactElement {
   const { table } = useTableData();
-  if (!canManageTable(table.role)) return <Navigate to={`/tables/${table.id}`} replace />;
+  if (!canManageTable(table.role)) return <Alert tone="error">{t('settings.gmOnly')}</Alert>;
   return (
     <div className="flex flex-col gap-8">
       <TableSettingsForm key={table.id} table={table} />
@@ -108,10 +109,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
     >
       {failure && <Alert tone="error">{failure}</Alert>}
       {saved && <Alert>{t('settings.saved')}</Alert>}
-      <section className="flex flex-col gap-4" aria-labelledby="table-settings-heading">
-        <h2 id="table-settings-heading" className="text-lg font-semibold">
-          {t('settings.table')}
-        </h2>
+      <div className="flex flex-col gap-4">
         <TextField
           label={t('createTable.name')}
           value={name}
@@ -139,7 +137,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
           />
           {t('settings.anyActorType')}
         </label>
-      </section>
+      </div>
       <section className="flex flex-col gap-4" aria-labelledby="house-rules-heading">
         <h2 id="house-rules-heading" className="text-lg font-semibold">
           {t('settings.houseRules', { name: table.systemName })}

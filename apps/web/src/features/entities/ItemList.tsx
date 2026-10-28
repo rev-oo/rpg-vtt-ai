@@ -11,8 +11,9 @@ import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
-import { EntityFilters } from './EntityFilters.js';
 import { EntityRow } from './EntityRow.js';
+import type { EntityFilters } from './filters.js';
+import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { usePagedList } from './paging.js';
 
@@ -23,7 +24,8 @@ export interface ItemListProps {
   /** The page after the loader's, if any (ADR-057). */
   nextCursor: string | null;
   fetchPage: (cursor: string) => Promise<ListPage<ItemView>>;
-  trash: boolean;
+  filters: EntityFilters;
+  onFilters: (filters: EntityFilters) => void;
   error: string | null;
 }
 
@@ -36,9 +38,11 @@ export function ItemList({
   items: firstPage,
   nextCursor,
   fetchPage,
-  trash,
+  filters,
+  onFilters,
   error,
 }: ItemListProps): ReactElement {
+  const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
   const items = paged.rows;
   const { table, types, actors } = data;
@@ -64,7 +68,12 @@ export function ItemList({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex-1">
-          <EntityFilters searchLabel={t('items.search')} types={types.itemTypes} />
+          <ListFilters
+            searchLabel={t('items.search')}
+            types={types.itemTypes}
+            value={filters}
+            onChange={onFilters}
+          />
         </div>
         {manage && types.itemTypes.length > 0 && (
           <Button

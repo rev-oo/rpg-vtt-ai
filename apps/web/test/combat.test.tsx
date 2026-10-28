@@ -117,7 +117,7 @@ describe('combat tracker', () => {
     const { sockets } = openTable('player', () => encounter);
     const socket = await connected(sockets);
 
-    expect(await screen.findByRole('heading', { name: /Combat/ })).toHaveTextContent('Round 1');
+    expect(await screen.findByText('Round 1')).toBeInTheDocument();
     expect(order()).toEqual(['15Goblin']);
     expect(screen.getByRole('listitem', { current: 'step' })).toHaveTextContent('Goblin');
     expect(screen.queryByRole('button', { name: 'Next turn' })).not.toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('combat tracker', () => {
     encounter = null;
     socket.receive(serverEvent({ type: 'combat.updated', tableId: 't1', payload: {} }));
     await waitFor(() => {
-      expect(screen.queryByRole('heading', { name: /Combat/ })).not.toBeInTheDocument();
+      expect(screen.queryByText('Round 1')).not.toBeInTheDocument();
     });
   });
 

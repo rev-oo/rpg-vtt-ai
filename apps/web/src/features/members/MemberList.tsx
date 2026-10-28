@@ -45,10 +45,7 @@ export function MemberList({ data, userId }: { data: TableData; userId: string }
   };
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="members-heading">
-      <h2 id="members-heading" className="text-lg font-semibold">
-        {t('members.title')}
-      </h2>
+    <div className="flex flex-col gap-3">
       {failure && <Alert tone="error">{failure}</Alert>}
       {status && (
         <p role="status" className="text-sm text-muted">
@@ -135,6 +132,6 @@ export function MemberList({ data, userId }: { data: TableData; userId: string }
         })}
       </ul>
       <p className="text-sm text-muted">{t('members.removeNote')}</p>
-    </section>
+    </div>
   );
 }

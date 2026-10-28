@@ -23,9 +23,11 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
   const log = page.getByRole('log', { name: 'Messages' });
 
+  // The sheet opens as its own panel, beside the actor list (ADR-059).
+  const sheet = page.getByRole('tabpanel', { name: 'Ayla' });
   await test.step('the sheet renders the plugin layout and its custom node', async () => {
-    await page.getByRole('link', { name: 'Open sheet: Ayla' }).click();
-    await expect(page.getByRole('heading', { name: 'Ayla' })).toBeVisible();
+    await page.getByRole('button', { name: 'Open sheet: Ayla' }).click();
+    await expect(sheet.getByRole('heading', { name: 'Ayla' })).toBeVisible();
     await expect(page.getByLabel('Might')).toHaveValue('4');
     // `mod` is `half(@might)`, from code/shared.js.
     const banner = page.getByText('Vitals: Ayla has 7 HP, mod 2');
@@ -36,14 +38,14 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
 
   await test.step('a roll button posts a card the plugin draws', async () => {
     await page.getByRole('button', { name: 'Check' }).click();
-    await expect(page.getByRole('status')).toHaveText('Rolled. The result is in the chat.');
+    await expect(sheet.getByRole('status')).toHaveText('Rolled. The result is in the chat.');
     await expect(log.getByText('Might check rolled 3: Success')).toBeVisible();
     await expect(log.getByLabel('Total 3', { exact: true })).toBeVisible();
   });
 
   await test.step('a handler recipe rolls and posts through server code', async () => {
     await page.getByRole('button', { name: 'Strike' }).click();
-    await expect(page.getByRole('status')).toHaveText('Rolled. The result is in the chat.');
+    await expect(sheet.getByRole('status')).toHaveText('Rolled. The result is in the chat.');
     await expect(log.getByText('Ayla strikes')).toBeVisible();
     await expect(log.getByLabel('Total 3', { exact: true })).toHaveCount(2);
   });

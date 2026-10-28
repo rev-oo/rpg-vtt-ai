@@ -7,6 +7,7 @@ import { expect, test, type BrowserContext } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
 import { installPlugin, packPlugin } from './support/plugins.js';
+import { showPanel } from './support/workspace.js';
 
 const reference = fileURLToPath(new URL('../../plugins/', import.meta.url));
 
@@ -48,18 +49,19 @@ test('the Content Security Policy lets the app run', async ({ browser }) => {
     role: 'player',
   });
   await post(player, `/invites/${token}/accept`);
-  const { actor } = await post<{ actor: { id: string } }>(player, `/tables/${table.id}/actors`, {
+  await post(player, `/tables/${table.id}/actors`, {
     type: 'character',
     name: 'Brin',
   });
-  const { entry } = await post<{ entry: { id: string } }>(gm, `/tables/${table.id}/journal`, {
+  await post(gm, `/tables/${table.id}/journal`, {
     title: 'Rumours',
     hidden: false,
   });
 
   const page = await player.context.newPage();
-  const response = await page.goto(`/tables/${table.id}/actors/${actor.id}`);
+  const response = await page.goto(`/tables/${table.id}`);
   expect(await response?.text()).toContain('http-equiv="Content-Security-Policy"');
+  await page.getByRole('button', { name: 'Open sheet: Brin' }).click();
   // The sheet is plugin code, styled by the plugin, live over the collab socket.
   await expect(page.getByRole('status', { name: 'Max HP by the rules' })).toHaveText('10');
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
@@ -69,7 +71,8 @@ test('the Content Security Policy lets the app run', async ({ browser }) => {
   await page.getByLabel('Message', { exact: true }).press('Enter');
   await expect(page.getByRole('log', { name: 'Messages' })).toContainText('Hello');
 
-  await page.goto(`/tables/${table.id}/journal/${entry.id}`);
+  await showPanel(page, 'Journal');
+  await page.getByRole('button', { name: 'Open: Rumours' }).click();
   await expect(page.getByRole('textbox', { name: 'Rumours' })).toBeVisible();
 
   expect(violations).toEqual([]);

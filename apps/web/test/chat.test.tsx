@@ -7,6 +7,7 @@ import type { ChatMessage } from '@vtt/shared/api';
 import { setCsrfToken } from '../src/api/client.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
+import { findAlert } from './support/alerts.js';
 import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
 import { fakeWebSocket, serverEvent, type FakeSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
@@ -96,7 +97,10 @@ describe('table page', () => {
     const whisper = message('psst', { audience: 'whisper', recipientIds: [USER.id] });
     openTable({ history: page([hello, whisper, message('gm', { audience: 'gm' })]) });
 
-    expect(await screen.findByRole('heading', { name: 'Crimson Throne' })).toBeInTheDocument();
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Crimson Throne' }),
+    ).toBeInTheDocument();
+    await screen.findByRole('log', { name: 'Messages' });
     expect(texts()).toEqual(['hello', 'psst', 'gm']);
     const items = within(log()).getAllByRole('listitem');
     expect(items[1]).toHaveTextContent('Whisper to Alice');
@@ -158,7 +162,7 @@ describe('table page', () => {
       },
     });
     renderApp('/tables/t9');
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    expect(await findAlert()).toHaveTextContent(
       'This table does not exist, or you are not a member.',
     );
   });
@@ -234,9 +238,7 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     });
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText('Message'), 'hi{Enter}');
-    expect(await screen.findByRole('alert')).toHaveTextContent(
-      'You can only speak as an actor you own.',
-    );
+    expect(await findAlert()).toHaveTextContent('You can only speak as an actor you own.');
     expect(screen.getByLabelText('Message')).toHaveValue('hi');
   });
 
@@ -333,7 +335,7 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     });
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText('Message'), '/r 1d20 + str{Enter}');
-    expect(await screen.findByRole('alert')).toHaveTextContent(
+    expect(await findAlert()).toHaveTextContent(
       'Unknown name "str"; references start with "@", as in @str (line 1, column 8)',
     );
     expect(screen.getByLabelText('Message')).toHaveValue('/r 1d20 + str');

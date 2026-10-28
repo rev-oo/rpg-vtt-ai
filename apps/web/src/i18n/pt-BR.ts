@@ -65,7 +65,26 @@ export const ptBR: Messages = {
 
   'table.notFound': 'Esta mesa não existe, ou você não é membro dela.',
   'table.back': 'Voltar para suas mesas',
-  'table.sections': 'Seções da mesa',
+  'workspace.tables': '← Mesas',
+  'workspace.panels': 'Painéis',
+  'workspace.resetLayout': 'Restaurar layout',
+  'workspace.isOpen': 'aberto',
+  'workspace.overview': 'Mesa',
+  'workspace.chat': 'Chat',
+  'workspace.dice': 'Dados',
+  'workspace.sheet': 'Ficha',
+  'workspace.about': 'Sobre esta mesa',
+  'workspace.hint':
+    'Abra um ator ou uma entrada do diário nas listas; ele abre aqui como um painel. Arraste os painéis pelas abas para organizar a mesa.',
+  'workspace.announce.opened': '{title} aberto',
+  'workspace.announce.closed': '{title} fechado',
+  'workspace.announce.maximized': '{title} maximizado',
+  'workspace.announce.restored': '{title} restaurado',
+  'workspace.announce.floated': '{title} flutua sobre a mesa',
+  'workspace.announce.docked': '{title} encaixado',
+  'workspace.closeTab': 'Fechar {title}',
+  'workspace.closeTabPlain': 'Fechar',
+  'workspace.empty': 'Todos os painéis estão fechados. Abra-os de novo pelo menu Painéis.',
 
   'entities.name': 'Nome',
   'entities.type': 'Tipo',
@@ -115,7 +134,6 @@ export const ptBR: Messages = {
   'ownership.save': 'Salvar',
   'ownership.saved': 'A propriedade de {name} foi salva.',
 
-  'chat.title': 'Chat',
   'chat.messages': 'Mensagens',
   'chat.empty': 'Nenhuma mensagem ainda.',
   'chat.loadOlder': 'Carregar mensagens anteriores',
@@ -279,18 +297,12 @@ export const ptBR: Messages = {
   'table.systemFailed': 'O sistema não pôde ser carregado: {detail}',
 
   'sheet.open': 'Abrir ficha',
-  'sheet.back': 'Voltar para os atores',
   'sheet.notFound': 'Este ator não existe, ou você não pode vê-lo.',
   'sheet.loading': 'Carregando a ficha…',
   'sheet.unavailable': 'A ficha não está disponível enquanto o sistema da mesa estiver desativado.',
   'sheet.dataVersion':
     'Esta ficha foi criada com {system} {made}; a mesa agora usa {current}. Campos que mudaram desde então podem mostrar o valor padrão.',
   'sheet.connecting': 'Conectando à ficha…',
-  'sheet.panes': 'Visões da ficha',
-  'sheet.pane.chat': 'Chat',
-  'sheet.pane.sheet': 'Ficha',
-  'sheet.pane.dice': 'Dados',
-  'dice.title': 'Dados',
   'dice.rollDie': 'Rolar um {die}',
   'dice.formula': 'Fórmula',
   'dice.roll': 'Rolar',
@@ -365,7 +377,6 @@ export const ptBR: Messages = {
   'journal.hiddenBanner':
     'Os jogadores não podem ver esta entrada. Revele-a quando eles devem lê-la.',
   'journal.open': 'Abrir',
-  'journal.back': 'Voltar para o diário',
   'journal.reveal': 'Revelar aos jogadores',
   'journal.hide': 'Ocultar dos jogadores',
   'journal.revealed': '{name} agora está visível para os jogadores.',
@@ -418,7 +429,7 @@ export const ptBR: Messages = {
   'invite.expired': 'Este link de convite expirou.',
 
   'settings.title': 'Configurações',
-  'settings.table': 'Mesa',
+  'settings.gmOnly': 'Só mestres e assistentes podem mudar as configurações da mesa.',
   'settings.anyActorType':
     'Jogadores podem criar todos os tipos de ator, inclusive os destinados ao mestre',
   'settings.houseRules': 'Regras da casa de {name}',

@@ -41,10 +41,7 @@ export function DicePane({
   };
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="dice-title">
-      <h2 id="dice-title" className="text-xl font-semibold">
-        {t('dice.title')}
-      </h2>
+    <div className="flex flex-col gap-3">
       {!mayRoll && <Alert tone="info">{t('dice.spectator')}</Alert>}
       <div className="grid grid-cols-4 gap-2">
         {DICE.map((die) => (
@@ -86,6 +83,6 @@ export function DicePane({
           {status}
         </p>
       )}
-    </section>
+    </div>
   );
 }

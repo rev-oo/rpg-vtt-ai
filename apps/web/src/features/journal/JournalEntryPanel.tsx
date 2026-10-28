@@ -1,63 +1,93 @@
 import { useForm } from '@tanstack/react-form';
-import { lazy, Suspense, useId, useState, type ReactElement } from 'react';
-import { Link, useRevalidator } from 'react-router';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useEffectEvent,
+  useId,
+  useState,
+  type ReactElement,
+} from 'react';
+import { useRevalidator } from 'react-router';
 
 import { canSetOwnership } from '@vtt/shared';
 import { createJournalBody, type JournalEntryView } from '@vtt/shared/api';
 import { Alert, Button } from '@vtt/ui';
 
-import { ApiError } from '../api/client.js';
-import { api } from '../api/endpoints.js';
-import { errorMessage } from '../api/errors.js';
-import { useJournalBody } from '../collab/use-journal-body.js';
-import { useTableData } from '../features/table/table-data.js';
-import { TextInput } from '../forms/fields.js';
-import { t } from '../i18n/index.js';
-
-import type { Route } from './+types/table-journal-entry';
+import { ApiError } from '../../api/client.js';
+import { api } from '../../api/endpoints.js';
+import { errorMessage } from '../../api/errors.js';
+import { useJournalBody } from '../../collab/use-journal-body.js';
+import { TextInput } from '../../forms/fields.js';
+import { t } from '../../i18n/index.js';
+import { useTableData } from '../table/table-data.js';
 
 // TipTap is only downloaded once an entry is opened (ADR-037).
 const RichTextEditor = lazy(() =>
-  import('../collab/RichTextEditor.js').then((module) => ({ default: module.RichTextEditor })),
+  import('../../collab/RichTextEditor.js').then((module) => ({ default: module.RichTextEditor })),
 );
 
-type EntryData = { entry: JournalEntryView; error: null } | { entry: null; error: string };
+type EntryState =
+  | { status: 'loading' }
+  | { status: 'ready'; entry: JournalEntryView }
+  | { status: 'failed'; error: string };
 
-/** A hidden or deleted entry answers 404, like one that never existed (ADR-038). */
-export async function clientLoader({ params }: Route.ClientLoaderArgs): Promise<EntryData> {
-  try {
-    return { entry: await api.getJournalEntry(params.entryId), error: null };
-  } catch (error) {
-    const gone = error instanceof ApiError && (error.status === 404 || error.status === 400);
-    return { entry: null, error: gone ? t('journal.notFound') : errorMessage(error) };
-  }
-}
+/**
+ * One journal entry, as a workspace panel: its title and its body, edited together
+ * (FR-JOURNAL-01). It loads again whenever the table's data does, so a hidden or deleted
+ * entry leaves the screen; such an entry answers 404, like one that never existed (ADR-038).
+ */
+export function JournalEntryPanel({
+  entryId,
+  onTitle,
+}: {
+  entryId: string;
+  onTitle: (title: string) => void;
+}): ReactElement {
+  const data = useTableData();
+  const [state, setState] = useState<EntryState>({ status: 'loading' });
+  const [reloads, setReloads] = useState(0);
+  const showTitle = useEffectEvent(onTitle);
 
-/** One journal entry: its title and its body, edited together (FR-JOURNAL-01). */
-export default function TableJournalEntryRoute({ loaderData }: Route.ComponentProps): ReactElement {
-  const { table } = useTableData();
-  const back = (
-    <Link to={`/tables/${table.id}/journal`} className="self-start">
-      {t('journal.back')}
-    </Link>
-  );
-  if (!loaderData.entry) {
-    return (
-      <div className="flex flex-col gap-3">
-        <Alert tone="error">{loaderData.error}</Alert>
-        {back}
-      </div>
+  useEffect(() => {
+    let current = true;
+    api.getJournalEntry(entryId).then(
+      (entry) => {
+        if (!current) return;
+        setState({ status: 'ready', entry });
+        showTitle(entry.title);
+      },
+      (error: unknown) => {
+        if (!current) return;
+        const gone = error instanceof ApiError && (error.status === 404 || error.status === 400);
+        setState({ status: 'failed', error: gone ? t('journal.notFound') : errorMessage(error) });
+      },
     );
-  }
+    return () => {
+      current = false;
+    };
+  }, [entryId, data, reloads]);
+
+  if (state.status === 'loading') return <p className="text-muted">{t('app.loading')}</p>;
+  if (state.status === 'failed') return <Alert tone="error">{state.error}</Alert>;
   return (
-    <div className="flex flex-col gap-3">
-      {back}
-      <JournalEntry key={loaderData.entry.id} entry={loaderData.entry} />
-    </div>
+    <JournalEntry
+      key={state.entry.id}
+      entry={state.entry}
+      onChanged={() => {
+        setReloads((n) => n + 1);
+      }}
+    />
   );
 }
 
-function JournalEntry({ entry }: { entry: JournalEntryView }): ReactElement {
+function JournalEntry({
+  entry,
+  onChanged,
+}: {
+  entry: JournalEntryView;
+  onChanged: () => void;
+}): ReactElement {
   const { table } = useTableData();
   const revalidator = useRevalidator();
   const body = useJournalBody(entry.id);
@@ -69,6 +99,8 @@ function JournalEntry({ entry }: { entry: JournalEntryView }): ReactElement {
     setFailure(null);
     try {
       await api.updateJournalEntry(entry.id, input);
+      onChanged();
+      // The list shows titles and hidden marks too.
       await revalidator.revalidate();
     } catch (caught) {
       setFailure(errorMessage(caught));

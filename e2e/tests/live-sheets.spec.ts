@@ -18,8 +18,9 @@ test.afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
 
-async function openSheet(page: Page, tableId: string, actorId: string) {
-  await page.goto(`/tables/${tableId}/actors/${actorId}`);
+async function openSheet(page: Page, tableId: string, name: string) {
+  await page.goto(`/tables/${tableId}`);
+  await page.getByRole('button', { name: `Open sheet: ${name}` }).click();
   const sheet = page.locator('[data-plugin="tiny-d20"]');
   await expect(sheet).toBeVisible();
   return sheet;
@@ -60,9 +61,9 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     page.on('pageerror', (error) => errors.push(error.message));
     return page;
   };
-  const ownerSheet = await openSheet(await pageOf(owner), table.id, actor.id);
-  const gmSheet = await openSheet(await pageOf(gm), table.id, actor.id);
-  const watcherSheet = await openSheet(await pageOf(watcher), table.id, actor.id);
+  const ownerSheet = await openSheet(await pageOf(owner), table.id, 'Ayla');
+  const gmSheet = await openSheet(await pageOf(gm), table.id, 'Ayla');
+  const watcherSheet = await openSheet(await pageOf(watcher), table.id, 'Ayla');
 
   await test.step('changes reach the other browsers within 500 ms', async () => {
     await ownerSheet.getByLabel('Strength').fill('14');
@@ -168,7 +169,7 @@ test('two browsers edit one live sheet', async ({ browser }) => {
     await expect(watcherSheet.getByRole('toolbar')).toHaveCount(0);
 
     // The formatting is kept with the document.
-    const again = await openSheet(await pageOf(gm), table.id, actor.id);
+    const again = await openSheet(await pageOf(gm), table.id, 'Ayla');
     await again.getByRole('tab', { name: 'Notes' }).click();
     await expect(biography(again).locator('li strong')).toHaveText(
       'Ayla. Born in Elm. Raised by wolves.',
@@ -178,7 +179,7 @@ test('two browsers edit one live sheet', async ({ browser }) => {
 
   await test.step('the data survives a reload', async () => {
     const page = await pageOf(owner);
-    const again = await openSheet(page, table.id, actor.id);
+    const again = await openSheet(page, table.id, 'Ayla');
     await expect(again.getByLabel('Strength')).toHaveValue('14');
     await expect(again.getByRole('textbox', { name: 'Hit points', exact: true })).toHaveValue('7');
   });
