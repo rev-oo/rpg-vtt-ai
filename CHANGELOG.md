@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- Item types can declare a `group`, a plural label (`labelPlural`) and an `order`. The items panel, an actor's items and the compendium then show items under their groups, such as "Spells" and "Gear", with the compendium's actors first. Systems that declare no group keep a single list. Tiny D20 adds spells, in a "Spells" group, and two spells in its bestiary pack (FR-PLUGIN-11, ADR-061).
+
 ### Changed
 
 - The compendium is a panel of the workspace that every member can browse. Search the system's pack entries by name, pack and type, preview each entry's sheet, and see which ones the table already has. GMs and assistants copy chosen entries into the table, and anyone copies items onto an actor they own. This replaces importing whole packs from the table settings, and `GET /tables/:id/packs` and `POST /tables/:id/packs/:name/import` are removed (FR-PLUGIN-09, ADR-060).
