@@ -161,7 +161,7 @@ export function ChatPanel({
         ref={listRef}
         role="log"
         aria-label={t('chat.messages')}
-        className="min-h-0 flex-1 overflow-y-auto"
+        className="min-h-24 flex-1 overflow-y-auto"
         onScroll={(e) => {
           const list = e.currentTarget;
           atBottom.current = list.scrollHeight - list.scrollTop - list.clientHeight < 24;

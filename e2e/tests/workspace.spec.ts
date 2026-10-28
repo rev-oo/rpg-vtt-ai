@@ -55,6 +55,18 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await expect(log).toBeVisible();
   });
 
+  await test.step('a short window scrolls inside the panels, never around them', async () => {
+    await page.setViewportSize({ width: 1280, height: 360 });
+    // A string, as this package has no DOM types; it runs in the page.
+    const overflowing = (): Promise<number> =>
+      page.evaluate<number>(
+        `[...document.querySelectorAll('.dv-view, html')].filter((el) => el.scrollHeight > el.clientHeight + 1).length`,
+      );
+    await expect(log).toBeVisible();
+    await expect.poll(overflowing).toBe(0);
+    await page.setViewportSize({ width: 1280, height: 800 });
+  });
+
   await test.step('two sheets open side by side; the URL stays on the table', async () => {
     await page.getByRole('button', { name: 'Open sheet: Wren' }).click();
     await expect(panel(page, 'Wren').getByLabel('Strength')).toBeVisible();

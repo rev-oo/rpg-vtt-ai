@@ -22,15 +22,13 @@ import { useTableData } from '../table/table-data.js';
 import { useDock } from './dock-context.js';
 import { usePanelList } from './use-panel-list.js';
 
-/** A panel's scrolling body; dockview names its tab panel after the tab (ADR-059). */
-function Body({
-  scroll = true,
-  children,
-}: {
-  scroll?: boolean;
-  children: ReactNode;
-}): ReactElement {
-  return <div className={scroll ? 'h-full overflow-y-auto p-3' : 'h-full p-3'}>{children}</div>;
+/**
+ * A panel's body, which scrolls whatever does not fit, so dockview's own view never does
+ * (ADR-059). It is positioned, so absolutely placed content such as screen-reader-only
+ * labels stays inside too. dockview names its tab panel after the tab.
+ */
+function Body({ children }: { children: ReactNode }): ReactElement {
+  return <div className="relative h-full overflow-y-auto p-3">{children}</div>;
 }
 
 const param = (params: unknown, key: string): unknown =>
@@ -214,7 +212,7 @@ export function ChatDockPanel(): ReactElement {
   const { table, members, actors, chat } = useTableData();
   const { userId } = useDock();
   return (
-    <Body scroll={false}>
+    <Body>
       <ChatPanel
         table={table}
         members={members}
