@@ -270,6 +270,8 @@ export const en = {
   'sheet.notFound': 'This actor does not exist, or you cannot see it.',
   'sheet.loading': 'Loading the sheet…',
   'sheet.unavailable': 'The sheet is not available while the table’s system is disabled.',
+  'sheet.dataVersion':
+    'This sheet was made with {system} {made}; the table now uses {current}. Fields that changed since may show their defaults.',
   'sheet.connecting': 'Connecting to the sheet…',
   'sheet.panes': 'Sheet views',
   'sheet.pane.chat': 'Chat',

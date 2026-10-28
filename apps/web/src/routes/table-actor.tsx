@@ -81,6 +81,16 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
         </h2>
         {host.status === 'ready' && actor.access === 'owner' && <SheetHistory actorId={actor.id} />}
       </div>
+      {actor.dataVersion !== table.systemVersion && (
+        // Plugin data migrations are LATER (§9.7, ADR-058): say so instead.
+        <Alert tone="info">
+          {t('sheet.dataVersion', {
+            system: table.systemName,
+            made: actor.dataVersion,
+            current: table.systemVersion,
+          })}
+        </Alert>
+      )}
       {host.status === 'loading' && <p className="text-muted">{t('sheet.loading')}</p>}
       {host.status === 'unavailable' && <Alert tone="info">{t('sheet.unavailable')}</Alert>}
       {host.status === 'error' && (

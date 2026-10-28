@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, ne } from 'drizzle-orm';
 import type { FastifyBaseLogger } from 'fastify';
 
 import { ArchiveError, pluginFolderOf, readPluginArchive, readPluginFolder } from '@vtt/plugin-io';
@@ -15,7 +15,7 @@ import {
 import type { PluginStatus } from '@vtt/shared/api';
 
 import type { Db } from '../db/client.js';
-import { plugins } from '../db/schema.js';
+import { gameTables, plugins } from '../db/schema.js';
 import { conflict, unprocessable } from '../errors.js';
 
 import { PluginCodeRuntime, type LoadedCode } from './code-runtime.js';
@@ -210,6 +210,19 @@ export class PluginRegistry {
           tx.insert(plugins)
             .values({ id: plugin.id, enabled: false, ...values })
             .run();
+        // Tables follow their system's installed version; entities keep the version they
+        // were made with, so sheets can tell them apart (§9.7, ADR-058).
+        if (manifest) {
+          tx.update(gameTables)
+            .set({ systemVersion: manifest.version })
+            .where(
+              and(
+                eq(gameTables.systemId, plugin.id),
+                ne(gameTables.systemVersion, manifest.version),
+              ),
+            )
+            .run();
+        }
       }
       const found = new Set(scanned.map((plugin) => plugin.id));
       for (const id of existing.keys()) {

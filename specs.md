@@ -19,13 +19,13 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
 | M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
 | M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Done        | 100%     |
-| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | In progress | 67%      |
+| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Done        | 100%     |
 | LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M11
-- **Next task:** `T-0813`
+- **Active milestone:** none; M8–M11 are done and 0.2.0 is ready to release (§17)
+- **Next task:** release 0.2.0
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -49,6 +49,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0808 done (ADR-055): scheduled backups via `BACKUP_DIR`, keeping the newest N. M10 done.                                                                                    |
 | 2026-10-27 | T-0811 done (ADR-056): the image is built and smoke-tested natively on amd64 and arm64; releases tag both in one manifest.                                                    |
 | 2026-10-28 | T-0812 done (ADR-057): actor, item and journal lists page with cursors; the web tabs load more on scroll.                                                                     |
+| 2026-10-28 | T-0813 done (ADR-058): tables follow their system's installed version; actor sheets made with another version show a notice. M11 done; 0.2.0 is ready to release.             |
 
 ---
 
@@ -636,7 +637,7 @@ Notes:
 
 - Values written by clients are validated against the schema on input (client) and on persist (server).
 - Invalid values on persist are replaced with the schema default and logged. The editor receives a `validation` message (ADR-031). Journal bodies are not repaired.
-- Schema changes on a plugin version bump are **not** auto-migrated in MVP. Actors and items store the system version they were created with (`dataVersion`); missing fields read as their defaults. Nothing compares versions yet; migrations are LATER (see §7.11).
+- Schema changes on a plugin version bump are **not** auto-migrated. Actors and items store the system version they were created with (`dataVersion`); missing fields read as their defaults. Tables follow their system's installed version, and an actor sheet whose `dataVersion` differs shows a notice (ADR-058). Migrations are LATER (see §7.11).
 
 ---
 
@@ -838,10 +839,11 @@ Independent tasks from the known limitations of 0.1.0. The CLI and SDK stay unpu
   - **Done when:** endpoint tests cover cursors and limits; a table with more entries than one page lists all of them in the web.
   - **Note:** done as ADR-057. Pages are keyset pages on `lower(name), id` with opaque cursors; the server fills each page with what the caller may see. The tabs load 50 at a time, the next page when the end of the list scrolls into view. The table loader still reads all actors.
 
-- [ ] **T-0813 · Data version warning**
+- [x] **T-0813 · Data version warning**
   - **Deps:** none
   - **Do:** Compare an actor's or item's `dataVersion` with the installed plugin version and show a notice on its sheet when they differ (§9.7). Migrations stay LATER.
   - **Done when:** a test with an upgraded fixture plugin shows the notice; matching versions show nothing.
+  - **Note:** done as ADR-058. Plugin scans now move each table's `system_version` to the installed version, so new entities get it too; before, tables kept the version they were created with. Items have no sheet yet, so only actor sheets show the notice.
 
 ### LATER — Not scheduled
 
@@ -973,6 +975,7 @@ Each question blocks specific tasks if unanswered. Record decisions in `docs/adr
 | ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted |
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
 | ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
+| ADR-058 | [Tables follow their system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)                    | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
