@@ -14,7 +14,6 @@ import { useTableSystem } from '../../plugin-host/system-context.js';
 import { useTableData } from '../table/table-data.js';
 
 import { ArchiveTable } from './ArchiveTable.js';
-import { Compendium } from './Compendium.js';
 import { houseRuleErrors, type SettingValues } from './house-rules.js';
 import { HouseRules } from './HouseRules.js';
 import { UpgradeSystem } from './UpgradeSystem.js';
@@ -28,7 +27,6 @@ export function TableSettings(): ReactElement {
   return (
     <div className="flex flex-col gap-8">
       <TableSettingsForm key={table.id} table={table} />
-      <Compendium table={table} />
       <UpgradeSystem table={table} />
       <ArchiveTable table={table} />
     </div>

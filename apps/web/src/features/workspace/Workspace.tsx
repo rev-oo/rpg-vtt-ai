@@ -53,6 +53,7 @@ const MENU: readonly (ToolPanel | PagePanel)[] = [
   'actors',
   'items',
   'journal',
+  'compendium',
   'combat',
   'chat',
   'dice',

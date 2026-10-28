@@ -54,7 +54,16 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     for (const name of ['Actors', 'Table', 'Combat', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }
-    expect(tabs()).toEqual(['Actors', 'Items', 'Journal', 'Table', 'Combat', 'Chat', 'Dice']);
+    expect(tabs()).toEqual([
+      'Actors',
+      'Items',
+      'Journal',
+      'Compendium',
+      'Table',
+      'Combat',
+      'Chat',
+      'Dice',
+    ]);
   });
 
   it('has no other table URLs: they lead home', async () => {
@@ -117,7 +126,16 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     openTable('/tables/t1');
     expect(await panel('Table')).toBeInTheDocument();
     expect(screen.queryByRole('tabpanel', { name: 'Chat' })).toBeNull();
-    expect(tabs()).toEqual(['Table', 'Actors', 'Items', 'Journal', 'Chat', 'Combat', 'Dice']);
+    expect(tabs()).toEqual([
+      'Table',
+      'Actors',
+      'Items',
+      'Journal',
+      'Compendium',
+      'Chat',
+      'Combat',
+      'Dice',
+    ]);
     await userEvent.setup().click(screen.getByText('Chat', { selector: '.dv-tab *' }));
     expect(await panel('Chat')).toBeInTheDocument();
     await waitFor(() => {

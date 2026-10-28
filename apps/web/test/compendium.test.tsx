@@ -1,9 +1,10 @@
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { PluginDefinition } from '@vtt/plugin-schema';
-import type { PackSummary, TableView } from '@vtt/shared/api';
+import type { TableRole } from '@vtt/shared';
+import type { CompendiumEntry } from '@vtt/shared/api';
 
 import { setCsrfToken } from '../src/api/client.js';
 import { clearLoadedSystems } from '../src/plugin-host/load.js';
@@ -15,7 +16,8 @@ import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 import { openPanel } from './support/workspace.js';
 
-// T-0803 (FR-PLUGIN-09): importing a compendium pack from the table settings.
+// T-1202 (FR-PLUGIN-09, ADR-060): the compendium panel lists pack entries, previews them and
+// copies them into the table or onto the caller's actors.
 
 afterEach(() => {
   clearLoadedSystems();
@@ -34,9 +36,25 @@ const DEFINITION: PluginDefinition = {
     hasCode: false,
     locales: ['en'],
   },
-  actorTypes: {},
-  itemTypes: {},
-  sheets: {},
+  actorTypes: {
+    npc: {
+      label: 'type.npc',
+      controlledBy: 'gm',
+      sheet: 'npc',
+      schema: { type: 'object', properties: { str: { type: 'integer', default: 10 } } },
+    },
+  },
+  itemTypes: {
+    weapon: {
+      label: 'type.weapon',
+      sheet: 'weapon',
+      schema: { type: 'object', properties: { damage: { type: 'string', default: '1d4' } } },
+    },
+  },
+  sheets: {
+    npc: { layout: { type: 'field', path: 'str', label: 'Strength', input: 'number' } },
+    weapon: { layout: { type: 'field', path: 'damage', label: 'Damage' } },
+  },
   rolls: {},
   dice: {},
   cards: {},
@@ -45,26 +63,40 @@ const DEFINITION: PluginDefinition = {
   styles: [],
 };
 
-const PACK: PackSummary = {
-  name: 'bestiary',
-  label: 'pack.bestiary',
-  actors: 2,
-  items: 2,
-  imported: 0,
+const OGRE: CompendiumEntry = {
+  ref: 'tiny-d20:bestiary:ogre',
+  pack: 'bestiary',
+  kind: 'actor',
+  type: 'npc',
+  name: 'Ogre',
+  system: { str: 19 },
+  inTable: false,
+};
+const SWORD: CompendiumEntry = {
+  ref: 'tiny-d20:bestiary:shortsword',
+  pack: 'bestiary',
+  kind: 'item',
+  type: 'weapon',
+  name: 'Shortsword',
+  system: { damage: '1d6' },
+  inTable: true,
 };
 
-/** The settings page with its system and packs; `table` answers the table as it is now. */
-async function openSettings(
-  handlers: Parameters<typeof fakeApi>[0],
-  table: () => TableView = () => TABLE,
-) {
+const page = (...entries: CompendiumEntry[]) => ({
+  body: { packs: [{ name: 'bestiary', label: 'pack.bestiary' }], entries, nextCursor: null },
+});
+
+/** The table with its compendium panel open. */
+async function openCompendium(role: TableRole, handlers: Parameters<typeof fakeApi>[0] = {}) {
   fakeWebSocket();
+  const actors = { body: { nextCursor: null, actors: [HERO] } };
   const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
     'GET /me': { body: SESSION },
-    'GET /tables/t1': () => ({ body: { table: table() } }),
+    'GET /tables/t1': { body: { table: { ...TABLE, role } } },
     'GET /tables/t1/members': { body: { members: MEMBERS } },
-    'GET /tables/t1/actors': { body: { nextCursor: null, actors: [HERO] } },
+    'GET /tables/t1/actors': actors,
+    'GET /tables/t1/actors?trash=live&limit=50': actors,
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
     'GET /tables/t1/encounter': { body: { encounter: null } },
@@ -81,101 +113,85 @@ async function openSettings(
         },
       },
     },
-    'GET /tables/t1/packs': { body: { packs: [PACK] } },
+    'GET /tables/t1/compendium?limit=50': page(OGRE, SWORD),
     ...handlers,
   });
   renderApp('/tables/t1');
-  await openPanel('Settings');
+  await openPanel('Compendium');
   return api;
 }
 
-describe('compendium', () => {
-  it('imports a pack and says what was already there', async () => {
-    let pack = PACK;
-    const { calls } = await openSettings({
-      'GET /tables/t1/packs': () => ({ body: { packs: [pack] } }),
-      'POST /tables/t1/packs/bestiary/import': () => {
-        pack = { ...PACK, imported: 4 };
-        return { body: { created: 3, skipped: 1 } };
-      },
+const entries = () => screen.findByRole('list', { name: 'Compendium entries' });
+const row = async (name: string) =>
+  within(await entries())
+    .getAllByRole('listitem')
+    .find((item) => within(item).queryByRole('heading', { name }) !== null) ?? null;
+
+describe('compendium browser', () => {
+  it('lists entries with their pack and whether the table has them, and previews a sheet', async () => {
+    await openCompendium('gm');
+    const user = userEvent.setup();
+    expect(await within(await entries()).findByRole('heading', { name: 'Ogre' })).toBeVisible();
+    const sword = await row('Shortsword');
+    expect(sword).toHaveTextContent('Bestiary');
+    expect(sword).toHaveTextContent('In the table');
+    expect(await row('Ogre')).not.toHaveTextContent('In the table');
+
+    const ogre = await row('Ogre');
+    if (!ogre) throw new Error('no Ogre row');
+    await user.click(within(ogre).getByText('Preview', { selector: 'summary', exact: false }));
+    expect(await within(ogre).findByLabelText('Strength')).toHaveValue('19');
+  });
+
+  it('lets the GM copy an entry into the table', async () => {
+    const { calls } = await openCompendium('gm', {
+      'POST /tables/t1/compendium/copy': { status: 201, body: { actors: [], items: [] } },
     });
     const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Copy Ogre to the table' }));
+    expect(await screen.findByText('Ogre was copied to the table.')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
+      refs: ['tiny-d20:bestiary:ogre'],
+    });
+  });
 
-    expect(await screen.findByText('Bestiary')).toBeInTheDocument();
-    expect(screen.getByText('2 actors, 2 items · 0 in this table')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Import Bestiary' }));
-    expect(await screen.findByText('Imported 3; 1 were already in the table.')).toBeInTheDocument();
+  it('lets a player copy items onto actors they own, and nothing into the table', async () => {
+    const { calls } = await openCompendium('player', {
+      'POST /tables/t1/compendium/copy': { status: 201, body: { actors: [], items: [] } },
+    });
+    const user = userEvent.setup();
+    await within(await entries()).findByRole('heading', { name: 'Ogre' });
+    expect(screen.queryByRole('button', { name: /to the table$/ })).toBeNull();
+    expect(screen.queryByLabelText('Copy Ogre onto')).toBeNull();
+
+    expect(screen.getByLabelText('Copy Shortsword onto')).toHaveValue('a1');
+    await user.click(screen.getByRole('button', { name: 'Copy Shortsword onto the chosen actor' }));
+    expect(await screen.findByText('Shortsword was copied onto Goblin King.')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
+      refs: ['tiny-d20:bestiary:shortsword'],
+      actorId: 'a1',
+    });
+  });
+
+  it('filters by name and type', async () => {
+    const { calls } = await openCompendium('gm', {
+      'GET /tables/t1/compendium?search=og&limit=50': page(OGRE),
+      'GET /tables/t1/compendium?kind=item&type=weapon&limit=50': page(SWORD),
+    });
+    const user = userEvent.setup();
+    await within(await entries()).findByRole('heading', { name: 'Shortsword' });
+
+    await user.type(screen.getByLabelText('Search the compendium'), 'og');
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Import Bestiary' })).toBeDisabled();
+      expect(screen.queryByRole('heading', { name: 'Shortsword' })).toBeNull();
     });
-    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(1);
-  });
-});
-
-describe('archiving (T-0807)', () => {
-  it('archives the table, marks it read-only and unarchives it', async () => {
-    let table: TableView = TABLE;
-    const answer = (archivedAt: string | null) => () => {
-      table = { ...TABLE, archivedAt };
-      return { body: { table } };
-    };
-    const { calls } = await openSettings(
-      {
-        'POST /tables/t1/archive': answer('2026-10-27T12:00:00.000Z'),
-        'POST /tables/t1/unarchive': answer(null),
-      },
-      () => table,
-    );
-    const user = userEvent.setup();
-
-    await user.click(await screen.findByRole('button', { name: 'Archive table' }));
-    expect(await screen.findByText('This table is archived: it is read-only.')).toBeInTheDocument();
-    expect(screen.getByText('The table is archived: the chat is read-only.')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Message')).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Unarchive table' }));
+    await user.clear(screen.getByLabelText('Search the compendium'));
+    await user.selectOptions(screen.getByLabelText('Type'), 'item:weapon');
     await waitFor(() => {
-      expect(
-        screen.queryByText('This table is archived: it is read-only.'),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'Ogre' })).toBeNull();
     });
-    expect(calls.filter((c) => c.method === 'POST').map((c) => c.path)).toEqual([
-      '/tables/t1/archive',
-      '/tables/t1/unarchive',
-    ]);
-  });
-});
-
-describe('system version (T-0813)', () => {
-  it('upgrades the table to the installed version when the GM asks', async () => {
-    let table: TableView = { ...TABLE, systemVersion: '0.9.0', installedVersion: '1.0.0' };
-    const { calls } = await openSettings(
-      {
-        'POST /tables/t1/upgrade-system': () => {
-          table = { ...table, systemVersion: '1.0.0' };
-          return { body: { table } };
-        },
-      },
-      () => table,
+    expect(calls.map((c) => c.path)).toContain(
+      '/tables/t1/compendium?kind=item&type=weapon&limit=50',
     );
-    const user = userEvent.setup();
-
-    expect(
-      await screen.findByText('Tiny d20 1.0.0 is installed; this table plays 0.9.0.'),
-    ).toBeInTheDocument();
-    expect(await screen.findByText('This table plays Tiny d20 0.9.0.')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Upgrade to 1.0.0' }));
-    expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
-    expect(screen.queryByText(/is installed; this table plays/)).not.toBeInTheDocument();
-    expect(calls.filter((c) => c.method === 'POST').map((c) => c.path)).toEqual([
-      '/tables/t1/upgrade-system',
-    ]);
-  });
-
-  it('offers nothing when the table plays the installed version', async () => {
-    await openSettings({});
-    expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
   });
 });

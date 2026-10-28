@@ -7,6 +7,7 @@ import { api } from '../../api/endpoints.js';
 import { t } from '../../i18n/index.js';
 import { ChatPanel } from '../chat/ChatPanel.js';
 import { CombatTracker } from '../combat/CombatTracker.js';
+import { CompendiumBrowser } from '../compendium/CompendiumBrowser.js';
 import { ActorList } from '../entities/ActorList.js';
 import { ActorSheetPanel } from '../entities/ActorSheet.js';
 import { readFilters, toListQuery, type EntityFilters } from '../entities/filters.js';
@@ -135,6 +136,14 @@ export function JournalPanel(props: IDockviewPanelProps): ReactElement {
       ) : (
         <Loading />
       )}
+    </Body>
+  );
+}
+
+export function CompendiumPanel(): ReactElement {
+  return (
+    <Body>
+      <CompendiumBrowser />
     </Body>
   );
 }
