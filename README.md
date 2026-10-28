@@ -15,16 +15,17 @@ The full product spec, roadmap and progress tracker are in [`specs.md`](specs.md
 
 Early development. Current status is tracked in the [Progress Tracker](specs.md#0-progress-tracker) in `specs.md`.
 
-| Milestone | Scope                                                   |
-| --------- | ------------------------------------------------------- |
-| M0        | Foundation                                              |
-| M1        | Core server: users, auth, tables, membership            |
-| M2        | Entities and realtime: actors, items, events, chat      |
-| M3        | Formula and dice engine                                 |
-| M4        | Plugin system: loader, validator, scoped CSS, sheets    |
-| M5        | Live sheets (CRDT): sync, presence, observer mode       |
-| M6        | Journal, members, table settings, plugin admin          |
-| M7        | Reference plugins, hardening, Docker, docs → **v0.1.0** |
+| Milestone | Scope                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------- |
+| M0        | Foundation                                                                                         |
+| M1        | Core server: users, auth, tables, membership                                                       |
+| M2        | Entities and realtime: actors, items, events, chat                                                 |
+| M3        | Formula and dice engine                                                                            |
+| M4        | Plugin system: loader, validator, scoped CSS, sheets                                               |
+| M5        | Live sheets (CRDT): sync, presence, observer mode                                                  |
+| M6        | Journal, members, table settings, plugin admin                                                     |
+| M7        | Reference plugins, hardening, Docker, docs → **v0.1.0**                                            |
+| M8–M11    | Plugin server code, combat, packs, chat edits, sheet history, archive, backups, arm64 → **v0.2.0** |
 
 ## Tech stack
 
@@ -32,10 +33,10 @@ TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (R
 
 ## Running with Docker
 
-Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.1.0`, `0.1`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
+Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.2.0`, `0.2`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
 
 ```bash
-docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.1.0
+docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.2.0
 ```
 
 To build the image from a checkout instead, use the example compose file:
