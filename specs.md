@@ -1,7 +1,7 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
 > **Status:** 0.2.0 released (2026-10-28) · **Created:** 2026-10-19 · **Last updated:** 2026-10-28
-> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. The MVP's task notes and change log are in [`docs/history/mvp.md`](docs/history/mvp.md).
+> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0) and [`0.2.0.md`](docs/history/0.2.0.md).
 
 ---
 
@@ -13,44 +13,26 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.1 Milestone overview
 
-| ID    | Milestone                                                                                                                        | Release | Status      | Progress |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
-| M0–M7 | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
-| M8    | Plugin code runtime: shared and server code, handler recipes, slash commands                                                     | 0.2.0   | Done        | 100%     |
-| M9    | Combat tracker and initiative                                                                                                    | 0.2.0   | Done        | 100%     |
-| M10   | Content and table life cycle: compendium packs, chat edits, sheet history, archive, backups                                      | 0.2.0   | Done        | 100%     |
-| M11   | Operations: arm64 image, pagination, version warnings                                                                            | 0.2.0   | Done        | 100%     |
-| LATER | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
+| ID     | Milestone                                                                                                                        | Release | Status      | Progress |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
+| M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
+| M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
+| LATER  | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** none; 0.2.0 is released (M8–M11)
 - **Next task:** none planned; see LATER
 - **Open blockers:** none
-- **Decisions pending:** see §14 (Open Questions)
+- **Decisions pending:** none (§14)
 
 ### 0.3 Change log
 
-Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md); user-visible changes go in `CHANGELOG.md`.
+Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), and up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                        |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-27 | MVP task lists and change log moved to `docs/history/mvp.md`. Spec reshaped for post-MVP work.                                                                                |
-| 2026-10-27 | M8–M11 all target 0.2.0. No npm releases of the CLI and SDK (Q15); T-0810 dropped.                                                                                            |
-| 2026-10-27 | §8 shortened to the design and planned parts; the format is documented in the authoring guide and the generated reference (ADR-045). §8.14 added for `combat.json` and packs. |
-| 2026-10-27 | Q13 decided (ADR-047): plugin shared and server code run in a worker thread per plugin. T-0809 done: shared functions in formulas on both sides, handler recipes with `ctx`.  |
-| 2026-10-27 | T-0804 done (ADR-048): plugin slash commands, with `ctx.fail`; calling server hooks moves to T-0802. M8 done.                                                                 |
-| 2026-10-27 | Q14 decided (ADR-049): encounters are rows refetched on `combat.updated`. T-0801 done: combat tracker with hidden combatants.                                                 |
-| 2026-10-27 | T-0802 done (ADR-050): initiative from `combat.json`, `desc`/`asc`/`sideBased` ordering, the `orderCombatants` and `onTurnStart` hooks. M9 done.                              |
-| 2026-10-27 | T-0803 done (ADR-051): compendium packs are validated, listed and imported once into a table.                                                                                 |
-| 2026-10-27 | T-0805 done (ADR-052): authors edit or delete their text messages for 5 minutes; GMs delete any message.                                                                      |
-| 2026-10-27 | T-0806 done (ADR-053): sheet history keeps 50 snapshots per actor document, restored in place by owners and GMs.                                                              |
-| 2026-10-27 | T-0807 done (ADR-054): GMs and assistants archive a table, read-only everywhere until unarchived.                                                                             |
-| 2026-10-27 | T-0808 done (ADR-055): scheduled backups via `BACKUP_DIR`, keeping the newest N. M10 done.                                                                                    |
-| 2026-10-27 | T-0811 done (ADR-056): the image is built and smoke-tested natively on amd64 and arm64; releases tag both in one manifest.                                                    |
-| 2026-10-28 | T-0812 done (ADR-057): actor, item and journal lists page with cursors; the web tabs load more on scroll.                                                                     |
-| 2026-10-28 | T-0813 done (ADR-058): GMs upgrade a table to its system's installed version; actor sheets made with another version show a notice. M11 done; 0.2.0 is ready to release.      |
-| 2026-10-28 | Release 0.2.0 (M8–M11). The plugin core API stays at `0.1.0`: the format only grew, so plugins for 0.1.0 keep working.                                                        |
+| Date       | Change                                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built. |
 
 ---
 
@@ -506,41 +488,7 @@ Syntax, references, operators, functions and dice: [guide, Formulas](docs/plugin
 
 ### 8.10 Code entries
 
-Planned shape of all three entries:
-
-```ts
-// code/shared.ts
-export default defineShared({
-  functions: {
-    carryCapacity: (str: number): number => str * 15,
-  },
-});
-
-// code/client.tsx
-export default defineClient({
-  nodes: {
-    hpBar: HpBar, // React component receiving { value, max, path }
-  },
-  cards: {
-    skill: SkillCard,
-  },
-});
-
-// code/server.ts
-export default defineServer({
-  handlers: {
-    attack: async ({ ctx, actor, args }) => {
-      const hit = await ctx.roll('1d20 + @derived.strMod', { actor });
-      await ctx.chat.post({ rolls: [hit], text: `${actor.name} attacks` });
-    },
-  },
-  hooks: {
-    onTurnStart: async ({ ctx, combatant }) => {
-      /* … */
-    },
-  },
-});
-```
+Three entries, each optional: `code/shared` (`defineShared`: formula functions), `code/client` (`defineClient`: sheet nodes and chat cards) and `code/server` (`defineServer`: handler recipes, slash commands and combat hooks). Working examples: [guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 **Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
@@ -550,7 +498,7 @@ Rules:
 - Client code receives only `@vtt/sdk/client` hooks (`useField`, `useDerived`, `useActor`, `useTranslate`). It cannot open sockets or call arbitrary APIs. It imports `react`, `react/jsx-runtime` and `@vtt/sdk/client` by name; the app's import map resolves them to its own copies (ADR-025).
 - Shared code is pure and must pass the same lint boundaries as `packages/formula`.
 - Custom nodes must be pure rendering: they read via hooks and write via `useField` setters.
-- **Trust model (v1):** `code/` is trusted. Installing a plugin with code requires explicit admin enablement. The admin UI lists the code entry points.
+- **Trust model:** `code/` is trusted (Q1); server code is contained in a worker per plugin (ADR-047), not sandboxed. Installing a plugin with code requires explicit admin enablement. The admin UI lists the code entry points.
 
 ### 8.11 Chat cards
 
@@ -564,9 +512,9 @@ A card lays out a recipe's roll in chat with formula rows that read the roll; a 
 
 The server runs the same validation as `vtt-plugin validate` on install and on rescan. The CLI (`packages/plugin-cli`) validates, previews (`dev`), packs to `.vttplugin` archives (ADR-026) and emits JSON Schemas. It is not published; authors run it from a build of this repository (ADR-045, Q15). [Guide, Checking, previewing and installing](docs/plugin-authoring.md#checking-previewing-and-installing).
 
-### 8.14 Planned plugin files
+### 8.14 Combat and pack files
 
-Reserved in 0.1.0 and built in 0.2.0:
+Reserved in 0.1.0, built in 0.2.0:
 
 - **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. Built in T-0802 (ADR-050): [guide, Combat](docs/plugin-authoring.md#combat). An `orderCombatants` hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
 - **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Built in T-0803 (ADR-051): [guide, Compendium packs](docs/plugin-authoring.md#compendium-packs).
@@ -739,112 +687,16 @@ All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/hi
 | M6        | T-0601…T-0606 | Journal, members, invites, table and instance settings, plugin admin         |
 | M7        | T-0701…T-0705 | Security review, e2e, Docker image, authoring guide, release                 |
 
-### M8 — Plugin code runtime (0.2.0)
+### M8–M11 — Plugin code, combat, content, operations (released as 0.2.0)
 
-0.1.0 runs only `code/client` (ADR-025). M8 runs the other two entries, so handler recipes, custom formula functions and server hooks work.
+All done; the task lists with their notes are in [`docs/history/0.2.0.md`](docs/history/0.2.0.md).
 
-- [x] **T-0809 · Run plugin shared and server code**
-  - **Deps:** none (needs Q13)
-  - **Do:**
-    - Add `defineShared({ functions })` and `defineServer({ handlers, hooks })` to `@vtt/sdk`, with the shapes in §8.10.
-    - The server loads `code/shared.js` and `code/server.js` of enabled plugins; the web loads `code/shared.js` alongside `code/client.js`.
-    - Shared functions become callable from formulas on both sides (derived values, rolls, `visibleIf`).
-    - `handler` recipes run their server handler with the restricted `ctx` of §8.10 (`roll`, `chat.post`, `actors.get`, `actors.adjust`, `log`), and `handler_recipe` goes away.
-    - A throwing or misbehaving handler fails its own roll with an error, never the server (per Q13).
-    - The admin plugin page lists each plugin's code entry points (FR-PLUGIN-06).
-  - **Done when:**
-    - A fixture plugin's shared function gives the same derived value on the server and in the web sheet.
-    - A handler recipe rolls and posts its rolls to the chat (as `roll` messages, ADR-047).
-    - Tests show `ctx` offers nothing beyond §8.10, and a failing handler leaves the server serving.
-    - §8.7, §8.10 and `docs/plugin-authoring.md` describe the new entries, and the tutorial test still passes.
-  - **Covers:** FR-PLUGIN-08, §8.7, §8.10
-
-- [x] **T-0804 · Plugin slash commands and server hooks**
-  - **Deps:** T-0809
-  - **Do:** Plugins declare slash commands in `code/server` (`/name args`), handled on the server for the table's system. Unknown commands answer with an error, as built-in ones do.
-  - **Done when:** a reference plugin's command posts a message for its caller; audience rules hold (whispered and GM-only results stay filtered); e2e covers one command.
-  - **Covers:** FR-PLUGIN-10
-  - **Note:** done as ADR-048 (`tiny-d20`'s `/check`). Server hooks are declared but called by combat, so calling them moves to T-0802.
-
-### M9 — Combat (0.2.0)
-
-- [x] **T-0801 · Combat tracker (rules, endpoints, UI)**
-  - **Deps:** none (needs Q14)
-  - **Do:**
-    - Encounters per table, stored as decided in Q14. Combatants are actors or free-form entries.
-    - GM endpoints to create an encounter, add and remove combatants, start, advance the turn and end. Rounds count up.
-    - A `combat.updated` event (§10.2) after every change.
-    - A tracker panel on the table page for everyone, with GM controls.
-    - Combatants follow actor visibility (FR-ENT-03), and hidden combatants are never sent to players.
-  - **Done when:** the GM runs an encounter through two rounds; other members see each change within 500 ms; a wire-level test shows hidden combatants never reach players; e2e covers a round.
-  - **Covers:** FR-COMBAT-01, FR-COMBAT-03, FR-COMBAT-04
-  - **Note:** done as ADR-049. Initiative is typed by the GM until T-0802 rolls it.
-
-- [x] **T-0802 · Initiative and combat.json**
-  - **Deps:** T-0801; T-0809 for the code hook
-  - **Do:** Roll initiative with the plugin's `combat.json` formula and order combatants by `desc`, `asc` or `sideBased`. Call the `onTurnStart` server hook when a plugin has one. Both reference plugins get a `combat.json`.
-  - **Done when:** each ordering rule is unit-tested, including ties; both reference plugins roll initiative in e2e; the hook runs once per turn in a test.
-  - **Covers:** FR-COMBAT-02
-  - **Note:** done as ADR-050. Sides are the actor type's `controlledBy`; `orderCombatants` is the ordering hook. Initiative rolls are chat messages.
-
-### M10 — Content and table life cycle (0.2.0)
-
-- [x] **T-0803 · Compendium packs import**
-  - **Deps:** none
-  - **Do:** Validate `packs/*.json` (entries of the plugin's own actor and item types). GMs import a pack into the table library. Re-importing does not duplicate entries.
-  - **Done when:** a reference plugin ships a pack; importing creates its items; an invalid pack is reported with file and JSON path; re-import is idempotent.
-  - **Covers:** FR-PLUGIN-09
-  - **Note:** done as ADR-051. Imported entries become the table's actors and library items; `pack_ref` makes re-import skip them. The Compendium section is on the table settings page.
-
-- [x] **T-0805 · Chat message edit and delete**
-  - **Deps:** none
-  - **Do:** Authors edit or delete their own text messages within 5 minutes; GMs delete any message. Roll and card messages cannot be edited. Changes go out as events to the same audience as the message.
-  - **Done when:** allow and deny tests for each rule; an edit reaches other clients live; a deleted whisper is gone for its recipients too.
-  - **Covers:** FR-CHAT-09
-  - **Note:** done as ADR-052. Deletes are permanent, after a confirm in the web. A message the caller cannot see answers 404.
-
-- [x] **T-0806 · Sheet history snapshots**
-  - **Deps:** none
-  - **Do:** Keep the last 50 snapshots per actor, taken on store at most once per few minutes. Owners and GMs list them and restore one; restoring changes the live document for everyone.
-  - **Done when:** snapshot count and rotation are tested; a restore reaches open sheets; secret-layer snapshots stay GM-only.
-  - **Covers:** FR-SHEET-11
-  - **Note:** done as ADR-053. Snapshots are kept per document (main and secret, 50 each), every 5 minutes at most and only on change. A restore keeps the state it replaces first.
-
-- [x] **T-0807 · Table archive**
-  - **Deps:** none
-  - **Do:** GMs and assistants archive a table and unarchive it. An archived table is read-only everywhere: REST writes, chat, rolls and collaborative documents.
-  - **Done when:** tests show each write path rejected while archived and allowed again after unarchiving; the table list marks archived tables.
-  - **Covers:** FR-TABLE-06
-  - **Note:** done as ADR-054. The archive shares the read-only check of an unavailable system and also stops chat, settings, roles and invites. Removing members and revoking invites stay allowed.
-
-- [x] **T-0808 · Automated backups**
-  - **Deps:** none
-  - **Do:** An environment variable schedules backups with the existing backup command (`apps/server/src/cli/backup.ts`), keeping the last N.
-  - **Done when:** a test with fake timers shows backups written on schedule and old ones removed; `docs/backup.md` documents the settings.
-  - **Covers:** FR-ADMIN-05 (automated part)
-  - **Note:** done as ADR-055. `BACKUP_DIR`, `BACKUP_INTERVAL_HOURS` and `BACKUP_KEEP`. The server checks every 15 minutes whether the newest backup is an interval old, so restarts keep the schedule.
-
-### M11 — Operations (0.2.0)
-
-Independent tasks from the known limitations of 0.1.0. The CLI and SDK stay unpublished (Q15).
-
-- [x] **T-0811 · arm64 image**
-  - **Deps:** none
-  - **Do:** The release job builds `linux/amd64` and `linux/arm64` into one manifest. CI smoke-tests the arm64 image on an arm64 runner.
-  - **Done when:** the next release's image runs on arm64 and passes `docker/smoke-test.sh`.
-  - **Note:** done as ADR-056. Each architecture is built natively, on `ubuntu-latest` and `ubuntu-24.04-arm`, and smoke-tested on every push. The release merges the two digests into one tag. Confirm on the 0.2.0 release that the published tag holds both platforms; the release job checks it.
-
-- [x] **T-0812 · List pagination**
-  - **Deps:** none
-  - **Do:** Cursor pagination for actor, item and journal lists (§10.1, ADR-015). The web lists load more on scroll.
-  - **Done when:** endpoint tests cover cursors and limits; a table with more entries than one page lists all of them in the web.
-  - **Note:** done as ADR-057. Pages are keyset pages on `lower(name), id` with opaque cursors; the server fills each page with what the caller may see. The tabs load 50 at a time, the next page when the end of the list scrolls into view. The table loader still reads all actors.
-
-- [x] **T-0813 · Data version warning**
-  - **Deps:** none
-  - **Do:** Compare an actor's or item's `dataVersion` with the installed plugin version and show a notice on its sheet when they differ (§9.7). Migrations stay LATER.
-  - **Done when:** a test with an upgraded fixture plugin shows the notice; matching versions show nothing.
-  - **Note:** done as ADR-058. Upgrading is a GM action: installing a plugin version leaves tables as they are, and GMs and assistants upgrade a table from its settings (`POST /tables/:id/upgrade-system`). The sheet compares with the table's version. Items have no sheet yet, so only actor sheets show the notice.
+| Milestone | Tasks                                  | Scope                                                                     |
+| --------- | -------------------------------------- | ------------------------------------------------------------------------- |
+| M8        | T-0809, T-0804                         | Plugin shared and server code in workers, handler recipes, slash commands |
+| M9        | T-0801, T-0802                         | Combat tracker, initiative from `combat.json`, combat hooks               |
+| M10       | T-0803, T-0805, T-0806, T-0807, T-0808 | Compendium packs, chat edits, sheet history, table archive, backups       |
+| M11       | T-0811, T-0812, T-0813                 | arm64 image, list pagination, data version notice and table upgrades      |
 
 ### LATER — Not scheduled
 
@@ -876,42 +728,44 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 ## 14. Open Questions
 
-Each question blocks specific tasks if unanswered. Record decisions in `docs/adr/` and update here.
+No questions are open. A new question gets the next number (Q16), the tasks it blocks, and a proposed default; once decided, record it in `docs/adr/` and move it to the list below. Code cites these numbers.
 
-| #   | Question                                                                                                                                                                                                          | Blocks                | Proposed default                                                                                                                                |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                                                                               | T-0411+, FR-PLUGIN-08 | **Decided:** trusted only. Plugins with code are flagged and start disabled; an admin enables them (FR-PLUGIN-06, ADR-020). Sandboxing is LATER |
-| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                                                                                  | FR-TABLE-02           | **Decided:** No (fixed); `PATCH` rejects it                                                                                                     |
-| Q3  | TipTap for rich text, or a lighter editor?                                                                                                                                                                        | T-0510                | **Decided:** TipTap for `richText`; `longText` keeps the plain shared textarea (ADR-035, ADR-037)                                               |
-| Q4  | Email-based invites, or link-only?                                                                                                                                                                                | T-0109                | **Decided:** Link-only (no SMTP dependency)                                                                                                     |
-| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                                                                          | T-0412, T-0702        | **Decided:** required; it shipped in 0.1.0 (T-0412)                                                                                             |
-| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                                                                                     | FR-ENT-04             | **Decided:** Configurable, default 30 (ADR-014)                                                                                                 |
-| Q7  | Does Hocuspocus need its own port in development?                                                                                                                                                                 | T-0501                | **Decided:** no; one port, routed by upgrade path (§4.2)                                                                                        |
-| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                                                                           | T-0301                | **Decided:** Hand-written Pratt (ADR-017)                                                                                                       |
-| Q9  | Required Node version: current LTS at the time of M0?                                                                                                                                                             | T-0001                | **Decided:** Node 24 LTS, pinned in `.nvmrc`                                                                                                    |
-| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema?                                                          | T-0409                | **Decided:** `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025)                                  |
-| Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                                                                               | T-0601                | **Decided:** later in M6, with T-0602 and T-0603; T-0601 is the server side (ADR-038)                                                           |
-| Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                                                                               | T-0604                | **Decided:** an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)                                             |
-| Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | T-0809                | **Decided:** a worker thread per plugin, with time limits for functions and handlers, and `ctx` calls passed as messages (ADR-047)              |
-| Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | T-0801                | **Decided:** rows and events: turns are GM-driven, so live co-editing adds little (ADR-049)                                                     |
-| Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | —                     | **Decided:** no. Plugin authors build them from this repository (ADR-045)                                                                       |
+**Decided**
+
+| #   | Question                                                                                                                                                                                                          | Decision                                                                                                                           |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Accept "trusted code only" for plugins in v1, or require sandboxing before release?                                                                                                                               | trusted only. Plugins with code are flagged and start disabled; an admin enables them (FR-PLUGIN-06, ADR-020). Sandboxing is LATER |
+| Q2  | Should GMs be allowed to change a table's plugin after creation?                                                                                                                                                  | No (fixed); `PATCH` rejects it                                                                                                     |
+| Q3  | TipTap for rich text, or a lighter editor?                                                                                                                                                                        | TipTap for `richText`; `longText` keeps the plain shared textarea (ADR-035, ADR-037)                                               |
+| Q4  | Email-based invites, or link-only?                                                                                                                                                                                | Link-only (no SMTP dependency)                                                                                                     |
+| Q5  | Is `tiny-pool` required for v0.1.0 or can it move to v1?                                                                                                                                                          | required; it shipped in 0.1.0 (T-0412)                                                                                             |
+| Q6  | Soft-delete retention window: 30 days fixed, or configurable?                                                                                                                                                     | Configurable, default 30 (ADR-014)                                                                                                 |
+| Q7  | Does Hocuspocus need its own port in development?                                                                                                                                                                 | no; one port, routed by upgrade path (§4.2)                                                                                        |
+| Q8  | Formula parser: hand-written Pratt or Peggy/Chevrotain?                                                                                                                                                           | Hand-written Pratt (ADR-017)                                                                                                       |
+| Q9  | Required Node version: current LTS at the time of M0?                                                                                                                                                             | Node 24 LTS, pinned in `.nvmrc`                                                                                                    |
+| Q10 | `GET /systems/:id` sends a plugin definition, whose schema lives in `plugin-schema`, which `shared` may not import (§4.4). Where is its response schema?                                                          | `shared` types it as `record(unknown)`; the web parses it with `pluginDefinitionSchema` (ADR-025)                                  |
+| Q11 | No M6 task names the journal UI. Is it built with T-0601, or later?                                                                                                                                               | later in M6, with T-0602 and T-0603; T-0601 is the server side (ADR-038)                                                           |
+| Q12 | FR-ADMIN-01 names a registration policy and upload limits, but nobody can sign up and there are no uploads. What does T-0604 build?                                                                               | an `invite` policy lets invite links sign up; upload limits wait for uploads (ADR-040)                                             |
+| Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | a worker thread per plugin, with time limits for functions and handlers, and `ctx` calls passed as messages (ADR-047)              |
+| Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | rows and events: turns are GM-driven, so live co-editing adds little (ADR-049)                                                     |
+| Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | no. Plugin authors build them from this repository (ADR-045)                                                                       |
 
 ---
 
 ## 15. Risks
 
-| Risk                                                | Likelihood                   | Impact | Mitigation                                                                                                                                                                     |
-| --------------------------------------------------- | ---------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Layout JSON becomes too limited for a real system   | Low                          | High   | Two reference systems and a reader test built systems with it in 0.1.0; `custom:` nodes as escape hatch                                                                        |
-| CRDT + permissions bugs leak secret data            | Medium                       | High   | Wire-level tests (NFR-08), server-side checks on every update, secret docs separate from main                                                                                  |
-| Trusted plugin code is a security hole              | High (if untrusted installs) | High   | Code plugins start disabled and are flagged; documented trust model; containment decided in Q13 before server code runs (M8); sandboxing LATER                                 |
-| SQLite write contention under many active tables    | Low                          | Medium | WAL mode, batched projection writes, single writer; revisit at scale                                                                                                           |
-| Formula language scope creep                        | High                         | Medium | Fixed function whitelist, change requires an ADR                                                                                                                               |
-| Type drift between Zod, JSON Schema, and TypeScript | Medium                       | Medium | Single Zod source, emitted schemas snapshot-tested                                                                                                                             |
-| Mobile sheet UX is cramped                          | Low                          | Medium | Dedicated full-screen route under 768 px (T-0511); phone e2e in CI                                                                                                             |
-| Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                                                                                                            |
-| Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; plugin data migrations are LATER (T-0813 warns meanwhile); `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046) |
-| CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes                                                         |
+| Risk                                                | Likelihood                   | Impact | Mitigation                                                                                                                                                                                                                                                                              |
+| --------------------------------------------------- | ---------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layout JSON becomes too limited for a real system   | Low                          | High   | Two reference systems and a reader test built systems with it in 0.1.0; `custom:` nodes as escape hatch                                                                                                                                                                                 |
+| CRDT + permissions bugs leak secret data            | Medium                       | High   | Wire-level tests (NFR-08), server-side checks on every update, secret docs separate from main                                                                                                                                                                                           |
+| Trusted plugin code is a security hole              | High (if untrusted installs) | High   | Code plugins start disabled and are flagged; documented trust model; server code runs in a worker per plugin with time limits and a restricted `ctx` (ADR-047); sandboxing is LATER                                                                                                     |
+| SQLite write contention under many active tables    | Low                          | Medium | WAL mode, batched projection writes, single writer; revisit at scale                                                                                                                                                                                                                    |
+| Formula language scope creep                        | High                         | Medium | Fixed function whitelist, change requires an ADR                                                                                                                                                                                                                                        |
+| Type drift between Zod, JSON Schema, and TypeScript | Medium                       | Medium | Single Zod source, emitted schemas snapshot-tested                                                                                                                                                                                                                                      |
+| Mobile sheet UX is cramped                          | Low                          | Medium | Dedicated full-screen route under 768 px (T-0511); phone e2e in CI                                                                                                                                                                                                                      |
+| Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                                                                                                                                                                                                                     |
+| Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); plugin data migrations are LATER; `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)                              |
+| CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes. Known intermittent e2e failures: `journal entries are hidden until the GM reveals them` and the concurrent rich-text step of `two browsers edit one live sheet` |
 
 ---
 
@@ -996,4 +850,4 @@ If you are an AI coding agent working in this repository:
 8. **Record decisions** that differ from this PRD in `docs/adr/` and in §16, in the same commit as the code change.
 9. **Commit style:** conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`), referencing task IDs (for example `feat(formula): add dice keep modifiers (T-0303)`).
 10. **Releasing** (ADR-046): in a PR, bump every `package.json` to the new version and move `[Unreleased]` in `CHANGELOG.md` into a dated section. After it merges, tag the merge commit `v<version>` on main and push the tag; CI publishes the image and the GitHub release once every check passes.
-11. **Past work:** the MVP's task notes and change log are in `docs/history/mvp.md`. Read them when a task touches code built then.
+11. **Past work:** task notes and change logs of released milestones are in `docs/history/`, one file per release (`mvp.md` for 0.1.0, `0.2.0.md`). Read them when a task touches code built then. After each release, move its milestones' tasks and change-log rows there.
