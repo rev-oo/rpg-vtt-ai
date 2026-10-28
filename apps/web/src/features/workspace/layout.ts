@@ -86,14 +86,14 @@ export function showPanel(api: DockviewApi, id: ToolPanel | PagePanel, phone: bo
   api.addPanel({ id, component: id, title: titleOf(id), ...(position && { position }) });
 }
 
-/** Opens what a URL points at, or brings it to the front. */
+/** Opens a document or page, or brings it to the front. */
 export function showTarget(
   api: DockviewApi,
   target: PanelTarget,
   phone: boolean,
   title: string,
 ): void {
-  if (target.kind === 'page' || target.kind === 'list') {
+  if (target.kind === 'page') {
     showPanel(api, target.id, phone);
     return;
   }

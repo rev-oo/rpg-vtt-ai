@@ -10,6 +10,7 @@ import { fakeApi, SESSION, TABLE, USER, type FakeResponse } from './support/fake
 import { fakeWebSocket, serverEvent } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { BOB, HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
+import { openPanel } from './support/workspace.js';
 
 afterEach(() => {
   closeEventsClient();
@@ -304,7 +305,7 @@ describe('actor list (FR-ENT-01..04)', () => {
 
 describe('item library (FR-ENT-05, 06)', () => {
   it('lets the GM create items', async () => {
-    const { calls } = openTable('/tables/t1/items', {
+    const { calls } = openTable('/tables/t1', {
       handlers: {
         'POST /tables/t1/items': {
           status: 201,
@@ -312,6 +313,7 @@ describe('item library (FR-ENT-05, 06)', () => {
         },
       },
     });
+    await openPanel('Items');
     const user = userEvent.setup();
     expect(await screen.findByRole('heading', { name: 'Sword' })).toBeVisible();
     await user.click(screen.getByRole('button', { name: 'New item' }));
@@ -328,7 +330,7 @@ describe('item library (FR-ENT-05, 06)', () => {
   });
 
   it('lets players copy items into actors they own, but not manage the library', async () => {
-    const { calls } = openTable('/tables/t1/items', {
+    const { calls } = openTable('/tables/t1', {
       role: 'player',
       handlers: {
         'GET /tables/t1/actors': {
@@ -346,6 +348,7 @@ describe('item library (FR-ENT-05, 06)', () => {
         },
       },
     });
+    await openPanel('Items');
     const user = userEvent.setup();
     const give = await screen.findByLabelText('Give Sword to');
     expect(
@@ -362,7 +365,7 @@ describe('item library (FR-ENT-05, 06)', () => {
   });
 
   it('deletes and restores library items', async () => {
-    const { calls } = openTable('/tables/t1/items', {
+    const { calls } = openTable('/tables/t1', {
       handlers: {
         'GET /tables/t1/items?trash=restorable&limit=50': {
           body: { nextCursor: null, items: [SWORD] },
@@ -370,6 +373,7 @@ describe('item library (FR-ENT-05, 06)', () => {
         'POST /items/i1/restore': { body: { item: SWORD } },
       },
     });
+    await openPanel('Items');
     const user = userEvent.setup();
     await user.click(await screen.findByLabelText('Show trash'));
     await user.click(await screen.findByRole('button', { name: 'Restore' }));
@@ -378,11 +382,12 @@ describe('item library (FR-ENT-05, 06)', () => {
   });
 
   it('shows failures inline', async () => {
-    openTable('/tables/t1/items', {
+    openTable('/tables/t1', {
       handlers: {
         'DELETE /items/i1': { status: 403, body: { error: { code: 'forbidden', message: 'No.' } } },
       },
     });
+    await openPanel('Items');
     const user = userEvent.setup();
     await user.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(await findAlert()).toHaveTextContent('No.');

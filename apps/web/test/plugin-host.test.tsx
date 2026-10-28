@@ -15,6 +15,7 @@ import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
 import { fakeWebSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
+import { openSheet } from './support/workspace.js';
 
 /**
  * The sheet's live documents. The Yjs store and the socket are tested on their own
@@ -205,7 +206,7 @@ describe('plugin host (T-0409)', () => {
   it('opens an actor sheet from the list and edits its live data (T-0506)', async () => {
     const sheet = liveData();
     openTable('/tables/t1');
-    await userEvent.click(await screen.findByRole('link', { name: 'Open sheet: Goblin King' }));
+    await openSheet('Goblin King');
     const strength = await screen.findByLabelText('Strength');
     expect(strength).toHaveValue('13');
     expect(strength).not.toHaveAttribute('readonly');
@@ -223,20 +224,23 @@ describe('plugin host (T-0409)', () => {
   });
 
   it('says when a sheet was made with another version of the system (T-0813)', async () => {
-    openTable('/tables/t1/actors/a1', { dataVersion: '0.9.0' });
+    openTable('/tables/t1', { dataVersion: '0.9.0' });
+    await openSheet('Goblin King');
     expect(
       await screen.findByText(/made with Tiny d20 0\.9\.0; the table now uses 1\.0\.0/),
     ).toBeVisible();
   });
 
   it('says nothing when the versions match (T-0813)', async () => {
-    openTable('/tables/t1/actors/a1');
+    openTable('/tables/t1');
+    await openSheet('Goblin King');
     await screen.findByLabelText('Strength');
     expect(screen.queryByText(/This sheet was made with/)).toBeNull();
   });
 
   it('rolls a recipe for the owner and reports it', async () => {
-    const { calls } = openTable('/tables/t1/actors/a1');
+    const { calls } = openTable('/tables/t1');
+    await openSheet('Goblin King');
     await userEvent.click(await screen.findByRole('button', { name: 'Attack' }));
     expect(await screen.findByText('Rolled. The result is in the chat.')).toBeInTheDocument();
     expect(calls.find((c) => c.method === 'POST')?.body).toMatchObject({
@@ -246,7 +250,8 @@ describe('plugin host (T-0409)', () => {
   });
 
   it('lists the sheet history and restores a snapshot (T-0806)', async () => {
-    const { calls } = openTable('/tables/t1/actors/a1');
+    const { calls } = openTable('/tables/t1');
+    await openSheet('Goblin King');
     await userEvent.click(await screen.findByRole('button', { name: 'History' }));
     const dialog = await screen.findByRole('dialog', { name: 'Sheet history' });
     const restores = await within(dialog).findAllByRole('button', { name: /^Restore / });
@@ -260,7 +265,8 @@ describe('plugin host (T-0409)', () => {
   });
 
   it('hides secret fields and roll buttons from spectators', async () => {
-    openTable('/tables/t1/actors/a1', { role: 'spectator' });
+    openTable('/tables/t1', { role: 'spectator' });
+    await openSheet('Goblin King');
     expect(await screen.findByLabelText('Strength')).toBeInTheDocument();
     expect(screen.queryByLabelText('Lair')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Attack' })).toBeDisabled();
@@ -269,14 +275,16 @@ describe('plugin host (T-0409)', () => {
 
   it('follows the server: read-only documents, repairs and connecting (FR-SHEET-03, 09)', async () => {
     liveData({ readOnly: true, issues: [{ path: ['str'], reason: 'maximum' }] });
-    openTable('/tables/t1/actors/a1');
+    openTable('/tables/t1');
+    await openSheet('Goblin King');
     expect(await screen.findByLabelText('Strength')).toHaveAttribute('readonly');
     expect(screen.getByText(/were reset to their default \(1\)/)).toBeInTheDocument();
   });
 
   it('waits for the documents before showing the sheet', async () => {
     collab.sheet = { status: 'connecting' };
-    openTable('/tables/t1/actors/a1');
+    openTable('/tables/t1');
+    await openSheet('Goblin King');
     expect(await screen.findByText('Connecting to the sheet…')).toBeInTheDocument();
     expect(screen.queryByLabelText('Strength')).not.toBeInTheDocument();
   });
@@ -323,12 +331,13 @@ describe('plugin host (T-0409)', () => {
         npc: { layout: { type: 'derived', key: 'power', label: 'Power' } },
       },
     };
-    openTable('/tables/t1/actors/a1', {
+    openTable('/tables/t1', {
       system: {
         // Served from the project root, as the server serves plugin files.
         system: { ...SYSTEM.system, definition, shared: '/test/fixtures/shared.js' },
       },
     });
+    await openSheet('Goblin King');
     // The live sheet holds str 13 (see liveData).
     expect(await screen.findByText('26')).toBeInTheDocument();
   });

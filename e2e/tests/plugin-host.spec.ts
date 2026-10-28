@@ -26,7 +26,7 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
   // The sheet opens as its own panel, beside the actor list (ADR-059).
   const sheet = page.getByRole('tabpanel', { name: 'Ayla' });
   await test.step('the sheet renders the plugin layout and its custom node', async () => {
-    await page.getByRole('link', { name: 'Open sheet: Ayla' }).click();
+    await page.getByRole('button', { name: 'Open sheet: Ayla' }).click();
     await expect(sheet.getByRole('heading', { name: 'Ayla' })).toBeVisible();
     await expect(page.getByLabel('Might')).toHaveValue('4');
     // `mod` is `half(@might)`, from code/shared.js.

@@ -4,7 +4,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { setCsrfToken } from '../src/api/client.js';
 import { layoutKey } from '../src/features/workspace/layout.js';
-import { pathOf, targetOf } from '../src/features/workspace/panel-ids.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
@@ -58,25 +57,17 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(tabs()).toEqual(['Actors', 'Items', 'Journal', 'Table', 'Combat', 'Chat', 'Dice']);
   });
 
-  it('opens the panel a URL names, then goes back to the table URL', async () => {
-    openTable('/tables/t1/members');
-    expect(await panel('Members')).toBeInTheDocument();
+  it('has no other table URLs: they lead home', async () => {
+    openTable('/tables/t1/actors/a1');
     await waitFor(() => {
-      expect(location()).toBe('/tables/t1');
-    });
-    cleanup();
-
-    openTable('/tables/t1/items');
-    expect(await panel('Items')).toBeInTheDocument();
-    await waitFor(() => {
-      expect(location()).toBe('/tables/t1');
+      expect(location()).toBe('/');
     });
   });
 
   it('opens documents in place, leaving the URL on the table', async () => {
     openTable('/tables/t1');
     const user = userEvent.setup();
-    await user.click(await screen.findByRole('link', { name: 'Open sheet: Goblin King' }));
+    await user.click(await screen.findByRole('button', { name: 'Open sheet: Goblin King' }));
     expect(tabs()).toContain('Goblin King');
     await user.click((await panelsMenu(user)).getByRole('button', { name: 'Members' }));
     expect(await panel('Members')).toBeInTheDocument();
@@ -133,19 +124,5 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, true))).not.toBeNull();
     });
     expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, false))).toBeNull();
-  });
-});
-
-describe('workspace URLs', () => {
-  it('maps paths to panels and back', () => {
-    expect(targetOf('actors/a1')).toEqual({ kind: 'sheet', id: 'actor:a1', actorId: 'a1' });
-    expect(targetOf('journal/j1')).toEqual({ kind: 'entry', id: 'entry:j1', entryId: 'j1' });
-    expect(targetOf('settings')).toEqual({ kind: 'page', id: 'settings' });
-    expect(targetOf('journal')).toEqual({ kind: 'list', id: 'journal' });
-    expect(targetOf('')).toBeNull();
-    expect(targetOf('actors/a1/extra')).toBeNull();
-    expect(pathOf('t1', 'actor:a1')).toBe('/tables/t1/actors/a1');
-    expect(pathOf('t1', 'overview')).toBe('/tables/t1');
-    expect(pathOf('t1', 'chat')).toBeNull();
   });
 });

@@ -1,4 +1,4 @@
-# ADR-059: The table is a dockview workspace, and its URL stays on the table
+# ADR-059: The table is a dockview workspace with a single URL
 
 - **Status:** Accepted
 - **Date:** 2026-10-28
@@ -13,7 +13,7 @@ A first version with two fixed side panels (collapse and resize only) was built 
 
 ## Decision
 
-1. **Outside the shell.** `routes/signed-in.tsx` holds the session check and the site name (`useSiteName`). Below it, `app-layout` (header, page frame) wraps the tables list, account and admin pages. `tables/:tableId/*` sits beside it, with no child routes, and fills the viewport.
+1. **Outside the shell.** `routes/signed-in.tsx` holds the session check and the site name (`useSiteName`). Below it, `app-layout` (header, page frame) wraps the tables list, account and admin pages. `tables/:tableId` sits beside it and fills the viewport. It is the table's only route.
 2. **Everything is a panel.** `dockview-react`, pinned to an exact version, renders these panels:
    - **Tools**, one of each: Actors, Items, Journal, Combat, Chat and Dice.
    - **Pages**, one of each: Table (the overview), Members and Settings.
@@ -22,13 +22,13 @@ A first version with two fixed side panels (collapse and resize only) was built 
    Every panel can be closed, dragged into a tab strip, split to any side or floated. Pop-out browser windows are not offered. The **Panels** menu opens a closed panel, or brings an open one forward, near where the default layout keeps it. **Reset layout** restores the default.
 
 3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Combat sits on the right (384 px), above Chat and Dice as tabs.
-4. **The URL stays on the table.**
-   - Opening, switching or closing panels never changes the URL, which stays `/tables/:id`. The saved layout, not the URL, brings the open documents back after a reload.
-   - The lists' "Open" links open their document as a panel in place. They are still real links to `/tables/:id/actors/:actorId` and `/journal/:entryId`, so a new tab or window opens the document there.
-   - A link into the table opens its panel, or brings it forward, then the URL goes back to `/tables/:id`. This covers `/actors/:actorId`, `/journal/:entryId`, `/members`, `/settings` and the old list pages `/items` and `/journal`.
+4. **One URL per table.**
+   - `/tables/:id` is the table's only URL. The old child routes are removed: `/actors/:actorId`, `/journal/:entryId`, `/items`, `/journal`, `/members` and `/settings`. Like any unknown path, they now lead to the tables list.
+   - Opening, switching or closing panels never changes the URL. The saved layout, not the URL, brings the open documents back after a reload.
+   - The lists' "Open" controls are buttons that open their document as a panel, and the upgrade notice's button opens Settings.
    - The back button leaves the table, rather than stepping through the panels.
 
-   A first version pushed the active document's URL on every switch. The user found it noisy, and it was dropped.
+   A first version gave each document a URL and pushed it on every switch. The user found that noisy and asked for a single route.
 
 5. **Panels load their own data.** Lists load their first page (`usePanelList`, ADR-057). Journal entries and members' invites load in the panel. All of them load again whenever the table's data revalidates, so `entity.changed` events, resyncs and a GM hiding an entry reach open panels. Each open sheet keeps its own live connection.
 6. **Filters belong to their list.** Search, type and trash are kept in the list panel's dockview parameters and saved with the layout. Until now they were kept in the URL. They no longer are, because two lists open side by side would otherwise share one search.

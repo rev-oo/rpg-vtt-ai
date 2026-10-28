@@ -15,11 +15,6 @@ export interface DockContextValue {
 
 export const DockContext = createContext<DockContextValue | null>(null);
 
-/** The workspace around a component, if any. */
-export function useOptionalDock(): DockContextValue | null {
-  return use(DockContext);
-}
-
 /** Only usable in a workspace panel; they render through portals below `Workspace`. */
 export function useDock(): DockContextValue {
   const value = use(DockContext);

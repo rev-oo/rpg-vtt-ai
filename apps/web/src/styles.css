@@ -35,7 +35,7 @@
   }
 }
 
-/* PROTOTYPE (spike/m12-dockview): dockview in the app's colours, light and dark. */
+/* dockview in the app's colours, light and dark (ADR-059). */
 .vtt-dock .dockview-theme-light {
   --dv-group-view-background-color: var(--color-canvas);
   --dv-tabs-and-actions-container-background-color: var(--color-surface);

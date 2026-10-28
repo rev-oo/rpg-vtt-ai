@@ -7,6 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, patch, post, signIn, type SignedIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
+import { openSheet, showPanel } from './support/workspace.js';
 
 const reference = fileURLToPath(new URL('../../plugins/', import.meta.url));
 
@@ -18,10 +19,12 @@ test.afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
 });
 
-async function openTab(who: SignedIn, tableId: string, tab: string): Promise<Page> {
+/** Opens the table, and then one of its panels. */
+async function openTab(who: SignedIn, tableId: string, panel?: string): Promise<Page> {
   const page = await who.context.newPage();
-  await page.goto(`/tables/${tableId}${tab}`);
+  await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  if (panel) await showPanel(page, panel);
   return page;
 }
 
@@ -40,7 +43,7 @@ test('members, invite links and sign-up', async ({ browser }) => {
     name: 'Guild Table',
     systemId: 'e2e-system',
   });
-  const gmPage = await openTab(gm, table.id, '/members');
+  const gmPage = await openTab(gm, table.id, 'Members');
   const invites = gmPage.getByRole('list', { name: 'Invite links' });
 
   let lastLink = '';
@@ -88,7 +91,7 @@ test('members, invite links and sign-up', async ({ browser }) => {
       'Iris is now Spectator.',
     );
 
-    const erinPage = await openTab(erin, table.id, '/members');
+    const erinPage = await openTab(erin, table.id, 'Members');
     await expect(memberRow(erinPage, 'Iris (you)')).toContainText('Spectator');
     await expect(erinPage.getByRole('list', { name: 'Invite links' })).toHaveCount(0);
 
@@ -140,8 +143,8 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   });
   await post(finn, `/invites/${token}/accept`);
 
-  const gmPage = await openTab(gm, table.id, '/journal');
-  const finnPage = await openTab(finn, table.id, '/journal');
+  const gmPage = await openTab(gm, table.id, 'Journal');
+  const finnPage = await openTab(finn, table.id, 'Journal');
   const entry = (page: Page) =>
     page
       .getByRole('list', { name: 'Journal' })
@@ -155,7 +158,7 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   await expect(entry(gmPage)).toContainText('Hidden from players');
   await expect(finnPage.getByText('The journal is empty.')).toBeVisible();
 
-  await entry(gmPage).getByRole('link', { name: 'Open: The Old Mill' }).click();
+  await entry(gmPage).getByRole('button', { name: 'Open: The Old Mill' }).click();
   const body = gmPage.getByRole('textbox', { name: 'The Old Mill' });
   await body.click();
   await gmPage.keyboard.type('The miller hides a map.');
@@ -166,7 +169,7 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
 
   // The reveal reaches the player's open list (FR-ENT-07).
   await expect(entry(finnPage)).toBeVisible();
-  await entry(finnPage).getByRole('link', { name: 'Open: The Old Mill' }).click();
+  await entry(finnPage).getByRole('button', { name: 'Open: The Old Mill' }).click();
   const read = finnPage.getByRole('textbox', { name: 'The Old Mill' });
   await expect(read).toHaveText('The miller hides a map.');
   await expect(read).toHaveAttribute('contenteditable', 'false');
@@ -202,12 +205,13 @@ test('house rules change derived values on open sheets', async ({ browser }) => 
   });
   setActorData(actor.id, { level: 3 });
 
-  const sheet = await openTab(gwen, table.id, `/actors/${actor.id}`);
+  const sheet = await openTab(gwen, table.id);
+  await openSheet(sheet, 'Ayla');
   const maxHp = sheet.getByRole('status', { name: 'Max HP by the rules' });
   // startingHp (default 10) + level - 1.
   await expect(maxHp).toHaveText('12');
 
-  const settings = await openTab(gm, table.id, '/settings');
+  const settings = await openTab(gm, table.id, 'Settings');
   await expect(settings.getByRole('heading', { name: 'House rules of Tiny D20' })).toBeVisible();
   const startingHp = settings.getByLabel('Starting hit points');
   await expect(startingHp).toHaveValue('10');
@@ -235,11 +239,11 @@ test('an archived table is read-only until unarchived', async ({ browser }) => {
   });
   await post(pia, `/invites/${token}/accept`);
 
-  const page = await openTab(pia, table.id, '');
+  const page = await openTab(pia, table.id);
   const composer = page.getByLabel('Message', { exact: true });
   await expect(composer).toBeVisible();
 
-  const settings = await openTab(gm, table.id, '/settings');
+  const settings = await openTab(gm, table.id, 'Settings');
   await settings.getByRole('button', { name: 'Archive table' }).click();
   await expect(page.getByText('This table is archived: it is read-only.')).toBeVisible();
   await expect(page.getByText('The table is archived: the chat is read-only.')).toBeVisible();
@@ -249,7 +253,8 @@ test('an archived table is read-only until unarchived', async ({ browser }) => {
   const card = settings.getByRole('listitem').filter({ hasText: 'Old Campaign' });
   await expect(card).toContainText('Archived');
 
-  await settings.goto(`/tables/${table.id}/settings`);
+  await settings.goto(`/tables/${table.id}`);
+  await showPanel(settings, 'Settings');
   await settings.getByRole('button', { name: 'Unarchive table' }).click();
   await expect(page.getByText('This table is archived: it is read-only.')).toBeHidden();
   await composer.fill('Back again');

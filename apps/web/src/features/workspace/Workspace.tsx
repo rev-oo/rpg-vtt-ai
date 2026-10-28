@@ -9,7 +9,7 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { Link, useNavigate, useParams } from 'react-router';
+import { Link } from 'react-router';
 
 import { canManageTable } from '@vtt/shared';
 import { Button, cn } from '@vtt/ui';
@@ -28,7 +28,7 @@ import {
   titleOf,
 } from './layout.js';
 import { PANEL_COMPONENTS } from './panel-components.js';
-import { targetOf, type PagePanel, type PanelTarget, type ToolPanel } from './panel-ids.js';
+import type { PagePanel, PanelTarget, ToolPanel } from './panel-ids.js';
 import { useDesktop } from './use-desktop.js';
 
 export interface WorkspaceProps {
@@ -80,8 +80,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const [dock, setDock] = useState<DockviewApi | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
-  const subpath = useParams()['*'] ?? '';
-  const navigate = useNavigate();
 
   const onActive = useEffectEvent((panelId: string | undefined) => {
     if (panelId?.startsWith(ACTOR_PREFIX)) setDiceActorId(panelId.slice(ACTOR_PREFIX.length));
@@ -115,19 +113,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         : t('journal.title');
     showTarget(api, target, phone, title);
   };
-  // The URL stays on the table while panels change (ADR-059). A link into the table
-  // (`/actors/:id`, `/journal/:id`, `/members`, `/settings`, the old list pages) opens its
-  // panel, then the URL goes back to the table.
-  const followUrl = useEffectEvent((api: DockviewApi) => {
-    if (subpath === '') return;
-    const target = targetOf(subpath);
-    if (target) open(api, target);
-    void navigate(`/tables/${table.id}`, { replace: true });
-  });
-  useEffect(() => {
-    if (dock) followUrl(dock);
-  }, [dock, subpath]);
-
   return (
     <DockContext
       value={{

@@ -59,7 +59,7 @@ test('sheets on a phone', async ({ browser }) => {
   await page.setViewportSize({ width: 360, height: 740 });
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  await page.goto(`/tables/${table.id}/actors/${actor.id}`);
+  await page.goto(`/tables/${table.id}`);
   const sheet = page.locator('[data-plugin="tiny-d20"]');
   const sheetTab = page.getByRole('tab', { name: 'Ayla' });
   const log = page.getByRole('log', { name: 'Messages' });
@@ -67,6 +67,8 @@ test('sheets on a phone', async ({ browser }) => {
     await page.getByRole('button', { name: 'Panels' }).click();
     await page.getByRole('list', { name: 'Panels' }).getByRole('button', { name: panel }).click();
   };
+  await show('Actors');
+  await page.getByRole('button', { name: 'Open sheet: Ayla' }).click();
   await expect(sheet.getByLabel('Strength')).toBeVisible();
 
   await test.step('the sheet fills the screen', async () => {

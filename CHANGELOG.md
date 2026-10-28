@@ -6,7 +6,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
-- A table opens as a full-page workspace. Lists, sheets, journal entries, the table overview, members, settings, combat, chat and dice are panels: drag them by their tabs to stack, split or float them, and close or reopen them from the Panels menu. Several sheets can be open side by side. Switching panels leaves the URL on the table; links to a sheet, journal entry, members or settings still open it as a panel. Each browser remembers the layout per table, separately for phones, where every panel is a full-screen tab. Each list keeps its own search and filters, which are no longer part of the URL. Old `/items` and `/journal` links open the matching list (FR-TABLE-08, ADR-059).
+- A table opens as a full-page workspace. Lists, sheets, journal entries, the table overview, members, settings, combat, chat and dice are panels: drag them by their tabs to stack, split or float them, and close or reopen them from the Panels menu. Several sheets can be open side by side. A table now has a single URL, which panels do not change. Links to a table's sheets, journal entries, items, members or settings no longer work and lead to the tables list. Each browser remembers the layout per table, separately for phones, where every panel is a full-screen tab. Each list keeps its own search and filters, which are no longer part of the URL (FR-TABLE-08, ADR-059).
 
 ## [0.2.0] - 2026-10-28
 

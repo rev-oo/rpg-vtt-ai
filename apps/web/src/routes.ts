@@ -11,9 +11,9 @@ export default [
       route('admin/plugins', 'routes/admin-plugins.tsx'),
       route('admin/settings', 'routes/admin-settings.tsx'),
     ]),
-    // A table is a full-page workspace outside the app's header; its panels, not child
-    // routes, show what the rest of the path names (FR-TABLE-08, ADR-059).
-    route('tables/:tableId/*', 'routes/table.tsx'),
+    // A table is a full-page workspace outside the app's header. It has one URL: its panels,
+    // not child routes, show sheets, entries and pages (FR-TABLE-08, ADR-059).
+    route('tables/:tableId', 'routes/table.tsx'),
   ]),
   route('*', 'routes/catch-all.tsx'),
 ] satisfies RouteConfig;

@@ -14,7 +14,7 @@ import { LoadMore } from '../entities/LoadMore.js';
 import { OwnershipDialog } from '../entities/OwnershipDialog.js';
 import { usePagedList } from '../entities/paging.js';
 import type { TableData } from '../table/table-data.js';
-import { DocumentLink } from '../workspace/DocumentLink.js';
+import { OpenButton } from '../workspace/OpenButton.js';
 import { entryPanelId } from '../workspace/panel-ids.js';
 
 import { CreateJournalDialog } from './CreateJournalDialog.js';
@@ -123,14 +123,13 @@ export function JournalList({
                 </Button>
               ) : (
                 <>
-                  <DocumentLink
-                    tableId={table.id}
+                  <OpenButton
                     target={{ kind: 'entry', id: entryPanelId(entry.id), entryId: entry.id }}
                     className="self-center"
                     label={`${t('journal.open')}: ${entry.title}`}
                   >
                     {t('journal.open')}
-                  </DocumentLink>
+                  </OpenButton>
                   {manages && (
                     <Button
                       onClick={() =>

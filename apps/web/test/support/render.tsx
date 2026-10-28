@@ -26,7 +26,6 @@ function asLoader<T>(
 
 const tableParams = (args: LoaderFunctionArgs) => ({
   tableId: args.params.tableId ?? '',
-  '*': args.params['*'] ?? '',
 });
 
 // Mirrors src/routes.ts with the real route modules; `Layout` (the <html> shell) is skipped.
@@ -62,7 +61,7 @@ const Stub = createRoutesStub([
           },
           {
             id: TABLE_ROUTE_ID,
-            path: 'tables/:tableId/*',
+            path: 'tables/:tableId',
             Component: table.default,
             // Typegen types `params` from the route path, which the stub cannot know.
             loader: asLoader((args) => table.clientLoader({ ...args, params: tableParams(args) })),

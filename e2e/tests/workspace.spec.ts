@@ -56,9 +56,9 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
   });
 
   await test.step('two sheets open side by side; the URL stays on the table', async () => {
-    await page.getByRole('link', { name: 'Open sheet: Wren' }).click();
+    await page.getByRole('button', { name: 'Open sheet: Wren' }).click();
     await expect(panel(page, 'Wren').getByLabel('Strength')).toBeVisible();
-    await page.getByRole('link', { name: 'Open sheet: Goblin' }).click();
+    await page.getByRole('button', { name: 'Open sheet: Goblin' }).click();
     await expect(panel(page, 'Goblin').getByLabel('Strength')).toBeVisible();
     const content = await panel(page, 'Goblin').boundingBox();
     if (!content) throw new Error('the Goblin panel is not shown');

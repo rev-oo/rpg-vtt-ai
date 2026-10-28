@@ -9,7 +9,7 @@ import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
-import { DocumentLink } from '../workspace/DocumentLink.js';
+import { OpenButton } from '../workspace/OpenButton.js';
 import { sheetPanelId } from '../workspace/panel-ids.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
@@ -129,14 +129,13 @@ export function ActorList({
                 </Button>
               ) : (
                 <>
-                  <DocumentLink
-                    tableId={table.id}
+                  <OpenButton
                     target={{ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id }}
                     className="self-center"
                     label={`${t('sheet.open')}: ${actor.name}`}
                   >
                     {t('sheet.open')}
-                  </DocumentLink>
+                  </OpenButton>
                   {canDuplicate(actor) && (
                     <Button
                       onClick={() =>

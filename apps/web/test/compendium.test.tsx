@@ -13,6 +13,7 @@ import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
 import { fakeWebSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
+import { openPanel } from './support/workspace.js';
 
 // T-0803 (FR-PLUGIN-09): importing a compendium pack from the table settings.
 
@@ -53,7 +54,7 @@ const PACK: PackSummary = {
 };
 
 /** The settings page with its system and packs; `table` answers the table as it is now. */
-function openSettings(
+async function openSettings(
   handlers: Parameters<typeof fakeApi>[0],
   table: () => TableView = () => TABLE,
 ) {
@@ -83,14 +84,15 @@ function openSettings(
     'GET /tables/t1/packs': { body: { packs: [PACK] } },
     ...handlers,
   });
-  renderApp('/tables/t1/settings');
+  renderApp('/tables/t1');
+  await openPanel('Settings');
   return api;
 }
 
 describe('compendium', () => {
   it('imports a pack and says what was already there', async () => {
     let pack = PACK;
-    const { calls } = openSettings({
+    const { calls } = await openSettings({
       'GET /tables/t1/packs': () => ({ body: { packs: [pack] } }),
       'POST /tables/t1/packs/bestiary/import': () => {
         pack = { ...PACK, imported: 4 };
@@ -117,7 +119,7 @@ describe('archiving (T-0807)', () => {
       table = { ...TABLE, archivedAt };
       return { body: { table } };
     };
-    const { calls } = openSettings(
+    const { calls } = await openSettings(
       {
         'POST /tables/t1/archive': answer('2026-10-27T12:00:00.000Z'),
         'POST /tables/t1/unarchive': answer(null),
@@ -147,7 +149,7 @@ describe('archiving (T-0807)', () => {
 describe('system version (T-0813)', () => {
   it('upgrades the table to the installed version when the GM asks', async () => {
     let table: TableView = { ...TABLE, systemVersion: '0.9.0', installedVersion: '1.0.0' };
-    const { calls } = openSettings(
+    const { calls } = await openSettings(
       {
         'POST /tables/t1/upgrade-system': () => {
           table = { ...table, systemVersion: '1.0.0' };
@@ -172,7 +174,7 @@ describe('system version (T-0813)', () => {
   });
 
   it('offers nothing when the table plays the installed version', async () => {
-    openSettings({});
+    await openSettings({});
     expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
   });

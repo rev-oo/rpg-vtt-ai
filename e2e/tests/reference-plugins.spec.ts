@@ -7,6 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn, type SignedIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
+import { showPanel } from './support/workspace.js';
 
 const reference = fileURLToPath(new URL('../../plugins/', import.meta.url));
 
@@ -83,7 +84,7 @@ async function rollsInitiative(
 async function openSheet(page: Page, tableId: string, name: string): Promise<void> {
   await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
-  await page.getByRole('link', { name: `Open sheet: ${name}` }).click();
+  await page.getByRole('button', { name: `Open sheet: ${name}` }).click();
   await expect(page.getByRole('heading', { name, level: 2 })).toBeVisible();
 }
 
@@ -242,7 +243,8 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
 
   await test.step('the GM imports the bestiary pack once (T-0803)', async () => {
     const gmPage = await gm.context.newPage();
-    await gmPage.goto(`/tables/${table.id}/settings`);
+    await gmPage.goto(`/tables/${table.id}`);
+    await showPanel(gmPage, 'Settings');
     const importButton = gmPage.getByRole('button', { name: 'Import Bestiary' });
     await expect(gmPage.getByText('2 actors, 2 items · 0 in this table')).toBeVisible();
     await importButton.click();

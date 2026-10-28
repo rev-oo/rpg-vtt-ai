@@ -10,6 +10,7 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { upgradeAvailable } from '../features/settings/system-version.js';
 import type { TableData, TableLoaderData } from '../features/table/table-data.js';
+import { OpenButton } from '../features/workspace/OpenButton.js';
 import { Workspace } from '../features/workspace/Workspace.js';
 import { t } from '../i18n/index.js';
 import { TableSystemContext, useTableSystem } from '../plugin-host/system-context.js';
@@ -105,7 +106,9 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             version: table.installedVersion ?? '',
             current: table.systemVersion,
           })}{' '}
-          <Link to={`/tables/${table.id}/settings`}>{t('table.upgradeLink')}</Link>
+          <OpenButton target={{ kind: 'page', id: 'settings' }}>
+            {t('table.upgradeLink')}
+          </OpenButton>
         </Alert>
       )}
       {system.status === 'unavailable' && (
