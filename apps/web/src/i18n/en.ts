@@ -70,6 +70,7 @@ export const en = {
   'workspace.chat': 'Chat',
   'workspace.dice': 'Dice',
   'workspace.sheet': 'Sheet',
+  'workspace.about': 'About this table',
   'workspace.hint':
     'Open an actor or a journal entry from the lists; it opens as a panel here. Drag panels by their tabs to arrange the table.',
   'workspace.announce.opened': '{title} opened',

@@ -173,7 +173,7 @@ export function OverviewPanel(): ReactElement {
   return (
     <Body>
       <div className="mx-auto flex max-w-2xl flex-col gap-3 py-3">
-        <h2 className="text-2xl font-bold">{table.name}</h2>
+        <h2 className="text-2xl font-bold">{t('workspace.about')}</h2>
         <p className="text-sm text-muted">
           {t(`tables.role.${table.role}`)} ·{' '}
           {t('tables.system', { name: table.systemName, version: table.systemVersion })}

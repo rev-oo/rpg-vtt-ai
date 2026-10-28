@@ -73,6 +73,7 @@ export const ptBR: Messages = {
   'workspace.chat': 'Chat',
   'workspace.dice': 'Dados',
   'workspace.sheet': 'Ficha',
+  'workspace.about': 'Sobre esta mesa',
   'workspace.hint':
     'Abra um ator ou uma entrada do diário nas listas; ele abre aqui como um painel. Arraste os painéis pelas abas para organizar a mesa.',
   'workspace.announce.opened': '{title} aberto',

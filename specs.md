@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | Not started | 0%       |
+| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | In progress | 33%      |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1201`
+- **Next task:** `T-1202`
 - **Open blockers:** none
 - **Decisions pending:** Q16–Q19 (§14)
 
@@ -40,6 +40,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
 | 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
+| 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; the URL names the active document; layouts saved per browser) (ADR-059).                     |
 
 ---
 
@@ -311,7 +312,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                                                                                                   | MVP      | 0.1.0                 |
 | FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                                                                                           | v1       | 0.2.0                 |
 | FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                                                                                                 | MVP      | 0.1.0                 |
-| FR-TABLE-08 | The table opens as a full-page workspace: a centre stage (sheet, journal entry or map) and collapsible, resizable panels for chat, actors, items, journal and combat. On phones each panel opens full screen. | 1.0      | planned (M12)         |
+| FR-TABLE-08 | The table opens as a full-page workspace: a centre stage (sheet, journal entry or map) and collapsible, resizable panels for chat, actors, items, journal and combat. On phones each panel opens full screen. | 1.0      | 0.3.0 (ADR-059)       |
 
 ### 7.3 Actors and items (`FR-ENT`)
 
@@ -719,7 +720,7 @@ All done; the task lists with their notes are in [`docs/history/0.2.0.md`](docs/
 
 The table becomes a full-page workspace, ready for maps in M14, and the compendium becomes a browser instead of a whole-pack import.
 
-- [ ] **T-1201 · Full-page workspace**
+- [x] **T-1201 · Full-page workspace**
   - **Deps:** none
   - **Do:** The table route leaves the app shell and fills the viewport (FR-TABLE-08). A centre stage shows the open sheet or journal entry (and the map from M14). Chat, actors, items, journal and combat become panels that collapse and resize; their layout is remembered per user and table. On phones each panel opens full screen, keeping T-0511's sheet route. Keyboard users can move between panels (NFR-10).
   - **Done when:** e2e opens a table on desktop and phone, collapses and resizes panels, reloads and finds the same layout; every current table feature works from the workspace; the existing e2e suite passes on it.
@@ -904,7 +905,8 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | SQLite write contention under many active tables    | Low                          | Medium | WAL mode, batched projection writes, single writer; revisit at scale                                                                                                                                                                                                                    |
 | Formula language scope creep                        | High                         | Medium | Fixed function whitelist, change requires an ADR                                                                                                                                                                                                                                        |
 | Type drift between Zod, JSON Schema, and TypeScript | Medium                       | Medium | Single Zod source, emitted schemas snapshot-tested                                                                                                                                                                                                                                      |
-| Mobile sheet UX is cramped                          | Low                          | Medium | Dedicated full-screen route under 768 px (T-0511); phone e2e in CI                                                                                                                                                                                                                      |
+| Mobile sheet UX is cramped                          | Low                          | Medium | Every workspace panel is a full-screen tab under 768 px (ADR-059, replacing T-0511's bar); phone e2e in CI                                                                                                                                                                              |
+| Keyboard users cannot rearrange the workspace       | Medium                       | Medium | dockview's keyboard docking and resizing are paid modules (ADR-059); the default layout, tab strips and the Panels menu work by keyboard; revisit if the free packages gain them                                                                                                        |
 | Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                                                                                                                                                                                                                     |
 | Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); plugin data migrations are LATER; `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)                              |
 | CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes. Known intermittent e2e failures: `journal entries are hidden until the GM reveals them` and the concurrent rich-text step of `two browsers edit one live sheet` |
@@ -976,6 +978,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
 | ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
 | ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted |
+| ADR-059 | [The table is a dockview workspace; the URL names the active document](docs/adr/ADR-059-table-workspace.md)                                     | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

@@ -200,8 +200,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
             theme={themeLight}
             components={PANEL_COMPONENTS}
             watermarkComponent={Empty}
-            // F6 and Shift+F6 move between groups; Ctrl+] and Ctrl+[ between tabs (NFR-10).
-            keyboardNavigation
             messages={DOCK_MESSAGES}
             disableDnd={phone}
             disableFloatingGroups={phone}

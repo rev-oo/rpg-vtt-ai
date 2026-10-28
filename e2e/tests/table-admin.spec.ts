@@ -83,7 +83,10 @@ test('members, invite links and sign-up', async ({ browser }) => {
   await test.step('the GM changes a role and removes a member (FR-TABLE-04)', async () => {
     await gmPage.reload();
     await memberRow(gmPage, 'Iris').getByLabel('Role').selectOption({ label: 'Spectator' });
-    await expect(gmPage.getByRole('status')).toHaveText('Iris is now Spectator.');
+    // dockview's own status region narrates panels opening (ADR-059).
+    await expect(gmPage.getByRole('tabpanel', { name: 'Members' }).getByRole('status')).toHaveText(
+      'Iris is now Spectator.',
+    );
 
     const erinPage = await openTab(erin, table.id, '/members');
     await expect(memberRow(erinPage, 'Iris (you)')).toContainText('Spectator');
@@ -156,7 +159,9 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   const body = gmPage.getByRole('textbox', { name: 'The Old Mill' });
   await body.click();
   await gmPage.keyboard.type('The miller hides a map.');
-  await gmPage.getByRole('button', { name: 'Reveal to players' }).click();
+  // The entry opens as its own panel beside the list, which offers the same actions.
+  const entryPanel = gmPage.getByRole('tabpanel', { name: 'The Old Mill' });
+  await entryPanel.getByRole('button', { name: 'Reveal to players' }).click();
   await expect(gmPage.getByText('Players cannot see this entry.', { exact: false })).toBeHidden();
 
   // The reveal reaches the player's open list (FR-ENT-07).
@@ -168,7 +173,7 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   await expect(finnPage.getByRole('toolbar', { name: 'Formatting' })).toHaveCount(0);
 
   // Hidden again, it leaves the player's screen.
-  await gmPage.getByRole('button', { name: 'Hide from players' }).click();
+  await entryPanel.getByRole('button', { name: 'Hide from players' }).click();
   await expect(
     finnPage.getByText('This entry does not exist, or you cannot see it.').first(),
   ).toBeVisible();

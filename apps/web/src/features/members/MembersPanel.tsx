@@ -42,7 +42,8 @@ export function MembersPanel(): ReactElement {
     return () => {
       current = false;
     };
-  }, [tableId]);
+    // A revalidation (after an invite is made or revoked) reloads them.
+  }, [tableId, data]);
 
   return (
     <div className="flex flex-col gap-6">

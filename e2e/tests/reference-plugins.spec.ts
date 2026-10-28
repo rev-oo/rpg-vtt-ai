@@ -156,7 +156,10 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const message = page.getByLabel('Message', { exact: true });
     await message.fill('/check');
     await message.press('Enter');
-    await expect(page.getByRole('alert')).toHaveText('Use /check str or /check dex.');
+    // dockview keeps an empty alert region of its own (ADR-059).
+    await expect(page.getByRole('alert').filter({ hasText: /./ })).toHaveText(
+      'Use /check str or /check dex.',
+    );
     await page.getByLabel('Speak as').selectOption({ label: 'Ayla' });
     await message.fill('/check str');
     await message.press('Enter');
@@ -246,7 +249,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(gmPage.getByText('Imported 4; 0 were already in the table.')).toBeVisible();
     await expect(gmPage.getByText('2 actors, 2 items · 4 in this table')).toBeVisible();
     await expect(importButton).toBeDisabled();
-    await gmPage.getByRole('link', { name: 'Items' }).click();
+    await gmPage.getByRole('tab', { name: 'Items' }).click();
     await expect(gmPage.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
     await expect(gmPage.getByRole('heading', { name: 'Shortsword' })).toBeVisible();
   });
