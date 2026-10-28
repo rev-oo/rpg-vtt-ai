@@ -111,6 +111,7 @@ export const ptBR: Messages = {
   'actors.duplicate': 'Duplicar',
   'actors.duplicated': '{name} foi criado.',
   'actors.items': 'Itens',
+  'actors.itemsOf': 'Itens de {name}',
   'actors.noItems': 'Nenhum item ainda.',
 
   'items.title': 'Itens',
@@ -118,6 +119,7 @@ export const ptBR: Messages = {
   'items.new': 'Novo item',
   'items.create': 'Criar item',
   'items.empty': 'Nenhum item encontrado.',
+  'items.otherTypes': 'Outros',
   'items.trashEmpty': 'A lixeira está vazia.',
   'items.giveTo': 'Dar {name} para',
   'items.give': 'Dar',
@@ -335,6 +337,7 @@ export const ptBR: Messages = {
     'O código compartilhado do sistema não pôde ser carregado, então os valores que o usam não podem ser calculados: {detail}',
 
   'compendium.title': 'Compêndio',
+  'compendium.actors': 'Atores',
   'compendium.entries': 'Entradas do compêndio',
   'compendium.search': 'Buscar no compêndio',
   'compendium.pack': 'Pacote',

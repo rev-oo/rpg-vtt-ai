@@ -15,6 +15,8 @@ import { sheetPanelId } from '../workspace/panel-ids.js';
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
 import type { EntityFilters } from './filters.js';
+import { GroupedList } from './GroupedList.js';
+import { groupItems, useItemTypes } from './item-groups.js';
 import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { OwnershipDialog } from './OwnershipDialog.js';
@@ -216,6 +218,7 @@ export function ActorList({
 /** An actor's own items (FR-ENT-05), loaded when the user expands them. */
 function ActorItems({ actor }: { actor: ActorView }): ReactElement {
   const [items, setItems] = useState<ItemView[] | null>(null);
+  const { itemTypes, translate } = useItemTypes();
   const [failure, setFailure] = useState<string | null>(null);
 
   return (
@@ -232,13 +235,19 @@ function ActorItems({ actor }: { actor: ActorView }): ReactElement {
       {failure && <Alert tone="error">{failure}</Alert>}
       {items?.length === 0 && <p className="text-muted">{t('actors.noItems')}</p>}
       {items && items.length > 0 && (
-        <ul className="list-disc pl-6">
-          {items.map((item) => (
+        <GroupedList
+          label={t('actors.itemsOf', { name: actor.name })}
+          groups={groupItems(items, (item) => item.type, itemTypes, translate)}
+          rowKey={(item) => item.id}
+          listClassName="list-disc pl-6"
+          headingClassName="mt-1 text-xs font-semibold text-muted uppercase"
+          headingLevel={4}
+          renderRow={(item) => (
             <li key={item.id}>
               {item.name} <span className="text-muted">({item.type})</span>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       )}
     </details>
   );
