@@ -6,6 +6,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- The compendium is a panel of the workspace that every member can browse. Search the system's pack entries by name, pack and type, preview each entry's sheet, and see which ones the table already has. GMs and assistants copy chosen entries into the table, and anyone copies items onto an actor they own. This replaces importing whole packs from the table settings, and `GET /tables/:id/packs` and `POST /tables/:id/packs/:name/import` are removed (FR-PLUGIN-09, ADR-060).
 - A table opens as a full-page workspace. Lists, sheets, journal entries, the table overview, members, settings, combat, chat and dice are panels: drag them by their tabs to stack, split or float them, and close or reopen them from the Panels menu. Several sheets can be open side by side. A table now has a single URL, which panels do not change. Links to a table's sheets, journal entries, items, members or settings no longer work and lead to the tables list. Each browser remembers the layout per table, separately for phones, where every panel is a full-screen tab. Each list keeps its own search and filters, which are no longer part of the URL (FR-TABLE-08, ADR-059).
 
 ## [0.2.0] - 2026-10-28

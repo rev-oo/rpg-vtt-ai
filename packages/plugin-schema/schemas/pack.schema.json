@@ -11,7 +11,7 @@
       "minLength": 1,
       "maxLength": 500,
       "title": "Text",
-      "description": "What GMs see; a lang key or text."
+      "description": "The pack’s name in the compendium; a lang key or text."
     },
     "entries": {
       "maxItems": 1000,
@@ -23,7 +23,7 @@
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
             "title": "Name",
-            "description": "Stable within the pack: importing again skips entries already imported, by this id."
+            "description": "Stable within the pack and across versions: copies remember it, so the compendium marks entries a table already has."
           },
           "kind": {
             "type": "string",
@@ -70,5 +70,5 @@
     "entries"
   ],
   "additionalProperties": false,
-  "description": "A compendium pack: actors and items GMs import into a table."
+  "description": "A compendium pack: actors and items members browse and copy into a table."
 }

@@ -6,7 +6,7 @@ export * from './constants.js';
 export * from './events.js';
 export * from './history.js';
 export * from './issues.js';
-export * from './packs.js';
+export * from './compendium.js';
 export * from './plugins.js';
 export * from './requests.js';
 export * from './responses.js';

@@ -27,8 +27,8 @@ export function canUpgradeTableSystem(role: TableRole): boolean {
   return isGmLike(role);
 }
 
-/** Importing the system's compendium packs into the table (FR-PLUGIN-09). */
-export function canImportPacks(role: TableRole): boolean {
+/** Copying compendium entries into the table's actors and library (FR-PLUGIN-09). */
+export function canCopyCompendiumToTable(role: TableRole): boolean {
   return isGmLike(role);
 }
 

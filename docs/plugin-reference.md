@@ -568,12 +568,12 @@ Initiative for the combat tracker.
 
 ## Compendium pack (packs/<name>.json)
 
-A compendium pack: actors and items GMs import into a table.
+A compendium pack: actors and items members browse and copy into a table.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
-| `label` | [text](#text) | yes | What GMs see; a lang key or text. |
+| `label` | [text](#text) | yes | The pack’s name in the compendium; a lang key or text. |
 | `entries` | list of [`entries`](#pack-entries) (at most 1000 items) | yes |  |
 
 <a id="pack-entries"></a>
@@ -584,7 +584,7 @@ A compendium entry.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
-| `id` | [name](#name) | yes | Stable within the pack: importing again skips entries already imported, by this id. |
+| `id` | [name](#name) | yes | Stable within the pack and across versions: copies remember it, so the compendium marks entries a table already has. |
 | `kind` | one of `"actor"`, `"item"` | yes | An actor or an item. |
 | `type` | [name](#name) | yes | An actor or item type of this plugin. |
 | `name` | text (1–100 characters) | yes | The name it gets in the table. |

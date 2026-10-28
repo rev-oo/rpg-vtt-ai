@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | In progress | 33%      |
+| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | In progress | 67%      |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1202`
+- **Next task:** `T-1203`
 - **Open blockers:** none
 - **Decisions pending:** Q16–Q19 (§14)
 
@@ -41,6 +41,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
 | 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
 | 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; one URL per table; layouts saved per browser) (ADR-059).                                     |
+| 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).     |
 
 ---
 
@@ -379,22 +380,22 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                                                             | Priority | Status                                           |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------ |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                              | MVP      | 0.1.0                                            |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                              | MVP      | 0.1.0                                            |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                               | MVP      | 0.1.0                                            |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                          | MVP      | 0.1.0                                            |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                 | MVP      | 0.1.0                                            |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                 | MVP      | 0.1.0                                            |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                          | MVP      | 0.1.0                                            |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                    | MVP      | 0.1.0 (`code/client`); 0.2.0                     |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own. | v1       | 0.2.0 (whole-pack import); browser planned (M12) |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                        | v1       | 0.2.0                                            |
-| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | planned (M12)                                    |
-| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                         | 1.0      | planned (M15)                                    |
-| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.               | 1.0      | planned (M15)                                    |
-| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                      | 1.0      | planned (M16)                                    |
+| ID           | Requirement                                                                                                                                                             | Priority | Status                       |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                              | MVP      | 0.1.0                        |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                              | MVP      | 0.1.0                        |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                               | MVP      | 0.1.0                        |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                          | MVP      | 0.1.0                        |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                 | MVP      | 0.1.0                        |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                 | MVP      | 0.1.0                        |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                          | MVP      | 0.1.0                        |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                    | MVP      | 0.1.0 (`code/client`); 0.2.0 |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own. | v1       | 0.3.0 (browser, ADR-060)     |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                        | v1       | 0.2.0                        |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | planned (M12)                |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                         | 1.0      | planned (M15)                |
+| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.               | 1.0      | planned (M15)                |
+| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                      | 1.0      | planned (M16)                |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -535,7 +536,7 @@ The server runs the same validation as `vtt-plugin validate` on install and on r
 Reserved in 0.1.0, built in 0.2.0:
 
 - **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. Built in T-0802 (ADR-050): [guide, Combat](docs/plugin-authoring.md#combat). An `orderCombatants` hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
-- **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which GMs import into a table library (FR-PLUGIN-09). Built in T-0803 (ADR-051): [guide, Compendium packs](docs/plugin-authoring.md#compendium-packs).
+- **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which members browse and copy into a table or onto their actors (FR-PLUGIN-09). Built in T-0803 (ADR-051); browsed since T-1202 (ADR-060): [guide, Compendium packs](docs/plugin-authoring.md#compendium-packs).
 
 ---
 
@@ -631,6 +632,7 @@ Key resource groups:
 | Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`, `GET /actors/:id/history`, `POST /actors/:id/history/:snapshotId/restore` (ADR-053) |
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                         |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                       |
+| Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                        |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
@@ -725,7 +727,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Do:** The table route leaves the app shell and fills the viewport (FR-TABLE-08). A centre stage shows the open sheet or journal entry (and the map from M14). Chat, actors, items, journal and combat become panels that collapse and resize; their layout is remembered per user and table. On phones each panel opens full screen, keeping T-0511's sheet route. Keyboard users can move between panels (NFR-10).
   - **Done when:** e2e opens a table on desktop and phone, collapses and resizes panels, reloads and finds the same layout; every current table feature works from the workspace; the existing e2e suite passes on it.
 
-- [ ] **T-1202 · Compendium browser**
+- [x] **T-1202 · Compendium browser**
   - **Deps:** none
   - **Do:** Replace the whole-pack import (ADR-051 §5, §7) with a browser, in a new ADR (FR-PLUGIN-09). `GET /tables/:id/compendium` lists the entries of every pack of the system, with search, pack and type filters, paged as in ADR-057, readable by every member; each entry says whether the table has it already (`pack_ref`). `POST /tables/:id/compendium/copy` takes chosen entries: GMs and assistants copy actors and items into the table; players copy items onto actors they own. Copies keep `pack_ref`. The web shows the compendium as a panel of the workspace, with entry previews. The import endpoints are removed.
   - **Done when:** endpoint tests cover listing, filters, paging, copying by role and the "already in the table" mark; a player copies a pack item onto their character and a GM copies an actor, in e2e.
@@ -918,67 +920,68 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 
 ## 16. Decision Log (ADR index)
 
-| ADR     | Decision                                                                                                                                        | Status   |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                                                       | Accepted |
-| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                                                   | Accepted |
-| ADR-003 | SQLite + Drizzle, single data directory                                                                                                         | Accepted |
-| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                                                        | Accepted |
-| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                                                             | Accepted |
-| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                                                 | Accepted |
-| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                                                             | Accepted |
-| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)                                              | Accepted |
-| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md)                                | Accepted |
-| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                                          | Accepted |
-| ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md)                        | Accepted |
-| ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted |
-| ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted |
-| ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted |
-| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted |
-| ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted |
-| ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted |
-| ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted |
-| ADR-019 | [Plugin validation: one pure validator, issue codes, reference roots](docs/adr/ADR-019-plugin-validation.md)                                    | Accepted |
-| ADR-020 | [Plugin registry: scanning, status, enabling, read-only tables](docs/adr/ADR-020-plugin-registry.md)                                            | Accepted |
-| ADR-021 | [Scoped plugin CSS: scope, layer, at-rules, URLs, limits](docs/adr/ADR-021-scoped-plugin-css.md)                                                | Accepted |
-| ADR-022 | [Plugin file serving: access, allowed files, scoped CSS, headers](docs/adr/ADR-022-plugin-file-serving.md)                                      | Accepted |
-| ADR-023 | [Plugin engine: collections, defaults, derived values, recipes, cards, document layout](docs/adr/ADR-023-plugin-engine.md)                      | Accepted |
-| ADR-024 | [Sheet renderer: store, inputs, CSS hooks, phone layout, preview](docs/adr/ADR-024-sheet-renderer.md)                                           | Accepted |
-| ADR-025 | [Plugin host: system definitions, engine rolls and cards, import map, SDK client hooks](docs/adr/ADR-025-plugin-host.md)                        | Accepted |
-| ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted |
-| ADR-027 | [Reference plugins: tiny-d20 code, end-to-end path, gaps until M5–M7](docs/adr/ADR-027-reference-plugins.md)                                    | Accepted |
-| ADR-028 | [Collaboration socket: Hocuspocus behind @fastify/websocket, per-message access checks, frame limits](docs/adr/ADR-028-collab-socket.md)        | Accepted |
-| ADR-029 | [Document persistence and the Yjs mapping: ydocs, projection, unload delay](docs/adr/ADR-029-document-persistence.md)                           | Accepted |
-| ADR-030 | [Secret layer: filtered views and formulas, secret documents only for secret fields](docs/adr/ADR-030-secret-layer.md)                          | Accepted |
-| ADR-031 | [Counter adjustments and data repair over collab stateless messages](docs/adr/ADR-031-adjust-and-repair.md)                                     | Accepted |
-| ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted |
-| ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted |
-| ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted |
-| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted |
-| ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted |
-| ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted |
-| ADR-038 | [Journal entries over REST and collab: hidden by default, 404 for hidden entries, a `body` fragment](docs/adr/ADR-038-journal-entries.md)       | Accepted |
-| ADR-039 | [Table settings checked against the system's house rules; `table.updated` event](docs/adr/ADR-039-table-settings.md)                            | Accepted |
-| ADR-040 | [Instance settings, invite sign-up and `/api/health`](docs/adr/ADR-040-instance-settings-and-health.md)                                         | Accepted |
-| ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted |
-| ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted |
-| ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted |
-| ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted |
-| ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted |
-| ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted |
-| ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted |
-| ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted |
-| ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted |
-| ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted |
-| ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted |
-| ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted |
-| ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted |
-| ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted |
-| ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted |
-| ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
-| ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
-| ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted |
-| ADR-059 | [The table is a dockview workspace with a single URL](docs/adr/ADR-059-table-workspace.md)                                                      | Accepted |
+| ADR     | Decision                                                                                                                                        | Status                                     |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| ADR-001 | Vite + React SPA instead of Next.js (realtime and runtime plugin loading)                                                                       | Accepted                                   |
+| ADR-002 | Fastify server with Hocuspocus for Yjs, separate `/ws/events` for JSON events                                                                   | Accepted                                   |
+| ADR-003 | SQLite + Drizzle, single data directory                                                                                                         | Accepted                                   |
+| ADR-004 | Plugins are JSON-first; code is opt-in and trusted in v1                                                                                        | Accepted                                   |
+| ADR-005 | TypeScript strict across all packages; ESLint flat config; Prettier                                                                             | Accepted                                   |
+| ADR-006 | Id-keyed maps for collections in CRDT documents                                                                                                 | Accepted                                   |
+| ADR-007 | Server-authoritative rolls; formulas never `eval`'d                                                                                             | Accepted                                   |
+| ADR-008 | [Pin TypeScript to 6.0.x until typescript-eslint supports 7](docs/adr/ADR-008-typescript-6-pin.md)                                              | Accepted                                   |
+| ADR-009 | [eslint-plugin-import-x instead of eslint-plugin-import (ESLint 10)](docs/adr/ADR-009-eslint-plugin-import-x.md)                                | Accepted                                   |
+| ADR-010 | [One root ESLint config instead of per-package configs](docs/adr/ADR-010-single-root-eslint-config.md)                                          | Accepted                                   |
+| ADR-011 | [M1 server decisions: plugins table, `TRUST_PROXY`, CSRF, last GM, permissions](docs/adr/ADR-011-m1-server-decisions.md)                        | Accepted                                   |
+| ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted                                   |
+| ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted                                   |
+| ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted                                   |
+| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted                                   |
+| ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted                                   |
+| ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted                                   |
+| ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted                                   |
+| ADR-019 | [Plugin validation: one pure validator, issue codes, reference roots](docs/adr/ADR-019-plugin-validation.md)                                    | Accepted                                   |
+| ADR-020 | [Plugin registry: scanning, status, enabling, read-only tables](docs/adr/ADR-020-plugin-registry.md)                                            | Accepted                                   |
+| ADR-021 | [Scoped plugin CSS: scope, layer, at-rules, URLs, limits](docs/adr/ADR-021-scoped-plugin-css.md)                                                | Accepted                                   |
+| ADR-022 | [Plugin file serving: access, allowed files, scoped CSS, headers](docs/adr/ADR-022-plugin-file-serving.md)                                      | Accepted                                   |
+| ADR-023 | [Plugin engine: collections, defaults, derived values, recipes, cards, document layout](docs/adr/ADR-023-plugin-engine.md)                      | Accepted                                   |
+| ADR-024 | [Sheet renderer: store, inputs, CSS hooks, phone layout, preview](docs/adr/ADR-024-sheet-renderer.md)                                           | Accepted                                   |
+| ADR-025 | [Plugin host: system definitions, engine rolls and cards, import map, SDK client hooks](docs/adr/ADR-025-plugin-host.md)                        | Accepted                                   |
+| ADR-026 | [Plugin CLI and archives: plugin-io, .vttplugin format, install endpoint, pack, dev](docs/adr/ADR-026-plugin-cli-and-archives.md)               | Accepted                                   |
+| ADR-027 | [Reference plugins: tiny-d20 code, end-to-end path, gaps until M5–M7](docs/adr/ADR-027-reference-plugins.md)                                    | Accepted                                   |
+| ADR-028 | [Collaboration socket: Hocuspocus behind @fastify/websocket, per-message access checks, frame limits](docs/adr/ADR-028-collab-socket.md)        | Accepted                                   |
+| ADR-029 | [Document persistence and the Yjs mapping: ydocs, projection, unload delay](docs/adr/ADR-029-document-persistence.md)                           | Accepted                                   |
+| ADR-030 | [Secret layer: filtered views and formulas, secret documents only for secret fields](docs/adr/ADR-030-secret-layer.md)                          | Accepted                                   |
+| ADR-031 | [Counter adjustments and data repair over collab stateless messages](docs/adr/ADR-031-adjust-and-repair.md)                                     | Accepted                                   |
+| ADR-032 | [The web app's live sheet store: Yjs SheetStore, one socket per sheet, server-side adjust](docs/adr/ADR-032-web-sheet-store.md)                 | Accepted                                   |
+| ADR-033 | [Sheet presence over Yjs awareness: ids only, names and colors from the members](docs/adr/ADR-033-sheet-presence.md)                            | Accepted                                   |
+| ADR-034 | [Collections under concurrent edits: server-created maps, ties broken by id](docs/adr/ADR-034-collection-concurrency.md)                        | Accepted                                   |
+| ADR-035 | [Collaborative long text: a minimal shared textarea, TipTap deferred](docs/adr/ADR-035-shared-text.md)                                          | Accepted                                   |
+| ADR-036 | [Pushing access changes to open documents: re-check after every change](docs/adr/ADR-036-access-revocation.md)                                  | Accepted                                   |
+| ADR-037 | [Rich text with TipTap over a Y.XmlFragment; plain text as its JSON value](docs/adr/ADR-037-rich-text.md)                                       | Accepted                                   |
+| ADR-038 | [Journal entries over REST and collab: hidden by default, 404 for hidden entries, a `body` fragment](docs/adr/ADR-038-journal-entries.md)       | Accepted                                   |
+| ADR-039 | [Table settings checked against the system's house rules; `table.updated` event](docs/adr/ADR-039-table-settings.md)                            | Accepted                                   |
+| ADR-040 | [Instance settings, invite sign-up and `/api/health`](docs/adr/ADR-040-instance-settings-and-health.md)                                         | Accepted                                   |
+| ADR-041 | [UI languages: `pt-BR`, the catalogue check, and picking the language](docs/adr/ADR-041-ui-languages.md)                                        | Accepted                                   |
+| ADR-042 | [Content Security Policy, security headers and the new rate limits](docs/adr/ADR-042-security-headers-and-limits.md)                            | Accepted                                   |
+| ADR-043 | [The e2e suite on three browsers, one instance each](docs/adr/ADR-043-e2e-on-three-browsers.md)                                                 | Accepted                                   |
+| ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted                                   |
+| ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted                                   |
+| ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted                                   |
+| ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted                                   |
+| ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted                                   |
+| ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted                                   |
+| ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted                                   |
+| ADR-051 | [Compendium packs import once into a table’s actors and items](docs/adr/ADR-051-compendium-packs.md)                                            | Accepted; §4, §5, §7 superseded by ADR-060 |
+| ADR-052 | [Chat edits and deletes go to the message’s audience](docs/adr/ADR-052-chat-edit-delete.md)                                                     | Accepted                                   |
+| ADR-053 | [Sheet history keeps copies of each actor document, restored in place](docs/adr/ADR-053-sheet-history.md)                                       | Accepted                                   |
+| ADR-054 | [An archived table is read-only through the same checks as an unavailable system](docs/adr/ADR-054-table-archive.md)                            | Accepted                                   |
+| ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted                                   |
+| ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted                                   |
+| ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted                                   |
+| ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted                                   |
+| ADR-059 | [The table is a dockview workspace with a single URL](docs/adr/ADR-059-table-workspace.md)                                                      | Accepted                                   |
+| ADR-060 | [Members browse the compendium and copy chosen entries](docs/adr/ADR-060-compendium-browser.md)                                                 | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

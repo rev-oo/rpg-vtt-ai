@@ -57,10 +57,13 @@ import {
   type CombatantUpdateInput,
   type CommandRequestInput,
   encounterResponseSchema,
-  packImportResponseSchema,
-  packsResponseSchema,
-  type PackImportResponse,
-  type PackSummary,
+  compendiumCopyResponseSchema,
+  compendiumPageSchema,
+  type CompendiumCopyInput,
+  type CompendiumCopyResponse,
+  type CompendiumEntry,
+  type CompendiumPack,
+  type CompendiumQuery,
   type EncounterView,
   type RollRequestInput,
   type CreateTableInput,
@@ -301,15 +304,19 @@ export const api = {
     (await request('GET', `/actors/${actorId}/history`, actorHistoryResponseSchema)).snapshots,
   restoreSnapshot: (actorId: string, snapshotId: string): Promise<void> =>
     requestNoContent('POST', `/actors/${actorId}/history/${snapshotId}/restore`),
-  /** The system's compendium packs, for GMs and assistants (FR-PLUGIN-09). */
-  listPacks: async (tableId: string): Promise<PackSummary[]> =>
-    (await request('GET', `/tables/${tableId}/packs`, packsResponseSchema)).packs,
-  importPack: (tableId: string, name: string): Promise<PackImportResponse> =>
-    request(
-      'POST',
-      `/tables/${tableId}/packs/${encodeURIComponent(name)}/import`,
-      packImportResponseSchema,
+  /** One page of the compendium's entries, and the system's packs (FR-PLUGIN-09). */
+  compendiumPage: (
+    tableId: string,
+    query: CompendiumQuery,
+  ): Promise<ListPage<CompendiumEntry> & { packs: CompendiumPack[] }> =>
+    request('GET', `/tables/${tableId}/compendium${toQuery(query)}`, compendiumPageSchema).then(
+      ({ entries, nextCursor, packs }) => ({ rows: entries, nextCursor, packs }),
     ),
+  copyFromCompendium: (
+    tableId: string,
+    input: CompendiumCopyInput,
+  ): Promise<CompendiumCopyResponse> =>
+    request('POST', `/tables/${tableId}/compendium/copy`, compendiumCopyResponseSchema, input),
 
   /** The table's encounter as the caller may see it, or `null` (FR-COMBAT-01, 04). */
   getEncounter: async (tableId: string): Promise<EncounterView | null> =>
