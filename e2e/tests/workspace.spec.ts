@@ -95,7 +95,11 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
   await test.step('a reload finds the layout, the open sheets and the filters', async () => {
     await tab(page, 'Combat').dragTo(tab(page, 'Actors'));
     await expect(strip(page, 'Actors')).toContainText('Combat');
-    await tab(page, 'Actors').click();
+    // WebKit can drop the first click after an emulated drag; click until the tab opens.
+    await expect(async () => {
+      await tab(page, 'Actors').click();
+      await expect(tab(page, 'Actors')).toHaveAttribute('aria-selected', 'true', { timeout: 500 });
+    }).toPass();
     await page.getByLabel('Search actors').fill('Wr');
     await expect(actors.getByRole('heading', { name: 'Goblin' })).toHaveCount(0);
 
