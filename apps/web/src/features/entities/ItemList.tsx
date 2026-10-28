@@ -5,7 +5,7 @@ import { canManageItemLibrary } from '@vtt/shared';
 import type { ItemView } from '@vtt/shared/api';
 import { Alert, Button } from '@vtt/ui';
 
-import { api } from '../../api/endpoints.js';
+import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
@@ -13,11 +13,16 @@ import type { TableData } from '../table/table-data.js';
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityFilters } from './EntityFilters.js';
 import { EntityRow } from './EntityRow.js';
+import { LoadMore } from './LoadMore.js';
+import { usePagedList } from './paging.js';
 
 export interface ItemListProps {
   data: TableData;
   /** The filtered library from the route loader. */
   items: readonly ItemView[];
+  /** The page after the loader's, if any (ADR-057). */
+  nextCursor: string | null;
+  fetchPage: (cursor: string) => Promise<ListPage<ItemView>>;
   trash: boolean;
   error: string | null;
 }
@@ -26,7 +31,16 @@ export interface ItemListProps {
  * The table's item library (FR-ENT-05, 06): GMs and assistants curate it, and anyone can
  * copy an item into an actor they own.
  */
-export function ItemList({ data, items, trash, error }: ItemListProps): ReactElement {
+export function ItemList({
+  data,
+  items: firstPage,
+  nextCursor,
+  fetchPage,
+  trash,
+  error,
+}: ItemListProps): ReactElement {
+  const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const items = paged.rows;
   const { table, types, actors } = data;
   const revalidator = useRevalidator();
   const [creating, setCreating] = useState(false);
@@ -125,6 +139,8 @@ export function ItemList({ data, items, trash, error }: ItemListProps): ReactEle
           />
         ))}
       </ul>
+      {paged.error && <Alert tone="error">{paged.error}</Alert>}
+      {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
 
       <CreateEntityDialog
         open={creating}

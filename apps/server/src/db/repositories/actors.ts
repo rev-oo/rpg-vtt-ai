@@ -4,6 +4,7 @@ import { generateId } from '../../domain/auth/tokens.js';
 import type { DbOrTx } from '../client.js';
 import { actors } from '../schema.js';
 
+import { afterName, limitOf, type ListWindow } from './pages.js';
 import {
   containsText,
   expiredCondition,
@@ -64,6 +65,7 @@ export function listActors(
   tableId: string,
   filter: ActorFilter,
   retention: Retention,
+  window: ListWindow = {},
 ): Actor[] {
   return db
     .select()
@@ -74,9 +76,11 @@ export function listActors(
         trashCondition(actors.softDeletedAt, filter.trash ?? 'live', retention),
         filter.type === undefined ? undefined : eq(actors.type, filter.type),
         filter.search ? containsText(actors.name, filter.search) : undefined,
+        afterName(actors.name, actors.id, window.after),
       ),
     )
     .orderBy(asc(sql`lower(${actors.name})`), asc(actors.id))
+    .limit(limitOf(window))
     .all();
 }
 

@@ -116,6 +116,7 @@ export const en = {
   'chat.messages': 'Messages',
   'chat.empty': 'No messages yet.',
   'chat.loadOlder': 'Load older messages',
+  'lists.loadMore': 'Load more',
   'chat.connecting': 'Connecting…',
   'chat.reconnecting': 'Reconnecting…',
   'chat.sessionEnded': 'Your session ended. Log in again to keep chatting.',

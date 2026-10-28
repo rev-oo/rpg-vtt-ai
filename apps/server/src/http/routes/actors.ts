@@ -33,6 +33,7 @@ import { publishActorChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireActor } from '../entities.js';
 import { requireMember } from '../membership.js';
+import { listPage, nameKey } from '../pages.js';
 import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
@@ -56,13 +57,20 @@ export function actorRoutes({ app, db, config, events, now, plugins }: AppContex
     const subject = { userId: membership.userId, role: membership.role };
     const visible = visibleTo(table, membership);
 
-    const actors = listActors(db, id, query, retention()).flatMap((actor) => {
-      const access = actorAccess(subject, actor);
-      // The trash lists what the caller could restore.
-      if (!access || (query.trash === 'restorable' && access !== 'owner')) return [];
-      return [toActorView(actor, access, visible)];
-    });
-    return { actors };
+    const { views, nextCursor } = listPage(
+      {
+        fetch: (window) => listActors(db, id, query, retention(), window),
+        keyOf: (actor) => nameKey(actor.name, actor.id),
+        view: (actor) => {
+          const access = actorAccess(subject, actor);
+          // The trash lists what the caller could restore.
+          if (!access || (query.trash === 'restorable' && access !== 'owner')) return undefined;
+          return toActorView(actor, access, visible);
+        },
+      },
+      query,
+    );
+    return { actors: views, nextCursor };
   });
 
   app.post('/api/v1/tables/:id/actors', (request, reply) => {
@@ -203,9 +211,17 @@ export function actorRoutes({ app, db, config, events, now, plugins }: AppContex
     const { id } = parseInput(idParams, request.params);
     const { actor, access, table, membership } = requireActor(db, request, id);
     const query = parseInput(entityListQuery, request.query);
-    if (query.trash === 'restorable' && access !== 'owner') return { items: [] };
-    const items = listItems(db, actor.tableId, { ...query, actorId: actor.id }, retention());
+    if (query.trash === 'restorable' && access !== 'owner') return { items: [], nextCursor: null };
     const visible = visibleTo(table, membership);
-    return { items: items.map((item) => toItemView(item, access, visible)) };
+    const { views, nextCursor } = listPage(
+      {
+        fetch: (window) =>
+          listItems(db, actor.tableId, { ...query, actorId: actor.id }, retention(), window),
+        keyOf: (item) => nameKey(item.name, item.id),
+        view: (item) => toItemView(item, access, visible),
+      },
+      query,
+    );
+    return { items: views, nextCursor };
   });
 }

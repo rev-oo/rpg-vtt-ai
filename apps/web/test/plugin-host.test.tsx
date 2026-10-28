@@ -171,8 +171,10 @@ function openTable(
     'GET /me': { body: SESSION },
     'GET /tables/t1': { body: { table: { ...TABLE, role, systemAvailable } } },
     'GET /tables/t1/members': { body: { members: MEMBERS } },
-    'GET /tables/t1/actors': { body: { actors: [{ ...HERO, system: { str: 13 } }] } },
-    'GET /tables/t1/actors?trash=live': { body: { actors: [HERO] } },
+    'GET /tables/t1/actors': {
+      body: { nextCursor: null, actors: [{ ...HERO, system: { str: 13 } }] },
+    },
+    'GET /tables/t1/actors?trash=live&limit=50': { body: { nextCursor: null, actors: [HERO] } },
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages, nextCursor: null } },
     'GET /systems/tiny-d20': { body: system },

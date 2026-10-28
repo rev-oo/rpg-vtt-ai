@@ -4,6 +4,7 @@ import { generateId } from '../../domain/auth/tokens.js';
 import type { DbOrTx } from '../client.js';
 import { journalEntries } from '../schema.js';
 
+import { afterName, limitOf, type ListWindow } from './pages.js';
 import {
   containsText,
   expiredCondition,
@@ -68,6 +69,7 @@ export function listJournalEntries(
   tableId: string,
   filter: JournalFilter,
   retention: Retention,
+  window: ListWindow = {},
 ): JournalEntry[] {
   return db
     .select()
@@ -78,9 +80,11 @@ export function listJournalEntries(
         trashCondition(journalEntries.softDeletedAt, filter.trash ?? 'live', retention),
         filter.includeHidden === false ? eq(journalEntries.hidden, false) : undefined,
         filter.search ? containsText(journalEntries.title, filter.search) : undefined,
+        afterName(journalEntries.title, journalEntries.id, window.after),
       ),
     )
     .orderBy(asc(sql`lower(${journalEntries.title})`), asc(journalEntries.id))
+    .limit(limitOf(window))
     .all();
 }
 

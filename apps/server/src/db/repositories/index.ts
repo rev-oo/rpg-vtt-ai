@@ -10,6 +10,7 @@ export * from './chat.js';
 export * from './items.js';
 export * from './journal.js';
 export type { RestoreResult, Retention, Trash } from './soft-delete.js';
+export type { ListWindow, NameKey } from './pages.js';
 
 /** Permanently removes every entity whose retention window has closed (FR-ENT-04). */
 export function purgeDeletedEntities(

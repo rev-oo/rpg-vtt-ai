@@ -63,7 +63,7 @@ function openSettings(
     'GET /me': { body: SESSION },
     'GET /tables/t1': () => ({ body: { table: table() } }),
     'GET /tables/t1/members': { body: { members: MEMBERS } },
-    'GET /tables/t1/actors': { body: { actors: [HERO] } },
+    'GET /tables/t1/actors': { body: { nextCursor: null, actors: [HERO] } },
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
     'GET /tables/t1/encounter': { body: { encounter: null } },

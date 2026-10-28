@@ -149,7 +149,7 @@ describe('owned items (FR-ENT-05)', () => {
     expect((await t.call(t.carol.client, 'DELETE', `/items/${owned.id}`)).statusCode).toBe(403);
     expect((await copyInto(t, t.carol.client, hero.id, sword.id)).statusCode).toBe(403);
     const trash = await t.call(t.carol.client, 'GET', `/actors/${hero.id}/items?trash=restorable`);
-    expect(trash.json()).toEqual({ items: [] });
+    expect(trash.json()).toEqual({ items: [], nextCursor: null });
   });
 
   it('deletes and restores owned items, and hides them while their actor is in the trash', async () => {

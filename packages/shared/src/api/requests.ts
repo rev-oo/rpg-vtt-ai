@@ -8,6 +8,7 @@ import {
   MAX_ENTITY_NAME,
   MAX_ENTITY_TYPE,
   MAX_IMAGE_URL,
+  MAX_LIST_PAGE,
   MAX_SEARCH,
   MAX_SITE_NAME,
   MAX_PASSWORD_LENGTH,
@@ -144,12 +145,22 @@ export const ownershipSchema = z.object({
 });
 
 /** `GET /tables/:id/actors` and `/items`. */
+/**
+ * A page of a list (§10.1, ADR-057): up to `limit` entries after `cursor`, the `nextCursor`
+ * of the page before. Without `limit`, the whole list.
+ */
+const listPage = {
+  limit: z.coerce.number().int().min(1).max(MAX_LIST_PAGE).optional(),
+  cursor: z.string().max(512).optional(),
+};
+
 export const entityListQuery = z.object({
   /** Case-insensitive substring of the name. */
   search: z.string().trim().max(MAX_SEARCH).optional(),
   type: entityType.optional(),
   /** `restorable`: the trash, within the retention window (FR-ENT-04). */
   trash: z.enum(['live', 'restorable']).default('live'),
+  ...listPage,
 });
 export type EntityListQuery = z.input<typeof entityListQuery>;
 
@@ -200,6 +211,7 @@ export const journalListQuery = z.object({
   search: z.string().trim().max(MAX_SEARCH).optional(),
   /** `restorable`: the trash, within the retention window. */
   trash: z.enum(['live', 'restorable']).default('live'),
+  ...listPage,
 });
 export type JournalListQuery = z.input<typeof journalListQuery>;
 

@@ -77,6 +77,12 @@ import {
 
 import { request, requestNoContent, upload } from './client.js';
 
+/** One page of a list, and the cursor of the next; `null` on the last (ADR-057). */
+export interface ListPage<T> {
+  rows: T[];
+  nextCursor: string | null;
+}
+
 /** A change to the table's encounter, answered with the encounter as the caller sees it. */
 async function encounterChange(
   tableId: string,
@@ -186,6 +192,14 @@ export const api = {
       )
     ).entries,
 
+  /** One page of the journal tab (§10.1, ADR-057). */
+  journalPage: (tableId: string, query: JournalListQuery): Promise<ListPage<JournalEntryView>> =>
+    request(
+      'GET',
+      `/tables/${tableId}/journal${toQuery(query)}`,
+      journalEntriesResponseSchema,
+    ).then(({ entries, nextCursor }) => ({ rows: entries, nextCursor })),
+
   getJournalEntry: async (entryId: string): Promise<JournalEntryView> =>
     (await request('GET', `/journal/${entryId}`, journalEntryResponseSchema)).entry,
 
@@ -214,6 +228,12 @@ export const api = {
     (await request('GET', `/tables/${tableId}/actors${toQuery(query)}`, actorsResponseSchema))
       .actors,
 
+  /** One page of the actors tab (§10.1, ADR-057); `listActors` reads the whole list. */
+  actorsPage: (tableId: string, query: EntityListQuery): Promise<ListPage<ActorView>> =>
+    request('GET', `/tables/${tableId}/actors${toQuery(query)}`, actorsResponseSchema).then(
+      ({ actors, nextCursor }) => ({ rows: actors, nextCursor }),
+    ),
+
   createActor: async (tableId: string, input: CreateActorInput): Promise<ActorView> =>
     (await request('POST', `/tables/${tableId}/actors`, actorResponseSchema, input)).actor,
 
@@ -231,6 +251,12 @@ export const api = {
   /** The table's item library (items no actor owns). */
   listItems: async (tableId: string, query: EntityListQuery = {}): Promise<ItemView[]> =>
     (await request('GET', `/tables/${tableId}/items${toQuery(query)}`, itemsResponseSchema)).items,
+
+  /** One page of the items tab (§10.1, ADR-057). */
+  itemsPage: (tableId: string, query: EntityListQuery): Promise<ListPage<ItemView>> =>
+    request('GET', `/tables/${tableId}/items${toQuery(query)}`, itemsResponseSchema).then(
+      ({ items, nextCursor }) => ({ rows: items, nextCursor }),
+    ),
 
   listActorItems: async (actorId: string): Promise<ItemView[]> =>
     (await request('GET', `/actors/${actorId}/items`, itemsResponseSchema)).items,
@@ -360,7 +386,10 @@ export const api = {
 
 function toQuery(query: EntityListQuery | JournalListQuery): string {
   const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) if (value) params.set(key, value);
+  for (const [key, value] of Object.entries(query)) {
+    if (typeof value === 'number') params.set(key, String(value));
+    else if (typeof value === 'string' && value !== '') params.set(key, value);
+  }
   const text = params.toString();
   return text ? `?${text}` : '';
 }

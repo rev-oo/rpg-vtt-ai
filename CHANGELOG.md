@@ -16,6 +16,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - **Table archive.** GMs can archive a table from its settings. An archived table is read-only for everyone (no edits, chat, rolls or new members) until it is unarchived, and the table list marks it.
 - **Scheduled backups.** Set `BACKUP_DIR` and the server backs itself up every `BACKUP_INTERVAL_HOURS` (24 by default), keeping the newest `BACKUP_KEEP` (7). See `docs/backup.md`.
 - **arm64 image.** The Docker image now runs on `linux/arm64` as well as `linux/amd64`, under the same tags.
+- **Long lists.** The actor, item and journal tabs load 50 entries at a time and the next ones as you scroll. The list endpoints take `limit` and `cursor` and answer `nextCursor`.
 
 ## [0.1.0] - 2026-10-26
 
