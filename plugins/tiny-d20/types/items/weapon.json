@@ -1,6 +1,9 @@
 {
   "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
   "label": "type.weapon",
+  "labelPlural": "type.weapons",
+  "group": "group.gear",
+  "order": 1,
   "sheet": "weapon",
   "schema": {
     "type": "object",

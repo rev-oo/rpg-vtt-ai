@@ -1,0 +1,15 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.spell",
+  "labelPlural": "type.spells",
+  "group": "group.spells",
+  "order": 2,
+  "sheet": "spell",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "level": { "type": "integer", "default": 1, "minimum": 0, "maximum": 9 },
+      "effect": { "type": "string", "default": "", "maxLength": 200 }
+    }
+  }
+}

@@ -114,7 +114,7 @@ describe('compendium browser (T-1202)', () => {
   it('lists every pack entry by name for every member, without their secret fields', async () => {
     const page = await browse();
     expect(page.packs).toEqual([{ name: 'bestiary', label: 'pack.bestiary' }]);
-    expect(names(page)).toEqual(['Goblin', 'Greatclub', 'Ogre', 'Shortsword']);
+    expect(names(page)).toEqual(['Goblin', 'Greatclub', 'Mend', 'Ogre', 'Shortsword', 'Spark']);
     expect(page.nextCursor).toBeNull();
     const ogre = page.entries.find((entry) => entry.ref === OGRE);
     expect(ogre).toMatchObject({ pack: 'bestiary', kind: 'actor', type: 'npc', inTable: false });
@@ -129,7 +129,13 @@ describe('compendium browser (T-1202)', () => {
 
   it('filters by name, pack, kind and type', async () => {
     expect(names(await browse(gm, '?search=GOB'))).toEqual(['Goblin']);
-    expect(names(await browse(gm, '?kind=item'))).toEqual(['Greatclub', 'Shortsword']);
+    expect(names(await browse(gm, '?kind=item'))).toEqual([
+      'Greatclub',
+      'Mend',
+      'Shortsword',
+      'Spark',
+    ]);
+    expect(names(await browse(gm, '?type=spell'))).toEqual(['Mend', 'Spark']);
     expect(names(await browse(gm, '?kind=actor&type=npc'))).toEqual(['Goblin', 'Ogre']);
     expect(names(await browse(gm, '?type=weapon&search=short'))).toEqual(['Shortsword']);
     expect(names(await browse(gm, '?pack=bestiary&search=o'))).toEqual([
@@ -155,7 +161,7 @@ describe('compendium browser (T-1202)', () => {
       cursor = page.nextCursor;
       if (cursor === null) break;
     }
-    expect(seen).toEqual(['Goblin', 'Greatclub', 'Ogre', 'Shortsword']);
+    expect(seen).toEqual(['Goblin', 'Greatclub', 'Mend', 'Ogre', 'Shortsword', 'Spark']);
     expect(
       (await call(gm, 'GET', `/tables/${tableId}/compendium?limit=2&cursor=nope`)).statusCode,
     ).toBe(400);
@@ -174,6 +180,8 @@ describe('compendium browser (T-1202)', () => {
       [GREATCLUB]: true,
       [OGRE]: true,
       [SHORTSWORD]: false,
+      'tiny-d20:bestiary:mend': false,
+      'tiny-d20:bestiary:spark': false,
     });
 
     // A second copy is another actor; the mark stays while a copy is in the trash.
