@@ -1,6 +1,6 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 0.1.0 released (2026-10-27); planning 0.2.0 · **Created:** 2026-10-19 · **Last updated:** 2026-10-27
+> **Status:** 0.2.0 released (2026-10-28) · **Created:** 2026-10-19 · **Last updated:** 2026-10-28
 > **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. The MVP's task notes and change log are in [`docs/history/mvp.md`](docs/history/mvp.md).
 
 ---
@@ -24,8 +24,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** none; M8–M11 are done and 0.2.0 is ready to release (§17)
-- **Next task:** release 0.2.0
+- **Active milestone:** none; 0.2.0 is released (M8–M11)
+- **Next task:** none planned; see LATER
 - **Open blockers:** none
 - **Decisions pending:** see §14 (Open Questions)
 
@@ -50,6 +50,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-27 | T-0811 done (ADR-056): the image is built and smoke-tested natively on amd64 and arm64; releases tag both in one manifest.                                                    |
 | 2026-10-28 | T-0812 done (ADR-057): actor, item and journal lists page with cursors; the web tabs load more on scroll.                                                                     |
 | 2026-10-28 | T-0813 done (ADR-058): GMs upgrade a table to its system's installed version; actor sheets made with another version show a notice. M11 done; 0.2.0 is ready to release.      |
+| 2026-10-28 | Release 0.2.0 (M8–M11). The plugin core API stays at `0.1.0`: the format only grew, so plugins for 0.1.0 keep working.                                                        |
 
 ---
 

@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-28
+
+Plugins can run server code, and tables get combat, compendium packs, chat edits, sheet history and archiving. The image now runs on arm64 too. Plugins written for 0.1.0 work unchanged: the plugin core API stays at `0.1.0`.
+
 ### Added
 
 - **Plugin shared and server code.** `code/shared` adds formula functions to sheets and rolls, and `code/server` runs `handler` roll recipes, which roll, post to the chat, read actors and adjust counters as the roller. Each plugin's code runs in a worker thread of its own with time limits, so a failing or looping plugin fails only its roll. The admin plugin page lists each plugin's code files.
@@ -18,6 +22,12 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - **arm64 image.** The Docker image now runs on `linux/arm64` as well as `linux/amd64`, under the same tags.
 - **System upgrades per table.** Installing a new version of a system no longer affects its tables until their GM upgrades them from the table settings; the table page says when one is available. Sheets made before an upgrade say which version they were made with, since plugin data is not migrated yet.
 - **Long lists.** The actor, item and journal tabs load 50 entries at a time and the next ones as you scroll. The list endpoints take `limit` and `cursor` and answer `nextCursor`.
+
+### Known limitations
+
+- Plugin data is not migrated between system versions: sheets made with an older version show a notice, and fields the new version changed read as their defaults.
+- Maps, tokens and assets are not available yet.
+- The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 
 ## [0.1.0] - 2026-10-26
 
@@ -69,5 +79,6 @@ The first release: a self-hosted virtual tabletop where game systems come from p
 - The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 - The image is built for `linux/amd64` only.
 
-[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rev-oo/rpg-vtt-ai/releases/tag/v0.1.0
