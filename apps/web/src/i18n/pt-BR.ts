@@ -344,7 +344,7 @@ export const ptBR: Messages = {
   'compendium.copyToTable': 'Copiar para a mesa',
   'compendium.copyToTableOf': 'Copiar {name} para a mesa',
   'compendium.copyOnto': 'Copiar',
-  'compendium.copyOntoOf': 'Copiar {name} para',
+  'compendium.copyOntoOf': 'Ator que recebe {name}',
   'compendium.copyOntoButton': 'Copiar {name} para o ator escolhido',
   'compendium.copied': '{name} foi copiado para a mesa.',
   'compendium.copiedOnto': '{name} foi copiado para {actor}.',

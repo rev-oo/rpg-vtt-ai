@@ -5,11 +5,11 @@ import { name, schemaUrl, text } from './common.js';
 /** The most entries one pack may hold. */
 export const MAX_PACK_ENTRIES = 1000;
 
-/** One compendium entry: an actor or item of the plugin's own types (FR-PLUGIN-09, ADR-051). */
+/** One compendium entry: an actor or item of the plugin's own types (FR-PLUGIN-09, ADR-051, ADR-060). */
 export const packEntrySchema = z
   .strictObject({
     id: name.describe(
-      'Stable within the pack: importing again skips entries already imported, by this id.',
+      'Stable within the pack and across versions: copies remember it, so the compendium marks entries a table already has.',
     ),
     kind: z.enum(['actor', 'item']).describe('An actor or an item.'),
     type: name.describe('An actor or item type of this plugin.'),
@@ -24,12 +24,12 @@ export const packEntrySchema = z
   .describe('A compendium entry.');
 export type PackEntry = z.infer<typeof packEntrySchema>;
 
-/** `packs/<name>.json`: entries GMs import into a table (FR-PLUGIN-09). */
+/** `packs/<name>.json`: entries members browse and copy into a table (FR-PLUGIN-09). */
 export const packSchema = z
   .strictObject({
     ...schemaUrl,
-    label: text.describe('What GMs see; a lang key or text.'),
+    label: text.describe('The pack’s name in the compendium; a lang key or text.'),
     entries: z.array(packEntrySchema).max(MAX_PACK_ENTRIES),
   })
-  .describe('A compendium pack: actors and items GMs import into a table.');
+  .describe('A compendium pack: actors and items members browse and copy into a table.');
 export type Pack = z.infer<typeof packSchema>;

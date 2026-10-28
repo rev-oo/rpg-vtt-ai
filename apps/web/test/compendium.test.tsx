@@ -162,9 +162,9 @@ describe('compendium browser', () => {
     const user = userEvent.setup();
     await within(await entries()).findByRole('heading', { name: 'Ogre' });
     expect(screen.queryByRole('button', { name: /to the table$/ })).toBeNull();
-    expect(screen.queryByLabelText('Copy Ogre onto')).toBeNull();
+    expect(screen.queryByLabelText('Actor to copy Ogre onto')).toBeNull();
 
-    expect(screen.getByLabelText('Copy Shortsword onto')).toHaveValue('a1');
+    expect(screen.getByLabelText('Actor to copy Shortsword onto')).toHaveValue('a1');
     await user.click(screen.getByRole('button', { name: 'Copy Shortsword onto the chosen actor' }));
     expect(await screen.findByText('Shortsword was copied onto Goblin King.')).toBeInTheDocument();
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({

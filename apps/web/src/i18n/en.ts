@@ -339,7 +339,7 @@ export const en = {
   'compendium.copyToTable': 'Copy to the table',
   'compendium.copyToTableOf': 'Copy {name} to the table',
   'compendium.copyOnto': 'Copy',
-  'compendium.copyOntoOf': 'Copy {name} onto',
+  'compendium.copyOntoOf': 'Actor to copy {name} onto',
   'compendium.copyOntoButton': 'Copy {name} onto the chosen actor',
   'compendium.copied': '{name} was copied to the table.',
   'compendium.copiedOnto': '{name} was copied onto {actor}.',

@@ -653,7 +653,7 @@ my-system/
 ├─ cards/<name>.json        how recipe rolls show in chat
 ├─ settings.json            options each table can change
 ├─ combat.json              initiative for the combat tracker
-├─ packs/<name>.json        compendium packs GMs import
+├─ packs/<name>.json        compendium packs members browse and copy
 ├─ lang/<locale>.json       translations; English is required once any exist
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
@@ -904,7 +904,7 @@ Combatants without initiative go last, and ties go in the order they were added.
 
 ### Compendium packs
 
-A pack holds ready-made actors and items of the plugin's own types. GMs import it into a table from the table settings:
+A pack holds ready-made actors and items of the plugin's own types. Every member of a table browses them in the Compendium panel, with a preview of each entry's sheet. GMs and assistants copy entries into the table, and anyone copies items onto an actor they own:
 
 ```json
 {
@@ -916,12 +916,12 @@ A pack holds ready-made actors and items of the plugin's own types. GMs import i
 }
 ```
 
-- **`id`** is a [name](plugin-reference.md#name), unique in the pack. Keep it the same across versions: importing again skips the entries the table already has, by id, including ones in the trash. New entries of a later version are added; entries already imported are not changed.
+- **`id`** is a [name](plugin-reference.md#name), unique in the pack. Keep it the same across versions: copies remember it, so the Compendium panel marks the entries a table already has. Copies are not changed when a later version changes the entry.
 - **`kind`** is `actor` or `item`, and **`type`** one of the plugin's types of that kind.
 - **`data`** is checked against the type's schema, like defaults; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.
-- **`label`** names the pack for GMs; a lang key or text.
+- **`label`** names the pack in the panel's pack filter; a lang key or text.
 
-Actors are imported as the GM's, so players see them only once the GM shares them. Items go to the table's library. A pack may hold 1,000 entries.
+Copied actors belong to whoever copies them, so players see a GM's copies only once the GM shares them. Items copied into the table go to its library. Players see every entry in the panel, but not its secret fields: keep surprises in GM-only fields. A pack may hold 1,000 entries.
 
 ### Table settings
 
