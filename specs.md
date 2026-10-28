@@ -17,22 +17,29 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| LATER  | Maps, tokens, fog of war, assets, migrations, export/import                                                                      | —       | Not planned | —        |
+| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | Not started | 0%       |
+| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
+| M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
+| M17    | 1.0: API freeze, upgrade guarantee, hardening                                                                                    | 1.0.0   | Not started | 0%       |
+| LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** none; 0.2.0 is released (M8–M11)
-- **Next task:** none planned; see LATER
+- **Active milestone:** M12
+- **Next task:** `T-1201`
 - **Open blockers:** none
-- **Decisions pending:** none (§14)
+- **Decisions pending:** Q16–Q19 (§14)
 
 ### 0.3 Change log
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), and up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built. |
+| Date       | Change                                                                                                                                                                                    |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
+| 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
 
 ---
 
@@ -49,14 +56,12 @@ Build a **browser-based, self-hostable virtual tabletop** for tabletop RPGs. The
 - **G5 — Easy self-hosting.** One container image and one data volume. No mandatory external services.
 - **G6 — Type safety end to end.** The entire codebase is TypeScript in `strict` mode. Plugin files are validated against schemas generated from the same source as the TypeScript types.
 
-### 1.2 Non-goals (v0.x / v1)
+### 1.2 Non-goals (up to 1.0)
 
 - Built-in game rules for any specific system.
 - Built-in voice or video. Tables link to external tools (Discord, Jitsi).
 - A marketplace or hosted content service.
-- A visual plugin/system builder (planned for a later version; plugins are authored by developers).
-- Maps, tokens, and fog of war (LATER).
-- Asset manager, data migrations, world export/import (LATER).
+- World export and import (LATER).
 - Multi-instance horizontal scaling. A single server process is the supported topology.
 - Native mobile apps. The web app must be usable on phones.
 
@@ -297,15 +302,16 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.2 Tables and membership (`FR-TABLE`)
 
-| ID          | Requirement                                                                                                                           | Priority | Status |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| FR-TABLE-01 | Any user can create a table and becomes its GM. Creation requires selecting an installed system plugin.                               | MVP      | 0.1.0  |
-| FR-TABLE-02 | A table's system plugin and its `systemVersion` are fixed at creation.                                                                | MVP      | 0.1.0  |
-| FR-TABLE-03 | GMs invite users by generating a table invite link with a role (`player`, `spectator`, `assistant`). Links can expire and be revoked. | MVP      | 0.1.0  |
-| FR-TABLE-04 | GMs change member roles and remove members. Removing a member keeps their characters, which become unowned.                           | MVP      | 0.1.0  |
-| FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                           | MVP      | 0.1.0  |
-| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                   | v1       | 0.2.0  |
-| FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                         | MVP      | 0.1.0  |
+| ID          | Requirement                                                                                                                                                                                                   | Priority | Status                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------- |
+| FR-TABLE-01 | Any user can create a table and becomes its GM. Creation requires selecting an installed system plugin.                                                                                                       | MVP      | 0.1.0                 |
+| FR-TABLE-02 | A table's system plugin is fixed at creation. Its `systemVersion` changes only when a GM or assistant upgrades the table to the installed version (ADR-058).                                                  | MVP      | 0.1.0; upgrades 0.2.0 |
+| FR-TABLE-03 | GMs invite users by generating a table invite link with a role (`player`, `spectator`, `assistant`). Links can expire and be revoked.                                                                         | MVP      | 0.1.0                 |
+| FR-TABLE-04 | GMs change member roles and remove members. Removing a member keeps their characters, which become unowned.                                                                                                   | MVP      | 0.1.0                 |
+| FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                                                                                                   | MVP      | 0.1.0                 |
+| FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                                                                                           | v1       | 0.2.0                 |
+| FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                                                                                                 | MVP      | 0.1.0                 |
+| FR-TABLE-08 | The table opens as a full-page workspace: a centre stage (sheet, journal entry or map) and collapsible, resizable panels for chat, actors, items, journal and combat. On phones each panel opens full screen. | 1.0      | planned (M12)         |
 
 ### 7.3 Actors and items (`FR-ENT`)
 
@@ -372,18 +378,22 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                | Priority | Status                       |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed. | MVP      | 0.1.0                        |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path. | MVP      | 0.1.0                        |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                  | MVP      | 0.1.0                        |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                             | MVP      | 0.1.0                        |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                    | MVP      | 0.1.0                        |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.    | MVP      | 0.1.0                        |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.             | MVP      | 0.1.0                        |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                       | MVP      | 0.1.0 (`code/client`); 0.2.0 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) can be imported into a table library.                                             | v1       | 0.2.0                        |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                           | v1       | 0.2.0                        |
+| ID           | Requirement                                                                                                                                                             | Priority | Status                                           |
+| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------ |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                              | MVP      | 0.1.0                                            |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                              | MVP      | 0.1.0                                            |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                               | MVP      | 0.1.0                                            |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                          | MVP      | 0.1.0                                            |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                 | MVP      | 0.1.0                                            |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                 | MVP      | 0.1.0                                            |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                          | MVP      | 0.1.0                                            |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                    | MVP      | 0.1.0 (`code/client`); 0.2.0                     |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own. | v1       | 0.2.0 (whole-pack import); browser planned (M12) |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                        | v1       | 0.2.0                                            |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | planned (M12)                                    |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                         | 1.0      | planned (M15)                                    |
+| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.               | 1.0      | planned (M15)                                    |
+| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                      | 1.0      | planned (M16)                                    |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -404,12 +414,19 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`.                                     | MVP                        | 0.1.0                             |
 | FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) | 0.1.0 (doc); 0.2.0 (automated)    |
 
-### 7.11 Maps and assets — LATER
+### 7.11 Maps and assets (`FR-MAP`, `FR-ASSET`)
 
-Out of scope for MVP and v1. Captured here so the data model stays compatible:
+| ID          | Requirement                                                                                                                                      | Priority | Status        |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- |
+| FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | planned (M13) |
+| FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | planned (M13) |
+| FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | planned (M13) |
+| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | planned (M14) |
+| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14) |
+| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14) |
+| FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14) |
 
-- `img` fields are plain URL strings; no asset table yet.
-- A `scenes` table and token placement are added later; no MVP schema depends on them.
+`img` fields stay plain URL strings; an uploaded asset has a URL of its own, so nothing that stores images changes shape.
 
 ---
 
@@ -698,15 +715,131 @@ All done; the task lists with their notes are in [`docs/history/0.2.0.md`](docs/
 | M10       | T-0803, T-0805, T-0806, T-0807, T-0808 | Compendium packs, chat edits, sheet history, table archive, backups       |
 | M11       | T-0811, T-0812, T-0813                 | arm64 image, list pagination, data version notice and table upgrades      |
 
+### M12 — Table workspace and compendium (0.3.0)
+
+The table becomes a full-page workspace, ready for maps in M14, and the compendium becomes a browser instead of a whole-pack import.
+
+- [ ] **T-1201 · Full-page workspace**
+  - **Deps:** none
+  - **Do:** The table route leaves the app shell and fills the viewport (FR-TABLE-08). A centre stage shows the open sheet or journal entry (and the map from M14). Chat, actors, items, journal and combat become panels that collapse and resize; their layout is remembered per user and table. On phones each panel opens full screen, keeping T-0511's sheet route. Keyboard users can move between panels (NFR-10).
+  - **Done when:** e2e opens a table on desktop and phone, collapses and resizes panels, reloads and finds the same layout; every current table feature works from the workspace; the existing e2e suite passes on it.
+
+- [ ] **T-1202 · Compendium browser**
+  - **Deps:** none
+  - **Do:** Replace the whole-pack import (ADR-051 §5, §7) with a browser, in a new ADR (FR-PLUGIN-09). `GET /tables/:id/compendium` lists the entries of every pack of the system, with search, pack and type filters, paged as in ADR-057, readable by every member; each entry says whether the table has it already (`pack_ref`). `POST /tables/:id/compendium/copy` takes chosen entries: GMs and assistants copy actors and items into the table; players copy items onto actors they own. Copies keep `pack_ref`. The web shows the compendium as a panel of the workspace, with entry previews. The import endpoints are removed.
+  - **Done when:** endpoint tests cover listing, filters, paging, copying by role and the "already in the table" mark; a player copies a pack item onto their character and a GM copies an actor, in e2e.
+
+- [ ] **T-1203 · Item groups**
+  - **Deps:** Q16
+  - **Do:** Item types may declare a `group` (lang key or text) and a `labelPlural` (FR-PLUGIN-11). The schema, validator and generated reference document them. The items panel, an actor's items and the compendium list items under their groups, in the order the plugin declares. `tiny-d20` adds a `spell` item type in a "Spells" group, with a pack entry or two.
+  - **Done when:** validator tests cover the new keys; web tests show grouped lists; tiny-d20's spells appear under "Spells" in the items panel, on a character and in the compendium.
+
+### M13 — Assets (0.4.0)
+
+Uploads, so maps and sheets need no outside image hosting.
+
+- [ ] **T-1301 · Asset storage and uploads**
+  - **Deps:** none
+  - **Do:** An `assets` table and files under `DATA_DIR/assets` (FR-ASSET-01, FR-ASSET-03). Uploads are checked by content (PNG, JPEG, WebP, GIF, SVG sanitised or refused), limited in size and by an instance quota set in the admin settings (finishing FR-ADMIN-01's upload limits). Each asset belongs to a table; GMs and assistants upload, and members of the table read. Files are served with the CSP and long cache headers. Backups and their restore include the assets folder.
+  - **Done when:** endpoint tests cover types, limits, quota, permissions and serving; a backup taken with assets restores them; the security review notes for uploads are written down in the ADR.
+
+- [ ] **T-1302 · Asset manager**
+  - **Deps:** T-1301
+  - **Do:** A workspace panel lists a table's assets with thumbnails, uploads by picking or dropping files, and deletes unused ones (FR-ASSET-02). Image fields (actor and item images, journal images) open it as a picker that also accepts a URL.
+  - **Done when:** web tests cover upload, pick and delete; e2e uploads an image and sets it as an actor's portrait.
+
+### M14 — Maps and tokens (0.5.0)
+
+Scenes with a grid, tokens and fog of war, in the workspace centre.
+
+- [ ] **T-1401 · Scenes**
+  - **Deps:** T-1301
+  - **Do:** A `scenes` table (FR-MAP-01): name, background asset, size, grid type (square, hex) and size, and which scene is active for players. GMs and assistants create, edit, order and delete scenes; `scene.updated` events keep clients current. Players only see the active scene.
+  - **Done when:** endpoint tests cover the scene life cycle, permissions and events.
+
+- [ ] **T-1402 · Map canvas**
+  - **Deps:** T-1201, T-1401, Q18
+  - **Do:** The scene renders in the workspace centre on a canvas (FR-MAP-02), with the renderer chosen in Q18 (an ADR): background, grid, pan and zoom by mouse, keyboard and touch. Rendering stays smooth on a mid-range phone.
+  - **Done when:** web tests cover the scene model behind the canvas; e2e pans and zooms on desktop and phone viewports; a performance check with a large background and 100 tokens is recorded.
+
+- [ ] **T-1403 · Tokens**
+  - **Deps:** T-1402
+  - **Do:** Tokens link to an actor (taking its image and name) or stand alone (FR-MAP-03). GMs place, hide and remove tokens; owners of the actor move its tokens; moves snap to the grid and show live to everyone who may see them. Hidden tokens are filtered on the server and never sent to players (NFR-08). Opening a token opens its actor's sheet in the workspace.
+  - **Done when:** endpoint and wire tests cover placement, movement permissions and hidden tokens; e2e has a GM and a player moving tokens in two browsers.
+
+- [ ] **T-1404 · Fog of war**
+  - **Deps:** T-1403
+  - **Do:** GMs reveal and hide areas of a scene with shapes or grid cells (FR-MAP-04). Players receive only revealed areas, and tokens inside hidden areas are not sent to them. GMs see the fog as a tint.
+  - **Done when:** wire tests prove hidden areas and the tokens in them never reach players; e2e reveals an area and a player sees it appear.
+
+### M15 — Plugin platform (0.6.0)
+
+Plugin data that follows system upgrades, and plugin code that runs contained.
+
+- [ ] **T-1501 · Plugin data migrations**
+  - **Deps:** none
+  - **Do:** A plugin ships `migrations/` (FR-PLUGIN-12): declarative steps per version (rename, move, set default, drop a field) and, for what they cannot express, a `migrate` hook in `code/server`. When a GM upgrades a table (ADR-058), the steps between each entity's `dataVersion` and the new version run on its documents, in a transaction per entity, and `dataVersion` is updated, so the sheet notice clears. A failed migration leaves the entity as it was and reports it.
+  - **Done when:** validator tests cover the migration files; tests upgrade reference plugin fixtures across two versions, including a failing step; the authoring guide has a migrations section.
+
+- [ ] **T-1502 · Client code sandbox**
+  - **Deps:** Q17
+  - **Do:** `code/client` runs in a sandboxed iframe per plugin with the approach chosen in Q17, and reaches sheets only through the `@vtt/sdk/client` hooks over a message bridge (FR-PLUGIN-13). Custom nodes and cards keep working for the reference plugins.
+  - **Done when:** tests show client code cannot read the app's DOM, cookies or fetch the API; the reference plugins' custom nodes and cards work as before.
+
+- [ ] **T-1503 · Server code isolation**
+  - **Deps:** none
+  - **Do:** Plugin server code runs in an isolated runtime with no Node API reachable (no `require`, `process`, filesystem or network), keeping the worker per plugin and the time limits of ADR-047 (FR-PLUGIN-13).
+  - **Done when:** tests show those APIs are unreachable from shared and server code; the reference plugins' handlers, commands and hooks pass unchanged.
+
+### M16 — System builder (0.7.0)
+
+Declarative systems built in the browser, for people who do not write plugins by hand (FR-PLUGIN-14).
+
+- [ ] **T-1601 · Types and schemas builder**
+  - **Deps:** none
+  - **Do:** An admin page edits a draft system: manifest, actor and item types, their schemas with defaults and bounds, and derived values. Drafts are stored on the server and validated with the plugin validator as they change.
+  - **Done when:** a draft equivalent to tiny-pool's types validates clean; web tests cover editing and validation errors.
+
+- [ ] **T-1602 · Sheet layout editor**
+  - **Deps:** T-1601
+  - **Do:** A layout editor for the draft's sheets, adding and arranging layout nodes bound to schema fields, with a live preview through `sheet-renderer` on sample data.
+  - **Done when:** tiny-pool's character sheet can be rebuilt in the editor; the preview matches the installed plugin's rendering in a test.
+
+- [ ] **T-1603 · Rolls, translations and export**
+  - **Deps:** T-1602
+  - **Do:** The builder edits rolls and lang files, then packs the draft as a `.vttplugin` to download or installs it directly (ADR-026).
+  - **Done when:** e2e builds a small system, installs it, creates a table with it and rolls from its sheet.
+
+### M17 — 1.0 (1.0.0)
+
+Stability promises, then the release.
+
+- [ ] **T-1701 · Plugin API freeze**
+  - **Deps:** M12–M16, Q19
+  - **Do:** Set `CORE_API_VERSION` to `1.0.0` and document what 1.x keeps compatible (manifest, file formats, SDK, `ctx`). Plugins for 0.x load as Q19 decides. The reference plugins and the guide move to `^1.0.0`.
+  - **Done when:** the compatibility promise is in the guide and an ADR; tests cover loading plugins declaring each supported range.
+
+- [ ] **T-1702 · Upgrade guarantee**
+  - **Deps:** M12–M16
+  - **Do:** An automated test starts from a 0.2.0 data folder (database, plugins, documents), runs the 1.0 server on it and checks the tables, entities and documents survive. `docs/upgrading.md` explains upgrades and backups before them.
+  - **Done when:** the test runs in CI; the guide is linked from the README.
+
+- [ ] **T-1703 · Security review and hardening**
+  - **Deps:** M12–M16
+  - **Do:** Review the surfaces added since 0.2.0: uploads, scenes and tokens on the wire, fog filtering, the client sandbox, server isolation and the builder. Fix what is found, and record the review like T-0701.
+  - **Done when:** the review document lists each surface with its checks; findings are fixed or recorded as accepted risks in §15.
+
+- [ ] **T-1704 · Release 1.0.0**
+  - **Deps:** T-1701, T-1702, T-1703
+  - **Do:** Release as in §17 (item 10): versions to `1.0.0`, `CHANGELOG.md` section, tag `v1.0.0`.
+  - **Done when:** the release job publishes the `1.0.0` and `1.0` image tags for both architectures and the GitHub release.
+
 ### LATER — Not scheduled
 
-- Maps, scenes, tokens, fog of war (PixiJS)
-- Asset manager and uploads
-- Data migrations for plugin schema changes
 - World export and import
-- Plugin sandboxing (iframes and isolated runtime for `code/`)
-- Declarative system builder UI
 - Composition keywords (`$ref`, `oneOf`) in the schema subset
+- Other plugin kinds: the reserved `module` kind, add-ons that extend a system (new types, sheets, packs or code) without replacing it
+- A book-style journal view: entries laid out as pages, with text flowing onto the next page
 
 ---
 
@@ -728,7 +861,16 @@ Test data: seeded fixtures under `packages/*/test/fixtures`. Reference plugins a
 
 ## 14. Open Questions
 
-No questions are open. A new question gets the next number (Q16), the tasks it blocks, and a proposed default; once decided, record it in `docs/adr/` and move it to the list below. Code cites these numbers.
+Each open question blocks the tasks it names. Record the decision in `docs/adr/`, then move it to **Decided** below. A new question takes the next number. Code cites these numbers.
+
+**Open**
+
+| #   | Question                                                                                                                             | Blocks | Proposed default                                                                                                                                                        |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Q16 | A spell in a compendium is an item of a plugin type `spell`. Should "item" be renamed, since items now cover spells, feats and gear? | T-1203 | No rename. "Item" stays the core term for typed data an actor holds; plugins name what players see through type labels and item groups ("Spells", "Gear"), FR-PLUGIN-11 |
+| Q17 | How is `code/client` sandboxed?                                                                                                      | T-1502 | A sandboxed `<iframe>` per plugin (no `allow-same-origin`), rendering its nodes and cards inside, with the SDK hooks over `postMessage`                                 |
+| Q18 | Which renderer draws maps?                                                                                                           | T-1402 | PixiJS (WebGL with canvas fallback), as LATER named it; React only for the panels around it                                                                             |
+| Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading?                                                                         | T-1701 | Yes for one major version: 1.x accepts 0.x plugins whose files validate, and lists them with a "made for 0.x" note                                                      |
 
 **Decided**
 
@@ -766,6 +908,9 @@ No questions are open. A new question gets the next number (Q16), the tasks it b
 | Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                                                                                                                                                                                                                     |
 | Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); plugin data migrations are LATER; `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)                              |
 | CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes. Known intermittent e2e failures: `journal entries are hidden until the GM reveals them` and the concurrent rich-text step of `two browsers edit one live sheet` |
+| Maps are slow or cramped on phones                  | Medium                       | Medium | One renderer with a measured budget (T-1402); full-screen map view on phones; performance check recorded per release                                                                                                                                                                    |
+| Uploads are abused (size, malware, script in SVG)   | Medium                       | High   | Content sniffing, SVG refused or sanitised, size limits and a quota (T-1301); only table GMs and assistants upload; assets served under the CSP                                                                                                                                         |
+| The system builder grows without end                | High                         | Medium | Scope fixed to what the declarative format already supports; no code editing in the builder; composition keywords stay LATER                                                                                                                                                            |
 
 ---
 
