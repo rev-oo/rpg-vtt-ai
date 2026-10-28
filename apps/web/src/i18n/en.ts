@@ -136,6 +136,11 @@ export const en = {
   'chat.whisperTo': 'Whisper to {names}',
   'chat.gmOnly': 'GM only',
   'chat.formerMember': 'former member',
+  'systemVersion.title': 'System version',
+  'systemVersion.current': 'This table plays {name} {version}.',
+  'systemVersion.help':
+    'Version {version} is installed. After upgrading, new actors and items use it; existing sheets keep their data and say which version they were made with.',
+  'systemVersion.upgrade': 'Upgrade to {version}',
   'archive.title': 'Archive',
   'archive.help':
     'An archived table is read-only for everyone: nothing can be changed, posted or rolled, and nobody can join. You can unarchive it at any time.',
@@ -143,6 +148,8 @@ export const en = {
   'archive.archive': 'Archive table',
   'archive.unarchive': 'Unarchive table',
   'table.archived': 'This table is archived: it is read-only.',
+  'table.upgradeAvailable': '{name} {version} is installed; this table plays {current}.',
+  'table.upgradeLink': 'Upgrade in settings',
   'table.archivedError': 'This table is archived, so it is read-only.',
   'tables.archived': 'Archived',
   'chat.archived': 'The table is archived: the chat is read-only.',

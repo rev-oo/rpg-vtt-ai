@@ -13,6 +13,7 @@ import { ArchiveTable } from '../features/settings/ArchiveTable.js';
 import { Compendium } from '../features/settings/Compendium.js';
 import { houseRuleErrors, type SettingValues } from '../features/settings/house-rules.js';
 import { HouseRules } from '../features/settings/HouseRules.js';
+import { UpgradeSystem } from '../features/settings/UpgradeSystem.js';
 import { useTableData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
 import { useTableSystem } from '../plugin-host/system-context.js';
@@ -27,6 +28,7 @@ export default function TableSettingsRoute(): ReactElement {
     <div className="flex flex-col gap-8">
       <TableSettingsForm key={table.id} table={table} />
       <Compendium table={table} />
+      <UpgradeSystem table={table} />
       <ArchiveTable table={table} />
     </div>
   );

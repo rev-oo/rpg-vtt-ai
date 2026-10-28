@@ -16,9 +16,10 @@ import {
   type TestApp,
 } from './support/app.js';
 import { referencePluginFiles } from './support/reference.js';
+import { setupTable } from './support/table.js';
 
-// T-0813 (§9.7, ADR-058): tables follow their system's installed version, and entities keep
-// the version they were made with.
+// T-0813 (§9.7, ADR-058): a table moves to its system's installed version when a GM upgrades
+// it, and entities keep the version they were made with.
 
 let dataDir: string;
 let t: TestApp;
@@ -67,32 +68,44 @@ const get = async <T>(url: string): Promise<T> => {
   return res.json<T>();
 };
 
-const post = async <T>(url: string, payload: unknown): Promise<T> => {
+const post = async <T>(url: string, payload: unknown, status = 201): Promise<T> => {
   const res = await t.app.inject({
     method: 'POST',
     url: `/api/v1${url}`,
     headers: authHeaders(admin),
     payload: payload as Record<string, unknown>,
   });
-  expect(res.statusCode, res.body).toBe(201);
+  expect(res.statusCode, res.body).toBe(status);
   return res.json<T>();
 };
 
 describe('data versions (T-0813)', () => {
-  it('moves tables to an upgraded system and keeps entities at their version', async () => {
+  it('keeps a table at its version until a GM upgrades it', async () => {
     await install('0.1.0');
     const table = await createTable(t.app, admin, { systemId: 'tiny-d20' });
-    expect(table.systemVersion).toBe('0.1.0');
+    expect(table).toMatchObject({ systemVersion: '0.1.0', installedVersion: '0.1.0' });
     const { actor: old } = await post<{ actor: ActorView }>(`/tables/${table.id}/actors`, {
       type: 'character',
       name: 'Old hero',
     });
 
+    // Installing a new version leaves the table, and what is made on it, where it was.
     await install('0.2.0');
-    const { table: upgraded } = await get<{ table: TableView }>(`/tables/${table.id}`);
-    expect(upgraded.systemVersion).toBe('0.2.0');
-    expect((await get<{ actor: ActorView }>(`/actors/${old.id}`)).actor.dataVersion).toBe('0.1.0');
+    const { table: before } = await get<{ table: TableView }>(`/tables/${table.id}`);
+    expect(before).toMatchObject({ systemVersion: '0.1.0', installedVersion: '0.2.0' });
+    const { actor: meanwhile } = await post<{ actor: ActorView }>(`/tables/${table.id}/actors`, {
+      type: 'character',
+      name: 'Meanwhile',
+    });
+    expect(meanwhile.dataVersion).toBe('0.1.0');
 
+    const { table: after } = await post<{ table: TableView }>(
+      `/tables/${table.id}/upgrade-system`,
+      {},
+      200,
+    );
+    expect(after).toMatchObject({ systemVersion: '0.2.0', installedVersion: '0.2.0' });
+    expect((await get<{ actor: ActorView }>(`/actors/${old.id}`)).actor.dataVersion).toBe('0.1.0');
     const { actor } = await post<{ actor: ActorView }>(`/tables/${table.id}/actors`, {
       type: 'character',
       name: 'New hero',
@@ -102,5 +115,18 @@ describe('data versions (T-0813)', () => {
       name: 'New sword',
     });
     expect([actor.dataVersion, item.dataVersion]).toEqual(['0.2.0', '0.2.0']);
+  });
+});
+
+describe('POST /tables/:id/upgrade-system', () => {
+  it('is for GMs and assistants, on tables that are not archived', async () => {
+    const s = await setupTable();
+    const url = `/tables/${s.table.id}/upgrade-system`;
+    expect((await s.call(s.bob.client, 'POST', url)).statusCode).toBe(403);
+    expect((await s.call(s.gm.client, 'POST', url)).statusCode).toBe(200);
+    await s.call(s.gm.client, 'POST', `/tables/${s.table.id}/archive`);
+    const archived = await s.call(s.gm.client, 'POST', url);
+    expect(archived.json()).toMatchObject({ error: { code: 'table_archived' } });
+    await s.app.close();
   });
 });

@@ -31,8 +31,9 @@ async function pack(version: string): Promise<string> {
   return packPlugin(dir, path.join(temp, `e2e-versioned-${version}.vttplugin`));
 }
 
-// T-0813 (§9.7, ADR-058): after a system upgrade, sheets made with the older version say so.
-test('sheets made before a system upgrade show a notice', async ({ browser }) => {
+// T-0813 (§9.7, ADR-058): a GM upgrades the table to a newly installed system version; sheets
+// made before then say so.
+test('a GM upgrades the table, and older sheets show a notice', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await installPlugin(gm, await pack('1.0.0'));
   await post(gm, '/plugins/e2e-versioned/enable');
@@ -43,19 +44,36 @@ test('sheets made before a system upgrade show a notice', async ({ browser }) =>
   const create = (name: string) =>
     post<{ actor: { id: string } }>(gm, `/tables/${table.id}/actors`, { type: 'npc', name });
   const { actor: veteran } = await create('Veteran');
-
   await installPlugin(gm, await pack('1.1.0'));
-  const { actor: recruit } = await create('Recruit');
 
   const page = await gm.context.newPage();
   const notice = page.getByText(/This sheet was made with/);
-  await page.goto(`/tables/${table.id}/actors/${veteran.id}`);
-  await expect(page.getByRole('heading', { name: 'Veteran' })).toBeVisible();
-  await expect(notice).toHaveText(
-    'This sheet was made with Versioned System 1.0.0; the table now uses 1.1.0. Fields that changed since may show their defaults.',
-  );
+  const openSheet = async (id: string, name: string) => {
+    await page.goto(`/tables/${table.id}/actors/${id}`);
+    await expect(page.getByRole('heading', { name })).toBeVisible();
+  };
 
-  await page.goto(`/tables/${table.id}/actors/${recruit.id}`);
-  await expect(page.getByRole('heading', { name: 'Recruit' })).toBeVisible();
-  await expect(notice).toBeHidden();
+  await test.step('the table stays on its version until upgraded', async () => {
+    await openSheet(veteran.id, 'Veteran');
+    await expect(
+      page.getByText('Versioned System 1.1.0 is installed; this table plays 1.0.0.'),
+    ).toBeVisible();
+    await expect(notice).toBeHidden();
+  });
+
+  await test.step('the GM upgrades it from the settings', async () => {
+    await page.getByRole('link', { name: 'Upgrade in settings' }).click();
+    await page.getByRole('button', { name: 'Upgrade to 1.1.0' }).click();
+    await expect(page.getByText('This table plays Versioned System 1.1.0.')).toBeVisible();
+  });
+
+  await test.step('older sheets say so; new ones do not', async () => {
+    await openSheet(veteran.id, 'Veteran');
+    await expect(notice).toHaveText(
+      'This sheet was made with Versioned System 1.0.0; the table now uses 1.1.0. Fields that changed since may show their defaults.',
+    );
+    const { actor: recruit } = await create('Recruit');
+    await openSheet(recruit.id, 'Recruit');
+    await expect(notice).toBeHidden();
+  });
 });

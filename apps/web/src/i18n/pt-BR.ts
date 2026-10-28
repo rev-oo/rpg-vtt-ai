@@ -139,6 +139,11 @@ export const ptBR: Messages = {
   'chat.whisperTo': 'Sussurro para {names}',
   'chat.gmOnly': 'Só o mestre',
   'chat.formerMember': 'ex-membro',
+  'systemVersion.title': 'Versão do sistema',
+  'systemVersion.current': 'Esta mesa usa {name} {version}.',
+  'systemVersion.help':
+    'A versão {version} está instalada. Depois de atualizar, novos atores e itens a usam; as fichas existentes mantêm seus dados e dizem com qual versão foram criadas.',
+  'systemVersion.upgrade': 'Atualizar para {version}',
   'archive.title': 'Arquivar',
   'archive.help':
     'Uma mesa arquivada fica somente leitura para todos: nada pode ser alterado, enviado ou rolado, e ninguém pode entrar. Você pode desarquivá-la a qualquer momento.',
@@ -147,6 +152,8 @@ export const ptBR: Messages = {
   'archive.archive': 'Arquivar mesa',
   'archive.unarchive': 'Desarquivar mesa',
   'table.archived': 'Esta mesa está arquivada: ela é somente leitura.',
+  'table.upgradeAvailable': '{name} {version} está instalado; esta mesa usa {current}.',
+  'table.upgradeLink': 'Atualizar nas configurações',
   'table.archivedError': 'Esta mesa está arquivada, então é somente leitura.',
   'tables.archived': 'Arquivada',
   'chat.archived': 'A mesa está arquivada: o chat é somente leitura.',

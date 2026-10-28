@@ -143,3 +143,37 @@ describe('archiving (T-0807)', () => {
     ]);
   });
 });
+
+describe('system version (T-0813)', () => {
+  it('upgrades the table to the installed version when the GM asks', async () => {
+    let table: TableView = { ...TABLE, systemVersion: '0.9.0', installedVersion: '1.0.0' };
+    const { calls } = openSettings(
+      {
+        'POST /tables/t1/upgrade-system': () => {
+          table = { ...table, systemVersion: '1.0.0' };
+          return { body: { table } };
+        },
+      },
+      () => table,
+    );
+    const user = userEvent.setup();
+
+    expect(
+      await screen.findByText('Tiny d20 1.0.0 is installed; this table plays 0.9.0.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText('This table plays Tiny d20 0.9.0.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Upgrade to 1.0.0' }));
+    expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
+    expect(screen.queryByText(/is installed; this table plays/)).not.toBeInTheDocument();
+    expect(calls.filter((c) => c.method === 'POST').map((c) => c.path)).toEqual([
+      '/tables/t1/upgrade-system',
+    ]);
+  });
+
+  it('offers nothing when the table plays the installed version', async () => {
+    openSettings({});
+    expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
+  });
+});

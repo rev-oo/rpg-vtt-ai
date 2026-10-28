@@ -8,7 +8,7 @@ import {
   type ShouldRevalidateFunctionArgs,
 } from 'react-router';
 
-import { canManageTable } from '@vtt/shared';
+import { canManageTable, canUpgradeTableSystem } from '@vtt/shared';
 import type { TableTypes } from '@vtt/shared/api';
 import { Alert, cn } from '@vtt/ui';
 
@@ -17,6 +17,7 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { ChatPanel } from '../features/chat/ChatPanel.js';
 import { CombatTracker } from '../features/combat/CombatTracker.js';
+import { upgradeAvailable } from '../features/settings/system-version.js';
 import { DicePane } from '../features/table/DicePane.js';
 import type { TableData, TableLoaderData } from '../features/table/table-data.js';
 import { t } from '../i18n/index.js';
@@ -139,6 +140,18 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             {table.description && <p>{table.description}</p>}
           </div>
           {table.archivedAt !== null && <Alert tone="info">{t('table.archived')}</Alert>}
+          {table.archivedAt === null &&
+            canUpgradeTableSystem(table.role) &&
+            upgradeAvailable(table) && (
+              <Alert tone="info">
+                {t('table.upgradeAvailable', {
+                  name: table.systemName,
+                  version: table.installedVersion ?? '',
+                  current: table.systemVersion,
+                })}{' '}
+                <Link to={`/tables/${table.id}/settings`}>{t('table.upgradeLink')}</Link>
+              </Alert>
+            )}
           {system.status === 'unavailable' && (
             <Alert tone="info">{t('table.readOnly', { name: table.systemName })}</Alert>
           )}

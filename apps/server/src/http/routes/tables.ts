@@ -3,7 +3,7 @@ import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
 import { settingsIssues, type SettingIssue } from '@vtt/plugin-engine';
-import { canArchiveTable, canManageTable } from '@vtt/shared';
+import { canArchiveTable, canManageTable, canUpgradeTableSystem } from '@vtt/shared';
 import { createTableBody, updateTableBody, type TableTypes } from '@vtt/shared/api';
 
 import { gameTables, members, plugins } from '../../db/schema.js';
@@ -11,7 +11,7 @@ import { generateId } from '../../domain/auth/tokens.js';
 import { requireUnarchived, requireWritableTable, systemTypes } from '../../domain/entities.js';
 import { isAvailable } from '../../domain/plugins.js';
 import { toTableView } from '../../domain/tables.js';
-import { badRequest, unprocessable } from '../../errors.js';
+import { badRequest, conflict, unprocessable } from '../../errors.js';
 import type { AppContext } from '../app.js';
 import { requireSession } from '../auth.js';
 import { requireMember } from '../membership.js';
@@ -159,4 +159,28 @@ export function tableRoutes({ app, db, events, now, plugins: registry }: AppCont
   };
   app.post('/api/v1/tables/:id/archive', setArchived(true));
   app.post('/api/v1/tables/:id/unarchive', setArchived(false));
+
+  /**
+   * Moves the table to its system's installed version (§9.7, ADR-058). Existing entities keep
+   * the version they were made with, and their sheets say so; new ones get the new version.
+   */
+  app.post('/api/v1/tables/:id/upgrade-system', (request) => {
+    const { id } = parseInput(tableIdParams, request.params);
+    const { table, membership } = requireMember(db, request, id, canUpgradeTableSystem);
+    requireWritableTable(db, table);
+    const plugin = db
+      .select({ version: plugins.version })
+      .from(plugins)
+      .where(eq(plugins.id, table.systemId))
+      .get();
+    if (!plugin) throw conflict('table_read_only', "The table's system is not installed.");
+    const updated = db
+      .update(gameTables)
+      .set({ systemVersion: plugin.version })
+      .where(eq(gameTables.id, id))
+      .returning()
+      .get();
+    events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
+    return { table: toTableView(db, updated, membership.role) };
+  });
 }

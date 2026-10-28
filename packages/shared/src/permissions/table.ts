@@ -22,6 +22,11 @@ export function canArchiveTable(role: TableRole): boolean {
   return isGmLike(role);
 }
 
+/** Moving the table to its system's installed version (§9.7, ADR-058). */
+export function canUpgradeTableSystem(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
 /** Importing the system's compendium packs into the table (FR-PLUGIN-09). */
 export function canImportPacks(role: TableRole): boolean {
   return isGmLike(role);
