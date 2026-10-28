@@ -125,6 +125,27 @@ export type ActorType = z.infer<typeof actorTypeSchema>;
 
 /** `types/items/<type>.json` (specs §8.4). */
 export const itemTypeSchema = z
-  .strictObject(typeBase)
+  .strictObject({
+    ...typeBase,
+    /** Item lists show types of one group under one heading (FR-PLUGIN-11, ADR-061). */
+    labelPlural: text
+      .optional()
+      .describe(
+        'The type name for a list of them, such as "Weapons"; a lang key or literal text. It heads the type’s items when the type has no `group`.',
+      ),
+    group: text
+      .optional()
+      .describe(
+        'The heading item lists show this type under, such as "Spells" or "Gear"; a lang key or literal text. Types with the same group share it.',
+      ),
+    order: z
+      .int()
+      .min(-1000)
+      .max(1000)
+      .optional()
+      .describe(
+        'Where its group comes in item lists: lowest first, then by heading. A group takes the lowest `order` of its types. Default 0.',
+      ),
+  })
   .describe('An item type, such as a weapon or a spell.');
 export type ItemType = z.infer<typeof itemTypeSchema>;

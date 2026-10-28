@@ -13,6 +13,8 @@ import type { TableData } from '../table/table-data.js';
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
 import type { EntityFilters } from './filters.js';
+import { GroupedList } from './GroupedList.js';
+import { groupItems, useItemTypes } from './item-groups.js';
 import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { usePagedList } from './paging.js';
@@ -47,6 +49,7 @@ export function ItemList({
   const items = paged.rows;
   const { table, types, actors } = data;
   const revalidator = useRevalidator();
+  const { itemTypes, translate } = useItemTypes();
   const [creating, setCreating] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
@@ -97,10 +100,14 @@ export function ItemList({
         <p className="text-muted">{t(trash ? 'items.trashEmpty' : 'items.empty')}</p>
       )}
 
-      <ul className="flex list-none flex-col gap-2 p-0" aria-label={t('items.title')}>
-        {items.map((item) => (
+      <GroupedList
+        label={t('items.title')}
+        groups={groupItems(items, (item) => item.type, itemTypes, translate)}
+        rowKey={(item) => item.id}
+        renderRow={(item, nested) => (
           <EntityRow
             key={item.id}
+            nested={nested}
             name={item.name}
             type={item.type}
             imageUrl={item.imageUrl}
@@ -146,8 +153,8 @@ export function ItemList({
               )
             }
           />
-        ))}
-      </ul>
+        )}
+      />
       {paged.error && <Alert tone="error">{paged.error}</Alert>}
       {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
 

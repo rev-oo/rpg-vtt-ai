@@ -108,6 +108,7 @@ export const en = {
   'actors.duplicate': 'Duplicate',
   'actors.duplicated': '{name} was created.',
   'actors.items': 'Items',
+  'actors.itemsOf': 'Items of {name}',
   'actors.noItems': 'No items yet.',
 
   'items.title': 'Items',
@@ -115,6 +116,7 @@ export const en = {
   'items.new': 'New item',
   'items.create': 'Create item',
   'items.empty': 'No items match.',
+  'items.otherTypes': 'Other',
   'items.trashEmpty': 'The trash is empty.',
   'items.giveTo': 'Give {name} to',
   'items.give': 'Give',
@@ -330,6 +332,7 @@ export const en = {
     'The system’s shared code could not be loaded, so values that use it cannot be worked out: {detail}',
 
   'compendium.title': 'Compendium',
+  'compendium.actors': 'Actors',
   'compendium.entries': 'Compendium entries',
   'compendium.search': 'Search the compendium',
   'compendium.pack': 'Pack',

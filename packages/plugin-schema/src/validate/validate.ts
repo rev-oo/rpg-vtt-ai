@@ -278,6 +278,11 @@ export function validatePlugin(
   for (const entry of types) {
     const { type, file } = entry;
     useText(type.label, file, ['label']);
+    // Actor types always name who controls them; item types may name a group.
+    if (!('controlledBy' in type)) {
+      useText(type.group, file, ['group']);
+      useText(type.labelPlural, file, ['labelPlural']);
+    }
     checkDataSchema(type.schema, (code, path, params) => {
       error(code, file, path, params);
     });

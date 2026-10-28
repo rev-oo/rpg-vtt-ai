@@ -201,6 +201,57 @@ export const CASES: FixtureCase[] = [
     valid: true,
   },
   {
+    name: 'item groups and plural labels in the plugin language (T-1203)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/spell.json'] = {
+        label: 'Spell',
+        labelPlural: 'type.spells',
+        group: 'group.magic',
+        order: 2,
+        sheet: 'item',
+        schema: { type: 'object', properties: {} },
+      };
+      f['types/items/gem.json'] = {
+        label: 'Gem',
+        labelPlural: 'Gems',
+        order: -1,
+        sheet: 'item',
+        schema: { type: 'object', properties: {} },
+      };
+      f['lang/en.json'] = { ...LANG, 'type.spells': 'Spells', 'group.magic': 'Magic' };
+      f['lang/pt-BR.json'] = { ...LANG, 'type.spells': 'Magias', 'group.magic': 'Magia' };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'item groups need their lang keys, and an order is a whole number (T-1203)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/spell.json'] = {
+        label: 'Spell',
+        labelPlural: 'type.spells',
+        group: 'group.magic',
+        sheet: 'item',
+        schema: { type: 'object', properties: {} },
+      };
+      f['types/items/gem.json'] = {
+        label: 'Gem',
+        order: 1.5,
+        sheet: 'item',
+        schema: { type: 'object', properties: {} },
+      };
+    },
+    issues: [
+      'error invalid_value types/items/gem.json $.order',
+      'error missing_lang_key types/items/spell.json $.group',
+      'warning missing_lang_key types/items/spell.json $.group',
+      'error missing_lang_key types/items/spell.json $.labelPlural',
+      'warning missing_lang_key types/items/spell.json $.labelPlural',
+    ],
+  },
+  {
     name: 'a pack with bad entries, reported by JSON path (T-0803)',
     change: (f: PluginFixture): void => {
       f['packs/bad.json'] = {

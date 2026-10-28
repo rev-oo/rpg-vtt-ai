@@ -115,6 +115,9 @@ An item type, such as a weapon or a spell.
 | `sheet` | [name](#name) | yes | The sheet in `sheets/`, without `.json`. |
 | `schema` | [Data schema](#item-type-data-schema) | yes | The entity's data: an object whose properties are fields. |
 | `derived` | map from [identifier](#identifier) to [formula](#formula) |  | Values computed from the data and never stored, by name. Formulas read them as `@derived.<name>`. |
+| `labelPlural` | [text](#text) |  | The type name for a list of them, such as "Weapons"; a lang key or literal text. It heads the type’s items when the type has no `group`. |
+| `group` | [text](#text) |  | The heading item lists show this type under, such as "Spells" or "Gear"; a lang key or literal text. Types with the same group share it. |
+| `order` | integer, -1000–1000 |  | Where its group comes in item lists: lowest first, then by heading. A group takes the lowest `order` of its types. Default 0. |
 
 <a id="item-type-data-schema"></a>
 

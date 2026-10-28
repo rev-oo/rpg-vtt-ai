@@ -106,7 +106,7 @@ describe('plugin scanner and registry (T-0403)', () => {
       character: { controlledBy: 'player' },
       npc: { controlledBy: 'gm' },
     });
-    expect(row?.itemTypes).toEqual(['weapon']);
+    expect(row?.itemTypes).toEqual(['spell', 'weapon']);
     expect(row?.scannedAt).toBeInstanceOf(Date);
   });
 
@@ -185,7 +185,7 @@ describe('plugin scanner and registry (T-0403)', () => {
     await writeFile(path.join(folder, 'types/actors/npc.json'), '{');
     expect((await rescan())['tiny-d20']?.status).toBe('invalid');
     const row = t.db.select().from(plugins).where(eq(plugins.id, 'tiny-d20')).get();
-    expect(row?.itemTypes).toEqual(['weapon']);
+    expect(row?.itemTypes).toEqual(['spell', 'weapon']);
   });
 
   it('needs an acknowledgement to enable a plugin with code (FR-PLUGIN-06)', async () => {
@@ -238,7 +238,7 @@ describe('plugin scanner and registry (T-0403)', () => {
     await symlink(outside, path.join(folder, 'types/items/gem.json'));
     expect((await rescan())['tiny-d20']?.status).toBe('ready');
     const row = t.db.select().from(plugins).where(eq(plugins.id, 'tiny-d20')).get();
-    expect(row?.itemTypes).toEqual(['weapon']);
+    expect(row?.itemTypes).toEqual(['spell', 'weapon']);
   });
 
   it('reports JSON files that are too large without reading them', async () => {

@@ -28,6 +28,20 @@
       "type": "weapon",
       "name": "Greatclub",
       "data": { "damage": "2d8", "bonus": 1 }
+    },
+    {
+      "id": "spark",
+      "kind": "item",
+      "type": "spell",
+      "name": "Spark",
+      "data": { "level": 0, "effect": "1d4 fire damage to one target in sight." }
+    },
+    {
+      "id": "mend",
+      "kind": "item",
+      "type": "spell",
+      "name": "Mend",
+      "data": { "level": 1, "effect": "A touched creature regains 1d8 hit points." }
     }
   ]
 }

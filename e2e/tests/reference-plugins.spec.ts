@@ -243,7 +243,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
 
   await test.step('a player copies a pack item onto their character (T-1202)', async () => {
     await showPanel(page, 'Compendium');
-    const entries = page.getByRole('list', { name: 'Compendium entries' });
+    const entries = page.getByRole('group', { name: 'Compendium entries' });
     await expect(entries.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
     // Players browse every entry but copy nothing into the table.
     await expect(page.getByRole('button', { name: /to the table$/ })).toHaveCount(0);
@@ -256,11 +256,30 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     ]);
   });
 
+  await test.step('spells sit under "Spells" in the compendium and on the character (T-1203)', async () => {
+    const spells = page.getByRole('list', { name: 'Spells' });
+    await expect(spells.getByRole('heading')).toHaveText(['Mend', 'Spark']);
+    await expect(page.getByRole('list', { name: 'Gear' })).toContainText('Shortsword');
+    await page.getByRole('button', { name: 'Copy Spark onto the chosen actor' }).click();
+    await expect(page.getByText('Spark was copied onto Ayla.')).toBeVisible();
+
+    await showPanel(page, 'Actors');
+    const ayla = page
+      .getByRole('list', { name: 'Actors' })
+      .getByRole('listitem')
+      .filter({ has: page.getByRole('heading', { name: 'Ayla', exact: true }) })
+      .first();
+    await ayla.getByText('Items', { exact: true }).click();
+    const owned = page.getByRole('group', { name: 'Items of Ayla' });
+    await expect(owned.getByRole('heading')).toHaveText(['Gear', 'Spells']);
+    await expect(owned.getByRole('list', { name: 'Spells' })).toContainText('Spark (spell)');
+  });
+
   await test.step('the GM previews a pack actor and copies it into the table (T-1202)', async () => {
     const gmPage = await gm.context.newPage();
     await gmPage.goto(`/tables/${table.id}`);
     await showPanel(gmPage, 'Compendium');
-    const entries = gmPage.getByRole('list', { name: 'Compendium entries' });
+    const entries = gmPage.getByRole('group', { name: 'Compendium entries' });
     const ogre = entries.getByRole('listitem').filter({
       has: gmPage.getByRole('heading', { name: 'Ogre' }),
     });
@@ -274,6 +293,14 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(
       gmPage.getByRole('list', { name: 'Actors' }).getByRole('heading', { name: 'Ogre' }),
     ).toBeVisible();
+
+    // A spell copied into the table sits under "Spells" in the items panel (T-1203).
+    await showPanel(gmPage, 'Compendium');
+    await gmPage.getByRole('button', { name: 'Copy Mend to the table' }).click();
+    await expect(gmPage.getByText('Mend was copied to the table.')).toBeVisible();
+    await gmPage.getByRole('tab', { name: 'Items' }).click();
+    const library = gmPage.getByRole('group', { name: 'Items' });
+    await expect(library.getByRole('list', { name: 'Spells' })).toContainText('Mend');
   });
 
   expect(errors).toEqual([]);

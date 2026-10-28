@@ -11,6 +11,8 @@ import { t } from '../../i18n/index.js';
 import { PluginSheet } from '../../plugin-host/PluginSheet.js';
 import { useSystem } from '../../plugin-host/system-context.js';
 import { EntityRow } from '../entities/EntityRow.js';
+import { GroupedList } from '../entities/GroupedList.js';
+import { groupItems, useItemTypes, type OtherRows } from '../entities/item-groups.js';
 import { LoadMore } from '../entities/LoadMore.js';
 import { LIST_PAGE, usePagedList } from '../entities/paging.js';
 import { useTableData } from '../table/table-data.js';
@@ -47,7 +49,7 @@ export function CompendiumBrowser(): ReactElement {
   const data = useTableData();
   const { table, types, actors } = data;
   const system = useSystem();
-  const translate = system.status === 'ready' ? system.translate : (text: string) => text;
+  const { itemTypes, translate } = useItemTypes();
   const revalidator = useRevalidator();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
   const [packs, setPacks] = useState<readonly CompendiumPack[]>([]);
@@ -116,10 +118,14 @@ export function CompendiumBrowser(): ReactElement {
       )}
       {!list.loaded && <p className="text-muted">{t('app.loading')}</p>}
 
-      <ul className="flex list-none flex-col gap-2 p-0" aria-label={t('compendium.entries')}>
-        {paged.rows.map((entry) => (
+      <GroupedList
+        label={t('compendium.entries')}
+        groups={groupItems(paged.rows, (entry) => entry.type, itemTypes, translate, ACTOR_ROWS)}
+        rowKey={(entry) => entry.ref}
+        renderRow={(entry, nested) => (
           <EntityRow
             key={entry.ref}
+            nested={nested}
             name={entry.name}
             type={entry.type}
             imageUrl={null}
@@ -175,12 +181,21 @@ export function CompendiumBrowser(): ReactElement {
               </div>
             </details>
           </EntityRow>
-        ))}
-      </ul>
+        )}
+      />
       {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
     </div>
   );
 }
+
+/** Pack actors come before the item groups, under one heading (ADR-061). */
+const ACTOR_ROWS: OtherRows<CompendiumEntry> = {
+  get title() {
+    return t('compendium.actors');
+  },
+  order: Number.NEGATIVE_INFINITY,
+  has: (entry) => entry.kind === 'actor',
+};
 
 /** Search, pack and type, applied as they change. */
 function CompendiumFilters({

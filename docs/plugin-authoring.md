@@ -681,6 +681,24 @@ A type file in `types/actors/` or `types/items/` defines one type, named after t
 - `schema`: the data each entity holds;
 - `derived`: values computed from the data;
 - `controlledBy` (required for actors, not allowed on items): `"player"` lets players create the type, `"gm"` leaves it to the GM.
+- `labelPlural`, `group` and `order` (items only, all optional): how item lists group the type's items, described below.
+
+#### Item groups
+
+Item lists (the items panel, an actor's items and the compendium) can show items under headings, such as "Spells" and "Gear". Give an item type a `group`, a lang key or literal text, and every item of that type sits under it. Types with the same `group` share one heading:
+
+```json
+{
+  "label": "type.spell",
+  "labelPlural": "type.spells",
+  "group": "group.spells",
+  "order": 2,
+  "sheet": "spell",
+  "schema": { "type": "object", "properties": {} }
+}
+```
+
+Once any item type has a `group`, a type without one gets a heading of its own: its `labelPlural`, or its `label` when it has none. Groups come by `order` (an integer, default 0; a group takes the lowest of its types), then by heading. In the compendium, actor entries come first under **Actors**. A system with no `group` keeps a single list.
 
 #### Data
 

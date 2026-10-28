@@ -73,6 +73,26 @@
         "title": "Formula",
         "description": "A formula (specs §8.9)."
       }
+    },
+    "labelPlural": {
+      "description": "The type name for a list of them, such as \"Weapons\"; a lang key or literal text. It heads the type’s items when the type has no `group`.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "title": "Text"
+    },
+    "group": {
+      "description": "The heading item lists show this type under, such as \"Spells\" or \"Gear\"; a lang key or literal text. Types with the same group share it.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "title": "Text"
+    },
+    "order": {
+      "description": "Where its group comes in item lists: lowest first, then by heading. A group takes the lowest `order` of its types. Default 0.",
+      "type": "integer",
+      "minimum": -1000,
+      "maximum": 1000
     }
   },
   "required": [

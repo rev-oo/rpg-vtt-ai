@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | In progress | 67%      |
+| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -27,10 +27,10 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M12
-- **Next task:** `T-1203`
+- **Active milestone:** M13
+- **Next task:** `T-1301`
 - **Open blockers:** none
-- **Decisions pending:** Q16–Q19 (§14)
+- **Decisions pending:** Q17–Q19 (§14)
 
 ### 0.3 Change log
 
@@ -42,6 +42,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
 | 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; one URL per table; layouts saved per browser) (ADR-059).                                     |
 | 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).     |
+| 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).          |
 
 ---
 
@@ -392,7 +393,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                    | MVP      | 0.1.0 (`code/client`); 0.2.0 |
 | FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own. | v1       | 0.3.0 (browser, ADR-060)     |
 | FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                        | v1       | 0.2.0                        |
-| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | planned (M12)                |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | 0.3.0 (ADR-061)              |
 | FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                         | 1.0      | planned (M15)                |
 | FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.               | 1.0      | planned (M15)                |
 | FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                      | 1.0      | planned (M16)                |
@@ -450,7 +451,7 @@ my-system/
 ├─ plugin.json              manifest (required)
 ├─ types/
 │  ├─ actors/<type>.json    actor type: schema, defaults, derived, sheet, controlledBy
-│  └─ items/<type>.json     item type: schema, defaults, derived, sheet
+│  └─ items/<type>.json     item type: schema, defaults, derived, sheet, group
 ├─ sheets/<name>.json       layout trees (referenced by types)
 ├─ rolls.json               roll recipes and outcomes (optional)
 ├─ dice.json                custom dice (optional)
@@ -476,7 +477,7 @@ The manifest names the plugin (`id`, `name`, `version`), declares the core API r
 
 ### 8.4 Actor and item types
 
-A type file declares the entity's data as a subset of JSON Schema, derived values (formulas without dice, never stored), its sheet, and for actors who may create it (`controlledBy`). `x-` annotations choose how the core stores each field, which is what the live document model (§9) builds on: `x-kind` (`longText`, `richText`, `collection`, `image`), `x-counter` (§9.5) and `x-layer: "secret"` (§9.3). Rules: [guide, Actor and item types](docs/plugin-authoring.md#actor-and-item-types); keys: [reference, Actor type](docs/plugin-reference.md#actor-type) and [Item type](docs/plugin-reference.md#item-type).
+A type file declares the entity's data as a subset of JSON Schema, derived values (formulas without dice, never stored), its sheet, for actors who may create it (`controlledBy`), and for items the group that item lists show them under (`group`, `labelPlural`, `order`, ADR-061). `x-` annotations choose how the core stores each field, which is what the live document model (§9) builds on: `x-kind` (`longText`, `richText`, `collection`, `image`), `x-counter` (§9.5) and `x-layer: "secret"` (§9.3). Rules: [guide, Actor and item types](docs/plugin-authoring.md#actor-and-item-types); keys: [reference, Actor type](docs/plugin-reference.md#actor-type) and [Item type](docs/plugin-reference.md#item-type).
 
 ### 8.5 Sheets (layout JSON)
 
@@ -732,7 +733,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Do:** Replace the whole-pack import (ADR-051 §5, §7) with a browser, in a new ADR (FR-PLUGIN-09). `GET /tables/:id/compendium` lists the entries of every pack of the system, with search, pack and type filters, paged as in ADR-057, readable by every member; each entry says whether the table has it already (`pack_ref`). `POST /tables/:id/compendium/copy` takes chosen entries: GMs and assistants copy actors and items into the table; players copy items onto actors they own. Copies keep `pack_ref`. The web shows the compendium as a panel of the workspace, with entry previews. The import endpoints are removed.
   - **Done when:** endpoint tests cover listing, filters, paging, copying by role and the "already in the table" mark; a player copies a pack item onto their character and a GM copies an actor, in e2e.
 
-- [ ] **T-1203 · Item groups**
+- [x] **T-1203 · Item groups**
   - **Deps:** Q16
   - **Do:** Item types may declare a `group` (lang key or text) and a `labelPlural` (FR-PLUGIN-11). The schema, validator and generated reference document them. The items panel, an actor's items and the compendium list items under their groups, in the order the plugin declares. `tiny-d20` adds a `spell` item type in a "Spells" group, with a pack entry or two.
   - **Done when:** validator tests cover the new keys; web tests show grouped lists; tiny-d20's spells appear under "Spells" in the items panel, on a character and in the compendium.
@@ -868,12 +869,11 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 
 **Open**
 
-| #   | Question                                                                                                                             | Blocks | Proposed default                                                                                                                                                        |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Q16 | A spell in a compendium is an item of a plugin type `spell`. Should "item" be renamed, since items now cover spells, feats and gear? | T-1203 | No rename. "Item" stays the core term for typed data an actor holds; plugins name what players see through type labels and item groups ("Spells", "Gear"), FR-PLUGIN-11 |
-| Q17 | How is `code/client` sandboxed?                                                                                                      | T-1502 | A sandboxed `<iframe>` per plugin (no `allow-same-origin`), rendering its nodes and cards inside, with the SDK hooks over `postMessage`                                 |
-| Q18 | Which renderer draws maps?                                                                                                           | T-1402 | PixiJS (WebGL with canvas fallback), as LATER named it; React only for the panels around it                                                                             |
-| Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading?                                                                         | T-1701 | Yes for one major version: 1.x accepts 0.x plugins whose files validate, and lists them with a "made for 0.x" note                                                      |
+| #   | Question                                                     | Blocks | Proposed default                                                                                                                        |
+| --- | ------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Q17 | How is `code/client` sandboxed?                              | T-1502 | A sandboxed `<iframe>` per plugin (no `allow-same-origin`), rendering its nodes and cards inside, with the SDK hooks over `postMessage` |
+| Q18 | Which renderer draws maps?                                   | T-1402 | PixiJS (WebGL with canvas fallback), as LATER named it; React only for the panels around it                                             |
+| Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading? | T-1701 | Yes for one major version: 1.x accepts 0.x plugins whose files validate, and lists them with a "made for 0.x" note                      |
 
 **Decided**
 
@@ -894,6 +894,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | Q13 | How is plugin server code contained in-process? A handler can loop forever or throw asynchronously. Options: a worker thread per plugin with a time limit, or `vm` contexts, or trusted code with try/catch only. | a worker thread per plugin, with time limits for functions and handlers, and `ctx` calls passed as messages (ADR-047)              |
 | Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | rows and events: turns are GM-driven, so live co-editing adds little (ADR-049)                                                     |
 | Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | no. Plugin authors build them from this repository (ADR-045)                                                                       |
+| Q16 | A spell in a compendium is an item of a plugin type `spell`. Should "item" be renamed, since items now cover spells, feats and gear?                                                                              | no rename. "Item" stays the core term; plugins name what players see through type labels and item groups (FR-PLUGIN-11, ADR-061)   |
 
 ---
 
@@ -982,6 +983,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted                                   |
 | ADR-059 | [The table is a dockview workspace with a single URL](docs/adr/ADR-059-table-workspace.md)                                                      | Accepted                                   |
 | ADR-060 | [Members browse the compendium and copy chosen entries](docs/adr/ADR-060-compendium-browser.md)                                                 | Accepted                                   |
+| ADR-061 | [Item types declare a group, and item lists show items under it](docs/adr/ADR-061-item-groups.md)                                               | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
