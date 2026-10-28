@@ -25,7 +25,12 @@ export function findTable(db: DbOrTx, tableId: string): GameTable | undefined {
 
 export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): TableView {
   const plugin = db
-    .select({ name: plugins.name, enabled: plugins.enabled, status: plugins.status })
+    .select({
+      name: plugins.name,
+      version: plugins.version,
+      enabled: plugins.enabled,
+      status: plugins.status,
+    })
     .from(plugins)
     .where(eq(plugins.id, table.systemId))
     .get();
@@ -36,6 +41,7 @@ export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): Tabl
     systemId: table.systemId,
     systemName: plugin?.name ?? table.systemId,
     systemVersion: table.systemVersion,
+    installedVersion: plugin?.version ?? null,
     settings: table.settings,
     playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
     systemAvailable: plugin ? isAvailable(plugin) : false,

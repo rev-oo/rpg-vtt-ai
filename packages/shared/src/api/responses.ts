@@ -33,7 +33,13 @@ export const tableSchema = z.object({
   systemId: z.string(),
   /** The plugin's display name, or its id if the plugin is no longer installed. */
   systemName: z.string(),
+  /** The system version the table plays with; entities made on it get this `dataVersion`. */
   systemVersion: z.string(),
+  /**
+   * The installed plugin's version, or `null` if it is no longer installed. When it differs,
+   * a GM may upgrade the table to it (ADR-058).
+   */
+  installedVersion: z.string().nullable(),
   settings: z.record(z.string(), z.unknown()),
   playersMayCreateAnyActorType: z.boolean(),
   /** Whether the system plugin is enabled and ready; without it the table is read-only. */

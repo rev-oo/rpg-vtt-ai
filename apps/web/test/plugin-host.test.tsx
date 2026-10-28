@@ -162,7 +162,13 @@ const CARD_MESSAGE: ChatMessage = {
 
 function openTable(
   path: string,
-  { role = 'gm', systemAvailable = true, system = SYSTEM, messages = [CARD_MESSAGE] } = {},
+  {
+    role = 'gm',
+    systemAvailable = true,
+    system = SYSTEM,
+    messages = [CARD_MESSAGE],
+    dataVersion = HERO.dataVersion,
+  } = {},
 ) {
   fakeWebSocket();
   if (!collab.sheet) liveData();
@@ -172,7 +178,7 @@ function openTable(
     'GET /tables/t1': { body: { table: { ...TABLE, role, systemAvailable } } },
     'GET /tables/t1/members': { body: { members: MEMBERS } },
     'GET /tables/t1/actors': {
-      body: { nextCursor: null, actors: [{ ...HERO, system: { str: 13 } }] },
+      body: { nextCursor: null, actors: [{ ...HERO, system: { str: 13 }, dataVersion }] },
     },
     'GET /tables/t1/actors?trash=live&limit=50': { body: { nextCursor: null, actors: [HERO] } },
     'GET /tables/t1/types': { body: TYPES },
@@ -214,6 +220,19 @@ describe('plugin host (T-0409)', () => {
       'href',
       '/plugins/tiny-d20/styles/sheet.css',
     );
+  });
+
+  it('says when a sheet was made with another version of the system (T-0813)', async () => {
+    openTable('/tables/t1/actors/a1', { dataVersion: '0.9.0' });
+    expect(
+      await screen.findByText(/made with Tiny d20 0\.9\.0; the table now uses 1\.0\.0/),
+    ).toBeVisible();
+  });
+
+  it('says nothing when the versions match (T-0813)', async () => {
+    openTable('/tables/t1/actors/a1');
+    await screen.findByLabelText('Strength');
+    expect(screen.queryByText(/This sheet was made with/)).toBeNull();
   });
 
   it('rolls a recipe for the owner and reports it', async () => {

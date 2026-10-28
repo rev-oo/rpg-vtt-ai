@@ -172,6 +172,7 @@ describe('responses', () => {
       systemId: 's',
       systemName: 'S',
       systemVersion: '1.0.0',
+      installedVersion: '1.0.0',
       settings: {},
       playersMayCreateAnyActorType: false,
       systemAvailable: true,
