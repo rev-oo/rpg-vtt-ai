@@ -9,6 +9,7 @@ import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
+import { useStageLink } from '../workspace/stage-link.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityFilters } from './EntityFilters.js';
@@ -41,6 +42,7 @@ export function ActorList({
   const actors = paged.rows;
   const { table, members, types } = data;
   const revalidator = useRevalidator();
+  const stageLink = useStageLink();
   const [creating, setCreating] = useState(false);
   const [editingOwnership, setEditingOwnership] = useState<ActorView | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export function ActorList({
               ) : (
                 <>
                   <Link
-                    to={`/tables/${table.id}/actors/${actor.id}`}
+                    to={stageLink(`/tables/${table.id}/actors/${actor.id}`)}
                     className="self-center"
                     aria-label={`${t('sheet.open')}: ${actor.name}`}
                   >

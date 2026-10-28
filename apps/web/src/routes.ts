@@ -4,10 +4,16 @@ export default [
   route('setup', 'routes/setup.tsx'),
   route('login', 'routes/login.tsx'),
   route('invite/:token', 'routes/invite.tsx'),
-  layout('routes/app-layout.tsx', [
-    index('routes/tables.tsx'),
+  layout('routes/signed-in.tsx', [
+    layout('routes/app-layout.tsx', [
+      index('routes/tables.tsx'),
+      route('account', 'routes/account.tsx'),
+      route('admin/plugins', 'routes/admin-plugins.tsx'),
+      route('admin/settings', 'routes/admin-settings.tsx'),
+    ]),
+    // A table is a full-page workspace, outside the app's header (FR-TABLE-08, ADR-059).
     route('tables/:tableId', 'routes/table.tsx', [
-      index('routes/table-actors.tsx'),
+      index('routes/table-home.tsx'),
       route('items', 'routes/table-items.tsx'),
       route('actors/:actorId', 'routes/table-actor.tsx'),
       route('journal', 'routes/table-journal.tsx'),
@@ -15,9 +21,6 @@ export default [
       route('members', 'routes/table-members.tsx'),
       route('settings', 'routes/table-settings.tsx'),
     ]),
-    route('account', 'routes/account.tsx'),
-    route('admin/plugins', 'routes/admin-plugins.tsx'),
-    route('admin/settings', 'routes/admin-settings.tsx'),
   ]),
   route('*', 'routes/catch-all.tsx'),
 ] satisfies RouteConfig;

@@ -50,7 +50,9 @@ test('a GM upgrades the table, and older sheets show a notice', async ({ browser
   const notice = page.getByText(/This sheet was made with/);
   const openSheet = async (id: string, name: string) => {
     await page.goto(`/tables/${table.id}/actors/${id}`);
-    await expect(page.getByRole('heading', { name })).toBeVisible();
+    await expect(
+      page.getByRole('main', { name: 'Open page' }).getByRole('heading', { name }),
+    ).toBeVisible();
   };
 
   await test.step('the table stays on its version until upgraded', async () => {

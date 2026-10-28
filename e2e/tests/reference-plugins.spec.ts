@@ -246,7 +246,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(gmPage.getByText('Imported 4; 0 were already in the table.')).toBeVisible();
     await expect(gmPage.getByText('2 actors, 2 items · 4 in this table')).toBeVisible();
     await expect(importButton).toBeDisabled();
-    await gmPage.getByRole('link', { name: 'Items' }).click();
+    await gmPage.getByRole('tab', { name: 'Items' }).click();
     await expect(gmPage.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
     await expect(gmPage.getByRole('heading', { name: 'Shortsword' })).toBeVisible();
   });

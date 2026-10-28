@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+
+- A table opens as a full-page workspace: the open sheet, journal entry or page sits in the centre, between the lists (actors, items, journal) and the chat with combat. Both panels collapse and resize, by pointer or keyboard, and each browser remembers the layout per user and table. On phones a bottom bar shows the lists, the open page, the chat or the dice, each full screen. Old `/items` and `/journal` links open the matching list (FR-TABLE-08, ADR-059).
+
 ## [0.2.0] - 2026-10-28
 
 Plugins can run server code, and tables get combat, compendium packs, chat edits, sheet history and archiving. The image now runs on arm64 too. Plugins written for 0.1.0 work unchanged: the plugin core API stays at `0.1.0`.
