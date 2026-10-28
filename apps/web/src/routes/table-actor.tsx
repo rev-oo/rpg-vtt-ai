@@ -14,7 +14,6 @@ import { useSheetPresence } from '../collab/presence.js';
 import { useLiveSheet } from '../collab/use-live-sheet.js';
 import { SheetHistory } from '../features/entities/SheetHistory.js';
 import { useTableData } from '../features/table/table-data.js';
-import { useStageLink } from '../features/workspace/stage-link.js';
 import { t } from '../i18n/index.js';
 import { entityType } from '../plugin-host/entity-type.js';
 import { PluginSheet } from '../plugin-host/PluginSheet.js';
@@ -37,13 +36,10 @@ function recipeArgs(args: Readonly<Record<string, Value>>): RecipeArgs | null {
 export default function TableActorRoute(): ReactElement {
   const { actorId } = useParams();
   const { table, actors } = useTableData();
-  const stageLink = useStageLink();
   const actor = actors.find((a) => a.id === actorId);
   return (
     <div className="flex flex-col gap-3">
-      <Link to={stageLink(`/tables/${table.id}`)} className="self-start">
-        {t('sheet.back')}
-      </Link>
+      <Link to={`/tables/${table.id}`}>{t('sheet.back')}</Link>
       {actor ? (
         <ActorSheet key={actor.id} table={table} actor={actor} />
       ) : (

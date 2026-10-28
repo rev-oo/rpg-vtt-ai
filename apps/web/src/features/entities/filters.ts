@@ -1,9 +1,6 @@
 import type { EntityListQuery } from '@vtt/shared/api';
 
-/**
- * List filters, kept in the URL so they survive reloads and can be shared (FR-ENT-04). They
- * sit beside `panel`, the browse panel's tab (ADR-059).
- */
+/** List filters, kept in the URL so they survive reloads and can be shared (FR-ENT-04). */
 export interface EntityFilters {
   search: string;
   type: string;
@@ -11,7 +8,8 @@ export interface EntityFilters {
   trash: boolean;
 }
 
-export function readFilters(params: URLSearchParams): EntityFilters {
+export function readFilters(url: URL): EntityFilters {
+  const params = url.searchParams;
   return {
     search: params.get('q') ?? '',
     type: params.get('type') ?? '',

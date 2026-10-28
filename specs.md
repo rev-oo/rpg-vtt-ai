@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | In progress | 33%      |
+| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | Not started | 0%       |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1202`
+- **Next task:** `T-1201`
 - **Open blockers:** none
 - **Decisions pending:** Q16–Q19 (§14)
 
@@ -40,7 +40,6 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
 | 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
-| 2026-10-28 | T-1201 done: the table is a full-page workspace with a routed stage, a Lists and a Chat panel that collapse and resize, kept per user and table (ADR-059).                                |
 
 ---
 
@@ -312,7 +311,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-TABLE-05 | A user may belong to multiple tables and set a default character per table.                                                                                                                                   | MVP      | 0.1.0                 |
 | FR-TABLE-06 | GMs and assistants can archive a table (read-only, still exportable in the future).                                                                                                                           | v1       | 0.2.0                 |
 | FR-TABLE-07 | Only the table GM can change table settings, roles, and system-level options.                                                                                                                                 | MVP      | 0.1.0                 |
-| FR-TABLE-08 | The table opens as a full-page workspace: a centre stage (sheet, journal entry or map) and collapsible, resizable panels for chat, actors, items, journal and combat. On phones each panel opens full screen. | 1.0      | 0.3.0 (ADR-059)       |
+| FR-TABLE-08 | The table opens as a full-page workspace: a centre stage (sheet, journal entry or map) and collapsible, resizable panels for chat, actors, items, journal and combat. On phones each panel opens full screen. | 1.0      | planned (M12)         |
 
 ### 7.3 Actors and items (`FR-ENT`)
 
@@ -720,7 +719,7 @@ All done; the task lists with their notes are in [`docs/history/0.2.0.md`](docs/
 
 The table becomes a full-page workspace, ready for maps in M14, and the compendium becomes a browser instead of a whole-pack import.
 
-- [x] **T-1201 · Full-page workspace**
+- [ ] **T-1201 · Full-page workspace**
   - **Deps:** none
   - **Do:** The table route leaves the app shell and fills the viewport (FR-TABLE-08). A centre stage shows the open sheet or journal entry (and the map from M14). Chat, actors, items, journal and combat become panels that collapse and resize; their layout is remembered per user and table. On phones each panel opens full screen, keeping T-0511's sheet route. Keyboard users can move between panels (NFR-10).
   - **Done when:** e2e opens a table on desktop and phone, collapses and resizes panels, reloads and finds the same layout; every current table feature works from the workspace; the existing e2e suite passes on it.
@@ -977,7 +976,6 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted |
 | ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted |
 | ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted |
-| ADR-059 | [The table is a full-page workspace: a routed stage between two panels](docs/adr/ADR-059-table-workspace.md)                                    | Accepted |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

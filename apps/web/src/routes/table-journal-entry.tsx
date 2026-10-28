@@ -11,7 +11,6 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { useJournalBody } from '../collab/use-journal-body.js';
 import { useTableData } from '../features/table/table-data.js';
-import { useStageLink } from '../features/workspace/stage-link.js';
 import { TextInput } from '../forms/fields.js';
 import { t } from '../i18n/index.js';
 
@@ -37,9 +36,8 @@ export async function clientLoader({ params }: Route.ClientLoaderArgs): Promise<
 /** One journal entry: its title and its body, edited together (FR-JOURNAL-01). */
 export default function TableJournalEntryRoute({ loaderData }: Route.ComponentProps): ReactElement {
   const { table } = useTableData();
-  const stageLink = useStageLink();
   const back = (
-    <Link to={stageLink(`/tables/${table.id}`)} className="self-start">
+    <Link to={`/tables/${table.id}/journal`} className="self-start">
       {t('journal.back')}
     </Link>
   );

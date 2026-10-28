@@ -13,7 +13,6 @@ import { LoadMore } from '../entities/LoadMore.js';
 import { OwnershipDialog } from '../entities/OwnershipDialog.js';
 import { usePagedList } from '../entities/paging.js';
 import type { TableData } from '../table/table-data.js';
-import { useStageLink } from '../workspace/stage-link.js';
 
 import { CreateJournalDialog } from './CreateJournalDialog.js';
 
@@ -44,7 +43,6 @@ export function JournalList({
   const entries = paged.rows;
   const { table, members } = data;
   const revalidator = useRevalidator();
-  const stageLink = useStageLink();
   const [creating, setCreating] = useState(false);
   const [editingOwnership, setEditingOwnership] = useState<JournalEntryView | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -120,7 +118,7 @@ export function JournalList({
               ) : (
                 <>
                   <Link
-                    to={stageLink(`/tables/${table.id}/journal/${entry.id}`)}
+                    to={`/tables/${table.id}/journal/${entry.id}`}
                     className="self-center"
                     aria-label={`${t('journal.open')}: ${entry.title}`}
                   >

@@ -35,9 +35,6 @@ export function EntityFilters({ searchLabel, types }: EntityFiltersProps): React
     const form = formRef.current;
     if (!form) return;
     const next = new URLSearchParams();
-    // The browse panel's tab is not a filter (ADR-059).
-    const panel = params.get('panel');
-    if (panel) next.set('panel', panel);
     for (const [key, value] of new FormData(form)) {
       if (typeof value === 'string' && value.trim()) next.set(key, value.trim());
     }

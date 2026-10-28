@@ -88,7 +88,10 @@ test('actors and items between a GM and a player', async ({ browser }) => {
 
   await test.step('the GM stocks the library; the player copies an item (FR-ENT-05, 06)', async () => {
     for (const page of [gmPage, danaPage]) {
-      await page.getByRole('tab', { name: 'Items' }).click();
+      await page
+        .getByRole('navigation', { name: 'Table sections' })
+        .getByRole('link', { name: 'Items' })
+        .click();
     }
     await expect(danaPage.getByRole('button', { name: 'New item' })).toHaveCount(0);
     await create(gmPage, 'item', 'Sword', 'weapon');
@@ -99,7 +102,10 @@ test('actors and items between a GM and a player', async ({ browser }) => {
     await danaPage.getByRole('button', { name: 'Give' }).click();
     await expect(danaPage.getByText('Dana the Bold received a copy of Sword.')).toBeVisible();
 
-    await danaPage.getByRole('tab', { name: 'Actors' }).click();
+    await danaPage
+      .getByRole('navigation', { name: 'Table sections' })
+      .getByRole('link', { name: 'Actors' })
+      .click();
     await row(danaPage, 'Dana the Bold').getByText('Items').click();
     await expect(row(danaPage, 'Dana the Bold')).toContainText('Sword (weapon)');
   });

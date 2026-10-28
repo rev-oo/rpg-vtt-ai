@@ -156,9 +156,7 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   const body = gmPage.getByRole('textbox', { name: 'The Old Mill' });
   await body.click();
   await gmPage.keyboard.type('The miller hides a map.');
-  // The entry opens on the stage, beside the list, which offers the same actions.
-  const stage = (page: Page) => page.getByRole('main', { name: 'Open page' });
-  await stage(gmPage).getByRole('button', { name: 'Reveal to players' }).click();
+  await gmPage.getByRole('button', { name: 'Reveal to players' }).click();
   await expect(gmPage.getByText('Players cannot see this entry.', { exact: false })).toBeHidden();
 
   // The reveal reaches the player's open list (FR-ENT-07).
@@ -170,7 +168,7 @@ test('journal entries are hidden until the GM reveals them', async ({ browser })
   await expect(finnPage.getByRole('toolbar', { name: 'Formatting' })).toHaveCount(0);
 
   // Hidden again, it leaves the player's screen.
-  await stage(gmPage).getByRole('button', { name: 'Hide from players' }).click();
+  await gmPage.getByRole('button', { name: 'Hide from players' }).click();
   await expect(
     finnPage.getByText('This entry does not exist, or you cannot see it.').first(),
   ).toBeVisible();

@@ -27,8 +27,7 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(overflow).toBeLessThanOrEqual(0);
 }
 
-// T-0511, T-1201: below 768 px a sheet fills the screen; a bar switches to the lists, the chat
-// or the dice (FR-SHEET-10, FR-TABLE-08).
+// T-0511: below 768 px a sheet fills the screen with a Chat / Sheet / Dice bar (FR-SHEET-10).
 test('sheets on a phone', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await installPlugin(
@@ -61,7 +60,7 @@ test('sheets on a phone', async ({ browser }) => {
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto(`/tables/${table.id}/actors/${actor.id}`);
   const sheet = page.locator('[data-plugin="tiny-d20"]');
-  const bar = page.getByRole('navigation', { name: 'Table views' });
+  const bar = page.getByRole('navigation', { name: 'Sheet views' });
   await expect(sheet.getByLabel('Strength')).toBeVisible();
 
   await test.step('the sheet fills the screen, with the bar below', async () => {
@@ -70,7 +69,7 @@ test('sheets on a phone', async ({ browser }) => {
       'aria-pressed',
       'true',
     );
-    await expect(page.getByRole('list', { name: 'Actors' })).toBeHidden();
+    await expect(page.getByRole('heading', { name: 'Phone Table' })).toBeHidden();
     await expect(page.getByRole('log', { name: 'Messages' })).toBeHidden();
     await expectNoHorizontalScroll(page);
     for (const tab of ['Skills', 'Notes']) {
@@ -103,7 +102,7 @@ test('sheets on a phone', async ({ browser }) => {
   await test.step('from 768 px the table layout returns, without the bar', async () => {
     await page.setViewportSize({ width: 1024, height: 740 });
     await expect(bar).toBeHidden();
-    await expect(page.getByRole('list', { name: 'Actors' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Phone Table' })).toBeVisible();
     await expect(page.getByRole('log', { name: 'Messages' })).toBeVisible();
   });
 
