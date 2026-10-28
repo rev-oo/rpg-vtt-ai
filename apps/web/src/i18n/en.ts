@@ -131,7 +131,6 @@ export const en = {
   'ownership.save': 'Save',
   'ownership.saved': 'Ownership of {name} was saved.',
 
-  'chat.title': 'Chat',
   'chat.messages': 'Messages',
   'chat.empty': 'No messages yet.',
   'chat.loadOlder': 'Load older messages',
@@ -298,7 +297,6 @@ export const en = {
   'sheet.dataVersion':
     'This sheet was made with {system} {made}; the table now uses {current}. Fields that changed since may show their defaults.',
   'sheet.connecting': 'Connecting to the sheet…',
-  'dice.title': 'Dice',
   'dice.rollDie': 'Roll a {die}',
   'dice.formula': 'Formula',
   'dice.roll': 'Roll',
@@ -426,7 +424,6 @@ export const en = {
 
   'settings.title': 'Settings',
   'settings.gmOnly': "Only GMs and assistants can change the table's settings.",
-  'settings.table': 'Table',
   'settings.anyActorType': 'Players may create every actor type, including those meant for the GM',
   'settings.houseRules': 'House rules of {name}',
   'settings.noHouseRules': 'This system has no house rules.',

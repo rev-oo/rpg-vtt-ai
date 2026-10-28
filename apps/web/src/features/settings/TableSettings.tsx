@@ -109,10 +109,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
     >
       {failure && <Alert tone="error">{failure}</Alert>}
       {saved && <Alert>{t('settings.saved')}</Alert>}
-      <section className="flex flex-col gap-4" aria-labelledby="table-settings-heading">
-        <h2 id="table-settings-heading" className="text-lg font-semibold">
-          {t('settings.table')}
-        </h2>
+      <div className="flex flex-col gap-4">
         <TextField
           label={t('createTable.name')}
           value={name}
@@ -140,7 +137,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
           />
           {t('settings.anyActorType')}
         </label>
-      </section>
+      </div>
       <section className="flex flex-col gap-4" aria-labelledby="house-rules-heading">
         <h2 id="house-rules-heading" className="text-lg font-semibold">
           {t('settings.houseRules', { name: table.systemName })}

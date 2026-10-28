@@ -150,18 +150,12 @@ export function ChatPanel({
   const now = useNow();
 
   return (
-    <section
-      aria-label={t('chat.title')}
-      className="flex h-full min-h-0 flex-col gap-2 rounded-xl border border-line bg-surface p-3"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold">{t('chat.title')}</h2>
-        {status !== 'open' && (
-          <span className="text-sm text-muted" role="status">
-            {t(STATUS_MESSAGES[status])}
-          </span>
-        )}
-      </div>
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      {status !== 'open' && (
+        <span className="text-sm text-muted" role="status">
+          {t(STATUS_MESSAGES[status])}
+        </span>
+      )}
 
       <div
         ref={listRef}
@@ -229,7 +223,7 @@ export function ChatPanel({
       ) : (
         <p className="text-sm text-muted">{t('chat.readOnly')}</p>
       )}
-    </section>
+    </div>
   );
 }
 

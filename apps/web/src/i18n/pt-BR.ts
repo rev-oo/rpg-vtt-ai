@@ -134,7 +134,6 @@ export const ptBR: Messages = {
   'ownership.save': 'Salvar',
   'ownership.saved': 'A propriedade de {name} foi salva.',
 
-  'chat.title': 'Chat',
   'chat.messages': 'Mensagens',
   'chat.empty': 'Nenhuma mensagem ainda.',
   'chat.loadOlder': 'Carregar mensagens anteriores',
@@ -304,7 +303,6 @@ export const ptBR: Messages = {
   'sheet.dataVersion':
     'Esta ficha foi criada com {system} {made}; a mesa agora usa {current}. Campos que mudaram desde então podem mostrar o valor padrão.',
   'sheet.connecting': 'Conectando à ficha…',
-  'dice.title': 'Dados',
   'dice.rollDie': 'Rolar um {die}',
   'dice.formula': 'Fórmula',
   'dice.roll': 'Rolar',
@@ -432,7 +430,6 @@ export const ptBR: Messages = {
 
   'settings.title': 'Configurações',
   'settings.gmOnly': 'Só mestres e assistentes podem mudar as configurações da mesa.',
-  'settings.table': 'Mesa',
   'settings.anyActorType':
     'Jogadores podem criar todos os tipos de ator, inclusive os destinados ao mestre',
   'settings.houseRules': 'Regras da casa de {name}',
