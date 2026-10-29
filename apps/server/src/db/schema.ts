@@ -367,6 +367,8 @@ export const ydocs = sqliteTable(
   {
     name: text('name').primaryKey(),
     actorId: text('actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    /** An item's documents (ADR-062). */
+    itemId: text('item_id').references(() => items.id, { onDelete: 'cascade' }),
     journalEntryId: text('journal_entry_id').references(() => journalEntries.id, {
       onDelete: 'cascade',
     }),
@@ -375,6 +377,7 @@ export const ydocs = sqliteTable(
   },
   (t) => [
     index('ydocs_actor_id_idx').on(t.actorId),
+    index('ydocs_item_id_idx').on(t.itemId),
     index('ydocs_journal_entry_id_idx').on(t.journalEntryId),
   ],
 );

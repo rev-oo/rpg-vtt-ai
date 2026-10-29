@@ -54,6 +54,21 @@ export function actorLayerAccess(
   return levelToAccess(effectiveOwnership(subject, ownership));
 }
 
+/**
+ * Access to an item's CRDT layer (specs §9.3, ADR-062). An owned item follows its actor's
+ * ownership; the library is edited by GMs and assistants and read by every member. The secret
+ * layer is GM and assistant only.
+ */
+export function itemLayerAccess(
+  subject: Subject,
+  actorOwnership: Ownership | undefined,
+  layer: ActorLayer,
+): DocumentAccess {
+  if (layer === 'secret') return isGmLike(subject.role) ? 'write' : 'none';
+  if (actorOwnership) return actorLayerAccess(subject, actorOwnership, layer);
+  return canManageItemLibrary(subject.role) ? 'write' : 'read';
+}
+
 /** A journal entry's access settings (FR-JOURNAL-02). */
 export interface JournalAccess {
   ownership: Ownership;

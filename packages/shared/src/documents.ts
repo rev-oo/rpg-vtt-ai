@@ -2,10 +2,14 @@ import type { ActorLayer } from './permissions/index.js';
 
 /** A collaborative document (specs §9.1): what `<kind>:<id>:<layer>` names. */
 export type DocumentRef =
-  { kind: 'actor'; id: string; layer: ActorLayer } | { kind: 'journal'; id: string; layer: 'main' };
+  | { kind: 'actor'; id: string; layer: ActorLayer }
+  | { kind: 'item'; id: string; layer: ActorLayer }
+  | { kind: 'journal'; id: string; layer: 'main' };
 
 const UUID = '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}';
-const DOCUMENT_NAME = new RegExp(`^(?:actor:(${UUID}):(main|secret)|journal:(${UUID}):main)$`);
+const DOCUMENT_NAME = new RegExp(
+  `^(?:(actor|item):(${UUID}):(main|secret)|journal:(${UUID}):main)$`,
+);
 
 /** The name of a collaborative document (specs §9.1). */
 export function documentName(ref: DocumentRef): string {
@@ -19,9 +23,9 @@ export function documentName(ref: DocumentRef): string {
 export function parseDocumentName(name: string): DocumentRef | null {
   const match = DOCUMENT_NAME.exec(name);
   if (!match) return null;
-  const [, actorId, layer, journalId] = match;
-  if (actorId !== undefined && (layer === 'main' || layer === 'secret')) {
-    return { kind: 'actor', id: actorId, layer };
+  const [, kind, entityId, layer, journalId] = match;
+  if ((kind === 'actor' || kind === 'item') && entityId !== undefined) {
+    if (layer === 'main' || layer === 'secret') return { kind, id: entityId, layer };
   }
   if (journalId !== undefined) return { kind: 'journal', id: journalId, layer: 'main' };
   return null;
