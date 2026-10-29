@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-29
+
+Tables open as a full-page workspace, the compendium becomes a browser, and items get sheets of their own and a place on actor sheets: inventories, equipped and prepared state, bonuses in derived values and rolls made with an item. Plugins written for 0.1.0 and 0.2.0 work unchanged: the plugin core API stays at `0.1.0`.
+
 ### Fixed
 
 - Items can be opened and edited. **Open** on a row of the items panel, or an item's name in an actor's items, shows the item's sheet as a panel, edited live like an actor's: GMs and assistants edit library items, and whoever owns an actor edits its items. Until now an item's system data could not be changed after it was created (FR-ENT-06, ADR-062).
@@ -20,6 +24,12 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 - The compendium is a panel of the workspace that every member can browse. Search the system's pack entries by name, pack and type, preview each entry's sheet, and see which ones the table already has. GMs and assistants copy chosen entries into the table, and anyone copies items onto an actor they own. This replaces importing whole packs from the table settings, and `GET /tables/:id/packs` and `POST /tables/:id/packs/:name/import` are removed (FR-PLUGIN-09, ADR-060).
 - A table opens as a full-page workspace. Lists, sheets, journal entries, the table overview, members, settings, combat, chat and dice are panels: drag them by their tabs to stack, split or float them, and close or reopen them from the Panels menu. Several sheets can be open side by side. A table now has a single URL, which panels do not change. Links to a table's sheets, journal entries, items, members or settings no longer work and lead to the tables list. Each browser remembers the layout per table, separately for phones, where every panel is a full-screen tab. Each list keeps its own search and filters, which are no longer part of the URL (FR-TABLE-08, ADR-059).
+
+### Known limitations
+
+- Plugin data is not migrated between system versions: sheets made with an older version show a notice, and fields the new version changed read as their defaults.
+- Maps, tokens and assets are not available yet.
+- The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 
 ## [0.2.0] - 2026-10-28
 
@@ -96,6 +106,7 @@ The first release: a self-hosted virtual tabletop where game systems come from p
 - The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 - The image is built for `linux/amd64` only.
 
-[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rev-oo/rpg-vtt-ai/releases/tag/v0.1.0
