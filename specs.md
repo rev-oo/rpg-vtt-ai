@@ -1,7 +1,7 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 0.3.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-10-29
-> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md) and [`0.3.0.md`](docs/history/0.3.0.md).
+> **Status:** 0.4.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-10-29
+> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md), [`0.3.0.md`](docs/history/0.3.0.md) and [`0.4.0.md`](docs/history/0.4.0.md).
 
 ---
 
@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
-| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Done        | 100%     |
+| M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
@@ -27,22 +27,18 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M14 (M13 done; 0.4.0 not released yet)
+- **Active milestone:** M14 (0.4.0 released)
 - **Next task:** `T-1401`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
 ### 0.3 Change log
 
-Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), and up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md); user-visible changes go in `CHANGELOG.md`.
+Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), and up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                |
-| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
-| 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated.     |
-| 2026-10-29 | M13 done (signed off with PR #49); M14 is active.                                                                                                                                                                                                                           |
-| 2026-10-29 | Sheet `image` fields (`x-kind: "image"`) open the image picker for editors, and count as asset uses (ADR-065 point 6); until now nothing could fill them.                                                                                                                   |
+| Date       | Change                                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active. |
 
 ---
 
@@ -734,19 +730,13 @@ All done; the task list with its notes is in [`docs/history/0.3.0.md`](docs/hist
 | --------- | ------------- | ----------------------------------------------------------------------------------------------- |
 | M12       | T-1201…T-1208 | Workspace, compendium browser, item groups, item sheets, contributions, inventories, item rolls |
 
-### M13 — Assets (0.4.0)
+### M13 — Assets (released as 0.4.0)
 
-Uploads, so maps and sheets need no outside image hosting.
+All done; the task list with its notes is in [`docs/history/0.4.0.md`](docs/history/0.4.0.md).
 
-- [x] **T-1301 · Asset storage and uploads**
-  - **Deps:** none
-  - **Do:** An `assets` table and files under `DATA_DIR/assets` (FR-ASSET-01, FR-ASSET-03). Uploads are checked by content (PNG, JPEG, WebP, GIF, SVG sanitised or refused), limited in size and by an instance quota set in the admin settings (finishing FR-ADMIN-01's upload limits). Each asset belongs to a table; GMs and assistants upload, and members of the table read. Files are served with the CSP and long cache headers. Backups and their restore include the assets folder.
-  - **Done when:** endpoint tests cover types, limits, quota, permissions and serving; a backup taken with assets restores them; the security review notes for uploads are written down in the ADR.
-
-- [x] **T-1302 · Asset manager**
-  - **Deps:** T-1301
-  - **Do:** A workspace panel lists a table's assets with thumbnails, uploads by picking or dropping files, and deletes unused ones (FR-ASSET-02). Image fields (actor and item images, journal images) open it as a picker that also accepts a URL.
-  - **Done when:** web tests cover upload, pick and delete; e2e uploads an image and sets it as an actor's portrait.
+| Milestone | Tasks          | Scope                                                    |
+| --------- | -------------- | -------------------------------------------------------- |
+| M13       | T-1301, T-1302 | Asset storage and uploads, Images panel and image picker |
 
 ### M14 — Maps and tokens (0.5.0)
 
