@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace and compendium browser                                                                                           | 0.3.0   | Done        | 100%     |
+| M12    | Table workspace, compendium browser and item sheets                                                                              | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -43,6 +43,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; one URL per table; layouts saved per browser) (ADR-059).                                     |
 | 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).     |
 | 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).          |
+| 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                     |
 
 ---
 
@@ -325,7 +326,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-ENT-03 | Ownership levels: `none`, `observer` (read), `owner` (read and edit). GMs are implicit owners of all actors.                                                              | MVP      | 0.1.0  |
 | FR-ENT-04 | Actors can be duplicated, deleted (soft delete with restore for 30 days), and listed with search and type filters.                                                        | MVP      | 0.1.0  |
 | FR-ENT-05 | Items exist in a table-level library. Items can be copied into an actor, creating an owned item with a `sourceId`.                                                        | MVP      | 0.1.0  |
-| FR-ENT-06 | Items have a name, image URL, and plugin-defined data, edited on an item sheet.                                                                                           | MVP      | 0.1.0  |
+| FR-ENT-06 | Items have a name, image URL, and plugin-defined data, edited on an item sheet (ADR-062).                                                                                 | MVP      | 0.3.0  |
 | FR-ENT-07 | Entity changes emit events so other clients refresh lists and sheet headers.                                                                                              | MVP      | 0.1.0  |
 | FR-ENT-08 | An actor's data is stored as a CRDT document (see §9). Its SQL projection is updated on persist.                                                                          | MVP      | 0.1.0  |
 | FR-ENT-09 | Deleting an actor removes its live document from active sessions and retains a snapshot for the restore window.                                                           | MVP      | 0.1.0  |
@@ -549,6 +550,7 @@ Every collaborative document is named `<kind>:<id>:<layer>`:
 
 - `actor:<id>:main` — main sheet data
 - `actor:<id>:secret` — GM/assistant-only data (only if the plugin declares secret fields)
+- `item:<id>:main`, `item:<id>:secret` — an item's data, layered like an actor's (ADR-062)
 - `journal:<id>:main` — journal entry body
 - `ydocs` table holds binary state, keyed by name.
 
@@ -557,7 +559,7 @@ Parsing the name is the only way the auth hook derives the entity and layer; the
 ### 9.2 Document structure
 
 ```
-actor:<id>:main, actor:<id>:secret
+actor:<id>:main, actor:<id>:secret, item:<id>:main, item:<id>:secret
  └─ data   Y.Map   the layer's schema fields: objects → nested Y.Map; x-kind longText → Y.Text;
                    x-kind richText → Y.XmlFragment (TipTap blocks, ADR-037);
                    collection → Y.Map keyed by row id, each row with a `sort` value;
@@ -566,7 +568,7 @@ journal:<id>:main
  └─ body   Y.XmlFragment   the entry's rich text (ADR-038)
 ```
 
-Owned items are rows in the `items` table with an `actorId` (ADR-015); items have no live documents. Data the layout does not know stays in `main` (ADR-029).
+Items are rows in the `items` table, owned ones with an `actorId` (ADR-015); each item has documents of its own, never a part of its actor's (ADR-062). Data the layout does not know stays in `main` (ADR-029).
 
 ### 9.3 Access rules (server-enforced)
 
@@ -574,11 +576,14 @@ Owned items are rows in the `items` table with an `actorId` (ADR-015); items hav
 | -------------------------- | ------ | --------- | ---------- | ---------- | ---------- |
 | `actor:*:main`             | reject | read-only | read/write | read/write | read/write |
 | `actor:*:secret`           | reject | reject    | reject     | read/write | read/write |
+| `item:*:main` (owned)      | reject | read-only | read/write | read/write | read/write |
+| `item:*:secret`            | reject | reject    | reject     | read/write | read/write |
 | `journal:*:main` (visible) | reject | read-only | read/write | read/write | read/write |
 | `journal:*:main` (hidden)  | reject | reject    | reject     | read/write | read/write |
 
 Notes:
 
+- An owned item's columns are its actor's ownership levels. A library item's main document is read-only for players and spectators and read/write for GMs and assistants (ADR-062).
 - The server re-checks permissions on every incoming update, not only on connect.
 - Secret layer state is never broadcast to clients without access. Hocuspocus is configured so that unauthorised connections never receive the document.
 - Ownership changes take effect immediately: connected clients whose access drops are disconnected from the document (ADR-036).
@@ -737,6 +742,11 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Deps:** Q16
   - **Do:** Item types may declare a `group` (lang key or text) and a `labelPlural` (FR-PLUGIN-11). The schema, validator and generated reference document them. The items panel, an actor's items and the compendium list items under their groups, in the order the plugin declares. `tiny-d20` adds a `spell` item type in a "Spells" group, with a pack entry or two.
   - **Done when:** validator tests cover the new keys; web tests show grouped lists; tiny-d20's spells appear under "Spells" in the items panel, on a character and in the compendium.
+
+- [x] **T-1204 · Item sheets**
+  - **Deps:** T-1201
+  - **Do:** Items open on a live sheet of their own (FR-ENT-06), which no release had: item data could not be edited. Each item gets `item:<id>:main` and, with secret fields, `item:<id>:secret`; library items are edited by GMs and assistants, owned items follow their actor. Items open as workspace panels from the items panel and from an actor's items. Owned items stay out of the actor document (ADR-062).
+  - **Done when:** server tests cover item document access, stores and cascades; web tests open library and owned items; e2e shows a GM's edit reaching a player's read-only item sheet, and a player editing their own copy.
 
 ### M13 — Assets (0.4.0)
 
@@ -937,7 +947,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-012 | [Tailwind CSS 4 for core UI styling](docs/adr/ADR-012-tailwind-css.md)                                                                          | Accepted                                   |
 | ADR-013 | [React Router framework mode (SPA), TanStack Form and a shared API contract](docs/adr/ADR-013-react-router-framework-mode-and-tanstack-form.md) | Accepted                                   |
 | ADR-014 | [Entity persistence: retention, owned items, ownership defaults](docs/adr/ADR-014-entity-persistence.md)                                        | Accepted                                   |
-| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted                                   |
+| ADR-015 | [Actor and item REST API: type catalogue, ownership, trash, duplicate](docs/adr/ADR-015-actor-and-item-api.md)                                  | Accepted; §8 amended by ADR-062            |
 | ADR-016 | [Events socket and chat: replies, session checks, audiences, history order](docs/adr/ADR-016-events-socket-and-chat.md)                         | Accepted                                   |
 | ADR-017 | [Formula language: precedence, dice terms, custom dice names, errors, evaluation rules](docs/adr/ADR-017-formula-language.md)                   | Accepted                                   |
 | ADR-018 | [Rolls in chat: roll messages, audiences, actor data, errors](docs/adr/ADR-018-rolls-in-chat.md)                                                | Accepted                                   |
@@ -984,6 +994,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-059 | [The table is a dockview workspace with a single URL](docs/adr/ADR-059-table-workspace.md)                                                      | Accepted                                   |
 | ADR-060 | [Members browse the compendium and copy chosen entries](docs/adr/ADR-060-compendium-browser.md)                                                 | Accepted                                   |
 | ADR-061 | [Item types declare a group, and item lists show items under it](docs/adr/ADR-061-item-groups.md)                                               | Accepted                                   |
+| ADR-062 | [Items are edited on live documents of their own](docs/adr/ADR-062-item-documents.md)                                                           | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

@@ -11,6 +11,7 @@ import type { RawData, WebSocket } from 'ws';
 import { copyInto } from '@vtt/plugin-engine';
 import {
   actorLayerAccess,
+  itemLayerAccess,
   documentName,
   journalAccess,
   parseDocumentName,
@@ -25,7 +26,7 @@ import {
 } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import { findActor, findJournalEntry } from '../db/repositories/index.js';
+import { findActor, findItem, findJournalEntry } from '../db/repositories/index.js';
 import type { Actor } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
 import {
@@ -93,6 +94,17 @@ export function documentAccess(
     if (ref.layer === 'secret' && !hasSecretLayer(db, actor, definition)) return 'none';
     return entityAccess(db, userId, actor.tableId, (subject) =>
       actorLayerAccess(subject, actor.ownership, ref.layer),
+    );
+  }
+  if (ref.kind === 'item') {
+    const item = findItem(db, ref.id);
+    if (!item) return 'none';
+    // Items of an actor in the trash are out of reach with it (ADR-015).
+    const actor = item.actorId === null ? undefined : findActor(db, item.actorId);
+    if (item.actorId !== null && !actor) return 'none';
+    if (ref.layer === 'secret' && !hasSecretLayer(db, item, definition, 'item')) return 'none';
+    return entityAccess(db, userId, item.tableId, (subject) =>
+      itemLayerAccess(subject, actor?.ownership, ref.layer),
     );
   }
   const entry = findJournalEntry(db, ref.id);

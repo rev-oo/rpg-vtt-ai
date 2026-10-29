@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Fixed
+
+- Items can be opened and edited. **Open** on a row of the items panel, or an item's name in an actor's items, shows the item's sheet as a panel, edited live like an actor's: GMs and assistants edit library items, and whoever owns an actor edits its items. Until now an item's system data could not be changed after it was created (FR-ENT-06, ADR-062).
+
 ### Added
 
 - Item types can declare a `group`, a plural label (`labelPlural`) and an `order`. The items panel, an actor's items and the compendium then show items under their groups, such as "Spells" and "Gear", with the compendium's actors first. Systems that declare no group keep a single list. Tiny D20 adds spells, in a "Spells" group, and two spells in its bestiary pack (FR-PLUGIN-11, ADR-061).

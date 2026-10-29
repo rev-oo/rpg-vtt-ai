@@ -17,6 +17,7 @@ import {
   canSetOwnership,
   canViewActor,
   canViewJournal,
+  itemLayerAccess,
   DEFAULT_JOURNAL_OWNERSHIP,
   effectiveOwnership,
   journalAccess,
@@ -95,6 +96,17 @@ describe('actors (every role × ownership combination)', () => {
     expect(canEditActor(subject, ownership)).toBe(expected === 'owner');
     expect(actorLayerAccess(subject, ownership, 'main')).toBe(ACTOR_MAIN[expected]);
     expect(actorLayerAccess(subject, ownership, 'secret')).toBe(SECRET_LAYER[role]);
+    // An owned item's layers follow its actor (ADR-062).
+    expect(itemLayerAccess(subject, ownership, 'main')).toBe(ACTOR_MAIN[expected]);
+    expect(itemLayerAccess(subject, ownership, 'secret')).toBe(SECRET_LAYER[role]);
+  });
+
+  it.each(TABLE_ROLES)('library item layers for %s (ADR-062)', (role) => {
+    const subject = { userId: 'u1', role };
+    expect(itemLayerAccess(subject, undefined, 'main')).toBe(
+      canManageItemLibrary(role) ? 'write' : 'read',
+    );
+    expect(itemLayerAccess(subject, undefined, 'secret')).toBe(SECRET_LAYER[role]);
   });
 
   const CREATE: Record<TableRole, [player: boolean, gm: boolean, gmAllowed: boolean]> = {

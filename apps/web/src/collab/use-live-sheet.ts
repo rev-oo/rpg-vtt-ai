@@ -48,13 +48,19 @@ interface LayerState {
   readOnly: boolean;
 }
 
+/** The actor or item whose sheet is live (ADR-062). */
+export interface LiveEntity {
+  kind: 'actor' | 'item';
+  id: string;
+}
+
 /**
- * Opens an actor's documents on `/ws/collab` while the sheet is shown: `main`, and `secret`
- * when the viewer may see secret fields and the type has some (specs §9.1, §9.3). The session
- * cookie authenticates the socket, so the token is empty.
+ * Opens an actor's or item's documents on `/ws/collab` while the sheet is shown: `main`, and
+ * `secret` when the viewer may see secret fields and the type has some (specs §9.1, §9.3). The
+ * session cookie authenticates the socket, so the token is empty.
  */
 export function useLiveSheet(
-  actorId: string,
+  { kind, id }: LiveEntity,
   layout: DocumentLayout,
   { secret }: { secret: boolean },
 ): LiveSheet {
@@ -72,7 +78,7 @@ export function useLiveSheet(
       states.set(layer, state);
       const provider = new HocuspocusProvider({
         websocketProvider: socket,
-        name: documentName({ kind: 'actor', id: actorId, layer }),
+        name: documentName({ kind, id, layer }),
         document: doc,
         token: '',
         // Presence (T-0507) lives on the main document only.
@@ -152,7 +158,7 @@ export function useLiveSheet(
       store.destroy();
       setSheet({ status: 'connecting' });
     };
-  }, [actorId, layout, secret]);
+  }, [kind, id, layout, secret]);
 
   return sheet;
 }

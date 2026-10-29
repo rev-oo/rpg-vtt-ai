@@ -21,15 +21,19 @@ export const LIST_PANELS = ['actors', 'items', 'journal', 'compendium'] as const
 
 export const sheetPanelId = (actorId: string): string => `actor:${actorId}`;
 export const entryPanelId = (entryId: string): string => `entry:${entryId}`;
+export const itemPanelId = (itemId: string): string => `item:${itemId}`;
 
 /** A document or page a component asks the workspace to open. */
 export type PanelTarget =
   | { kind: 'sheet'; id: string; actorId: string }
   | { kind: 'entry'; id: string; entryId: string }
+  /** An item's sheet (ADR-062); `name` titles the panel until the item loads. */
+  | { kind: 'item'; id: string; itemId: string; name: string }
   | { kind: 'page'; id: PagePanel };
 
-/** Sheets, entries and pages open in the centre; tools keep to the sides. */
+/** Sheets, items, entries and pages open in the centre; tools keep to the sides. */
 export const isDocument = (panelId: string): boolean =>
   (PAGE_PANELS as readonly string[]).includes(panelId) ||
   panelId.startsWith('actor:') ||
+  panelId.startsWith('item:') ||
   panelId.startsWith('entry:');

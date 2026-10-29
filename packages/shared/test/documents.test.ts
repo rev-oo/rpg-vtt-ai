@@ -9,6 +9,8 @@ describe('document names (specs §9.1)', () => {
     for (const ref of [
       { kind: 'actor', id: ID, layer: 'main' },
       { kind: 'actor', id: ID, layer: 'secret' },
+      { kind: 'item', id: ID, layer: 'main' },
+      { kind: 'item', id: ID, layer: 'secret' },
       { kind: 'journal', id: ID, layer: 'main' },
     ] as const) {
       expect(parseDocumentName(documentName(ref))).toEqual(ref);
@@ -20,7 +22,8 @@ describe('document names (specs §9.1)', () => {
     `actor:${ID}`,
     `actor:${ID}:gm`,
     `journal:${ID}:secret`,
-    `item:${ID}:main`,
+    `item:${ID}:gm`,
+    `item:${ID}`,
     `actor:${ID.toUpperCase()}:main`,
     `actor:not-an-id:main`,
     `actor:${ID}:main:extra`,

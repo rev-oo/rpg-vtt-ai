@@ -26,8 +26,8 @@ const collab = vi.hoisted(() => ({
   opened: [] as { actorId: string; secret: boolean }[],
 }));
 vi.mock('../src/collab/use-live-sheet.js', () => ({
-  useLiveSheet: (actorId: string, _layout: unknown, { secret }: { secret: boolean }) => {
-    collab.opened.push({ actorId, secret });
+  useLiveSheet: ({ id }: { id: string }, _layout: unknown, { secret }: { secret: boolean }) => {
+    collab.opened.push({ actorId: id, secret });
     return collab.sheet;
   },
 }));

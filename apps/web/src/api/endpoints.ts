@@ -275,6 +275,9 @@ export const api = {
   copyItemToActor: async (actorId: string, itemId: string): Promise<ItemView> =>
     (await request('POST', `/actors/${actorId}/items`, itemResponseSchema, { itemId })).item,
 
+  /** One item, from the library or an actor (ADR-062). */
+  getItem: async (itemId: string): Promise<ItemView> =>
+    (await request('GET', `/items/${itemId}`, itemResponseSchema)).item,
   deleteItem: (itemId: string): Promise<void> => requestNoContent('DELETE', `/items/${itemId}`),
 
   restoreItem: async (itemId: string): Promise<ItemView> =>

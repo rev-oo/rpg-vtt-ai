@@ -104,6 +104,31 @@ test('actors and items between a GM and a player', async ({ browser }) => {
     await expect(row(danaPage, 'Dana the Bold')).toContainText('Sword (weapon)');
   });
 
+  await test.step('items open on a live sheet (FR-ENT-06, T-1204)', async () => {
+    const sheet = (page: Page) => page.getByRole('tabpanel', { name: 'Sword' });
+    const notes = (page: Page) => sheet(page).getByRole('textbox');
+
+    // The GM edits the library sword; the player reads it live.
+    await gmPage.getByRole('button', { name: 'Open item: Sword' }).click();
+    await expect(sheet(gmPage)).toContainText('In the table’s library');
+    await notes(gmPage).fill('Sharp.');
+    await danaPage.getByRole('tab', { name: 'Items' }).click();
+    await danaPage.getByRole('button', { name: 'Open item: Sword' }).click();
+    await expect(notes(danaPage)).toHaveValue('Sharp.');
+    await expect(notes(danaPage)).not.toBeEditable();
+    await notes(gmPage).fill('Very sharp.');
+    await expect(notes(danaPage)).toHaveValue('Very sharp.');
+
+    // The player's own copy is theirs to edit; the library keeps its text.
+    await danaPage.getByRole('tab', { name: 'Actors' }).click();
+    await row(danaPage, 'Dana the Bold').getByRole('button', { name: 'Open item: Sword' }).click();
+    await expect(sheet(danaPage)).toContainText('Held by Dana the Bold');
+    await expect(notes(danaPage)).toBeEditable();
+    await notes(danaPage).fill('Mine.');
+    await expect(notes(danaPage)).toHaveValue('Mine.');
+    await expect(notes(gmPage)).toHaveValue('Very sharp.');
+  });
+
   for (const who of [gm, dana]) await who.context.close();
 });
 

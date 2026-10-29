@@ -10,7 +10,7 @@ import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
 import { OpenButton } from '../workspace/OpenButton.js';
-import { sheetPanelId } from '../workspace/panel-ids.js';
+import { itemPanelId, sheetPanelId } from '../workspace/panel-ids.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
@@ -244,7 +244,18 @@ function ActorItems({ actor }: { actor: ActorView }): ReactElement {
           headingLevel={4}
           renderRow={(item) => (
             <li key={item.id}>
-              {item.name} <span className="text-muted">({item.type})</span>
+              <OpenButton
+                target={{
+                  kind: 'item',
+                  id: itemPanelId(item.id),
+                  itemId: item.id,
+                  name: item.name,
+                }}
+                label={t('items.openItem', { name: item.name })}
+              >
+                {item.name}
+              </OpenButton>{' '}
+              <span className="text-muted">({item.type})</span>
             </li>
           )}
         />
