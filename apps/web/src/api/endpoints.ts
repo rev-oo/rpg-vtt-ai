@@ -1,4 +1,8 @@
 import {
+  assetListResponseSchema,
+  assetResponseSchema,
+  type AssetView,
+  type UpdateItemInput,
   acceptInviteResponseSchema,
   createdInviteResponseSchema,
   instanceInfoResponseSchema,
@@ -282,6 +286,27 @@ export const api = {
 
   restoreItem: async (itemId: string): Promise<ItemView> =>
     (await request('POST', `/items/${itemId}/restore`, itemResponseSchema)).item,
+
+  updateItem: async (itemId: string, input: UpdateItemInput): Promise<ItemView> =>
+    (await request('PATCH', `/items/${itemId}`, itemResponseSchema, input)).item,
+
+  /** A table's images, newest first (FR-ASSET-01, ADR-064). */
+  listAssets: async (tableId: string): Promise<AssetView[]> =>
+    (await request('GET', `/tables/${tableId}/assets`, assetListResponseSchema)).assets,
+
+  /** Uploads an image as the raw body; the server tells its type from its bytes. */
+  uploadAsset: async (tableId: string, file: File): Promise<AssetView> =>
+    (
+      await upload(
+        `/tables/${tableId}/assets?name=${encodeURIComponent(file.name)}`,
+        assetResponseSchema,
+        file,
+        file.type.startsWith('image/') ? file.type : 'application/octet-stream',
+      )
+    ).asset,
+
+  /** Deletes an image nothing uses; `409 asset_in_use` lists the uses (ADR-065). */
+  deleteAsset: (assetId: string): Promise<void> => requestNoContent('DELETE', `/assets/${assetId}`),
 
   /** One page of chat, newest first; pass `before` (a previous `nextCursor`) for older ones. */
   chatHistory: (

@@ -4,8 +4,10 @@ import { canSendChat, isGmLike } from '@vtt/shared';
 import type { ActorView, TableView } from '@vtt/shared/api';
 import { Alert } from '@vtt/ui';
 
+import { api } from '../../api/endpoints.js';
 import { t } from '../../i18n/index.js';
 import { useSystem } from '../../plugin-host/system-context.js';
+import { EntityImage } from '../assets/EntityImage.js';
 import { useTableData } from '../table/table-data.js';
 
 import { LiveEntitySheet } from './LiveEntitySheet.js';
@@ -38,6 +40,11 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
         </h2>
         {host.status === 'ready' && actor.access === 'owner' && <SheetHistory actorId={actor.id} />}
       </div>
+      <EntityImage
+        imageUrl={actor.imageUrl}
+        editable={actor.access === 'owner' && table.archivedAt === null}
+        onChange={(imageUrl) => api.updateActor(actor.id, { imageUrl })}
+      />
       {actor.dataVersion !== table.systemVersion && (
         // Plugin data migrations are LATER (§9.7, ADR-058): say so instead.
         <Alert tone="info">

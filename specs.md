@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
-| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | In progress | 50%      |
+| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | In progress | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M13 (0.3.0 released)
-- **Next task:** `T-1302`
+- **Next task:** `T-1401` (M14), once M13 is signed off
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,10 +36,11 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), and up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                |
-| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
+| Date       | Change                                                                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                                 |
+| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated.                  |
+| 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated; M13 awaits sign-off. |
 
 ---
 
@@ -360,12 +361,12 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.6 Journal (`FR-JOURNAL`)
 
-| ID            | Requirement                                                                                                                   | Priority | Status |
-| ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative).                                  | MVP      | 0.1.0  |
-| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.                                                | MVP      | 0.1.0  |
-| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players. New entries start hidden (ADR-038). | MVP      | 0.1.0  |
-| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.                                         | MVP      | 0.1.0  |
+| ID            | Requirement                                                                                                                   | Priority | Status                        |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------- |
+| FR-JOURNAL-01 | GMs and assistants create journal entries with a title and a rich-text body (collaborative).                                  | MVP      | 0.1.0                         |
+| FR-JOURNAL-02 | Journal entries have ownership like actors. Default is `observer` for players.                                                | MVP      | 0.1.0                         |
+| FR-JOURNAL-03 | Entries can be hidden, then revealed by the GM. Hidden entries are never sent to players. New entries start hidden (ADR-038). | MVP      | 0.1.0                         |
+| FR-JOURNAL-04 | Rich text supports headings, lists, bold, italic, links, and inline images from URLs.                                         | MVP      | 0.1.0; images 0.4.0 (ADR-065) |
 
 ### 7.7 Dice engine (`FR-DICE`)
 
@@ -418,17 +419,17 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.11 Maps and assets (`FR-MAP`, `FR-ASSET`)
 
-| ID          | Requirement                                                                                                                                      | Priority | Status          |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | --------------- |
-| FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | 0.4.0 (ADR-064) |
-| FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | planned (M13)   |
-| FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | 0.4.0 (ADR-064) |
-| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | planned (M14)   |
-| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14)   |
-| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14)   |
-| FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)   |
+| ID          | Requirement                                                                                                                                      | Priority | Status                           |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------- |
+| FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | 0.4.0 (ADR-064)                  |
+| FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | 0.4.0, scenes with M14 (ADR-065) |
+| FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | 0.4.0 (ADR-064)                  |
+| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | planned (M14)                    |
+| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14)                    |
+| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14)                    |
+| FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)                    |
 
-`img` fields stay plain URL strings; an uploaded asset has a URL of its own, so nothing that stores images changes shape.
+`img` fields stay plain URL strings; an uploaded asset has a URL of its own, its path `/api/v1/assets/<id>`, so nothing that stores images changes shape (ADR-065).
 
 ---
 
@@ -637,7 +638,7 @@ Key resource groups:
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                         |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                       |
 | Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                        |
-| Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064)                                                                                          |
+| Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064), `DELETE /assets/:id` (unused images only; ADR-065)                                      |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
@@ -740,7 +741,7 @@ Uploads, so maps and sheets need no outside image hosting.
   - **Do:** An `assets` table and files under `DATA_DIR/assets` (FR-ASSET-01, FR-ASSET-03). Uploads are checked by content (PNG, JPEG, WebP, GIF, SVG sanitised or refused), limited in size and by an instance quota set in the admin settings (finishing FR-ADMIN-01's upload limits). Each asset belongs to a table; GMs and assistants upload, and members of the table read. Files are served with the CSP and long cache headers. Backups and their restore include the assets folder.
   - **Done when:** endpoint tests cover types, limits, quota, permissions and serving; a backup taken with assets restores them; the security review notes for uploads are written down in the ADR.
 
-- [ ] **T-1302 · Asset manager**
+- [x] **T-1302 · Asset manager**
   - **Deps:** T-1301
   - **Do:** A workspace panel lists a table's assets with thumbnails, uploads by picking or dropping files, and deletes unused ones (FR-ASSET-02). Image fields (actor and item images, journal images) open it as a picker that also accepts a URL.
   - **Done when:** web tests cover upload, pick and delete; e2e uploads an image and sets it as an actor's portrait.
@@ -980,6 +981,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-062 | [Items are edited on live documents of their own](docs/adr/ADR-062-item-documents.md)                                                           | Accepted                                   |
 | ADR-063 | [Actor sheets hold their items, and formulas read them](docs/adr/ADR-063-actor-inventories.md)                                                  | Accepted                                   |
 | ADR-064 | [Uploaded images are table assets on disk, checked by content](docs/adr/ADR-064-asset-storage.md)                                               | Accepted                                   |
+| ADR-065 | [The Images panel picks and deletes table assets, and journal text holds images](docs/adr/ADR-065-asset-manager.md)                             | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

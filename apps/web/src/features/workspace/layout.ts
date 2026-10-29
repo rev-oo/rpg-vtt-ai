@@ -22,6 +22,7 @@ const TITLES = {
   items: 'items.title',
   journal: 'journal.title',
   compendium: 'compendium.title',
+  assets: 'assets.title',
   combat: 'combat.title',
   chat: 'workspace.chat',
   dice: 'workspace.dice',
@@ -127,6 +128,7 @@ export function defaultLayout(api: DockviewApi, phone: boolean): void {
       'items',
       'journal',
       'compendium',
+      'assets',
       'chat',
       'combat',
       'dice',
@@ -140,6 +142,7 @@ export function defaultLayout(api: DockviewApi, phone: boolean): void {
   add('items', { referencePanel: 'actors', direction: 'within' });
   add('journal', { referencePanel: 'actors', direction: 'within' });
   add('compendium', { referencePanel: 'actors', direction: 'within' });
+  add('assets', { referencePanel: 'actors', direction: 'within' });
   add('overview', { referencePanel: 'actors', direction: 'right' });
   add('combat', { referencePanel: 'overview', direction: 'right' });
   add('chat', { referencePanel: 'combat', direction: 'below' });

@@ -88,3 +88,47 @@ describe('rich text (ADR-037)', () => {
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument();
   });
 });
+
+describe('images in journal text (T-1302, ADR-065)', () => {
+  const withImage = () => {
+    const doc = new Y.Doc();
+    const image = new Y.XmlElement('image');
+    image.setAttribute('src', '/api/v1/assets/11111111-1111-4111-8111-111111111111');
+    image.setAttribute('alt', 'cave.png');
+    const paragraph = new Y.XmlElement('paragraph');
+    paragraph.insert(0, [new Y.XmlText('The cave.')]);
+    doc.getXmlFragment('body').insert(0, [paragraph, image]);
+    return doc.getXmlFragment('body');
+  };
+
+  it('shows the images of an entry, and offers an image button to its editors', async () => {
+    render(
+      <>
+        <span id="body-label">Body</span>
+        <RichTextEditor
+          fragment={withImage()}
+          labelId="body-label"
+          readOnly={false}
+          className=""
+          images
+        />
+      </>,
+    );
+    expect(await screen.findByRole('img', { name: 'cave.png' })).toHaveAttribute(
+      'src',
+      '/api/v1/assets/11111111-1111-4111-8111-111111111111',
+    );
+    expect(screen.getByRole('button', { name: 'Image' })).toBeVisible();
+  });
+
+  it('gives sheet fields no images', () => {
+    render(
+      <>
+        <span id="bio-label">Biography</span>
+        <RichTextEditor fragment={withImage()} labelId="bio-label" readOnly={false} className="" />
+      </>,
+    );
+    expect(screen.queryByRole('img')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Image' })).toBeNull();
+  });
+});

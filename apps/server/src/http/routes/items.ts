@@ -12,6 +12,7 @@ import {
   updateItem,
   type Retention,
 } from '../../db/repositories/index.js';
+import { requireTableImage } from '../../domain/assets.js';
 import {
   dataFilter,
   requireItemType,
@@ -60,6 +61,7 @@ export function itemRoutes({ app, db, config, events, now, plugins }: AppContext
     const { table, membership } = requireMember(db, request, id, canManageItemLibrary);
     const body = parseInput(createItemBody, request.body);
     requireItemType(writableSystemTypes(db, table), body.type);
+    requireTableImage(db, id, body.imageUrl);
 
     const item = createItem(db, { tableId: id, ...body, dataVersion: table.systemVersion }, now());
     publishItemChanged(events, 'created', item, undefined);
@@ -106,6 +108,7 @@ export function itemRoutes({ app, db, config, events, now, plugins }: AppContext
     const { id } = parseInput(idParams, request.params);
     const { access, actor, table, membership } = requireItem(db, request, id, { edit: true });
     const body = parseInput(updateItemBody, request.body);
+    requireTableImage(db, table.id, body.imageUrl);
     const updated = updateItem(db, id, body, now());
     if (!updated) throw notFound('Item not found.');
     publishItemChanged(events, 'updated', updated, actor);

@@ -8,12 +8,12 @@ import {
   MAX_UPLOAD_BYTES,
   MIN_ASSET_QUOTA_BYTES,
   MIN_UPLOAD_BYTES,
+  imageUrlSchema,
 } from './assets.js';
 import {
   MAX_DISPLAY_NAME,
   MAX_ENTITY_NAME,
   MAX_ENTITY_TYPE,
-  MAX_IMAGE_URL,
   MAX_LIST_PAGE,
   MAX_SEARCH,
   MAX_SITE_NAME,
@@ -139,10 +139,7 @@ export type CreateInviteInput = z.input<typeof createInviteBody>;
 
 const entityName = z.string().trim().min(1).max(MAX_ENTITY_NAME);
 const entityType = z.string().min(1).max(MAX_ENTITY_TYPE);
-const imageUrl = z
-  .url({ protocol: /^https?$/ })
-  .max(MAX_IMAGE_URL)
-  .nullable();
+const imageUrl = imageUrlSchema.nullable();
 
 export const ownershipSchema = z.object({
   default: z.enum(OWNERSHIP_LEVELS),

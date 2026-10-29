@@ -5,6 +5,7 @@ import type { JournalListQuery } from '@vtt/shared/api';
 
 import { api } from '../../api/endpoints.js';
 import { t } from '../../i18n/index.js';
+import { AssetGallery } from '../assets/AssetGallery.js';
 import { ChatPanel } from '../chat/ChatPanel.js';
 import { CombatTracker } from '../combat/CombatTracker.js';
 import { CompendiumBrowser } from '../compendium/CompendiumBrowser.js';
@@ -145,6 +146,14 @@ export function CompendiumPanel(): ReactElement {
   return (
     <Body>
       <CompendiumBrowser />
+    </Body>
+  );
+}
+
+export function AssetsPanel(): ReactElement {
+  return (
+    <Body>
+      <AssetGallery />
     </Body>
   );
 }

@@ -12,6 +12,10 @@ const MESSAGES: Partial<Record<string, MessageKey>> = {
   invalid_archive: 'plugins.invalidArchive',
   invalid_plugin: 'plugins.invalidPlugin',
   table_archived: 'table.archivedError',
+  unsupported_asset_type: 'assets.unsupported',
+  asset_too_large: 'assets.tooLarge',
+  asset_quota_exceeded: 'assets.quota',
+  unknown_asset: 'assets.unknown',
 };
 
 /** A user-facing message for a failed request. */

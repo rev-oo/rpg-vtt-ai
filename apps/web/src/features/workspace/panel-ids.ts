@@ -7,6 +7,7 @@ export const TOOL_PANELS = [
   'items',
   'journal',
   'compendium',
+  'assets',
   'combat',
   'chat',
   'dice',
@@ -17,7 +18,7 @@ export type ToolPanel = (typeof TOOL_PANELS)[number];
 export const PAGE_PANELS = ['overview', 'members', 'settings'] as const;
 export type PagePanel = (typeof PAGE_PANELS)[number];
 
-export const LIST_PANELS = ['actors', 'items', 'journal', 'compendium'] as const;
+export const LIST_PANELS = ['actors', 'items', 'journal', 'compendium', 'assets'] as const;
 
 export const sheetPanelId = (actorId: string): string => `actor:${actorId}`;
 export const entryPanelId = (entryId: string): string => `entry:${entryId}`;

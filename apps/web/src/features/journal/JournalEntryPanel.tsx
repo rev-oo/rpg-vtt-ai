@@ -152,6 +152,7 @@ function JournalEntry({
             labelId={labelId}
             readOnly={body.readOnly}
             className="min-h-64 rounded-lg border border-line bg-surface p-3"
+            images
           />
         </Suspense>
       )}

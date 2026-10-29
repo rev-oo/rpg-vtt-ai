@@ -34,5 +34,5 @@ ADR-035 gave long text a minimal shared textarea and left the rich editor to Q3.
 - Concurrent typing and formatting merge, as tested in two browsers in `e2e/tests/live-sheets.spec.ts` and against two `Y.Doc`s in `apps/web/test/rich-text.test.tsx`.
 - Reading a `richText` field over REST or in a formula gives plain text. Writing one there replaces its formatting.
 - The editor chunk is about 140 kB gzipped and is loaded on demand.
-- Inline images (FR-JOURNAL-04) and a link button are not in the toolbar yet; they come with the journal (T-0601).
+- Inline images (FR-JOURNAL-04) and a link button are not in the toolbar yet; they come with the journal (T-0601). Journal entries got inline images with T-1302 (ADR-065); sheet fields still have none.
 - `tiny-d20` characters gain a `biography` rich text field, which exercises the editor end to end.
