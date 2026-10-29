@@ -79,6 +79,7 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
         </p>
       </div>
       <EntityImage
+        name={item.name}
         imageUrl={imageUrl}
         editable={item.access === 'owner' && table.archivedAt === null}
         onChange={async (next) => {

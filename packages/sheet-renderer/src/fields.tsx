@@ -323,7 +323,10 @@ export function LongTextNode({
 const SAFE_IMAGE = /^(?:https?:\/\/|\/(?!\/)|data:image\/(?:png|jpeg|gif|webp|avif);)/i;
 const IMAGE_SIZES = { sm: 'size-16', md: 'size-32', lg: 'size-48' } as const;
 
-/** An `image` node: a picture from a URL field; other URLs are not loaded. */
+/**
+ * An `image` node: the field's picture; other URLs are not loaded. Editors of a sheet whose
+ * host can pick images click it to choose another (ADR-065).
+ */
 export function ImageNode({
   node,
   row,
@@ -337,16 +340,40 @@ export function ImageNode({
   const src =
     typeof field.value === 'string' && SAFE_IMAGE.test(field.value) ? field.value : undefined;
   const size = IMAGE_SIZES[node.size ?? 'md'];
-  return (
-    <div className={cn('vtt-image shrink-0', size, node.class)} data-field={node.path}>
-      {src ? (
-        <img src={src} alt="" className="size-full rounded-lg border border-line object-cover" />
-      ) : (
-        <div className="flex size-full items-center justify-center rounded-lg border border-dashed border-line text-center text-sm text-muted">
-          {sheet.strings.noImage}
-        </div>
-      )}
+  const picture = src ? (
+    <img src={src} alt="" className="size-full rounded-lg border border-line object-cover" />
+  ) : (
+    <div className="flex size-full items-center justify-center rounded-lg border border-dashed border-line text-center text-sm text-muted">
+      {sheet.pickImage && !sheet.readOnly ? sheet.strings.chooseImage : sheet.strings.noImage}
     </div>
+  );
+  const { pickImage } = sheet;
+  if (!pickImage || sheet.readOnly) {
+    return (
+      <div className={cn('vtt-image shrink-0', size, node.class)} data-field={node.path}>
+        {picture}
+      </div>
+    );
+  }
+  const current = typeof field.value === 'string' ? field.value : '';
+  return (
+    <button
+      type="button"
+      className={cn(
+        'vtt-image shrink-0 cursor-pointer rounded-lg hover:opacity-85 focus-visible:outline-2 focus-visible:outline-primary',
+        size,
+        node.class,
+      )}
+      data-field={node.path}
+      aria-label={src ? sheet.strings.changeImage : sheet.strings.chooseImage}
+      onClick={() => {
+        pickImage((url) => {
+          sheet.store.set(field.path, url ?? '');
+        }, current);
+      }}
+    >
+      {picture}
+    </button>
   );
 }
 

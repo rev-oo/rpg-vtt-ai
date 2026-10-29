@@ -47,6 +47,13 @@ export interface RichTextProps {
  */
 export type RichTextRenderer = (props: RichTextProps) => ReactNode;
 
+/**
+ * Asks the host for a picture for an `image` field (ADR-065), e.g. through its image picker.
+ * `done` gets the new URL, or `null` to remove the picture; it is not called on cancel.
+ * Without it, `image` nodes only show their field.
+ */
+export type ImagePicker = (done: (url: string | null) => void, current: string) => void;
+
 /** The item a row of an `items` node shows, read by `@item.*` (ADR-063). */
 export interface SheetItemRef {
   id: string;
@@ -93,6 +100,7 @@ export interface SheetEnvironment {
   presence: SheetPresence | undefined;
   renderRichText: RichTextRenderer | undefined;
   renderItems: ItemsRenderer | undefined;
+  pickImage: ImagePicker | undefined;
 }
 
 export const SheetContext = createContext<SheetEnvironment | null>(null);

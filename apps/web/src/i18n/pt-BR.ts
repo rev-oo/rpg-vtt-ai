@@ -118,6 +118,8 @@ export const ptBR: Messages = {
     'O espaço da instância para imagens acabou. Peça a um administrador para aumentá-lo.',
   'assets.unknown': 'Essa imagem não é uma das imagens desta mesa.',
   'image.choose': 'Escolher imagem',
+  'image.chooseFor': 'Escolher imagem para {name}',
+  'image.changeFor': 'Trocar imagem de {name}',
   'image.change': 'Trocar imagem',
   'image.remove': 'Remover imagem',
   'image.pickerTitle': 'Escolha uma imagem',

@@ -1,6 +1,7 @@
 export {
   useSheet,
   type CustomNodeProps,
+  type ImagePicker,
   type ItemsNodeProps,
   type ItemsRenderer,
   type RichTextProps,

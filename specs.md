@@ -42,6 +42,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
 | 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated.     |
 | 2026-10-29 | M13 done (signed off with PR #49); M14 is active.                                                                                                                                                                                                                           |
+| 2026-10-29 | Sheet `image` fields (`x-kind: "image"`) open the image picker for editors, and count as asset uses (ADR-065 point 6); until now nothing could fill them.                                                                                                                   |
 
 ---
 

@@ -36,7 +36,8 @@ Two choices were made with the user:
    - **Trash:** entities in the trash count, so restoring one never shows a missing image.
    - **Unsaved edits:** journal bodies are read from their live documents while open, so an image inserted moments ago counts.
    - **Unused images:** the row and the file are removed.
-6. **Not live.** Uploads and deletions do not send events. The panel loads again whenever the table's data does, and a page reload shows the rest.
+6. **Image fields of plugin data.** A sheet's `image` node shows a field marked `x-kind: "image"`. For whoever may edit the sheet it is a button that opens the image picker; the renderer asks the host through `pickImage`, as it does for rich text, and the chosen URL, or `""` to remove it, goes into the field. Such fields count as uses too: the stored data of the table's actors and items is searched for the asset's path, and so are their live documents while open.
+7. **Not live.** Uploads and deletions do not send events. The panel loads again whenever the table's data does, and a page reload shows the rest.
 
 ## Consequences
 

@@ -8,6 +8,7 @@ import { cn } from '@vtt/ui';
 import {
   SheetContext,
   type CustomNodeProps,
+  type ImagePicker,
   type ItemsRenderer,
   type RichTextRenderer,
   type RollHandler,
@@ -47,6 +48,8 @@ export interface SheetProps {
   presence?: SheetPresence;
   /** The editor of `richText` fields, on live sheets (ADR-037). */
   renderRichText?: RichTextRenderer;
+  /** Lets editors set `image` fields, on live sheets (ADR-065). */
+  pickImage?: ImagePicker;
   className?: string;
 }
 
@@ -74,6 +77,7 @@ export function Sheet({
   nodes = {},
   presence,
   renderRichText,
+  pickImage,
   className,
 }: SheetProps): ReactElement {
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
@@ -99,6 +103,7 @@ export function Sheet({
     presence,
     renderRichText,
     renderItems,
+    pickImage,
   };
 
   return (

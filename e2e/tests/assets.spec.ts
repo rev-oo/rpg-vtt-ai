@@ -58,12 +58,12 @@ test('an uploaded image becomes a portrait and a journal picture', async ({ brow
     await showPanel(gmPage, 'Actors');
     await openSheet(gmPage, 'Ogre');
     const sheet = gmPage.getByRole('tabpanel', { name: 'Ogre' });
-    await sheet.getByRole('button', { name: 'Choose image' }).click();
+    await sheet.getByRole('button', { name: 'Choose image for Ogre' }).click();
     await gmPage
       .getByRole('dialog', { name: 'Choose an image' })
       .getByRole('button', { name: 'Use cave.png' })
       .click();
-    await expect(sheet.getByRole('button', { name: 'Change image' })).toBeVisible();
+    await expect(sheet.getByRole('button', { name: 'Change image of Ogre' })).toBeVisible();
     await loaded(sheet.locator('img[src^="/api/v1/assets/"]').first());
   });
 

@@ -84,7 +84,7 @@ export function assetRoutes({ app: root, db, config, now, instance, collab }: Ap
       const asset = requireAsset(db, id);
       const { table } = requireMember(db, request, asset.tableId, isGmLike);
       requireUnarchived(table);
-      deleteAsset(db, config.dataDir, asset, (name) => collab.hocuspocus.documents.get(name));
+      deleteAsset(db, config.dataDir, asset, collab.hocuspocus.documents);
       return reply.code(204).send();
     });
 

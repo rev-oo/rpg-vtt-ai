@@ -8,6 +8,8 @@ export interface SheetStrings {
   increase: string;
   noRows: string;
   noImage: string;
+  chooseImage: string;
+  changeImage: string;
   missingNode: string;
   notNumber: string;
   notInteger: string;
@@ -26,6 +28,8 @@ export const DEFAULT_STRINGS: SheetStrings = {
   increase: 'Increase {label}',
   noRows: 'Nothing here yet.',
   noImage: 'No image',
+  chooseImage: 'Choose image',
+  changeImage: 'Change image',
   missingNode:
     'This part of the sheet needs the plugin “{name}” component, which is not available.',
   notNumber: 'Enter a number.',

@@ -2,10 +2,10 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, or, sql } from 'drizzle-orm';
 import * as Y from 'yjs';
 
-import { documentName } from '@vtt/shared';
+import { documentName, parseDocumentName } from '@vtt/shared';
 import {
   assetIdOf,
   assetPath,
@@ -19,6 +19,7 @@ import { actors, assets, items, journalEntries, ydocs } from '../db/schema.js';
 import { AppError, notFound, unprocessable } from '../errors.js';
 
 import { generateId } from './auth/tokens.js';
+import { DATA_MAP } from './documents.js';
 
 export type Asset = typeof assets.$inferSelect;
 
@@ -187,30 +188,55 @@ function hasImage(node: Y.XmlFragment, src: string): boolean {
 }
 
 /**
- * Where an asset is used in its table (ADR-065): actor and item images, and images in journal
- * text. Entities in the trash count, so restoring one never shows a missing image. Journal
- * bodies are read from their live documents while loaded, so edits not saved yet count too.
+ * Where an asset is used in its table (ADR-065): actor and item images, images in their plugin
+ * data (`image` fields, read from live documents while loaded, else from the projection),
+ * and images in journal text. Entities in the trash count, so restoring one never shows a
+ * missing image. Journal bodies are read from their live documents while loaded too, so edits
+ * not saved yet count.
  */
-export function assetUses(
-  db: DbOrTx,
-  asset: Asset,
-  live: (name: string) => Y.Doc | undefined,
-): AssetUse[] {
+export function assetUses(db: DbOrTx, asset: Asset, live: ReadonlyMap<string, Y.Doc>): AssetUse[] {
   const url = assetPath(asset.id);
+  // A field holding the path, as stored JSON or a live document's data writes it.
+  const quoted = `"${url}"`;
   const uses: AssetUse[] = [];
+  const add = (use: AssetUse) => {
+    if (!uses.some((known) => known.kind === use.kind && known.id === use.id)) uses.push(use);
+  };
+
+  const loaded = { actor: [] as string[], item: [] as string[] };
+  for (const [name, doc] of live) {
+    const ref = parseDocumentName(name);
+    if (ref?.kind !== 'actor' && ref?.kind !== 'item') continue;
+    if (JSON.stringify(doc.getMap(DATA_MAP).toJSON()).includes(quoted))
+      loaded[ref.kind].push(ref.id);
+  }
+  const inSystem = (column: typeof actors.system | typeof items.system) =>
+    sql`${column} like ${`%${quoted}%`}`;
   for (const actor of db
     .select({ id: actors.id, name: actors.name })
     .from(actors)
-    .where(and(eq(actors.tableId, asset.tableId), eq(actors.imageUrl, url)))
+    .where(
+      and(
+        eq(actors.tableId, asset.tableId),
+        or(eq(actors.imageUrl, url), inSystem(actors.system), inArray(actors.id, loaded.actor)),
+      ),
+    )
+    .orderBy(asc(actors.name))
     .all()) {
-    uses.push({ kind: 'actor', ...actor });
+    add({ kind: 'actor', ...actor });
   }
   for (const item of db
     .select({ id: items.id, name: items.name })
     .from(items)
-    .where(and(eq(items.tableId, asset.tableId), eq(items.imageUrl, url)))
+    .where(
+      and(
+        eq(items.tableId, asset.tableId),
+        or(eq(items.imageUrl, url), inSystem(items.system), inArray(items.id, loaded.item)),
+      ),
+    )
+    .orderBy(asc(items.name))
     .all()) {
-    uses.push({ kind: 'item', ...item });
+    add({ kind: 'item', ...item });
   }
   const entries = db
     .select({ id: journalEntries.id, name: journalEntries.title, state: ydocs.state })
@@ -219,11 +245,11 @@ export function assetUses(
     .where(eq(journalEntries.tableId, asset.tableId))
     .all();
   for (const entry of entries) {
-    const loaded = live(documentName({ kind: 'journal', id: entry.id, layer: 'main' }));
-    const doc = loaded ?? new Y.Doc();
-    if (!loaded && entry.state) Y.applyUpdate(doc, entry.state);
+    const open = live.get(documentName({ kind: 'journal', id: entry.id, layer: 'main' }));
+    const doc = open ?? new Y.Doc();
+    if (!open && entry.state) Y.applyUpdate(doc, entry.state);
     const used = hasImage(doc.getXmlFragment(JOURNAL_BODY), url);
-    if (!loaded) doc.destroy();
+    if (!open) doc.destroy();
     if (used) uses.push({ kind: 'journal', id: entry.id, name: entry.name });
   }
   return uses;
@@ -234,7 +260,7 @@ export function deleteAsset(
   db: Db,
   dataDir: string,
   asset: Asset,
-  live: (name: string) => Y.Doc | undefined,
+  live: ReadonlyMap<string, Y.Doc>,
 ): void {
   const uses = assetUses(db, asset, live);
   if (uses.length > 0) {
