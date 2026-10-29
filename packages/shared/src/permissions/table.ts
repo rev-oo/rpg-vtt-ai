@@ -37,6 +37,11 @@ export function canRunCombat(role: TableRole): boolean {
   return isGmLike(role);
 }
 
+/** Preparing scenes and choosing the one players see (FR-MAP-01). */
+export function canManageScenes(role: TableRole): boolean {
+  return isGmLike(role);
+}
+
 /** GM-only chat, secret rolls and secret sheet fields (FR-SHEET-04, FR-CHAT-02). */
 export function canSeeGmContent(role: TableRole): boolean {
   return isGmLike(role);

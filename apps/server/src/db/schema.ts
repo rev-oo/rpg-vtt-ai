@@ -21,6 +21,7 @@ import {
 } from '@vtt/shared';
 import {
   ASSET_TYPES,
+  GRID_TYPES,
   MESSAGE_KINDS,
   PLUGIN_STATUSES,
   type PluginIssueView,
@@ -402,4 +403,35 @@ export const assets = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index('assets_table_idx').on(t.tableId, t.createdAt)],
+);
+
+/**
+ * A table's map (FR-MAP-01, ADR-066): a background image under a grid. GMs and assistants
+ * prepare scenes; `active` marks the one players see, at most one per table.
+ */
+export const scenes = sqliteTable(
+  'scenes',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    backgroundUrl: text('background_url'),
+    columns: integer('columns').notNull(),
+    rows: integer('rows').notNull(),
+    gridType: text('grid_type', { enum: GRID_TYPES }).notNull(),
+    gridSize: integer('grid_size').notNull(),
+    active: integer('active', { mode: 'boolean' }).notNull().default(false),
+    /** Place in the GM's list. */
+    sort: integer('sort').notNull(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    index('scenes_table_idx').on(t.tableId, t.sort),
+    uniqueIndex('scenes_active_unique')
+      .on(t.tableId)
+      .where(sql`${t.active} = 1`),
+  ],
 );

@@ -43,4 +43,4 @@ Two choices were made with the user:
 
 - Groups can upload images and use them for portraits, item images and in journal text without outside hosting.
 - Chat messages keep the speaker's image URL from when they were sent. If that image is later deleted, the message shows a missing image; messages do not count as uses.
-- Images in sheet rich text, and scene backgrounds (M14), are left for later; scenes will count as uses when they arrive.
+- Images in sheet rich text are left for later. Scene backgrounds count as uses since T-1401 (`kind: "scene"`, ADR-066).

@@ -15,7 +15,7 @@ import {
 } from '@vtt/shared/api';
 
 import type { Db, DbOrTx } from '../db/client.js';
-import { actors, assets, items, journalEntries, ydocs } from '../db/schema.js';
+import { actors, assets, items, journalEntries, scenes, ydocs } from '../db/schema.js';
 import { AppError, notFound, unprocessable } from '../errors.js';
 
 import { generateId } from './auth/tokens.js';
@@ -190,7 +190,7 @@ function hasImage(node: Y.XmlFragment, src: string): boolean {
 /**
  * Where an asset is used in its table (ADR-065): actor and item images, images in their plugin
  * data (`image` fields, read from live documents while loaded, else from the projection),
- * and images in journal text. Entities in the trash count, so restoring one never shows a
+ * scene backgrounds (ADR-066) and images in journal text. Entities in the trash count, so restoring one never shows a
  * missing image. Journal bodies are read from their live documents while loaded too, so edits
  * not saved yet count.
  */
@@ -237,6 +237,14 @@ export function assetUses(db: DbOrTx, asset: Asset, live: ReadonlyMap<string, Y.
     .orderBy(asc(items.name))
     .all()) {
     add({ kind: 'item', ...item });
+  }
+  for (const scene of db
+    .select({ id: scenes.id, name: scenes.name })
+    .from(scenes)
+    .where(and(eq(scenes.tableId, asset.tableId), eq(scenes.backgroundUrl, url)))
+    .orderBy(asc(scenes.name))
+    .all()) {
+    add({ kind: 'scene', ...scene });
   }
   const entries = db
     .select({ id: journalEntries.id, name: journalEntries.title, state: ydocs.state })

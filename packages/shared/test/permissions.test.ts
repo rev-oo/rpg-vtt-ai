@@ -11,6 +11,7 @@ import {
   canManageInvites,
   canManageItemLibrary,
   canManageMembers,
+  canManageScenes,
   canManageTable,
   canSeeAudience,
   canSeeGmContent,
@@ -220,5 +221,7 @@ describe('table-level permissions', () => {
     // GM-like roles curate the item library and set ownership (FR-ENT-02, 05).
     expect(canManageItemLibrary(role)).toBe(gmContent);
     expect(canSetOwnership(role)).toBe(gmContent);
+    // And prepare scenes (FR-MAP-01).
+    expect(canManageScenes(role)).toBe(gmContent);
   });
 });

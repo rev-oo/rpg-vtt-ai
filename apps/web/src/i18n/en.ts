@@ -108,6 +108,7 @@ export const en = {
   'assets.use.actor': 'Actor: {name}',
   'assets.use.item': 'Item: {name}',
   'assets.use.journal': 'Journal entry: {name}',
+  'assets.use.scene': 'Scene: {name}',
   'assets.unsupported':
     'Upload a PNG, JPEG, GIF or WebP image. Other files, SVG included, are refused.',
   'assets.tooLarge': 'The image is larger than the upload limit.',
