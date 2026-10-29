@@ -716,7 +716,7 @@ Once any item type has a `group`, a type without one gets a heading of its own: 
 | `items`                   | The rows of an `array`                                                      |
 | `required`, `description` | As in JSON Schema                                                           |
 
-`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `if`/`then`/`else` and `patternProperties` are refused. Field names are [identifiers](plugin-reference.md#identifier) (`strMod`, `hp`), so formulas can refer to them. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total`, `roll` or `items`, which formulas use for other things.
+`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `if`/`then`/`else` and `patternProperties` are refused. Field names are [identifiers](plugin-reference.md#identifier) (`strMod`, `hp`), so formulas can refer to them. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total`, `roll`, `items` or `item`, which formulas use for other things.
 
 Fields left without a `default` start empty (an empty text, zero or false), so give each field a sensible default.
 
@@ -791,6 +791,7 @@ Only the actor's items count, not those in the trash, and an actor holds at most
 | `field`         | An input for the field at `path`; `input` is `text`, `number`, `checkbox`, `select` or `counter` |
 | `longText`      | The shared editor of a `longText` or `richText` field                                            |
 | `list`          | The rows of an `array` field, each laid out by `item`, with add (`addLabel`), remove and reorder |
+| `items`         | The actor's [items](#items-on-actor-sheets) of `itemTypes`, each laid out by `item`              |
 | `rollButton`    | A button that rolls the recipe `roll` with `args`                                                |
 | `derived`       | The derived value `key`, as is or with `format`: `integer`, `signed` (`+2`) or `decimal`         |
 | `image`         | The picture at the URL in field `path` (`size`: `sm`, `md`, `lg`)                                |
@@ -804,6 +805,33 @@ The validator checks that each `path` exists and fits its node: a `checkbox` nee
 - **Read-only and secret:** viewers who can only observe the entity see the sheet without inputs. Fields on the secret layer are not rendered for players at all, whatever `visibleIf` says.
 - **GM-only parts:** containers still render when everything in them is secret, so a tab or section holding only secret fields shows players its title and nothing else. No formula can tell who is viewing in 0.1.0, so `visibleIf` cannot hide it either. Put secret fields next to others (players simply do not see them), or accept the empty tab.
 - **Presence:** fields show who else is in them, so the core draws an outline and name badges over the field.
+
+#### Items on actor sheets
+
+An `items` node shows the actor's own items on its sheet, so players equip armour or prepare spells where they play:
+
+```json
+{
+  "type": "items",
+  "itemTypes": ["armor", "shield"],
+  "addLabel": "gear.add",
+  "item": {
+    "type": "row",
+    "children": [
+      { "type": "field", "path": "equipped", "input": "checkbox", "label": "field.equipped" },
+      { "type": "field", "path": "acBonus", "input": "number", "label": "field.acBonus" },
+      { "type": "field", "path": "weight", "visibleIf": "@item.type == 'armor'" }
+    ]
+  }
+}
+```
+
+- **Which items:** those of `itemTypes`, or every item type when it is left out, under their [groups](#item-groups) and by name.
+- **Rows:** `item` lays out one item. Its paths are relative to the item's data, and inputs edit the item itself, live, as on its own sheet. Formulas in a row still read the actor, plus `@item.id`, `@item.name` and `@item.type`.
+- **Validation:** every path in `item` must exist in every listed type. A node whose `visibleIf` is `@item.type == 'armor'` (or several such tests joined by `or`) is only checked against those types.
+- **Actions:** the core adds a button to open each item's own sheet and, for whoever may edit the actor, to remove it and to add one from the table's library (`addLabel` names the button). Items dragged from the library or the compendium can be dropped onto the node.
+- **Totals follow:** [item contributions](#item-contributions) come from the items as they are edited, so ticking "equipped" changes the actor's derived values at once.
+- **Limits:** only actor sheets have `items` nodes, and not inside a `list` or another `items` node. An item's secret fields show on its own sheet only.
 
 ### Formulas
 

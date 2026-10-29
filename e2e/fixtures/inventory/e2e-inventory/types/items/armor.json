@@ -1,0 +1,12 @@
+{
+  "label": "Armor",
+  "sheet": "armor",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "equipped": { "type": "boolean", "default": false },
+      "acBonus": { "type": "integer", "default": 2, "minimum": 0, "maximum": 10 }
+    }
+  },
+  "contributes": { "acBonus": { "formula": "@equipped ? @acBonus : 0" } }
+}

@@ -48,7 +48,7 @@ A first draft let actor formulas query items by type with a filter, such as `sum
    - It lists the actor's owned items of `itemTypes` (all types when omitted), grouped by item group and ordered by name. Each row is laid out by `item`, as `list` lays out array rows.
    - Paths inside `item` are relative to the item's data, and are checked against every listed type unless a `visibleIf` on `@item.type` guards them.
    - `@item.name`, `@item.type` and `@item.id` name the row's item.
-   - Row inputs write to the item's live document, which the sheet opens on its existing socket. Access is the item's (§9.3).
+   - Row inputs write to the item's live document. The sheet opens the main documents of the items it needs on one socket of its own. Access is the item's (§9.3), and an item's secret fields stay on its own sheet.
    - The core draws open, remove and add. Add offers the library's items of those types, and library or compendium rows can be dropped onto the node.
    - The open item documents also feed the contributions in the browser, so ticking "equipped" or "active" changes the actor's derived values at once.
 4. **`@item` in rolls.**

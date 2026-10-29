@@ -1,0 +1,9 @@
+{
+  "id": "e2e-inventory",
+  "name": "E2E Inventory",
+  "version": "1.0.0",
+  "kind": "system",
+  "coreApi": "^0.1.0",
+  "description": "Heroes with armour, for the inventory end-to-end tests.",
+  "hasCode": false
+}

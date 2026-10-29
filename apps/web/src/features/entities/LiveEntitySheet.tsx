@@ -15,6 +15,8 @@ import type { TableSystem } from '../../plugin-host/system-context.js';
 import { useSession } from '../../shell/use-session.js';
 import { useTableData } from '../table/table-data.js';
 
+import { useSheetItems } from './use-sheet-items.js';
+
 type ReadySystem = Extract<TableSystem, { status: 'ready' }>;
 
 // The editor and ProseMirror load only for sheets with rich text (ADR-037).
@@ -51,6 +53,13 @@ export function LiveEntitySheet({
     members,
   });
   const store = live.status === 'ready' ? live.store : undefined;
+  const readOnly = live.status !== 'ready' || live.readOnly || entity.access !== 'owner';
+  const { itemTotals, renderItems } = useSheetItems({
+    host,
+    actor: entity,
+    enabled: kind === 'actor',
+    readOnly,
+  });
   const renderRichText = useCallback(
     ({ path, ...props }: RichTextProps) => {
       const fragment = store?.richText(path);
@@ -81,9 +90,11 @@ export function LiveEntitySheet({
         store={live.store}
         presence={presence}
         renderRichText={renderRichText}
-        readOnly={live.readOnly || entity.access !== 'owner'}
+        readOnly={readOnly}
         secret={secret}
         onRoll={onRoll}
+        itemTotals={itemTotals}
+        renderItems={renderItems}
       />
     </>
   );

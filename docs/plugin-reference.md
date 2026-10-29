@@ -189,6 +189,7 @@ One of:
 - [Node `field`](#sheet-node-field): Edits one field, and shows who else is in it.
 - [Node `longText`](#sheet-node-longtext): A text box several people can type into at once; rich text gets a toolbar.
 - [Node `list`](#sheet-node-list): The rows of an array, with add, remove and reorder. `item` is one row's layout; its paths are relative to the row.
+- [Node `items`](#sheet-node-items): The actor's items, grouped, each edited in place, with open, remove and add (actor sheets only). `item` is one item's layout: its paths are relative to the item's data, and `@item.id`, `@item.name` and `@item.type` name the item.
 - [Node `rollButton`](#sheet-node-rollbutton): Rolls a recipe for the entity and posts it to chat.
 - [Node `derived`](#sheet-node-derived): Shows a derived value.
 - [Node `image`](#sheet-node-image): Shows a picture from a URL field.
@@ -307,6 +308,21 @@ The rows of an array, with add, remove and reorder. `item` is one row's layout; 
 | `visibleIf` | [formula](#formula) |  | Shows the node only while this formula is true. It cannot roll dice. |
 | `type` | `"list"` | yes |  |
 | `path` | [path](#path) | yes | An `array` field. |
+| `item` | [Node](#sheet-node) | yes |  |
+| `addLabel` | [text](#text) |  | The text of the add button. |
+
+<a id="sheet-node-items"></a>
+
+### Node `items`
+
+The actor's items, grouped, each edited in place, with open, remove and add (actor sheets only). `item` is one item's layout: its paths are relative to the item's data, and `@item.id`, `@item.name` and `@item.type` name the item.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `class` | [css classes](#css-classes) |  | Extra CSS classes, for `styles/*.css`. |
+| `visibleIf` | [formula](#formula) |  | Shows the node only while this formula is true. It cannot roll dice. |
+| `type` | `"items"` | yes |  |
+| `itemTypes` | list of [name](#name) (at least 1 item) |  | The item types to list; every type when left out. |
 | `item` | [Node](#sheet-node) | yes |  |
 | `addLabel` | [text](#text) |  | The text of the add button. |
 

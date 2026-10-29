@@ -1,13 +1,17 @@
 export {
   useSheet,
   type CustomNodeProps,
+  type ItemsNodeProps,
+  type ItemsRenderer,
   type RichTextProps,
   type RichTextRenderer,
   type RollHandler,
   type RowScope,
   type SheetEnvironment,
+  type SheetItemRef,
 } from './context.js';
 export { formatDerived } from './fields.js';
+export { ItemRow, type ItemRowProps } from './items.js';
 export { SheetNodeView } from './nodes.js';
 export type { PresenceUser, SheetPresence } from './presence.js';
 export { Sheet, type SheetProps } from './Sheet.js';

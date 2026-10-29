@@ -1,0 +1,9 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      { "type": "field", "path": "equipped", "input": "checkbox", "label": "Equipped" },
+      { "type": "field", "path": "acBonus", "input": "number", "label": "Bonus" }
+    ]
+  }
+}

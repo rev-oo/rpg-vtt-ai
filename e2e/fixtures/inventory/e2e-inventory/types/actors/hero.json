@@ -1,0 +1,7 @@
+{
+  "label": "Hero",
+  "controlledBy": "player",
+  "sheet": "hero",
+  "schema": { "type": "object", "properties": { "notes": { "type": "string", "default": "" } } },
+  "derived": { "ac": "10 + @items.acBonus" }
+}

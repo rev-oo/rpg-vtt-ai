@@ -113,6 +113,7 @@ export function ItemList({
             name={item.name}
             type={item.type}
             imageUrl={item.imageUrl}
+            drag={trash ? undefined : { kind: 'library', itemId: item.id }}
             actions={
               trash ? (
                 <Button
