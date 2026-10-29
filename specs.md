@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
-| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
+| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | In progress | 50%      |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M13 (0.3.0 released)
-- **Next task:** `T-1301`
+- **Next task:** `T-1302`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,9 +36,10 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), and up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active. |
+| Date       | Change                                                                                                                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                |
+| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
 
 ---
 
@@ -407,25 +408,25 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.10 Settings and administration (`FR-ADMIN`)
 
-| ID          | Requirement                                                                                                                       | Priority                   | Status                            |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | --------------------------------- |
-| FR-ADMIN-01 | Instance settings: site name, registration policy (closed, invite-only), session lifetime, upload limits.                         | MVP                        | 0.1.0 (no upload limits, ADR-040) |
-| FR-ADMIN-02 | Plugin admin page: list, enable, disable, rescan, view validation errors.                                                         | MVP                        | 0.1.0                             |
-| FR-ADMIN-03 | Health endpoint `/api/health` reports DB status and plugin load status.                                                           | MVP                        | 0.1.0                             |
-| FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`.                                     | MVP                        | 0.1.0                             |
-| FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) | 0.1.0 (doc); 0.2.0 (automated)    |
+| ID          | Requirement                                                                                                                       | Priority                   | Status                               |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------- | ------------------------------------ |
+| FR-ADMIN-01 | Instance settings: site name, registration policy (closed, invite-only), session lifetime, upload limits.                         | MVP                        | 0.1.0; upload limits 0.4.0 (ADR-064) |
+| FR-ADMIN-02 | Plugin admin page: list, enable, disable, rescan, view validation errors.                                                         | MVP                        | 0.1.0                                |
+| FR-ADMIN-03 | Health endpoint `/api/health` reports DB status and plugin load status.                                                           | MVP                        | 0.1.0                                |
+| FR-ADMIN-04 | Table settings page: name, description, house-rule options from the plugin's `settings.json`.                                     | MVP                        | 0.1.0                                |
+| FR-ADMIN-05 | Backups: documented procedure to copy `vtt.sqlite` and `plugins/` safely (WAL checkpoint). Optional scheduled backup via env var. | MVP (doc) / v1 (automated) | 0.1.0 (doc); 0.2.0 (automated)       |
 
 ### 7.11 Maps and assets (`FR-MAP`, `FR-ASSET`)
 
-| ID          | Requirement                                                                                                                                      | Priority | Status        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------------- |
-| FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | planned (M13) |
-| FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | planned (M13) |
-| FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | planned (M13) |
-| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | planned (M14) |
-| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14) |
-| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14) |
-| FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14) |
+| ID          | Requirement                                                                                                                                      | Priority | Status          |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | --------------- |
+| FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | 0.4.0 (ADR-064) |
+| FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | planned (M13)   |
+| FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | 0.4.0 (ADR-064) |
+| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | planned (M14)   |
+| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14)   |
+| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14)   |
+| FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)   |
 
 `img` fields stay plain URL strings; an uploaded asset has a URL of its own, so nothing that stores images changes shape.
 
@@ -636,6 +637,7 @@ Key resource groups:
 | Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                         |
 | Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                       |
 | Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                        |
+| Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064)                                                                                          |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
@@ -733,7 +735,7 @@ All done; the task list with its notes is in [`docs/history/0.3.0.md`](docs/hist
 
 Uploads, so maps and sheets need no outside image hosting.
 
-- [ ] **T-1301 · Asset storage and uploads**
+- [x] **T-1301 · Asset storage and uploads**
   - **Deps:** none
   - **Do:** An `assets` table and files under `DATA_DIR/assets` (FR-ASSET-01, FR-ASSET-03). Uploads are checked by content (PNG, JPEG, WebP, GIF, SVG sanitised or refused), limited in size and by an instance quota set in the admin settings (finishing FR-ADMIN-01's upload limits). Each asset belongs to a table; GMs and assistants upload, and members of the table read. Files are served with the CSP and long cache headers. Backups and their restore include the assets folder.
   - **Done when:** endpoint tests cover types, limits, quota, permissions and serving; a backup taken with assets restores them; the security review notes for uploads are written down in the ADR.
@@ -905,7 +907,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); plugin data migrations are LATER; `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)                              |
 | CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes. Known intermittent e2e failures: `journal entries are hidden until the GM reveals them` and the concurrent rich-text step of `two browsers edit one live sheet` |
 | Maps are slow or cramped on phones                  | Medium                       | Medium | One renderer with a measured budget (T-1402); full-screen map view on phones; performance check recorded per release                                                                                                                                                                    |
-| Uploads are abused (size, malware, script in SVG)   | Medium                       | High   | Content sniffing, SVG refused or sanitised, size limits and a quota (T-1301); only table GMs and assistants upload; assets served under the CSP                                                                                                                                         |
+| Uploads are abused (size, malware, script in SVG)   | Medium                       | High   | Content sniffing, SVG refused, size limits and a quota (T-1301, ADR-064); only table GMs and assistants upload; assets served under the CSP                                                                                                                                             |
 | The system builder grows without end                | High                         | Medium | Scope fixed to what the declarative format already supports; no code editing in the builder; composition keywords stay LATER                                                                                                                                                            |
 
 ---
@@ -977,6 +979,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-061 | [Item types declare a group, and item lists show items under it](docs/adr/ADR-061-item-groups.md)                                               | Accepted                                   |
 | ADR-062 | [Items are edited on live documents of their own](docs/adr/ADR-062-item-documents.md)                                                           | Accepted                                   |
 | ADR-063 | [Actor sheets hold their items, and formulas read them](docs/adr/ADR-063-actor-inventories.md)                                                  | Accepted                                   |
+| ADR-064 | [Uploaded images are table assets on disk, checked by content](docs/adr/ADR-064-asset-storage.md)                                               | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

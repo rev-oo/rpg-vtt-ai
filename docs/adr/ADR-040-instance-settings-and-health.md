@@ -16,7 +16,7 @@ FR-ADMIN-01 lists four instance settings: site name, registration policy (closed
    - `registration`, `closed` (default) or `invite`;
    - `sessionLifetimeSeconds`, 1 hour to 90 days. `SESSION_TTL` is now only its default. New sessions read the setting; sessions already issued keep their expiry.
    - A stored value that no longer fits falls back to its default, so a bad row never breaks the instance.
-   - **Upload limits are left out** until uploads exist (decided with the user).
+   - **Upload limits are left out** until uploads exist (decided with the user). ADR-064 adds them with uploads.
 2. **Routes:**
    - `GET /admin/settings` and `PATCH /admin/settings`, admin only. The schemas are `instanceSettingsSchema` and `updateInstanceSettingsBody` in `@vtt/shared/api`.
    - `GET /instance`, public: the site name and the registration policy, which the join page needs before anyone signs in.

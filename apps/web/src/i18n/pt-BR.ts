@@ -488,6 +488,12 @@ export const ptBR: Messages = {
   'instance.sessionLifetimeHint':
     'Por quanto tempo as pessoas ficam conectadas. Vale para novos logins.',
   'instance.sessionLifetimeRange': 'Digite um número inteiro de horas de {min} a {max}.',
+  'instance.maxUpload': 'Maior envio (MiB)',
+  'instance.maxUploadHint': 'A maior imagem que um mestre pode enviar para uma mesa.',
+  'instance.assetQuota': 'Espaço para envios (MiB)',
+  'instance.assetQuotaHint':
+    'Todas as imagens enviadas juntas. Diminuir mantém as imagens já guardadas.',
+  'instance.mibRange': 'Digite um número inteiro de MiB de {min} a {max}.',
   'instance.save': 'Salvar',
   'instance.saved': 'As configurações da instância foram salvas.',
 

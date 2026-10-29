@@ -85,6 +85,13 @@
       "when": 1793232222824,
       "tag": "0011_item_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793289590932,
+      "tag": "0012_assets",
+      "breakpoints": true
     }
   ]
 }

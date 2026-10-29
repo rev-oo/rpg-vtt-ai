@@ -33,6 +33,7 @@ describe('backupDataDir (T-0605, FR-ADMIN-05)', () => {
     expect(result).toEqual({
       dir: path.join(root, 'backups', 'vtt-backup-2026-10-23T18-30-05Z'),
       plugins: true,
+      assets: false,
     });
     // The server keeps writing; the backup does not change.
     db.update(users).set({ displayName: 'Changed' }).where(eq(users.id, ayla.id)).run();

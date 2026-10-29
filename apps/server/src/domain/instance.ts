@@ -1,11 +1,22 @@
-import { instanceSettingsSchema, type InstanceSettings } from '@vtt/shared/api';
+import {
+  DEFAULT_ASSET_QUOTA_BYTES,
+  DEFAULT_MAX_UPLOAD_BYTES,
+  instanceSettingsSchema,
+  type InstanceSettings,
+} from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
 import { instanceSettings } from '../db/schema.js';
 
 /** What an instance starts with; `SESSION_TTL` gives the session lifetime (FR-ADMIN-01). */
 export function instanceDefaults(sessionTtlSeconds: number): InstanceSettings {
-  return { siteName: 'VTT', registration: 'closed', sessionLifetimeSeconds: sessionTtlSeconds };
+  return {
+    siteName: 'VTT',
+    registration: 'closed',
+    sessionLifetimeSeconds: sessionTtlSeconds,
+    maxUploadBytes: DEFAULT_MAX_UPLOAD_BYTES,
+    assetQuotaBytes: DEFAULT_ASSET_QUOTA_BYTES,
+  };
 }
 
 const KEYS = Object.keys(instanceSettingsSchema.shape) as (keyof InstanceSettings)[];
