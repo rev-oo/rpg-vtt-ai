@@ -13,16 +13,17 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.1 Milestone overview
 
-Every milestone left ships in a single release, 1.0.0. Done milestones and their releases are listed in §12.
-
-| ID     | Milestone                                                                       | Status      | Progress |
-| ------ | ------------------------------------------------------------------------------- | ----------- | -------- |
-| M0–M13 | Released in 0.1.0–0.4.0 ([history](#milestones-history))                        | Done        | 100%     |
-| M14    | Maps: scenes, tokens, fog of war                                                | Not started | 0%       |
-| M15    | Plugin platform: data migrations, client sandbox, server isolation              | Not started | 0%       |
-| M16    | System builder                                                                  | Not started | 0%       |
-| M17    | API freeze, hardening, release 1.0.0                                            | Not started | 0%       |
-| LATER  | World export/import, schema composition, other plugin kinds, book-style journal | Not planned | —        |
+| ID     | Milestone                                                                                                                        | Release | Status      | Progress |
+| ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
+| M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
+| M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
+| M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
+| M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Not started | 0%       |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
+| M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
+| M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
+| LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
@@ -35,10 +36,10 @@ Every milestone left ships in a single release, 1.0.0. Done milestones and their
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), and up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                  |
-| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet. |
+| Date       | Change                                                                                                                                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                        |
+| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet. |
 
 ---
 
