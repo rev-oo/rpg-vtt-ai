@@ -682,6 +682,7 @@ A type file in `types/actors/` or `types/items/` defines one type, named after t
 - `derived`: values computed from the data;
 - `controlledBy` (required for actors, not allowed on items): `"player"` lets players create the type, `"gm"` leaves it to the GM.
 - `labelPlural`, `group` and `order` (items only, all optional): how item lists group the type's items, described below.
+- `contributes` (items only, optional): values the item adds to whoever holds it, described under [item contributions](#item-contributions).
 
 #### Item groups
 
@@ -715,7 +716,7 @@ Once any item type has a `group`, a type without one gets a heading of its own: 
 | `items`                   | The rows of an `array`                                                      |
 | `required`, `description` | As in JSON Schema                                                           |
 
-`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `if`/`then`/`else` and `patternProperties` are refused. Field names are [identifiers](plugin-reference.md#identifier) (`strMod`, `hp`), so formulas can refer to them. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total` or `roll`, which formulas use for other things.
+`$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `if`/`then`/`else` and `patternProperties` are refused. Field names are [identifiers](plugin-reference.md#identifier) (`strMod`, `hp`), so formulas can refer to them. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total`, `roll` or `items`, which formulas use for other things.
 
 Fields left without a `default` start empty (an empty text, zero or false), so give each field a sensible default.
 
@@ -742,6 +743,40 @@ Annotations combine: `{ "type": "string", "x-kind": "longText", "x-layer": "secr
   "maxHp": "@settings.startingHp + @level - 1"
 }
 ```
+
+#### Item contributions
+
+An item can change its holder's numbers: worn armour raises defense, a prepared spell counts toward a limit. The item type declares what it **contributes**, and actor formulas read the totals over the actor's items as `@items.<name>`:
+
+```json
+// types/items/armor.json
+"schema": { "type": "object", "properties": {
+  "equipped": { "type": "boolean", "default": false },
+  "acBonus": { "type": "integer", "default": 1 }
+} },
+"contributes": {
+  "acBonus": { "formula": "@equipped ? @acBonus : 0" },
+  "heaviest": { "formula": "@acBonus", "combine": "max", "default": 0 }
+}
+```
+
+```json
+// types/actors/character.json
+"derived": { "ac": "10 + @derived.dexMod + @items.acBonus" }
+```
+
+Each contribution's `formula` reads the item's own fields and derived values, never dice, and `combine` says how the items' values add up:
+
+| `combine`       | Values       | Total                   | With no item |
+| --------------- | ------------ | ----------------------- | ------------ |
+| `sum` (default) | numbers      | their sum               | 0            |
+| `max`, `min`    | numbers      | the largest or smallest | `default`    |
+| `any`           | true / false | true if one is          | false        |
+| `count`         | true / false | how many are            | 0            |
+
+`max` and `min` need a `default`; the others take none. Several item types may contribute the same name, such as armour and shields both adding to `acBonus`, as long as they combine it the same way. The validator checks this, refuses `@items` names no type contributes, and refuses `@items` in item formulas, so totals never depend on each other.
+
+Only the actor's items count, not those in the trash, and an actor holds at most 500 items. Contributions read only fields every viewer of the item may see: a formula that reaches a `"x-layer": "secret"` field, directly or through a derived value, is refused, so totals never reveal secrets.
 
 ### Sheets
 
@@ -783,6 +818,7 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | `@str`, `@hp.value`      | The entity's fields                                                   | Everywhere tied to a type         |
 | `@derived.strMod`        | A derived value                                                       | Everywhere tied to a type         |
 | `@settings.startingHp`   | A [table setting](#table-settings)                                    | Everywhere                        |
+| `@items.acBonus`         | A total of the actor's [items](#item-contributions)                   | Everywhere tied to an actor type  |
 | `@skills['id'].rank`     | One row of a collection, by id                                        | Everywhere tied to a type         |
 | `@skills[@args.id].rank` | The row a roll button named                                           | Recipes                           |
 | `@skills[*].rank`        | That field of every row, as a list for `sum`, `min`, `max` or `count` | Everywhere tied to a type         |

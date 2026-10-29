@@ -282,6 +282,12 @@ export const en = {
   'pluginIssue.unknown_die': 'Unknown die “{name}”; declare it in dice.json.',
   'pluginIssue.dice_not_allowed': 'Dice can only be used in roll formulas.',
   'pluginIssue.derived_cycle': 'Derived values depend on each other: {cycle}.',
+  'pluginIssue.contribution_mismatch':
+    '"{name}" is combined with {combine} here but with {other} in {file}.',
+  'pluginIssue.contribution_default':
+    '"{name}" combines with {combine}: max and min need a default, the others take none.',
+  'pluginIssue.secret_contribution':
+    '{reference} reads a secret field; contributions can only read main-layer fields.',
   'pluginIssue.duplicate_id': 'Another entry already has the id “{id}”.',
   'pluginIssue.missing_target': 'There is no {target} named “{name}”.',
   'pluginIssue.unknown_field': '“{field}” is not a field of {scope}.',

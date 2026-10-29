@@ -15,6 +15,7 @@ import {
 import {
   dataFilter,
   requireItemType,
+  requireRoomForItems,
   toItemView,
   writableSystemTypes,
 } from '../../domain/entities.js';
@@ -75,6 +76,7 @@ export function itemRoutes({ app, db, config, events, now, plugins }: AppContext
     if (source.actorId !== null) {
       throw unprocessable('not_library_item', 'Only items from the library can be copied.');
     }
+    requireRoomForItems(db, actor.id, 1);
 
     const copy = createItem(
       db,
@@ -120,10 +122,11 @@ export function itemRoutes({ app, db, config, events, now, plugins }: AppContext
 
   app.post('/api/v1/items/:id/restore', (request) => {
     const { id } = parseInput(idParams, request.params);
-    const { access, actor, table, membership } = requireItem(db, request, id, {
+    const { item, access, actor, table, membership } = requireItem(db, request, id, {
       includeDeleted: true,
       edit: true,
     });
+    if (actor && item.softDeletedAt) requireRoomForItems(db, actor.id, 1);
     const result = restoreItem(db, id, retention());
     if (result === 'not_deleted') throw conflict('not_deleted', 'The item is not deleted.');
     if (result === 'expired') {

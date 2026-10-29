@@ -16,6 +16,7 @@ import {
   createRules,
   EngineError,
   playerDefinition,
+  type HeldItem,
   type Rules,
 } from '@vtt/plugin-engine';
 import type { PluginDefinition } from '@vtt/plugin-schema';
@@ -75,6 +76,8 @@ export interface RollOptions {
   definition?: (systemId: string) => PluginDefinition | undefined;
   /** An actor's live sheet data while its document is loaded (specs §9.6). */
   liveData?: (actor: Actor) => Record<string, unknown> | undefined;
+  /** The items an actor holds, live, for `@items` (ADR-063); none when left out. */
+  heldItems?: (actor: Actor) => HeldItem[];
   /** The system's shared and server code, if it has any (ADR-047). */
   code?: (systemId: string) => Promise<LoadedCode | undefined>;
   /** For handlers' `ctx.actors.adjust`. */
@@ -116,7 +119,7 @@ function rollFormula(
   formula: string,
   actor: Actor | null,
   system: { plugin: PluginDefinition; rules: Rules } | undefined,
-  { rng, visible }: { rng: Rng; visible: DataFilter },
+  { rng, visible, items }: { rng: Rng; visible: DataFilter; items: readonly HeldItem[] },
 ): RollResult {
   const data = actor ? visible('actor', actor.type, actor.system) : {};
   if (!system) return rolling(() => roll(formula, { rng, data }));
@@ -124,7 +127,7 @@ function rollFormula(
   const known = actor !== null && Object.hasOwn(system.plugin.actorTypes, actor.type);
   return rolling(() =>
     system.rules.rollFormula(formula, {
-      ...(known ? { type: actor.type } : {}),
+      ...(known ? { type: actor.type, items } : {}),
       data,
       rng,
     }),
@@ -136,6 +139,8 @@ interface Prepared {
   subject: Subject;
   message: Omit<Parameters<typeof createChatMessage>[1], 'kind' | 'text'>;
   actor: Actor | null;
+  /** The actor's items, for `@items`. */
+  items: HeldItem[];
   table: ReturnType<typeof findTable>;
   plugin: PluginDefinition | undefined;
 }
@@ -144,7 +149,7 @@ function prepare(
   db: DbOrTx,
   sender: { tableId: string; userId: string; role: TableRole },
   input: MessageTarget,
-  { definition, liveData }: RollOptions,
+  { definition, liveData, heldItems }: RollOptions,
 ): Prepared {
   const subject: Subject = { userId: sender.userId, role: sender.role };
   return db.transaction((tx) => {
@@ -159,6 +164,7 @@ function prepare(
     return {
       subject,
       actor,
+      items: actor && heldItems ? heldItems(actor) : [],
       table,
       plugin: table ? definition?.(table.systemId) : undefined,
       message: {
@@ -220,7 +226,14 @@ export async function sendRollMessages(
       return runHandler(db, prepared, { name, args, code, functions }, options);
     }
     const result = rolling(() =>
-      system.rules.roll(name, { kind: 'actor', type: actor.type, data: actor.system, args, rng }),
+      system.rules.roll(name, {
+        kind: 'actor',
+        type: actor.type,
+        data: actor.system,
+        args,
+        items: prepared.items,
+        rng,
+      }),
     );
     const view = chatCardView(result, {
       hasTemplate: () => false,
@@ -254,10 +267,7 @@ export async function sendRollMessages(
     input.formula ?? '',
     actor,
     typedSystem(prepared, functions) ?? system,
-    {
-      rng,
-      visible,
-    },
+    { rng, visible, items: prepared.items },
   );
   const row = db.transaction((tx) =>
     createChatMessage(
@@ -480,7 +490,11 @@ async function runServerCode(
   // Rolls read the actor's data when its type is still in the system, else none.
   const rollData = () =>
     actor && Object.hasOwn(plugin.actorTypes, actor.type)
-      ? { type: actor.type, data: visible('actor', actor.type, actor.system) }
+      ? {
+          type: actor.type,
+          data: visible('actor', actor.type, actor.system),
+          items: prepared.items,
+        }
       : { data: actor ? visible('actor', actor.type, actor.system) : {} };
 
   const host = async (method: string, args: readonly unknown[]): Promise<unknown> => {

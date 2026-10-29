@@ -24,6 +24,8 @@ export interface DerivedValues {
 
 export interface DerivedOptions {
   settings?: Readonly<Record<string, Value>>;
+  /** `@items.*`: an actor's item totals (`itemTotals`, ADR-063). */
+  items?: Readonly<Record<string, Value>>;
   functions?: Readonly<Record<string, FormulaFunction>>;
 }
 
@@ -50,7 +52,7 @@ function derivedReads(ast: Expression): string[] {
 export function computeDerived(
   definitions: Readonly<Record<string, string>>,
   data: Readonly<Record<string, unknown>>,
-  { settings = {}, functions = {} }: DerivedOptions = {},
+  { settings = {}, items = {}, functions = {} }: DerivedOptions = {},
 ): DerivedValues {
   const values: Record<string, Value> = {};
   const errors: Record<string, FormulaFailure> = {};
@@ -81,7 +83,7 @@ export function computeDerived(
     if (!errors[name]) {
       try {
         values[name] = evaluate(formula, {
-          data: { ...data, derived: values, settings },
+          data: { ...data, derived: values, settings, items },
           functions,
         });
       } catch (error) {

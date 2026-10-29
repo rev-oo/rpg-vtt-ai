@@ -13,14 +13,15 @@ import {
   withDefaults,
   writeLayer,
   type DocumentLayout,
+  type HeldItem,
   type LayerData,
 } from '@vtt/plugin-engine';
 import type { FieldSchema, PluginDefinition } from '@vtt/plugin-schema';
 import { documentName, type DocumentRef } from '@vtt/shared';
-import type { DataIssue, FieldPath } from '@vtt/shared/api';
+import { MAX_ACTOR_ITEMS, type DataIssue, type FieldPath } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import { findActor, findItem, type Actor } from '../db/repositories/index.js';
+import { findActor, findItem, heldItems, type Actor } from '../db/repositories/index.js';
 import { actors, items, ydocs } from '../db/schema.js';
 
 import { recordSnapshot } from './history.js';
@@ -167,13 +168,14 @@ function storedLayer(db: DbOrTx, name: string, fields: Parameters<typeof readLay
  * An entity's data from both layers: each from its live document when loaded, else from its
  * stored state, else from the projection.
  */
-function joinLayers(
+/** Reads each layer of an entity: live document, else stored state, else the projection. */
+function layerReader(
   db: DbOrTx,
   kind: EntityKind,
   entity: SheetEntity,
   definition: DefinitionOf,
   live: (name: string) => Y.Doc | undefined,
-): LayerData {
+) {
   const type = entityLayout(db, kind, entity, definition);
   const split = type && splitLayers(type.layout, entity.system);
   const layer = (name: DocumentRef['layer']): LayerData | undefined => {
@@ -184,8 +186,21 @@ function joinLayers(
     return storedLayer(db, docName, fields) ?? (split ? split[name] : undefined);
   };
   // Without a layout the projection is one plain layer.
-  const main = layer('main') ?? (type ? {} : entity.system);
-  return mergeLayers(main, layer('secret'));
+  return {
+    main: () => layer('main') ?? (type ? {} : entity.system),
+    secret: () => layer('secret'),
+  };
+}
+
+function joinLayers(
+  db: DbOrTx,
+  kind: EntityKind,
+  entity: SheetEntity,
+  definition: DefinitionOf,
+  live: (name: string) => Y.Doc | undefined,
+): LayerData {
+  const read = layerReader(db, kind, entity, definition, live);
+  return mergeLayers(read.main(), read.secret());
 }
 
 /**
@@ -203,6 +218,25 @@ export function liveActorData(
     live(documentName({ kind: 'actor', id: actor.id, layer })),
   );
   return loaded ? joinLayers(db, 'actor', actor, definition, live) : undefined;
+}
+
+/**
+ * The items an actor holds, for `@items` (ADR-063): each one's main layer from its live
+ * document while one is loaded, so totals see edits not saved yet, else its projection.
+ * Contributions only read main-layer fields (the validator checks), so secrets stay unread.
+ */
+export function liveHeldItems(
+  db: DbOrTx,
+  actor: Actor,
+  definition: DefinitionOf,
+  live: (name: string) => Y.Doc | undefined,
+): HeldItem[] {
+  return heldItems(db, actor.id, MAX_ACTOR_ITEMS).map((item) => ({
+    type: item.type,
+    data: live(documentName({ kind: 'item', id: item.id, layer: 'main' }))
+      ? layerReader(db, 'item', item, definition, live).main()
+      : item.system,
+  }));
 }
 
 /**

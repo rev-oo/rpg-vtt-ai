@@ -118,6 +118,7 @@ An item type, such as a weapon or a spell.
 | `labelPlural` | [text](#text) |  | The type name for a list of them, such as "Weapons"; a lang key or literal text. It heads the type’s items when the type has no `group`. |
 | `group` | [text](#text) |  | The heading item lists show this type under, such as "Spells" or "Gear"; a lang key or literal text. Types with the same group share it. |
 | `order` | integer, -1000–1000 |  | Where its group comes in item lists: lowest first, then by heading. A group takes the lowest `order` of its types. Default 0. |
+| `contributes` | map from [identifier](#identifier) to [Contribution](#item-type-contribution) |  | Values the type adds to whoever holds it, by name. Actor formulas read the total over their items as `@items.<name>`. Types that contribute the same name must combine it the same way. |
 
 <a id="item-type-data-schema"></a>
 
@@ -131,6 +132,16 @@ The entity's data: an object whose properties are fields.
 | `properties` | map from [identifier](#identifier) to [Field](#item-type-field) | yes |  |
 | `required` | list of [identifier](#identifier) |  |  |
 | `description` | text (at most 2000 characters) |  |  |
+
+<a id="item-type-contribution"></a>
+
+### Contribution
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `formula` | [formula](#formula) | yes | Worked out for each item from its own data and derived values; it cannot read secret fields. |
+| `combine` | one of `"sum"`, `"max"`, `"min"`, `"any"`, `"count"` |  | How the items’ values combine: `sum` (the default), `max` or `min` of numbers; `any` (true if one is) or `count` (how many are) of true/false. |
+| `default` | number |  | The value of a `max` or `min` when no item contributes; required for those two. |
 
 <a id="item-type-field"></a>
 

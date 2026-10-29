@@ -40,7 +40,10 @@ export interface HandlerPost {
 
 /** What server code can do: everything goes through the server, on behalf of who rolled. */
 export interface ServerContext {
-  /** Rolls a formula against the recipe's actor, its derived values, `@settings` and `@args`. */
+  /**
+   * Rolls a formula against the recipe's actor, its derived values, its items' totals
+   * (`@items`), `@settings` and `@args`.
+   */
   roll(formula: string): Promise<HandlerRoll>;
   chat: {
     /** Posts a message; a handler must post at least one, and at most 10. */

@@ -404,7 +404,7 @@ export async function rollInitiative(
     let result;
     try {
       result = rules.rollFormula(formula, {
-        ...(known ? { type: actor.type } : {}),
+        ...(known ? { type: actor.type, items: options.heldItems?.(actor) ?? [] } : {}),
         data: actor?.system ?? {},
         rng: options.rng,
       });

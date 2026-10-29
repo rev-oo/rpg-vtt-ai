@@ -286,6 +286,12 @@ export const ptBR: Messages = {
   'pluginIssue.unknown_die': 'Dado desconhecido “{name}”; declare-o em dice.json.',
   'pluginIssue.dice_not_allowed': 'Dados só podem ser usados em fórmulas de rolagem.',
   'pluginIssue.derived_cycle': 'Valores derivados dependem uns dos outros: {cycle}.',
+  'pluginIssue.contribution_mismatch':
+    '"{name}" é combinado com {combine} aqui, mas com {other} em {file}.',
+  'pluginIssue.contribution_default':
+    '"{name}" é combinado com {combine}: max e min precisam de um default; os outros não aceitam.',
+  'pluginIssue.secret_contribution':
+    '{reference} lê um campo secreto; contribuições só podem ler campos da camada principal.',
   'pluginIssue.duplicate_id': 'Outra entrada já tem o id “{id}”.',
   'pluginIssue.missing_target': 'Não há {target} chamado “{name}”.',
   'pluginIssue.unknown_field': '“{field}” não é um campo de {scope}.',

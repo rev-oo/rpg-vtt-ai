@@ -123,6 +123,29 @@ export const actorTypeSchema = z
   .describe('An actor type, such as a character or an NPC.');
 export type ActorType = z.infer<typeof actorTypeSchema>;
 
+export const COMBINES = ['sum', 'max', 'min', 'any', 'count'] as const;
+export type Combine = (typeof COMBINES)[number];
+
+/** A value an item adds to its holder's formulas, as `@items.<name>` (FR-PLUGIN-15, ADR-063). */
+export const contributionSchema = z
+  .strictObject({
+    formula: formula.describe(
+      'Worked out for each item from its own data and derived values; it cannot read secret fields.',
+    ),
+    combine: z
+      .enum(COMBINES)
+      .optional()
+      .describe(
+        'How the items’ values combine: `sum` (the default), `max` or `min` of numbers; `any` (true if one is) or `count` (how many are) of true/false.',
+      ),
+    default: z
+      .number()
+      .optional()
+      .describe('The value of a `max` or `min` when no item contributes; required for those two.'),
+  })
+  .meta({ title: 'Contribution' });
+export type Contribution = z.infer<typeof contributionSchema>;
+
 /** `types/items/<type>.json` (specs §8.4). */
 export const itemTypeSchema = z
   .strictObject({
@@ -145,6 +168,12 @@ export const itemTypeSchema = z
       .optional()
       .describe(
         'Where its group comes in item lists: lowest first, then by heading. A group takes the lowest `order` of its types. Default 0.',
+      ),
+    contributes: z
+      .record(identifier, contributionSchema)
+      .optional()
+      .describe(
+        'Values the type adds to whoever holds it, by name. Actor formulas read the total over their items as `@items.<name>`. Types that contribute the same name must combine it the same way.',
       ),
   })
   .describe('An item type, such as a weapon or a spell.');

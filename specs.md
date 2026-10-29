@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 50%      |
+| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 63%      |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1205`
+- **Next task:** `T-1206`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -45,6 +45,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).          |
 | 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                     |
 | 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).  |
+| 2026-10-29 | T-1205 done: item types declare `contributes`; actor formulas read the totals as `@items.<name>` in rolls, recipes, initiative and plugin code, live; an actor holds at most 500 items.   |
 
 ---
 
@@ -751,7 +752,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Do:** Items open on a live sheet of their own (FR-ENT-06), which no release had: item data could not be edited. Each item gets `item:<id>:main` and, with secret fields, `item:<id>:secret`; library items are edited by GMs and assistants, owned items follow their actor. Items open as workspace panels from the items panel and from an actor's items. Owned items stay out of the actor document (ADR-062).
   - **Done when:** server tests cover item document access, stores and cascades; web tests open library and owned items; e2e shows a GM's edit reaching a player's read-only item sheet, and a player editing their own copy.
 
-- [ ] **T-1205 · Item contributions**
+- [x] **T-1205 · Item contributions**
   - **Deps:** T-1204
   - **Do:** Item types may declare `contributes`: named values, each a `formula` over the item's own main-layer data and derived values, with a `combine` (`sum`, `max`, `min`, `any`, `count`; `max` and `min` declare a `default`). Actor formulas read the totals over the actor's live items as `@items.<name>` (FR-PLUGIN-15). The validator gathers the names, requires types sharing a name to agree on `combine` and value type, checks `@items.<name>` like `@derived`, keeps contributions off secret fields and refuses `@items` in item formulas. The rules engine computes the totals; the server joins item data (live, stored, projection) for rolls, combat and plugin code, and the SDK reads the totals. An actor holds at most 500 items (ADR-063).
   - **Done when:** validator tests cover contributions, shared names and their mismatches, unknown `@items` names and secret reads; engine tests cover each combine with and without items; server tests show a roll's derived value seeing an item edit before it is stored; a tiny-d20 armour adds to AC on the server.

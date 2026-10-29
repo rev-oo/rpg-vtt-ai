@@ -252,6 +252,88 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'item contributions read by actor formulas (T-1205)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/ring.json'] = {
+        label: 'Ring',
+        sheet: 'item',
+        schema: {
+          type: 'object',
+          properties: {
+            worn: { type: 'boolean', default: false },
+            bonus: { type: 'integer', default: 1 },
+            curse: { type: 'string', default: '', 'x-layer': 'secret' },
+          },
+        },
+        derived: { counted: '@worn ? @bonus : 0' },
+        contributes: {
+          hpBonus: { formula: '@derived.counted' },
+          best: { formula: '@bonus', combine: 'max', default: 0 },
+          worn: { formula: '@worn', combine: 'count' },
+        },
+      };
+      f['types/items/belt.json'] = {
+        label: 'Belt',
+        sheet: 'item',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 2 } } },
+        contributes: { hpBonus: { formula: '@bonus', combine: 'sum' } },
+      };
+      hero(f).derived = {
+        mod: 'floor((@str - 10) / 2)',
+        maxHp: '10 + @items.hpBonus + @items.best',
+      };
+      sheetChildren(f).push({ type: 'text', text: 'Rings', visibleIf: '@items.worn > 0' });
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'contributions that disagree, leak secrets or loop through items (T-1205)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/ring.json'] = {
+        label: 'Ring',
+        sheet: 'item',
+        schema: {
+          type: 'object',
+          properties: {
+            bonus: { type: 'integer', default: 1 },
+            gm: {
+              type: 'object',
+              properties: { curse: { type: 'integer', default: 0, 'x-layer': 'secret' } },
+            },
+          },
+        },
+        derived: { cursed: '@gm.curse * 2', total: '@items.hpBonus' },
+        contributes: {
+          hpBonus: { formula: '@bonus' },
+          best: { formula: '@bonus', combine: 'max' },
+          worst: { formula: '@bonus', combine: 'sum', default: 1 },
+          leak: { formula: '@derived.cursed + @gm.curse' },
+          loop: { formula: '@items.hpBonus' },
+        },
+      };
+      f['types/items/belt.json'] = {
+        label: 'Belt',
+        sheet: 'item',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 2 } } },
+        contributes: { hpBonus: { formula: '@bonus', combine: 'max', default: 0 } },
+      };
+      hero(f).derived = { mod: 'floor((@str - 10) / 2)', maxHp: '10 + @items.nope' };
+    },
+    issues: [
+      'error contribution_mismatch types/items/ring.json $.contributes.hpBonus.combine',
+      'error contribution_default types/items/ring.json $.contributes.best',
+      'error contribution_default types/items/ring.json $.contributes.worst',
+      'error secret_contribution types/items/ring.json $.contributes.leak.formula',
+      'error secret_contribution types/items/ring.json $.contributes.leak.formula',
+      'error unknown_reference types/items/ring.json $.contributes.loop.formula',
+      'error unknown_reference types/items/ring.json $.derived.total',
+      'error unknown_reference types/actors/hero.json $.derived.maxHp',
+    ],
+  },
+  {
     name: 'a pack with bad entries, reported by JSON path (T-0803)',
     change: (f: PluginFixture): void => {
       f['packs/bad.json'] = {

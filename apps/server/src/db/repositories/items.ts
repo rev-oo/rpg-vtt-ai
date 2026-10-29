@@ -81,6 +81,28 @@ export function listItems(
     .all();
 }
 
+/** The live items an actor holds (ADR-063), at most `limit`. */
+export function heldItems(db: DbOrTx, actorId: string, limit: number): Item[] {
+  return db
+    .select()
+    .from(items)
+    .where(and(eq(items.actorId, actorId), isLive(items.softDeletedAt)))
+    .orderBy(asc(items.createdAt), asc(items.id))
+    .limit(limit)
+    .all();
+}
+
+/** How many live items an actor holds. */
+export function countHeldItems(db: DbOrTx, actorId: string): number {
+  return (
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(items)
+      .where(and(eq(items.actorId, actorId), isLive(items.softDeletedAt)))
+      .get()?.count ?? 0
+  );
+}
+
 /** Updates a live item; `undefined` if it does not exist or is deleted. */
 export function updateItem(db: DbOrTx, id: string, patch: ItemPatch, now: Date): Item | undefined {
   return db

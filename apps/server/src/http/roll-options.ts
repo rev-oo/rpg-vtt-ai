@@ -1,5 +1,5 @@
 import type { RollOptions } from '../domain/rolls.js';
-import { adjustActorCounter, liveDataOf } from '../realtime/collab.js';
+import { adjustActorCounter, heldItemsOf, liveDataOf } from '../realtime/collab.js';
 
 import type { AppContext } from './app.js';
 
@@ -12,6 +12,7 @@ export function rollOptions({ app, db, now, rng, plugins, collab }: AppContext):
     logger: app.log,
     definition,
     liveData: liveDataOf({ collab, db }, definition),
+    heldItems: heldItemsOf({ collab, db }, definition),
     code: (id) => plugins.code(id),
     adjust: adjustActorCounter({ collab, db }, definition),
   };

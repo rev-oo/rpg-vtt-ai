@@ -17,7 +17,13 @@ import type { Sheet, SheetNode } from '../sheet.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
 import { checkData, checkDataSchema } from './data.js';
-import { checkFormula, findCycle, type FormulaRules, type FormulaScope } from './formulas.js';
+import {
+  checkFormula,
+  findCycle,
+  secretReads,
+  type FormulaRules,
+  type FormulaScope,
+} from './formulas.js';
 import type { JsonPath, PluginIssue } from './issues.js';
 import { shapeIssues } from './shape.js';
 
@@ -252,6 +258,28 @@ export function validatePlugin(
       usedKeys.set(text, { file, path });
   };
 
+  /** An item type's `contributes`: formulas, combines, defaults and secret reads. */
+  const checkContributions = (entry: TypeEntry, type: ItemType) => {
+    for (const [key, contribution] of Object.entries(type.contributes ?? {})) {
+      const path = ['contributes', key];
+      formula(contribution.formula, typeScope(entry), false, entry.file, [...path, 'formula']);
+      for (const reference of secretReads(contribution.formula, type.schema, type.derived ?? {}))
+        error('secret_contribution', entry.file, [...path, 'formula'], { reference });
+      const combine = contribution.combine ?? 'sum';
+      const needsDefault = combine === 'max' || combine === 'min';
+      if (needsDefault !== (contribution.default !== undefined))
+        error('contribution_default', entry.file, path, { name: key, combine });
+      const first = contributed.get(key);
+      if (first && first.combine !== combine)
+        error('contribution_mismatch', entry.file, [...path, 'combine'], {
+          name: key,
+          combine,
+          other: first.combine,
+          file: first.file,
+        });
+    }
+  };
+
   // 2. Types: data schemas, derived values and their order.
   const types: TypeEntry[] = [
     ...Object.entries(actorTypes).map(([name, type]) => ({
@@ -269,10 +297,25 @@ export function validatePlugin(
       label: `item type "${name}"`,
     })),
   ];
+  // Values item types contribute (ADR-063): the first type to declare a name sets its combine.
+  const contributed = new Map<string, { combine: string; file: string }>();
+  for (const [name, type] of Object.entries(itemTypes)) {
+    for (const [key, contribution] of Object.entries(type.contributes ?? {})) {
+      if (!contributed.has(key)) {
+        contributed.set(key, {
+          combine: contribution.combine ?? 'sum',
+          file: `types/items/${name}.json`,
+        });
+      }
+    }
+  }
+  const contributedNames = new Set(contributed.keys());
   const typeScope = (entry: TypeEntry): FormulaScope => ({
     label: entry.label,
     data: entry.type.schema,
     derived: new Set(Object.keys(entry.type.derived ?? {})),
+    // Only actors hold items; item formulas cannot read totals, so no cycle runs through them.
+    ...(entry.actor && { items: contributedNames }),
     settings: settingNames,
   });
   for (const entry of types) {
@@ -296,6 +339,7 @@ export function validatePlugin(
       error('derived_cycle', file, ['derived', cycle[0]], { cycle: cycle.join(' → ') });
     if (!names.sheet?.has(type.sheet))
       error('missing_target', file, ['sheet'], { target: 'sheet', name: type.sheet });
+    if (!('controlledBy' in type)) checkContributions(entry, type);
   }
 
   // 3. Sheets, checked against every type that uses them.
