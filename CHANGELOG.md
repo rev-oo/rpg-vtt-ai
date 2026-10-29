@@ -4,10 +4,20 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-29
+
+Tables get their own images: upload them, browse them in an Images panel, and use them for actor and item pictures, in journal text and in a sheet's image fields. Plugins written for 0.1.0 to 0.3.0 work unchanged: the plugin core API stays at `0.1.0`.
+
 ### Added
 
 - An Images panel holds a table's images. Everyone at the table sees them; GMs and assistants upload by picking or dropping files and delete images nothing uses, while an image still used is kept and the panel says where it is used. A new image picker sets actor and item images from these images or a web address, on the create dialog and by a sheet's title, and the journal editor's Image button puts pictures in an entry's text. A sheet's image fields, such as tiny-d20's portrait, open the same picker when clicked; until now nothing could fill them (FR-ASSET-02, ADR-065).
 - Images can be uploaded to a table. GMs and assistants send PNG, JPEG, GIF or WebP images, which are checked by their contents (SVG and anything else is refused), and every member of the table can view them. Admins set the largest upload and the space all uploads may take on the instance settings page. Backups and their restore include the uploaded images. Picking them from the app arrives with the asset manager (FR-ASSET-01, FR-ASSET-03, ADR-064).
+
+### Known limitations
+
+- Plugin data is not migrated between system versions: sheets made with an older version show a notice, and fields the new version changed read as their defaults.
+- Maps and tokens are not available yet.
+- The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 
 ## [0.3.0] - 2026-10-29
 
@@ -111,7 +121,8 @@ The first release: a self-hosted virtual tabletop where game systems come from p
 - The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 - The image is built for `linux/amd64` only.
 
-[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/rev-oo/rpg-vtt-ai/releases/tag/v0.1.0

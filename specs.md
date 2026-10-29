@@ -1,7 +1,7 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 0.3.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-10-29
-> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md) and [`0.3.0.md`](docs/history/0.3.0.md).
+> **Status:** 0.4.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-10-29
+> **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md), [`0.3.0.md`](docs/history/0.3.0.md) and [`0.4.0.md`](docs/history/0.4.0.md).
 
 ---
 
@@ -18,31 +18,28 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
-| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Done        | 100%     |
-| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
-| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
-| M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
-| M17    | 1.0: API freeze, upgrade guarantee, hardening                                                                                    | 1.0.0   | Not started | 0%       |
+| M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Not started | 0%       |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
+| M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
+| M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M14 (M13 done; 0.4.0 not released yet)
+- **Active milestone:** M14 (0.4.0 released)
 - **Next task:** `T-1401`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
 ### 0.3 Change log
 
-Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), and up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md); user-visible changes go in `CHANGELOG.md`.
+Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), and up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                                      |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                |
-| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
-| 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated.     |
-| 2026-10-29 | M13 done (signed off with PR #49); M14 is active.                                                                                                                                                                                                                           |
-| 2026-10-29 | Sheet `image` fields (`x-kind: "image"`) open the image picker for editors, and count as asset uses (ADR-065 point 6); until now nothing could fill them.                                                                                                                   |
+| Date       | Change                                                                                                                                                                                                                                                      |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                        |
+| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet. |
 
 ---
 
@@ -700,55 +697,28 @@ Tasks are written so an agent can pick one up without extra context. Each task h
 - **Do:** what to build
 - **Done when:** objective acceptance criteria
 
-### M0–M7 — MVP (released as 0.1.0)
+### Milestones history
 
-All done; the task lists with their notes are in [`docs/history/mvp.md`](docs/history/mvp.md).
+All done; each release's task lists, with their notes and change log, are in [`docs/history/`](docs/history/).
 
-| Milestone | Tasks         | Scope                                                                        |
-| --------- | ------------- | ---------------------------------------------------------------------------- |
-| M0        | T-0001…T-0010 | Monorepo, TypeScript, lint, format, CI                                       |
-| M1        | T-0101…T-0111 | Users, auth, tables, membership, web shell                                   |
-| M2        | T-0201…T-0208 | Actors, items, events socket, chat                                           |
-| M3        | T-0301…T-0305 | Formula parser, evaluator, dice engine, rolls                                |
-| M4        | T-0401…T-0412 | Plugin schemas, scanner, CSS, engine, renderer, host, CLI, reference plugins |
-| M5        | T-0501…T-0512 | Live sheets: Yjs documents, presence, counters, collections, text            |
-| M6        | T-0601…T-0606 | Journal, members, invites, table and instance settings, plugin admin         |
-| M7        | T-0701…T-0705 | Security review, e2e, Docker image, authoring guide, release                 |
+| Milestone | Tasks                                  | Scope                                                                                           | Release                                  |
+| --------- | -------------------------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| M0        | T-0001…T-0010                          | Monorepo, TypeScript, lint, format, CI                                                          | 0.1.0 ([history](docs/history/mvp.md))   |
+| M1        | T-0101…T-0111                          | Users, auth, tables, membership, web shell                                                      | 0.1.0                                    |
+| M2        | T-0201…T-0208                          | Actors, items, events socket, chat                                                              | 0.1.0                                    |
+| M3        | T-0301…T-0305                          | Formula parser, evaluator, dice engine, rolls                                                   | 0.1.0                                    |
+| M4        | T-0401…T-0412                          | Plugin schemas, scanner, CSS, engine, renderer, host, CLI, reference plugins                    | 0.1.0                                    |
+| M5        | T-0501…T-0512                          | Live sheets: Yjs documents, presence, counters, collections, text                               | 0.1.0                                    |
+| M6        | T-0601…T-0606                          | Journal, members, invites, table and instance settings, plugin admin                            | 0.1.0                                    |
+| M7        | T-0701…T-0705                          | Security review, e2e, Docker image, authoring guide, release                                    | 0.1.0                                    |
+| M8        | T-0809, T-0804                         | Plugin shared and server code in workers, handler recipes, slash commands                       | 0.2.0 ([history](docs/history/0.2.0.md)) |
+| M9        | T-0801, T-0802                         | Combat tracker, initiative from `combat.json`, combat hooks                                     | 0.2.0                                    |
+| M10       | T-0803, T-0805, T-0806, T-0807, T-0808 | Compendium packs, chat edits, sheet history, table archive, backups                             | 0.2.0                                    |
+| M11       | T-0811, T-0812, T-0813                 | arm64 image, list pagination, data version notice and table upgrades                            | 0.2.0                                    |
+| M12       | T-1201…T-1208                          | Workspace, compendium browser, item groups, item sheets, contributions, inventories, item rolls | 0.3.0 ([history](docs/history/0.3.0.md)) |
+| M13       | T-1301, T-1302                         | Asset storage and uploads, Images panel and image picker                                        | 0.4.0 ([history](docs/history/0.4.0.md)) |
 
-### M8–M11 — Plugin code, combat, content, operations (released as 0.2.0)
-
-All done; the task lists with their notes are in [`docs/history/0.2.0.md`](docs/history/0.2.0.md).
-
-| Milestone | Tasks                                  | Scope                                                                     |
-| --------- | -------------------------------------- | ------------------------------------------------------------------------- |
-| M8        | T-0809, T-0804                         | Plugin shared and server code in workers, handler recipes, slash commands |
-| M9        | T-0801, T-0802                         | Combat tracker, initiative from `combat.json`, combat hooks               |
-| M10       | T-0803, T-0805, T-0806, T-0807, T-0808 | Compendium packs, chat edits, sheet history, table archive, backups       |
-| M11       | T-0811, T-0812, T-0813                 | arm64 image, list pagination, data version notice and table upgrades      |
-
-### M12 — Table workspace, compendium and inventories (released as 0.3.0)
-
-All done; the task list with its notes is in [`docs/history/0.3.0.md`](docs/history/0.3.0.md).
-
-| Milestone | Tasks         | Scope                                                                                           |
-| --------- | ------------- | ----------------------------------------------------------------------------------------------- |
-| M12       | T-1201…T-1208 | Workspace, compendium browser, item groups, item sheets, contributions, inventories, item rolls |
-
-### M13 — Assets (0.4.0)
-
-Uploads, so maps and sheets need no outside image hosting.
-
-- [x] **T-1301 · Asset storage and uploads**
-  - **Deps:** none
-  - **Do:** An `assets` table and files under `DATA_DIR/assets` (FR-ASSET-01, FR-ASSET-03). Uploads are checked by content (PNG, JPEG, WebP, GIF, SVG sanitised or refused), limited in size and by an instance quota set in the admin settings (finishing FR-ADMIN-01's upload limits). Each asset belongs to a table; GMs and assistants upload, and members of the table read. Files are served with the CSP and long cache headers. Backups and their restore include the assets folder.
-  - **Done when:** endpoint tests cover types, limits, quota, permissions and serving; a backup taken with assets restores them; the security review notes for uploads are written down in the ADR.
-
-- [x] **T-1302 · Asset manager**
-  - **Deps:** T-1301
-  - **Do:** A workspace panel lists a table's assets with thumbnails, uploads by picking or dropping files, and deletes unused ones (FR-ASSET-02). Image fields (actor and item images, journal images) open it as a picker that also accepts a URL.
-  - **Done when:** web tests cover upload, pick and delete; e2e uploads an image and sets it as an actor's portrait.
-
-### M14 — Maps and tokens (0.5.0)
+### M14 — Maps and tokens
 
 Scenes with a grid, tokens and fog of war, in the workspace centre.
 
@@ -772,7 +742,7 @@ Scenes with a grid, tokens and fog of war, in the workspace centre.
   - **Do:** GMs reveal and hide areas of a scene with shapes or grid cells (FR-MAP-04). Players receive only revealed areas, and tokens inside hidden areas are not sent to them. GMs see the fog as a tint.
   - **Done when:** wire tests prove hidden areas and the tokens in them never reach players; e2e reveals an area and a player sees it appear.
 
-### M15 — Plugin platform (0.6.0)
+### M15 — Plugin platform
 
 Plugin data that follows system upgrades, and plugin code that runs contained.
 
@@ -791,7 +761,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
   - **Do:** Plugin server code runs in an isolated runtime with no Node API reachable (no `require`, `process`, filesystem or network), keeping the worker per plugin and the time limits of ADR-047 (FR-PLUGIN-13).
   - **Done when:** tests show those APIs are unreachable from shared and server code; the reference plugins' handlers, commands and hooks pass unchanged.
 
-### M16 — System builder (0.7.0)
+### M16 — System builder
 
 Declarative systems built in the browser, for people who do not write plugins by hand (FR-PLUGIN-14).
 
@@ -810,19 +780,14 @@ Declarative systems built in the browser, for people who do not write plugins by
   - **Do:** The builder edits rolls and lang files, then packs the draft as a `.vttplugin` to download or installs it directly (ADR-026).
   - **Done when:** e2e builds a small system, installs it, creates a table with it and rolls from its sheet.
 
-### M17 — 1.0 (1.0.0)
+### M17 — 1.0
 
-Stability promises, then the release.
+The plugin API promise, a security review, then the release. The project has no users to upgrade yet, so 1.0 promises no upgrade path from 0.x data.
 
 - [ ] **T-1701 · Plugin API freeze**
   - **Deps:** M12–M16, Q19
   - **Do:** Set `CORE_API_VERSION` to `1.0.0` and document what 1.x keeps compatible (manifest, file formats, SDK, `ctx`). Plugins for 0.x load as Q19 decides. The reference plugins and the guide move to `^1.0.0`.
   - **Done when:** the compatibility promise is in the guide and an ADR; tests cover loading plugins declaring each supported range.
-
-- [ ] **T-1702 · Upgrade guarantee**
-  - **Deps:** M12–M16
-  - **Do:** An automated test starts from a 0.2.0 data folder (database, plugins, documents), runs the 1.0 server on it and checks the tables, entities and documents survive. `docs/upgrading.md` explains upgrades and backups before them.
-  - **Done when:** the test runs in CI; the guide is linked from the README.
 
 - [ ] **T-1703 · Security review and hardening**
   - **Deps:** M12–M16
@@ -830,7 +795,7 @@ Stability promises, then the release.
   - **Done when:** the review document lists each surface with its checks; findings are fixed or recorded as accepted risks in §15.
 
 - [ ] **T-1704 · Release 1.0.0**
-  - **Deps:** T-1701, T-1702, T-1703
+  - **Deps:** T-1701, T-1703
   - **Do:** Release as in §17 (item 10): versions to `1.0.0`, `CHANGELOG.md` section, tag `v1.0.0`.
   - **Done when:** the release job publishes the `1.0.0` and `1.0` image tags for both architectures and the GitHub release.
 
