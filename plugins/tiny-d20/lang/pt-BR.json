@@ -40,5 +40,19 @@
   "card.total": "Total",
   "setting.critFumble": "Acertos e falhas críticas",
   "setting.startingHp": "Pontos de vida iniciais",
-  "pack.bestiary": "Bestiário"
+  "pack.bestiary": "Bestiário",
+  "type.armor": "Armadura",
+  "type.armors": "Armaduras",
+  "field.ac": "Classe de armadura",
+  "field.equipped": "Equipada",
+  "field.acBonus": "Bônus na CA",
+  "field.prepared": "Preparada",
+  "field.preparedSpells": "Magias preparadas",
+  "tab.gear": "Equipamento",
+  "tab.spells": "Magias",
+  "gear.add": "Adicionar equipamento",
+  "spell.add": "Adicionar magia",
+  "card.attack.title": "Ataque",
+  "card.weapon": "Arma",
+  "card.damage": "Dano"
 }

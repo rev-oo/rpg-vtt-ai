@@ -612,7 +612,248 @@ Each CSS file in `styles/` applies to the plugin's own sheets and chat cards, an
 
 `:root` here means the plugin's sheet, so `--vtt-accent` changes only this plugin's accent colour. `.success` styles the outcome that set `"class": "success"` in step 4.
 
-### Step 8: pack, install and play
+### Step 8: an inventory
+
+The gear list holds names and weights, but a shield that adds to defense is better as an **item**: its own entry, with its own fields and sheet, that the GM keeps in the table's library and gives to heroes. Declare an item type in `types/items/`:
+
+```json file=types/items/armor.json
+{
+  "$schema": "../../../schemas/item-type.schema.json",
+  "label": "Armor",
+  "sheet": "armor",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "worn": { "type": "boolean", "default": false },
+      "protection": { "type": "integer", "default": 1, "minimum": 0, "maximum": 3 }
+    }
+  },
+  "contributes": {
+    "armor": { "formula": "@worn ? @protection : 0" }
+  }
+}
+```
+
+`contributes` is what each piece of armour adds to whoever holds it: its protection while worn. The contributions of all a hero's armour are added up, and the hero's formulas read the total as `@items.armor`. Every item type needs a sheet:
+
+```json file=sheets/armor.json
+{
+  "$schema": "../../schemas/sheet.schema.json",
+  "layout": {
+    "type": "row",
+    "gap": "sm",
+    "children": [
+      { "type": "field", "path": "worn", "label": "Worn", "input": "checkbox" },
+      { "type": "field", "path": "protection", "label": "Protection", "input": "number" }
+    ]
+  }
+}
+```
+
+Defense now counts the worn armour:
+
+```json file=types/actors/hero.json
+{
+  "$schema": "../../../schemas/actor-type.schema.json",
+  "label": "type.hero",
+  "controlledBy": "player",
+  "sheet": "hero",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "might": {
+        "type": "integer",
+        "default": 2,
+        "minimum": 0,
+        "maximum": 5
+      },
+      "agility": {
+        "type": "integer",
+        "default": 2,
+        "minimum": 0,
+        "maximum": 5
+      },
+      "hp": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 0,
+        "x-counter": true
+      },
+      "gear": {
+        "type": "array",
+        "x-kind": "collection",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "default": "",
+              "maxLength": 60
+            },
+            "weight": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "notes": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      }
+    }
+  },
+  "derived": {
+    "defense": "10 + @agility + @items.armor",
+    "load": "sum(@gear[*].weight)"
+  }
+}
+```
+
+and an `items` node shows the hero's armour on their sheet. Its `item` lays out one item, with paths into that item's fields, and the core adds buttons to open it, remove it, and add armour from the library:
+
+```json file=sheets/hero.json
+{
+  "$schema": "../../schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "md",
+    "children": [
+      {
+        "type": "row",
+        "gap": "md",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "might",
+            "label": "field.might",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "agility",
+            "label": "field.agility",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "hp",
+            "label": "field.hp",
+            "input": "counter"
+          },
+          {
+            "type": "derived",
+            "key": "defense",
+            "label": "field.defense"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "children": [
+          {
+            "type": "rollButton",
+            "roll": "check",
+            "label": "roll.might",
+            "args": {
+              "bonus": "@might"
+            }
+          },
+          {
+            "type": "rollButton",
+            "roll": "check",
+            "label": "roll.agility",
+            "args": {
+              "bonus": "@agility"
+            }
+          }
+        ]
+      },
+      {
+        "type": "text",
+        "text": "hint.down",
+        "visibleIf": "@hp <= 0"
+      },
+      {
+        "type": "section",
+        "title": "section.gear",
+        "class": "gear",
+        "children": [
+          {
+            "type": "list",
+            "path": "gear",
+            "addLabel": "gear.add",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "children": [
+                {
+                  "type": "field",
+                  "path": "name",
+                  "label": "gear.name"
+                },
+                {
+                  "type": "field",
+                  "path": "weight",
+                  "label": "gear.weight",
+                  "input": "number"
+                }
+              ]
+            }
+          },
+          {
+            "type": "derived",
+            "key": "load",
+            "label": "gear.load"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "title": "Armor",
+        "children": [
+          {
+            "type": "items",
+            "itemTypes": ["armor"],
+            "addLabel": "Add armor",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "children": [
+                {
+                  "type": "field",
+                  "path": "worn",
+                  "label": "Worn",
+                  "input": "checkbox"
+                },
+                {
+                  "type": "field",
+                  "path": "protection",
+                  "label": "Protection",
+                  "input": "number"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "longText",
+        "path": "notes",
+        "label": "field.notes"
+      }
+    ]
+  }
+}
+```
+
+Ticking **Worn** on a row raises the hero's defense at once. The new labels are literal English; give them lang keys, as in step 6, to translate them. A recipe can also be [rolled with an item](#rolls-made-with-an-item), such as an attack that reads the sword it is made with.
+
+### Step 9: pack, install and play
 
 Pack the plugin:
 
@@ -621,7 +862,7 @@ vtt-plugin pack .
 ```
 
 ```text
-Packed starter 0.1.0: 7 files, 2539 bytes → starter-0.1.0.vttplugin
+Packed starter 0.1.0: 9 files, 3245 bytes → starter-0.1.0.vttplugin
 ```
 
 The archive goes to the current folder, or wherever `--out <file>` says. Archives already in the plugin folder are left out of the new one.
@@ -632,6 +873,7 @@ Then, signed in to an instance as an admin:
 2. Choose **Enable** on Starter. New plugins start disabled.
 3. Under **Tables**, choose **New table** and pick Starter as the **Game system**.
 4. On the table, create a hero with **New actor**, open it, and roll.
+5. Under **Items**, create a piece of armour, then add it from the hero's sheet and mark it worn.
 
 To try changes on your own instance without packing, copy the plugin folder into the instance's `DATA_DIR/plugins/` (the folder must be named after the plugin id) and press **Rescan** on the Plugins page.
 

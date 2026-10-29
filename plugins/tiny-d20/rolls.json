@@ -4,8 +4,15 @@
     "label": "roll.skill",
     "formula": "1d20 + (@skills[@args.id].ability == 'str' ? @derived.strMod : @derived.dexMod) + @skills[@args.id].rank",
     "outcomes": [
-      { "when": "@total >= 15", "label": "outcome.success", "class": "ok" },
-      { "label": "outcome.failure", "class": "fail" }
+      {
+        "when": "@total >= 15",
+        "label": "outcome.success",
+        "class": "ok"
+      },
+      {
+        "label": "outcome.failure",
+        "class": "fail"
+      }
     ],
     "card": "skill"
   },
@@ -13,5 +20,11 @@
     "label": "roll.attack",
     "formula": "1d20 + @derived.strMod",
     "card": "skill"
+  },
+  "weaponAttack": {
+    "label": "roll.attack",
+    "formula": "1d20 + @derived.strMod + @item.bonus",
+    "card": "attack",
+    "item": ["weapon"]
   }
 }

@@ -6,14 +6,37 @@
   "schema": {
     "type": "object",
     "properties": {
-      "level": { "type": "integer", "default": 1, "minimum": 1, "maximum": 20 },
-      "str": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
-      "dex": { "type": "integer", "default": 10, "minimum": 1, "maximum": 30 },
+      "level": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 20
+      },
+      "str": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "dex": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
       "hp": {
         "type": "object",
         "properties": {
-          "value": { "type": "integer", "default": 10, "x-counter": true },
-          "max": { "type": "integer", "default": 10, "minimum": 1 }
+          "value": {
+            "type": "integer",
+            "default": 10,
+            "x-counter": true
+          },
+          "max": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1
+          }
         }
       },
       "skills": {
@@ -22,22 +45,54 @@
         "items": {
           "type": "object",
           "properties": {
-            "name": { "type": "string", "default": "", "maxLength": 60 },
-            "ability": { "type": "string", "enum": ["str", "dex"], "default": "str" },
-            "rank": { "type": "integer", "default": 0, "minimum": 0, "maximum": 10 }
+            "name": {
+              "type": "string",
+              "default": "",
+              "maxLength": 60
+            },
+            "ability": {
+              "type": "string",
+              "enum": ["str", "dex"],
+              "default": "str"
+            },
+            "rank": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0,
+              "maximum": 10
+            }
           }
         }
       },
-      "portrait": { "type": "string", "x-kind": "image", "default": "" },
-      "biography": { "type": "string", "x-kind": "richText", "default": "" },
-      "notes": { "type": "string", "x-kind": "longText", "default": "" },
-      "gmNotes": { "type": "string", "x-kind": "longText", "x-layer": "secret", "default": "" }
+      "portrait": {
+        "type": "string",
+        "x-kind": "image",
+        "default": ""
+      },
+      "biography": {
+        "type": "string",
+        "x-kind": "richText",
+        "default": ""
+      },
+      "notes": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      },
+      "gmNotes": {
+        "type": "string",
+        "x-kind": "longText",
+        "x-layer": "secret",
+        "default": ""
+      }
     }
   },
   "derived": {
     "strMod": "floor((@str - 10) / 2)",
     "dexMod": "floor((@dex - 10) / 2)",
     "proficiency": "2 + floor((@level - 1) / 4)",
-    "maxHp": "@settings.startingHp + @level - 1"
+    "maxHp": "@settings.startingHp + @level - 1",
+    "ac": "10 + @derived.dexMod + @items.acBonus",
+    "preparedSpells": "@items.preparedSpells"
   }
 }

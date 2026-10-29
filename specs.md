@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 88%      |
+| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -27,8 +27,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M12
-- **Next task:** `T-1208`
+- **Active milestone:** M13
+- **Next task:** `T-1301`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,18 +36,19 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), and up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                    |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                |
-| 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added. |
-| 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; one URL per table; layouts saved per browser) (ADR-059).                                     |
-| 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).     |
-| 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).          |
-| 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                     |
-| 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).  |
-| 2026-10-29 | T-1205 done: item types declare `contributes`; actor formulas read the totals as `@items.<name>` in rolls, recipes, initiative and plugin code, live; an actor holds at most 500 items.   |
-| 2026-10-29 | T-1206 done: an `items` sheet node lists and edits an actor's items in place, with open, remove, add from the library and drops; sheets compute `@items` from the open item documents.    |
-| 2026-10-29 | T-1207 done: recipes declare `item` types and read `@item`; buttons in an `items` row or on an owned item's sheet roll as the holder with that item, checked on the server.               |
+| Date       | Change                                                                                                                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-10-28 | M8–M11 task lists and change log moved to `docs/history/0.2.0.md`. §8.10, §8.14, §14 and §15 updated for what 0.2.0 built.                                                                                                     |
+| 2026-10-28 | Road to 1.0 planned: M12–M17 with releases 0.3.0 to 1.0.0; Q16–Q19 opened; world export/import and schema composition stay LATER, with other plugin kinds and a book-style journal added.                                      |
+| 2026-10-28 | T-1201 done: the table is a dockview workspace (lists, documents, pages and tools as panels; one URL per table; layouts saved per browser) (ADR-059).                                                                          |
+| 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).                                          |
+| 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).                                               |
+| 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                                                          |
+| 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).                                       |
+| 2026-10-29 | T-1205 done: item types declare `contributes`; actor formulas read the totals as `@items.<name>` in rolls, recipes, initiative and plugin code, live; an actor holds at most 500 items.                                        |
+| 2026-10-29 | T-1206 done: an `items` sheet node lists and edits an actor's items in place, with open, remove, add from the library and drops; sheets compute `@items` from the open item documents.                                         |
+| 2026-10-29 | T-1207 done: recipes declare `item` types and read `@item`; buttons in an `items` row or on an owned item's sheet roll as the holder with that item, checked on the server.                                                    |
+| 2026-10-29 | T-1208 done, M12 done: tiny-d20 gains armour adding to AC while equipped, a Gear tab whose weapons attack with `@item`, prepared spells counted on a Spells tab, and armour in its pack; the tutorial gains an inventory step. |
 
 ---
 
@@ -766,7 +767,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Deps:** T-1206
   - **Do:** Recipes may declare `item` types and read `@item`; a roll button in an `items` row, or on an owned item's sheet, rolls as the holder with that item (`itemId` in the roll request, checked against the actor). Library item sheets keep no roll (ADR-063).
   - **Done when:** validator tests cover `@item`; server tests refuse an item another actor holds; e2e shows an attack from a weapon row with the weapon's damage on the card.
-- [ ] **T-1208 · tiny-d20 inventory**
+- [x] **T-1208 · tiny-d20 inventory**
   - **Deps:** T-1207
   - **Do:** tiny-d20 gets armour (`equipped`, `acBonus`) contributing to an AC derived value while equipped, a gear list with an Attack per weapon, and prepared spells contributing to a prepared count on the character sheet; the pack gains armour. The guide's tutorial gains an inventory step.
   - **Done when:** the reference plugin validates; e2e on all three browsers: equip armour, prepare a spell, attack with a weapon.

@@ -7,7 +7,14 @@
       "kind": "actor",
       "type": "npc",
       "name": "Goblin",
-      "data": { "str": 8, "dex": 14, "hp": { "value": 7, "max": 7 } }
+      "data": {
+        "str": 8,
+        "dex": 14,
+        "hp": {
+          "value": 7,
+          "max": 7
+        }
+      }
     },
     {
       "id": "ogre",
@@ -17,31 +24,66 @@
       "data": {
         "str": 19,
         "dex": 8,
-        "hp": { "value": 30, "max": 30 },
+        "hp": {
+          "value": 30,
+          "max": 30
+        },
         "gmNotes": "Hates bright light."
       }
     },
-    { "id": "shortsword", "kind": "item", "type": "weapon", "name": "Shortsword" },
+    {
+      "id": "shortsword",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Shortsword"
+    },
     {
       "id": "greatclub",
       "kind": "item",
       "type": "weapon",
       "name": "Greatclub",
-      "data": { "damage": "2d8", "bonus": 1 }
+      "data": {
+        "damage": "2d8",
+        "bonus": 1
+      }
+    },
+    {
+      "id": "leather",
+      "kind": "item",
+      "type": "armor",
+      "name": "Leather armour",
+      "data": {
+        "acBonus": 1
+      }
+    },
+    {
+      "id": "chainmail",
+      "kind": "item",
+      "type": "armor",
+      "name": "Chain mail",
+      "data": {
+        "acBonus": 4
+      }
     },
     {
       "id": "spark",
       "kind": "item",
       "type": "spell",
       "name": "Spark",
-      "data": { "level": 0, "effect": "1d4 fire damage to one target in sight." }
+      "data": {
+        "level": 0,
+        "effect": "1d4 fire damage to one target in sight."
+      }
     },
     {
       "id": "mend",
       "kind": "item",
       "type": "spell",
       "name": "Mend",
-      "data": { "level": 1, "effect": "A touched creature regains 1d8 hit points." }
+      "data": {
+        "level": 1,
+        "effect": "A touched creature regains 1d8 hit points."
+      }
     }
   ]
 }

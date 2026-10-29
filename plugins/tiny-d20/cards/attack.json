@@ -1,0 +1,10 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/card.schema.json",
+  "title": "card.attack.title",
+  "rows": [
+    { "label": "card.weapon", "value": "@item.name" },
+    { "label": "card.roll", "value": "@roll.resolved" },
+    { "label": "card.total", "value": "@total", "class": "total" },
+    { "label": "card.damage", "value": "@item.damage" }
+  ]
+}

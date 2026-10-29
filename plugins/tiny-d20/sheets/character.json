@@ -9,21 +9,55 @@
         "gap": "md",
         "wrap": true,
         "children": [
-          { "type": "image", "path": "portrait", "size": "md" },
+          {
+            "type": "image",
+            "path": "portrait",
+            "size": "md"
+          },
           {
             "type": "grid",
             "columns": 3,
             "children": [
-              { "type": "field", "path": "level", "label": "field.level", "input": "number" },
-              { "type": "field", "path": "str", "label": "field.str", "input": "number" },
-              { "type": "field", "path": "dex", "label": "field.dex", "input": "number" },
-              { "type": "derived", "key": "strMod", "label": "field.strMod", "format": "signed" },
-              { "type": "derived", "key": "dexMod", "label": "field.dexMod", "format": "signed" },
+              {
+                "type": "field",
+                "path": "level",
+                "label": "field.level",
+                "input": "number"
+              },
+              {
+                "type": "field",
+                "path": "str",
+                "label": "field.str",
+                "input": "number"
+              },
+              {
+                "type": "field",
+                "path": "dex",
+                "label": "field.dex",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "strMod",
+                "label": "field.strMod",
+                "format": "signed"
+              },
+              {
+                "type": "derived",
+                "key": "dexMod",
+                "label": "field.dexMod",
+                "format": "signed"
+              },
               {
                 "type": "derived",
                 "key": "proficiency",
                 "label": "field.proficiency",
                 "format": "signed"
+              },
+              {
+                "type": "derived",
+                "key": "ac",
+                "label": "field.ac"
               }
             ]
           }
@@ -34,11 +68,35 @@
         "title": "section.vitals",
         "class": "vitals",
         "children": [
-          { "type": "field", "path": "hp.value", "label": "field.hp", "input": "counter" },
-          { "type": "field", "path": "hp.max", "label": "field.hpMax", "input": "number" },
-          { "type": "derived", "key": "maxHp", "label": "field.maxHpRule" },
-          { "type": "custom:hpBar", "props": { "path": "hp", "label": "field.hp" } },
-          { "type": "text", "text": "hint.unconscious", "visibleIf": "@hp.value <= 0" }
+          {
+            "type": "field",
+            "path": "hp.value",
+            "label": "field.hp",
+            "input": "counter"
+          },
+          {
+            "type": "field",
+            "path": "hp.max",
+            "label": "field.hpMax",
+            "input": "number"
+          },
+          {
+            "type": "derived",
+            "key": "maxHp",
+            "label": "field.maxHpRule"
+          },
+          {
+            "type": "custom:hpBar",
+            "props": {
+              "path": "hp",
+              "label": "field.hp"
+            }
+          },
+          {
+            "type": "text",
+            "text": "hint.unconscious",
+            "visibleIf": "@hp.value <= 0"
+          }
         ]
       },
       {
@@ -55,19 +113,121 @@
                   "type": "row",
                   "gap": "sm",
                   "children": [
-                    { "type": "field", "path": "name", "label": "skill.name" },
+                    {
+                      "type": "field",
+                      "path": "name",
+                      "label": "skill.name"
+                    },
                     {
                       "type": "field",
                       "path": "ability",
                       "label": "skill.ability",
                       "input": "select"
                     },
-                    { "type": "field", "path": "rank", "label": "skill.rank", "input": "number" },
+                    {
+                      "type": "field",
+                      "path": "rank",
+                      "label": "skill.rank",
+                      "input": "number"
+                    },
                     {
                       "type": "rollButton",
                       "roll": "skill",
                       "label": "roll.skill",
-                      "args": { "id": "@row.id" }
+                      "args": {
+                        "id": "@row.id"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "tab.gear",
+            "children": [
+              {
+                "type": "items",
+                "itemTypes": ["weapon", "armor"],
+                "addLabel": "gear.add",
+                "item": {
+                  "type": "row",
+                  "gap": "sm",
+                  "children": [
+                    {
+                      "type": "row",
+                      "gap": "sm",
+                      "visibleIf": "@item.type == 'weapon'",
+                      "children": [
+                        {
+                          "type": "field",
+                          "path": "damage",
+                          "label": "field.damage"
+                        },
+                        {
+                          "type": "field",
+                          "path": "bonus",
+                          "label": "field.bonus",
+                          "input": "number"
+                        },
+                        {
+                          "type": "rollButton",
+                          "roll": "weaponAttack",
+                          "label": "roll.attack"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "row",
+                      "gap": "sm",
+                      "visibleIf": "@item.type == 'armor'",
+                      "children": [
+                        {
+                          "type": "field",
+                          "path": "equipped",
+                          "label": "field.equipped",
+                          "input": "checkbox"
+                        },
+                        {
+                          "type": "field",
+                          "path": "acBonus",
+                          "label": "field.acBonus",
+                          "input": "number"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "label": "tab.spells",
+            "children": [
+              {
+                "type": "derived",
+                "key": "preparedSpells",
+                "label": "field.preparedSpells"
+              },
+              {
+                "type": "items",
+                "itemTypes": ["spell"],
+                "addLabel": "spell.add",
+                "item": {
+                  "type": "row",
+                  "gap": "sm",
+                  "children": [
+                    {
+                      "type": "field",
+                      "path": "prepared",
+                      "label": "field.prepared",
+                      "input": "checkbox"
+                    },
+                    {
+                      "type": "field",
+                      "path": "level",
+                      "label": "field.spellLevel",
+                      "input": "number"
                     }
                   ]
                 }
@@ -77,9 +237,21 @@
           {
             "label": "tab.notes",
             "children": [
-              { "type": "longText", "path": "biography", "label": "field.biography" },
-              { "type": "longText", "path": "notes", "label": "field.notes" },
-              { "type": "longText", "path": "gmNotes", "label": "field.gmNotes" }
+              {
+                "type": "longText",
+                "path": "biography",
+                "label": "field.biography"
+              },
+              {
+                "type": "longText",
+                "path": "notes",
+                "label": "field.notes"
+              },
+              {
+                "type": "longText",
+                "path": "gmNotes",
+                "label": "field.gmNotes"
+              }
             ]
           }
         ]
