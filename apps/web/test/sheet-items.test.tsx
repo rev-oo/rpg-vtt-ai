@@ -114,19 +114,40 @@ const DEFINITION: PluginDefinition = {
             type: 'items',
             itemTypes: ['armor'],
             addLabel: 'Add armor',
-            item: { type: 'field', path: 'equipped', label: 'Equipped', input: 'checkbox' },
+            item: {
+              type: 'row',
+              children: [
+                { type: 'field', path: 'equipped', label: 'Equipped', input: 'checkbox' },
+                { type: 'rollButton', roll: 'brace', label: 'Brace' },
+              ],
+            },
           },
         ],
       },
     },
     item: { layout: { type: 'column', children: [] } },
   },
-  rolls: {},
+  rolls: { brace: { formula: '1d20 + @item.acBonus', item: ['armor'] } },
   dice: {},
   cards: {},
   settings: {},
   lang: { en: {} },
   styles: [],
+};
+
+const ROLLED = {
+  id: 'm1',
+  tableId: TABLE.id,
+  senderId: 'u1',
+  speaker: { name: 'Goblin King', actorId: HERO.id, imageUrl: null },
+  audience: 'public',
+  recipientIds: [],
+  kind: 'roll',
+  text: '1d20 + 2',
+  rolls: [{ expression: '1d20 + @item.acBonus', resolved: '1d20 + 2', total: 12, dice: [] }],
+  card: null,
+  createdAt: '2026-10-20T12:00:00.000Z',
+  editedAt: null,
 };
 
 const item = (id: string, type: string, name: string, actorId: string | null): ItemView => ({
@@ -171,6 +192,7 @@ function openTable({ access = 'owner' }: { access?: 'owner' | 'observer' } = {})
     },
     'POST /actors/a1/items': { status: 201, body: { item: item('i3', 'armor', 'Plate', 'a1') } },
     'DELETE /items/i1': { status: 204 },
+    'POST /tables/t1/rolls': { status: 201, body: { message: ROLLED } },
     'POST /tables/t1/compendium/copy': {
       body: { actors: [], items: [item('i4', 'armor', 'Scale', 'a1')] },
     },
@@ -255,6 +277,20 @@ describe('items on actor sheets (T-1206)', () => {
         method: 'POST',
         path: '/tables/t1/compendium/copy',
         body: { refs: [ref], actorId: 'a1' },
+      }),
+    );
+  });
+
+  it("rolls from an item's row with that item (T-1207)", async () => {
+    const api = openTable();
+    await openSheet('Goblin King');
+    await userEvent.click(within(await items()).getByRole('button', { name: 'Brace' }));
+    expect(await screen.findByText('Rolled. The result is in the chat.')).toBeVisible();
+    expect(api.calls).toContainEqual(
+      expect.objectContaining({
+        method: 'POST',
+        path: '/tables/t1/rolls',
+        body: { recipe: { name: 'brace', args: {}, itemId: 'i1' }, actorId: 'a1' },
       }),
     );
   });

@@ -1,0 +1,7 @@
+{
+  "title": "Attack",
+  "rows": [
+    { "label": "Weapon", "value": "@item.name" },
+    { "label": "Damage", "value": "@item.damage" }
+  ]
+}

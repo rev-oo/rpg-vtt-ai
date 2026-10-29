@@ -74,6 +74,30 @@ describe('items nodes (T-1206)', () => {
     expect(screen.getByLabelText('Equipped')).toBeDisabled();
   });
 
+  it("rolls from a row with the row's item (T-1207)", async () => {
+    const rolls: unknown[] = [];
+    const renderItems: ItemsRenderer = ({ node }) => (
+      <ItemRow
+        item={{ id: 'i1', name: 'Mail', type: 'armor' }}
+        store={createMemoryStore({})}
+        schema={ARMOR}
+        readOnly
+        layout={node.item}
+      />
+    );
+    renderSheet(
+      { type: 'items', item: { type: 'rollButton', roll: 'brace', label: 'Brace' } },
+      {
+        renderItems,
+        onRoll: (...call) => {
+          rolls.push(call);
+        },
+      },
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Brace' }));
+    expect(rolls).toEqual([['brace', {}, { id: 'i1', name: 'Mail', type: 'armor' }]]);
+  });
+
   it('feeds item totals to derived values', () => {
     renderSheet(
       { type: 'derived', key: 'ac', label: 'AC' },

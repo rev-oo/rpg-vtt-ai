@@ -2,7 +2,11 @@
   "layout": {
     "type": "column",
     "children": [
-      { "type": "derived", "key": "ac", "label": "AC" },
+      {
+        "type": "derived",
+        "key": "ac",
+        "label": "AC"
+      },
       {
         "type": "items",
         "itemTypes": ["armor"],
@@ -10,8 +14,38 @@
         "item": {
           "type": "row",
           "children": [
-            { "type": "field", "path": "equipped", "input": "checkbox", "label": "Equipped" },
-            { "type": "field", "path": "acBonus", "input": "number", "label": "Bonus" }
+            {
+              "type": "field",
+              "path": "equipped",
+              "input": "checkbox",
+              "label": "Equipped"
+            },
+            {
+              "type": "field",
+              "path": "acBonus",
+              "input": "number",
+              "label": "Bonus"
+            }
+          ]
+        }
+      },
+      {
+        "type": "items",
+        "itemTypes": ["weapon"],
+        "addLabel": "Add weapon",
+        "item": {
+          "type": "row",
+          "children": [
+            {
+              "type": "field",
+              "path": "damage",
+              "label": "Damage"
+            },
+            {
+              "type": "rollButton",
+              "roll": "attack",
+              "label": "Attack"
+            }
           ]
         }
       }

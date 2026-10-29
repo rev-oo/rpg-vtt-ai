@@ -276,6 +276,10 @@ export const en = {
   'pluginIssue.actor_sheet_node':
     'The “{type}” node only belongs on actor sheets, but {scope} uses this sheet.',
   'pluginIssue.nested_items': 'An items node cannot sit inside a list or another items node.',
+  'pluginIssue.item_required':
+    'The roll “{roll}” is made with an item: put its button in an items row or on an item sheet.',
+  'pluginIssue.item_mismatch':
+    'The roll “{roll}” is not made with items of type “{type}”; list it in the roll’s item.',
   'pluginIssue.invalid_default': 'The default does not fit the field: {reason}',
   'pluginIssue.invalid_annotation': '{key} cannot be used on a field of type {type}.',
   'pluginIssue.reserved_name': '“{name}” is reserved for formulas and cannot name a field.',

@@ -279,6 +279,10 @@ export const ptBR: Messages = {
   'pluginIssue.unknown_node': 'Nó de ficha desconhecido “{type}”.',
   'pluginIssue.actor_sheet_node':
     'O nó “{type}” só pode ser usado em fichas de atores, mas {scope} usa esta ficha.',
+  'pluginIssue.item_required':
+    'A rolagem “{roll}” é feita com um item: coloque o botão numa linha de itens ou na ficha de um item.',
+  'pluginIssue.item_mismatch':
+    'A rolagem “{roll}” não é feita com itens do tipo “{type}”; liste-o em item da rolagem.',
   'pluginIssue.nested_items':
     'Um nó de itens não pode ficar dentro de uma lista ou de outro nó de itens.',
   'pluginIssue.invalid_default': 'O valor padrão não serve para o campo: {reason}',

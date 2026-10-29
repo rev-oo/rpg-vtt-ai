@@ -345,6 +345,7 @@ export function validatePlugin(
 
   // 3. Sheets, checked against every type that uses them.
   const recipeUsers = new Map<string, Set<TypeEntry>>();
+  const actorEntries = types.filter((entry) => entry.actor);
   const walkSheet = (sheetName: string, entry: TypeEntry | undefined) => {
     const sheet = sheets[sheetName];
     if (!sheet) return;
@@ -493,9 +494,24 @@ export function validatePlugin(
             if (one('rolls.json') !== undefined || !files.has('rolls.json')) {
               error('missing_target', file, [...path, 'roll'], { target: 'roll', name: node.roll });
             }
-          } else if (entry) {
+          } else {
+            const recipe = rolls[node.roll];
+            // The item a button rolls with: its row's, or the item whose sheet it is on.
+            const itemSheet = entry && !entry.actor ? entry.name : undefined;
+            const held = row?.itemType ?? itemSheet;
+            const takes = recipe && 'formula' in recipe ? recipe.item : undefined;
+            if (takes && held === undefined && entry) {
+              error('item_required', file, [...path, 'roll'], { roll: node.roll });
+            } else if (held !== undefined && (takes ?? []).length > 0 && !takes?.includes(held)) {
+              error('item_mismatch', file, [...path, 'roll'], { roll: node.roll, type: held });
+            } else if (itemSheet !== undefined && !takes) {
+              error('item_mismatch', file, [...path, 'roll'], { roll: node.roll, type: itemSheet });
+            }
+            // Any actor may hold an item, so its sheet's rolls are checked against them all.
+            const rollers = itemSheet === undefined ? (entry ? [entry] : []) : actorEntries;
             const users = recipeUsers.get(node.roll) ?? new Set();
-            recipeUsers.set(node.roll, users.add(entry));
+            for (const roller of rollers) users.add(roller);
+            recipeUsers.set(node.roll, users);
           }
           for (const [key, value] of Object.entries(node.args ?? {})) {
             if (typeof value === 'string')
@@ -538,11 +554,29 @@ export function validatePlugin(
       continue;
     }
     const users = [...(recipeUsers.get(name) ?? [])];
-    const scopes: FormulaScope[] = (
+    const rollers: FormulaScope[] = (
       users.length > 0
         ? users.map(typeScope)
         : [{ label: `roll "${name}"`, settings: settingNames }]
     ).map((scope) => ({ ...scope, args: true }));
+    // A roll made with an item reads it as `@item`, checked against each of its types.
+    recipe.item?.forEach((type, index) => {
+      if (!Object.hasOwn(itemTypes, type))
+        error('missing_target', file, [name, 'item', index], { target: 'item type', name: type });
+    });
+    const held = (recipe.item ?? []).filter((type) => Object.hasOwn(itemTypes, type));
+    const scopes = recipe.item
+      ? rollers.flatMap((scope) =>
+          held.map((type) => ({
+            ...scope,
+            label: `${scope.label} with item type "${type}"`,
+            item: {
+              schema: itemTypes[type]?.schema ?? { type: 'object' as const },
+              derived: new Set(Object.keys(itemTypes[type]?.derived ?? {})),
+            },
+          })),
+        )
+      : rollers;
     for (const scope of scopes) {
       formula(recipe.formula, scope, true, file, [name, 'formula']);
       recipe.outcomes?.forEach((outcome, index) => {

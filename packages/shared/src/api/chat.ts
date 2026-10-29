@@ -54,6 +54,8 @@ export const rollRequestBody = z
       .object({
         name: z.string().min(1).max(64),
         args: z.record(z.string().max(64), rollArg).default({}),
+        /** The item the recipe is made with, which the actor holds (ADR-063). */
+        itemId: z.uuid().optional(),
       })
       .optional(),
     ...messageTarget,

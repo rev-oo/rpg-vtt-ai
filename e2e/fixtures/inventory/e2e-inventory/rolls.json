@@ -1,0 +1,8 @@
+{
+  "attack": {
+    "label": "Attack",
+    "formula": "1d20 + @item.bonus",
+    "card": "attack",
+    "item": ["weapon"]
+  }
+}

@@ -220,23 +220,49 @@ export function liveActorData(
   return loaded ? joinLayers(db, 'actor', actor, definition, live) : undefined;
 }
 
+/** An item an actor holds, with what `@item` names it by (ADR-063). */
+export type LiveHeldItem = HeldItem & { id: string; name: string };
+
 /**
- * The items an actor holds, for `@items` (ADR-063): each one's main layer from its live
- * document while one is loaded, so totals see edits not saved yet, else its projection.
- * Contributions only read main-layer fields (the validator checks), so secrets stay unread.
+ * The items an actor holds, for `@items` and `@item` (ADR-063): each one's main layer from
+ * its live document while one is loaded, so rolls see edits not saved yet, else from its
+ * projection. Secret fields are never read, so no total or roll can reveal them.
  */
 export function liveHeldItems(
   db: DbOrTx,
   actor: Actor,
   definition: DefinitionOf,
   live: (name: string) => Y.Doc | undefined,
-): HeldItem[] {
-  return heldItems(db, actor.id, MAX_ACTOR_ITEMS).map((item) => ({
-    type: item.type,
-    data: live(documentName({ kind: 'item', id: item.id, layer: 'main' }))
-      ? layerReader(db, 'item', item, definition, live).main()
-      : item.system,
-  }));
+): LiveHeldItem[] {
+  const table = findTable(db, actor.tableId);
+  const plugin = table ? definition(table.systemId) : undefined;
+  const layouts = new Map<string, DocumentLayout | undefined>();
+  const layoutOf = (typeName: string) => {
+    if (!layouts.has(typeName)) {
+      const type =
+        plugin && Object.hasOwn(plugin.itemTypes, typeName)
+          ? plugin.itemTypes[typeName]
+          : undefined;
+      layouts.set(typeName, type && documentLayout(type.schema));
+    }
+    return layouts.get(typeName);
+  };
+  return heldItems(db, actor.id, MAX_ACTOR_ITEMS).map((item) => {
+    const layout = layoutOf(item.type);
+    const loaded = live(documentName({ kind: 'item', id: item.id, layer: 'main' }));
+    return {
+      id: item.id,
+      name: item.name,
+      type: item.type,
+      // An item of a type the system no longer declares contributes nothing and cannot be
+      // rolled with, so its data is not needed.
+      data: !layout
+        ? {}
+        : loaded
+          ? layerReader(db, 'item', item, definition, live).main()
+          : splitLayers(layout, item.system).main,
+    };
+  });
 }
 
 /**

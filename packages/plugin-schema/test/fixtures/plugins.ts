@@ -431,6 +431,80 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'rolls made with an item, from its row and its sheet (T-1207)',
+    change: (f: PluginFixture): void => {
+      f['types/items/weapon.json'] = {
+        label: 'Weapon',
+        sheet: 'weapon',
+        schema: {
+          type: 'object',
+          properties: {
+            bonus: { type: 'integer', default: 1 },
+            damage: { type: 'string', default: '1d6' },
+          },
+        },
+        derived: { hit: '@bonus + 1' },
+      };
+      f['types/items/armor.json'] = {
+        label: 'Armor',
+        sheet: 'armor',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 1 } } },
+      };
+      const attack = { type: 'rollButton', roll: 'attack', label: 'Attack' };
+      f['sheets/weapon.json'] = { layout: attack };
+      f['sheets/armor.json'] = { layout: { type: 'field', path: 'bonus' } };
+      f['cards/attack.json'] = {
+        title: 'Attack',
+        rows: [{ label: 'Damage', value: '@item.damage' }],
+      };
+      (f['rolls.json'] as Record<string, unknown>).attack = {
+        formula: '1d20 + @derived.mod + @item.bonus + @item.derived.hit',
+        outcomes: [{ when: "@total > 10 and @item.type == 'weapon'", label: 'Hit' }],
+        card: 'attack',
+        item: ['weapon'],
+      };
+      sheetChildren(f).push({
+        type: 'items',
+        item: { ...attack, visibleIf: "@item.type == 'weapon'" },
+      });
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'rolls made with an item, rolled without one or with the wrong one (T-1207)',
+    change: (f: PluginFixture): void => {
+      f['types/items/weapon.json'] = {
+        label: 'Weapon',
+        sheet: 'weapon',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 1 } } },
+      };
+      f['types/items/armor.json'] = {
+        label: 'Armor',
+        sheet: 'armor',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 1 } } },
+      };
+      f['sheets/weapon.json'] = { layout: { type: 'field', path: 'bonus' } };
+      // The skill roll is not made with an item.
+      f['sheets/armor.json'] = { layout: { type: 'rollButton', roll: 'skill', label: 'x' } };
+      (f['rolls.json'] as Record<string, unknown>).swing = {
+        formula: '1d20 + @item.nope',
+        item: ['weapon', 'wand'],
+      };
+      sheetChildren(f).push(
+        { type: 'rollButton', roll: 'swing', label: 'Swing' },
+        { type: 'items', item: { type: 'rollButton', roll: 'swing', label: 'Swing' } },
+      );
+    },
+    issues: [
+      'error item_mismatch sheets/armor.json $.layout.roll',
+      'error item_required sheets/hero.json $.layout.children[5].roll',
+      'error item_mismatch sheets/hero.json $.layout.children[6].item.roll',
+      'error missing_target rolls.json $.swing.item[1]',
+      'error unknown_reference rolls.json $.swing.formula',
+    ],
+  },
+  {
     name: 'a pack with bad entries, reported by JSON path (T-0803)',
     change: (f: PluginFixture): void => {
       f['packs/bad.json'] = {
@@ -588,9 +662,8 @@ export const CASES: FixtureCase[] = [
       'error unknown_field sheets/hero.json $.layout.children[3].path',
       'error unknown_field sheets/hero.json $.layout.children[4].path',
       'error unknown_reference sheets/hero.json $.layout.children[1].visibleIf',
-      // The item type rolls `skill` too, without the fields the recipe reads.
-      'error unknown_reference rolls.json $.skill.formula',
-      'error unknown_reference rolls.json $.skill.formula',
+      // The item type's sheet rolls `skill`, which is not made with an item (T-1207).
+      'error item_mismatch sheets/hero.json $.layout.children[3].item.children[1].roll',
     ],
   },
   {

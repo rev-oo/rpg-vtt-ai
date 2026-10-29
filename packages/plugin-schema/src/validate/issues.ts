@@ -25,6 +25,8 @@ export const PLUGIN_ISSUE_CODES = [
   'unknown_node',
   'actor_sheet_node',
   'nested_items',
+  'item_required',
+  'item_mismatch',
   // Data schemas
   'invalid_default',
   'invalid_annotation',
@@ -126,6 +128,10 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   actor_sheet_node: (x) =>
     `The "${p(x, 'type')}" node only belongs on actor sheets, but ${p(x, 'scope')} uses this sheet`,
   nested_items: () => 'An items node cannot sit inside a list or another items node',
+  item_required: (x) =>
+    `The roll "${p(x, 'roll')}" is made with an item: put its button in an items row or on an item sheet`,
+  item_mismatch: (x) =>
+    `The roll "${p(x, 'roll')}" is not made with items of type "${p(x, 'type')}"; list it in the roll's item`,
   invalid_default: (x) => `The default does not fit the field: ${p(x, 'reason')}`,
   invalid_annotation: (x) => `${p(x, 'key')} cannot be used on a field of type ${p(x, 'type')}`,
   duplicate_id: (x) => `Another entry already has the id "${p(x, 'id')}"`,

@@ -65,6 +65,16 @@
             "type": "string",
             "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
             "title": "Name"
+          },
+          "item": {
+            "description": "Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+              "title": "Name"
+            }
           }
         },
         "required": [

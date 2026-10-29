@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 75%      |
+| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 88%      |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1207`
+- **Next task:** `T-1208`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -47,6 +47,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).  |
 | 2026-10-29 | T-1205 done: item types declare `contributes`; actor formulas read the totals as `@items.<name>` in rolls, recipes, initiative and plugin code, live; an actor holds at most 500 items.   |
 | 2026-10-29 | T-1206 done: an `items` sheet node lists and edits an actor's items in place, with open, remove, add from the library and drops; sheets compute `@items` from the open item documents.    |
+| 2026-10-29 | T-1207 done: recipes declare `item` types and read `@item`; buttons in an `items` row or on an owned item's sheet roll as the holder with that item, checked on the server.               |
 
 ---
 
@@ -402,7 +403,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | planned (M15)                |
 | FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | planned (M15)                |
 | FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                |
-| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | planned (M12)                |
+| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | 0.3.0                        |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -761,7 +762,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Deps:** T-1205
   - **Do:** An `items` sheet node lists the actor's items of `itemTypes`, grouped, each row laid out by `item` with paths into the item's data and `@item.name/type/id` (FR-SHEET-12). Row inputs edit the item's live document; the sheet computes contributions from the open documents, so derived values follow at once. Open, remove and add (from the library), and dropping library or compendium rows onto the node.
   - **Done when:** validator tests check row paths against every listed type; web tests render, edit and add rows, read-only for observers, with a derived value following a checkbox; e2e shows a player equipping armour and AC changing on the GM's open sheet.
-- [ ] **T-1207 · Rolls with an item**
+- [x] **T-1207 · Rolls with an item**
   - **Deps:** T-1206
   - **Do:** Recipes may declare `item` types and read `@item`; a roll button in an `items` row, or on an owned item's sheet, rolls as the holder with that item (`itemId` in the roll request, checked against the actor). Library item sheets keep no roll (ADR-063).
   - **Done when:** validator tests cover `@item`; server tests refuse an item another actor holds; e2e shows an attack from a weapon row with the weapon's damage on the card.
