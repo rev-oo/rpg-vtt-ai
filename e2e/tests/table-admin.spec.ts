@@ -110,9 +110,16 @@ test('members, invite links and sign-up', async ({ browser }) => {
     await admin
       .getByLabel('Who can create accounts')
       .selectOption({ label: 'Admins, and anyone with a table invite link' });
+    // Upload limits (T-1301): edited in MiB, bounded.
+    await admin.getByLabel('Largest upload (MiB)').fill('500');
+    await admin.getByRole('button', { name: 'Save' }).click();
+    await expect(admin.getByText('Enter a whole number of MiB from 1 to 100.')).toBeVisible();
+    await admin.getByLabel('Largest upload (MiB)').fill('20');
     await admin.getByRole('button', { name: 'Save' }).click();
     await expect(admin.getByText('The instance settings were saved.')).toBeVisible();
     await expect(admin.getByRole('banner')).toContainText('Guild Hall');
+    await admin.reload();
+    await expect(admin.getByLabel('Largest upload (MiB)')).toHaveValue('20');
 
     const link = await createLink('Player');
     const stranger = await browser.newContext();
@@ -125,7 +132,11 @@ test('members, invite links and sign-up', async ({ browser }) => {
     await page.getByRole('button', { name: 'Create account and join' }).click();
     await expect(page.getByRole('heading', { name: 'Guild Table' })).toBeVisible();
 
-    await patch(gm, '/admin/settings', { siteName: 'VTT', registration: 'closed' });
+    await patch(gm, '/admin/settings', {
+      siteName: 'VTT',
+      registration: 'closed',
+      maxUploadBytes: 10 * 1024 * 1024,
+    });
     await stranger.close();
   });
 });

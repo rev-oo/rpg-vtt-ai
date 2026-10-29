@@ -17,16 +17,20 @@ const stampOf = (date: Date) =>
     .replace(/\.\d+Z$/, 'Z');
 
 export interface BackupResult {
-  /** The new backup folder: `vtt.sqlite` and, if there were any, `plugins/`. */
+  /** The new backup folder: `vtt.sqlite` and, if there were any, `plugins/` and `assets/`. */
   dir: string;
   plugins: boolean;
+  /** Uploaded images (ADR-064). */
+  assets: boolean;
 }
 
 /**
  * Takes a consistent backup of `DATA_DIR` while the server runs (FR-ADMIN-05, NFR-02).
  * `VACUUM INTO` writes a snapshot of the database, WAL included, in one read transaction, so
  * writes made meanwhile are either all in it or not at all. The plugin folders are copied
- * afterwards; they change only when an admin installs or removes a plugin.
+ * afterwards; they change only when an admin installs or removes a plugin. So are uploaded
+ * assets (ADR-064): an upload made meanwhile may have its file without its row, or the
+ * other way round, and an asset whose file is missing is not served.
  */
 export function backupDataDir(
   dataDir: string,
@@ -48,10 +52,14 @@ export function backupDataDir(
     db.close();
   }
 
-  const pluginsDir = path.join(dataDir, 'plugins');
-  const plugins = existsSync(pluginsDir);
-  if (plugins) cpSync(pluginsDir, path.join(dir, 'plugins'), { recursive: true });
-  return { dir, plugins };
+  const copied = (folder: string) => {
+    const source = path.join(dataDir, folder);
+    if (!existsSync(source)) return false;
+    cpSync(source, path.join(dir, folder), { recursive: true });
+    return true;
+  };
+  const plugins = copied('plugins');
+  return { dir, plugins, assets: copied('assets') };
 }
 
 /** The backup folders in `destination` this command named, oldest first, with their times. */

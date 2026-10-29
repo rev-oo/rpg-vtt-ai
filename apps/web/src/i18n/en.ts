@@ -479,6 +479,12 @@ export const en = {
   'instance.sessionLifetime': 'Session lifetime (hours)',
   'instance.sessionLifetimeHint': 'How long people stay signed in. Applies to new sign-ins.',
   'instance.sessionLifetimeRange': 'Enter a whole number of hours from {min} to {max}.',
+  'instance.maxUpload': 'Largest upload (MiB)',
+  'instance.maxUploadHint': 'The largest image a GM can upload to a table.',
+  'instance.assetQuota': 'Space for uploads (MiB)',
+  'instance.assetQuotaHint':
+    'All uploaded images together. Lowering it keeps the images already stored.',
+  'instance.mibRange': 'Enter a whole number of MiB from {min} to {max}.',
   'instance.save': 'Save',
   'instance.saved': 'The instance settings were saved.',
 

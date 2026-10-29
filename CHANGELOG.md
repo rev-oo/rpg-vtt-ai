@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- Images can be uploaded to a table. GMs and assistants send PNG, JPEG, GIF or WebP images, which are checked by their contents (SVG and anything else is refused), and every member of the table can view them. Admins set the largest upload and the space all uploads may take on the instance settings page. Backups and their restore include the uploaded images. Picking them from the app arrives with the asset manager (FR-ASSET-01, FR-ASSET-03, ADR-064).
+
 ## [0.3.0] - 2026-10-29
 
 Tables open as a full-page workspace, the compendium becomes a browser, and items get sheets of their own and a place on actor sheets: inventories, equipped and prepared state, bonuses in derived values and rolls made with an item. Plugins written for 0.1.0 and 0.2.0 work unchanged: the plugin core API stays at `0.1.0`.

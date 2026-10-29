@@ -51,6 +51,8 @@ describe('instance settings (FR-ADMIN-01, T-0604)', () => {
       siteName: 'VTT',
       registration: 'closed',
       sessionLifetimeSeconds: 7 * 24 * 60 * 60,
+      maxUploadBytes: 10 * 1024 * 1024,
+      assetQuotaBytes: 1024 * 1024 * 1024,
     });
 
     const bob = await createUserClient(t.app, t.admin, 'bob');

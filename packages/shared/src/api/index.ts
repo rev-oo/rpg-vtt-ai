@@ -1,4 +1,5 @@
 // The HTTP API contract shared by the server and the web app (ADR-013).
+export * from './assets.js';
 export * from './chat.js';
 export * from './combat.js';
 export * from './collab.js';

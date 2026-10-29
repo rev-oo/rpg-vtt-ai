@@ -3,7 +3,12 @@ import { redirect, useRevalidator } from 'react-router';
 
 import {
   instanceSettingsSchema,
+  MAX_ASSET_QUOTA_BYTES,
   MAX_SESSION_LIFETIME_SECONDS,
+  MAX_UPLOAD_BYTES,
+  MIB,
+  MIN_ASSET_QUOTA_BYTES,
+  MIN_UPLOAD_BYTES,
   MIN_SESSION_LIFETIME_SECONDS,
   REGISTRATION_POLICIES,
   type InstanceSettings,
@@ -49,6 +54,9 @@ function SettingsForm({ initial }: { initial: InstanceSettings }): ReactElement 
   const [registration, setRegistration] = useState(initial.registration);
   // Edited in hours; stored in seconds.
   const [hours, setHours] = useState(String(initial.sessionLifetimeSeconds / HOUR));
+  // Upload limits are edited in MiB; stored in bytes (ADR-064).
+  const [uploadMib, setUploadMib] = useState(String(initial.maxUploadBytes / MIB));
+  const [quotaMib, setQuotaMib] = useState(String(initial.assetQuotaBytes / MIB));
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
@@ -60,18 +68,25 @@ function SettingsForm({ initial }: { initial: InstanceSettings }): ReactElement 
   const lifetime = Number(hours) * HOUR;
   const lifetimeValid =
     hours.trim() !== '' && shape.sessionLifetimeSeconds.safeParse(lifetime).success;
+  const uploadBytes = Number(uploadMib) * MIB;
+  const uploadValid =
+    uploadMib.trim() !== '' && shape.maxUploadBytes.safeParse(uploadBytes).success;
+  const quotaBytes = Number(quotaMib) * MIB;
+  const quotaValid = quotaMib.trim() !== '' && shape.assetQuotaBytes.safeParse(quotaBytes).success;
 
   const save = async () => {
     setSubmitted(true);
     setSaved(false);
     setFailure(null);
-    if (siteNameError || !lifetimeValid) return;
+    if (siteNameError || !lifetimeValid || !uploadValid || !quotaValid) return;
     setBusy(true);
     try {
       await api.updateInstanceSettings({
         siteName: siteName.trim(),
         registration,
         sessionLifetimeSeconds: lifetime,
+        maxUploadBytes: uploadBytes,
+        assetQuotaBytes: quotaBytes,
       });
       // The header shows the new site name.
       refreshInstanceInfo();
@@ -137,6 +152,43 @@ function SettingsForm({ initial }: { initial: InstanceSettings }): ReactElement 
         }
         onChange={(e) => {
           setHours(e.target.value);
+        }}
+      />
+      <TextField
+        label={t('instance.maxUpload')}
+        hint={t('instance.maxUploadHint')}
+        type="number"
+        min={MIN_UPLOAD_BYTES / MIB}
+        max={MAX_UPLOAD_BYTES / MIB}
+        step={1}
+        value={uploadMib}
+        error={
+          submitted && !uploadValid
+            ? t('instance.mibRange', { min: MIN_UPLOAD_BYTES / MIB, max: MAX_UPLOAD_BYTES / MIB })
+            : undefined
+        }
+        onChange={(e) => {
+          setUploadMib(e.target.value);
+        }}
+      />
+      <TextField
+        label={t('instance.assetQuota')}
+        hint={t('instance.assetQuotaHint')}
+        type="number"
+        min={MIN_ASSET_QUOTA_BYTES / MIB}
+        max={MAX_ASSET_QUOTA_BYTES / MIB}
+        step={1}
+        value={quotaMib}
+        error={
+          submitted && !quotaValid
+            ? t('instance.mibRange', {
+                min: MIN_ASSET_QUOTA_BYTES / MIB,
+                max: MAX_ASSET_QUOTA_BYTES / MIB,
+              })
+            : undefined
+        }
+        onChange={(e) => {
+          setQuotaMib(e.target.value);
         }}
       />
       <Button type="submit" variant="primary" disabled={busy} className="self-start">

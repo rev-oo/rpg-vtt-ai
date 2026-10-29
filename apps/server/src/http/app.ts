@@ -28,6 +28,7 @@ import type { EventHub } from '../realtime/hub.js';
 import { registerAuth } from './auth.js';
 import { scheduleBackups } from './backups.js';
 import { actorRoutes } from './routes/actors.js';
+import { assetRoutes } from './routes/assets.js';
 import { authRoutes } from './routes/auth.js';
 import { chatRoutes } from './routes/chat.js';
 import { combatRoutes } from './routes/combat.js';
@@ -180,6 +181,7 @@ export async function buildApp({
   pluginRoutes(context);
   pluginAssetRoutes(context);
   tableRoutes(context);
+  assetRoutes(context);
   memberRoutes(context);
   inviteRoutes(context);
   actorRoutes(context);

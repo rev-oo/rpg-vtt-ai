@@ -20,6 +20,7 @@ import {
   type Ownership,
 } from '@vtt/shared';
 import {
+  ASSET_TYPES,
   MESSAGE_KINDS,
   PLUGIN_STATUSES,
   type PluginIssueView,
@@ -380,4 +381,25 @@ export const ydocs = sqliteTable(
     index('ydocs_item_id_idx').on(t.itemId),
     index('ydocs_journal_entry_id_idx').on(t.journalEntryId),
   ],
+);
+
+/**
+ * Images uploaded to a table (ADR-064). The file is `DATA_DIR/assets/<table id>/<id>`; its
+ * type was told from its bytes, so the row, not a file name, says what it is.
+ */
+export const assets = sqliteTable(
+  'assets',
+  {
+    id: text('id').primaryKey(),
+    tableId: text('table_id')
+      .notNull()
+      .references(() => gameTables.id, { onDelete: 'cascade' }),
+    uploaderId: text('uploader_id').references(() => users.id, { onDelete: 'set null' }),
+    name: text('name').notNull(),
+    type: text('type', { enum: ASSET_TYPES }).notNull(),
+    size: integer('size').notNull(),
+    sha256: text('sha256').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [index('assets_table_idx').on(t.tableId, t.createdAt)],
 );

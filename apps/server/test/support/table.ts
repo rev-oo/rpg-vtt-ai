@@ -3,6 +3,7 @@ import type { LightMyRequestResponse } from 'fastify';
 import type { Rng } from '@vtt/formula';
 import type { TableRole } from '@vtt/shared';
 
+import type { Db } from '../../src/db/client.js';
 import { members } from '../../src/db/schema.js';
 
 import {
@@ -49,12 +50,17 @@ export interface TableSetup extends TestApp {
  * member (eve), plus a movable clock. Sessions last a year so the clock can move past the
  * soft-delete window.
  */
-export async function setupTable({ rng }: { rng?: Rng } = {}): Promise<TableSetup> {
+export async function setupTable({
+  rng,
+  env = {},
+  db,
+}: { rng?: Rng; env?: Record<string, string>; db?: Db } = {}): Promise<TableSetup> {
   let clock = new Date('2026-03-01T12:00:00Z');
   const t = await createTestApp({
-    env: { SESSION_TTL: String(365 * 24 * 60 * 60) },
+    env: { SESSION_TTL: String(365 * 24 * 60 * 60), ...env },
     now: () => clock,
     ...(rng && { rng }),
+    ...(db && { db }),
   });
   insertPlugin(t.db);
   const admin = await setupAdmin(t.app);

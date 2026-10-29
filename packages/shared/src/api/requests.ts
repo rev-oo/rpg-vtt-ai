@@ -4,6 +4,12 @@ import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
 import { INVITE_ROLES, TABLE_ROLES } from '../roles.js';
 
 import {
+  MAX_ASSET_QUOTA_BYTES,
+  MAX_UPLOAD_BYTES,
+  MIN_ASSET_QUOTA_BYTES,
+  MIN_UPLOAD_BYTES,
+} from './assets.js';
+import {
   MAX_DISPLAY_NAME,
   MAX_ENTITY_NAME,
   MAX_ENTITY_TYPE,
@@ -253,6 +259,10 @@ export const instanceSettingsSchema = z.object({
     .int()
     .min(MIN_SESSION_LIFETIME_SECONDS)
     .max(MAX_SESSION_LIFETIME_SECONDS),
+  /** The largest file an upload may be (ADR-064). */
+  maxUploadBytes: z.int().min(MIN_UPLOAD_BYTES).max(MAX_UPLOAD_BYTES),
+  /** All assets of the instance together; uploads past it are refused. */
+  assetQuotaBytes: z.int().min(MIN_ASSET_QUOTA_BYTES).max(MAX_ASSET_QUOTA_BYTES),
 });
 export type InstanceSettings = z.infer<typeof instanceSettingsSchema>;
 
