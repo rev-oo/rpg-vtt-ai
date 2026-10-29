@@ -1,0 +1,11 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "row",
+    "gap": "sm",
+    "children": [
+      { "type": "field", "path": "equipped", "label": "field.equipped", "input": "checkbox" },
+      { "type": "field", "path": "acBonus", "label": "field.acBonus", "input": "number" }
+    ]
+  }
+}

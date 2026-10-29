@@ -4,8 +4,23 @@
     "type": "column",
     "gap": "sm",
     "children": [
-      { "type": "field", "path": "level", "label": "field.spellLevel", "input": "number" },
-      { "type": "field", "path": "effect", "label": "field.effect" }
+      {
+        "type": "field",
+        "path": "level",
+        "label": "field.spellLevel",
+        "input": "number"
+      },
+      {
+        "type": "field",
+        "path": "effect",
+        "label": "field.effect"
+      },
+      {
+        "type": "field",
+        "path": "prepared",
+        "label": "field.prepared",
+        "input": "checkbox"
+      }
     ]
   }
 }

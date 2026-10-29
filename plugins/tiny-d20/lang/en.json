@@ -40,5 +40,19 @@
   "card.total": "Total",
   "setting.critFumble": "Critical hits and fumbles",
   "setting.startingHp": "Starting hit points",
-  "pack.bestiary": "Bestiary"
+  "pack.bestiary": "Bestiary",
+  "type.armor": "Armour",
+  "type.armors": "Armour",
+  "field.ac": "Armour class",
+  "field.equipped": "Equipped",
+  "field.acBonus": "AC bonus",
+  "field.prepared": "Prepared",
+  "field.preparedSpells": "Prepared spells",
+  "tab.gear": "Gear",
+  "tab.spells": "Spells",
+  "gear.add": "Add gear",
+  "spell.add": "Add spell",
+  "card.attack.title": "Attack",
+  "card.weapon": "Weapon",
+  "card.damage": "Damage"
 }

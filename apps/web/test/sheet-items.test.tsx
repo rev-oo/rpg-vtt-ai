@@ -232,6 +232,8 @@ describe('items on actor sheets (T-1206)', () => {
         .getAllByRole('listitem')
         .map((row) => row.getAttribute('aria-label')),
     ).toEqual(['Mail']);
+    // The core names each row; the plugin's row lays out only the fields.
+    expect(within(within(list).getByRole('listitem')).getByText('Mail')).toBeVisible();
     expect(screen.getByLabelText('AC')).toHaveTextContent('10');
     await userEvent.click(within(list).getByLabelText('Equipped'));
     expect(collab.items.get('i1')?.getSnapshot()).toEqual({ equipped: true });

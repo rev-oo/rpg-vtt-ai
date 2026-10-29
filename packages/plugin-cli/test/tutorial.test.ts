@@ -91,6 +91,11 @@ describe('the plugin tutorial', () => {
       },
     };
     expect(rules.derived('actor', 'hero', data).values).toMatchObject({ defense: 13, load: 3 });
+    const armor = [
+      { type: 'armor', data: { worn: true, protection: 2 } },
+      { type: 'armor', data: { worn: false, protection: 3 } },
+    ];
+    expect(rules.derived('actor', 'hero', data, armor).values).toMatchObject({ defense: 15 });
 
     const result = rules.roll('check', {
       type: 'hero',
@@ -109,6 +114,6 @@ describe('the plugin tutorial', () => {
     const out = path.join(temp, 'starter.vttplugin');
     const result = await run('pack', dir(), '--out', out);
     expect(result).toMatchObject({ code: 0 });
-    expect(result.out).toMatch(/^Packed starter 0\.1\.0: 7 files/);
+    expect(result.out).toMatch(/^Packed starter 0\.1\.0: 9 files/);
   });
 });

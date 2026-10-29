@@ -88,6 +88,82 @@ async function openSheet(page: Page, tableId: string, name: string): Promise<voi
   await expect(page.getByRole('heading', { name, level: 2 })).toBeVisible();
 }
 
+// T-1208 (FR-SHEET-12, FR-PLUGIN-15, ADR-063): tiny-d20's inventory. Equipped armour adds to
+// AC, prepared spells are counted, and a weapon's row attacks with that weapon.
+test('tiny-d20 equips armour, prepares a spell and attacks with a weapon', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  await setUp(gm, 'tiny-d20');
+  const player = await createPlayer(browser, gm, 'hana', 'Hana');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'D20 Inventory',
+    systemId: 'tiny-d20',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor } = await post<{ actor: { id: string } }>(player, `/tables/${table.id}/actors`, {
+    type: 'character',
+    name: 'Brann',
+  });
+  setActorData(actor.id, { str: 16, dex: 14 });
+  // New items take their type's defaults: AC +1 and 1d6 damage.
+  const library = [
+    { type: 'armor', name: 'Chain mail' },
+    { type: 'weapon', name: 'Longsword' },
+    { type: 'spell', name: 'Spark' },
+  ];
+  for (const item of library) await post(gm, `/tables/${table.id}/items`, item);
+
+  const page = await player.context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await openSheet(page, table.id, 'Brann');
+  const sheet = page.locator('[data-plugin="tiny-d20"]');
+  const add = async (name: string, button: string) => {
+    await sheet.getByLabel('Item from the library').selectOption({ label: name });
+    await sheet.getByRole('button', { name: button }).click();
+    const row = sheet.getByRole('listitem', { name });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText(name);
+    return row;
+  };
+
+  await test.step('equipped armour raises AC', async () => {
+    const ac = sheet.getByRole('status', { name: 'Armour class' });
+    await expect(ac).toHaveText('12');
+    await sheet.getByRole('tab', { name: 'Gear' }).click();
+    const armour = await add('Chain mail', 'Add gear');
+    await expect(ac).toHaveText('12');
+    await armour.getByLabel('Equipped').check();
+    await expect(ac).toHaveText('13');
+    await armour.getByLabel('AC bonus').fill('4');
+    await expect(ac).toHaveText('16');
+  });
+
+  await test.step('a weapon row attacks with the weapon', async () => {
+    const sword = await add('Longsword', 'Add gear');
+    await sword.getByRole('button', { name: 'Attack' }).click();
+    const card = page.getByRole('log', { name: 'Messages' }).locator('[data-plugin="tiny-d20"]');
+    await expect(card.getByText('Attack', { exact: true })).toBeVisible();
+    // The card's rows: the weapon, the resolved roll, the total and the weapon's damage.
+    await expect(card.locator('dd').nth(0)).toHaveText('Longsword');
+    await expect(card.locator('dd').nth(1)).toHaveText('1d20 + 3 + 0');
+    await expect(card.locator('dd').nth(3)).toHaveText('1d6');
+  });
+
+  await test.step('preparing a spell counts it', async () => {
+    await sheet.getByRole('tab', { name: 'Spells' }).click();
+    const prepared = sheet.getByRole('status', { name: 'Prepared spells' });
+    await expect(prepared).toHaveText('0');
+    const spark = await add('Spark', 'Add spell');
+    await spark.getByLabel('Prepared').check();
+    await expect(prepared).toHaveText('1');
+  });
+
+  expect(errors).toEqual([]);
+});
+
 // T-0411: tiny-d20 uses types, derived values, a skills collection with a roll recipe and its
 // card, a counter, `visibleIf`, tabs, a secret layer, a custom node, scoped CSS and lang files.
 test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async ({ browser }) => {
