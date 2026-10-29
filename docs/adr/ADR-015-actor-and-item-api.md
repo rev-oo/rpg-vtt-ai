@@ -29,7 +29,7 @@ T-0202 exposes actors and items over REST with ownership enforced on every endpo
    - Needs read access to the actor and permission to create its type.
    - A GM's copy keeps the ownership; anyone else owns their copy alone.
    - Owned items are copied with their `sourceId`.
-8. **Plugin data is read-only over REST.** `system` is returned as a projection but not accepted in bodies; it is edited live on the sheet (M5). New entities start with `{}` until the plugin engine supplies defaults (T-0407).
+8. **Plugin data is read-only over REST.** `system` is returned as a projection but not accepted in bodies; it is edited live on the sheet (M5; items since ADR-062). New entities start with `{}` until the plugin engine supplies defaults (T-0407).
 9. **No pagination on entity lists yet.** A table's actors and items are bounded by what one group plays with, and permission filtering happens after the query. Cursor pagination (§10.1) is added if lists grow; chat history (T-0205) has it from the start. Superseded by ADR-057, which adds it.
 10. **A default character must be the member's own live actor on the table** (`400 invalid_character`).
 
