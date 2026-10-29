@@ -5,12 +5,13 @@ import path from 'node:path';
 import { and, eq } from 'drizzle-orm';
 import type { LightMyRequestResponse } from 'fastify';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import * as Y from 'yjs';
 
 import { MIB, type AssetView } from '@vtt/shared/api';
 
 import { backupDataDir } from '../src/db/backup.js';
 import { openDatabase, runMigrations } from '../src/db/client.js';
-import { members } from '../src/db/schema.js';
+import { members, ydocs } from '../src/db/schema.js';
 import { sniffImageType } from '../src/domain/assets.js';
 
 import {
@@ -218,6 +219,113 @@ describe('asset uploads (T-1301)', () => {
     // The limits themselves are bounded.
     expect((await setLimits({ maxUploadBytes: 1000 }, admin)).statusCode).toBe(400);
     expect((await setLimits({ maxUploadBytes: 101 * MIB }, admin)).statusCode).toBe(400);
+  });
+});
+
+describe('asset images and deletion (T-1302)', () => {
+  const create = async (path: string, payload: Record<string, unknown>) => {
+    const res = await t.call(t.gm.client, 'POST', `/tables/${t.table.id}/${path}`, payload);
+    expect(res.statusCode, res.body).toBe(201);
+    return res.json<Record<string, { id: string }>>();
+  };
+  const remove = (client: Client, asset: AssetView) =>
+    t.app.inject({ method: 'DELETE', url: asset.url, headers: authHeaders(client) });
+
+  it("image fields take the table's own assets, and no other table's", async () => {
+    const asset = await uploaded(t.gm.client, PNG);
+    const { actor } = await create('actors', { type: 'npc', name: 'Ogre', imageUrl: asset.url });
+    expect(actor).toMatchObject({ imageUrl: asset.url });
+
+    const other = await t.call(t.gm.client, 'POST', '/tables', {
+      name: 'Other',
+      systemId: 'test-system',
+    });
+    const otherAsset = await uploaded(t.gm.client, PNG, {
+      tableId: other.json<{ table: { id: string } }>().table.id,
+    });
+    for (const imageUrl of [
+      otherAsset.url,
+      '/api/v1/assets/00000000-0000-4000-8000-000000000000',
+    ]) {
+      const res = await t.call(t.gm.client, 'POST', `/tables/${t.table.id}/items`, {
+        type: 'weapon',
+        name: 'Axe',
+        imageUrl,
+      });
+      expect(res.statusCode).toBe(422);
+      expect(res.json()).toMatchObject({ error: { code: 'unknown_asset' } });
+    }
+    const patched = await t.call(t.gm.client, 'PATCH', `/actors/${actor?.id ?? ''}`, {
+      imageUrl: otherAsset.url,
+    });
+    expect(patched.statusCode).toBe(422);
+    // Other paths are not images of the instance at all.
+    const relative = await t.call(t.gm.client, 'PATCH', `/actors/${actor?.id ?? ''}`, {
+      imageUrl: '/api/v1/users',
+    });
+    expect(relative.statusCode).toBe(400);
+  });
+
+  it('deletes unused images, for GMs and assistants only', async () => {
+    const asset = await uploaded(t.gm.client, PNG);
+    expect((await remove(t.bob.client, asset)).statusCode).toBe(403);
+    expect((await remove(t.eve.client, asset)).statusCode).toBe(404);
+    expect((await remove(t.gm.client, asset)).statusCode).toBe(204);
+    expect(readdirSync(path.join(dataDir, 'assets', t.table.id))).toEqual([]);
+    expect((await fetchAsset(t.gm.client, asset.url)).statusCode).toBe(404);
+    expect((await remove(t.gm.client, asset)).statusCode).toBe(404);
+  });
+
+  it('refuses to delete an image an actor, item or journal entry uses, even in the trash', async () => {
+    const asset = await uploaded(t.gm.client, PNG);
+    const { actor } = await create('actors', { type: 'npc', name: 'Ogre', imageUrl: asset.url });
+    const { item } = await create('items', { type: 'weapon', name: 'Axe', imageUrl: asset.url });
+    const { entry } = await create('journal', { title: 'The Mill' });
+    const actorId = actor?.id ?? '';
+    const itemId = item?.id ?? '';
+    const entryId = entry?.id ?? '';
+
+    // The entry's body, as the editor stores it: an image node in the `body` fragment.
+    const doc = new Y.Doc();
+    const image = new Y.XmlElement('image');
+    image.setAttribute('src', asset.url);
+    doc.getXmlFragment('body').insert(0, [image]);
+    const name = `journal:${entryId}:main`;
+    t.db
+      .insert(ydocs)
+      .values({ name, journalEntryId: entryId, state: Buffer.from(Y.encodeStateAsUpdate(doc)) })
+      .onConflictDoUpdate({
+        target: ydocs.name,
+        set: { state: Buffer.from(Y.encodeStateAsUpdate(doc)) },
+      })
+      .run();
+
+    expect((await t.call(t.gm.client, 'DELETE', `/actors/${actorId}`)).statusCode).toBe(204);
+    const res = await remove(t.gm.client, asset);
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({
+      error: {
+        code: 'asset_in_use',
+        details: {
+          uses: [
+            { kind: 'actor', id: actorId, name: 'Ogre' },
+            { kind: 'item', id: itemId, name: 'Axe' },
+            { kind: 'journal', id: entryId, name: 'The Mill' },
+          ],
+        },
+      },
+    });
+
+    expect((await t.call(t.gm.client, 'POST', `/actors/${actorId}/restore`)).statusCode).toBe(200);
+    await t.call(t.gm.client, 'PATCH', `/actors/${actorId}`, { imageUrl: null });
+    await t.call(t.gm.client, 'PATCH', `/items/${itemId}`, { imageUrl: null });
+    doc.getXmlFragment('body').delete(0, 1);
+    t.db
+      .update(ydocs)
+      .set({ state: Buffer.from(Y.encodeStateAsUpdate(doc)) })
+      .where(eq(ydocs.name, name))
+      .run();
+    expect((await remove(t.gm.client, asset)).statusCode).toBe(204);
   });
 });
 

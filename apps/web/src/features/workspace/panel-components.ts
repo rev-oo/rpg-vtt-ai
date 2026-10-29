@@ -1,5 +1,6 @@
 import {
   ActorsPanel,
+  AssetsPanel,
   ChatDockPanel,
   CompendiumPanel,
   CombatPanel,
@@ -20,6 +21,7 @@ export const PANEL_COMPONENTS = {
   items: ItemsPanel,
   journal: JournalPanel,
   compendium: CompendiumPanel,
+  assets: AssetsPanel,
   sheet: SheetPanel,
   entry: EntryPanel,
   item: ItemPanel,

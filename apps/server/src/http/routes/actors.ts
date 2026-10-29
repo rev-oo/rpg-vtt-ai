@@ -19,6 +19,7 @@ import {
   updateActor,
   type Retention,
 } from '../../db/repositories/index.js';
+import { requireTableImage } from '../../domain/assets.js';
 import {
   actorAccess,
   actorTypeControl,
@@ -84,6 +85,7 @@ export function actorRoutes({ app, db, config, events, now, plugins }: AppContex
     }
     const gmLike = canSetOwnership(membership.role);
     if (body.ownership && !gmLike) throw forbidden('Only the GM can set ownership.');
+    requireTableImage(db, id, body.imageUrl);
 
     const actor = createActor(
       db,
@@ -117,6 +119,7 @@ export function actorRoutes({ app, db, config, events, now, plugins }: AppContex
     if (body.ownership && !canSetOwnership(membership.role)) {
       throw forbidden('Only the GM can change ownership.');
     }
+    requireTableImage(db, actor.tableId, body.imageUrl);
 
     const updated = updateActor(db, actor.id, body, now());
     if (!updated) throw notFound('Actor not found.');

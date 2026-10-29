@@ -2,13 +2,21 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, sql } from 'drizzle-orm';
+import * as Y from 'yjs';
 
-import { assetPath, type AssetType, type AssetView } from '@vtt/shared/api';
+import { documentName } from '@vtt/shared';
+import {
+  assetIdOf,
+  assetPath,
+  type AssetType,
+  type AssetUse,
+  type AssetView,
+} from '@vtt/shared/api';
 
 import type { Db, DbOrTx } from '../db/client.js';
-import { assets } from '../db/schema.js';
-import { AppError, notFound } from '../errors.js';
+import { actors, assets, items, journalEntries, ydocs } from '../db/schema.js';
+import { AppError, notFound, unprocessable } from '../errors.js';
 
 import { generateId } from './auth/tokens.js';
 
@@ -148,3 +156,92 @@ export function requireAsset(db: Db, id: string): Asset {
 }
 
 const mebibytes = (bytes: number) => `${String(Math.round(bytes / (1024 * 1024)))} MiB`;
+
+/**
+ * An image field may name one of the table's own assets, or any `http(s)` URL (ADR-065). An
+ * asset of another table, or one that is gone, is refused: its members could not see it.
+ */
+export function requireTableImage(
+  db: DbOrTx,
+  tableId: string,
+  imageUrl: string | null | undefined,
+): void {
+  const id = imageUrl ? assetIdOf(imageUrl) : undefined;
+  if (id === undefined) return;
+  const asset = db.select({ tableId: assets.tableId }).from(assets).where(eq(assets.id, id)).get();
+  if (asset?.tableId !== tableId) {
+    throw unprocessable('unknown_asset', "The image is not one of this table's assets.");
+  }
+}
+
+/** The root fragment of a journal entry's body (ADR-038), as the web editor names it. */
+const JOURNAL_BODY = 'body';
+
+/** Whether rich text holds an image of `src`, at any depth. */
+function hasImage(node: Y.XmlFragment, src: string): boolean {
+  return node.toArray().some((child) => {
+    if (!(child instanceof Y.XmlElement)) return false;
+    if (child.nodeName === 'image' && child.getAttribute('src') === src) return true;
+    return hasImage(child, src);
+  });
+}
+
+/**
+ * Where an asset is used in its table (ADR-065): actor and item images, and images in journal
+ * text. Entities in the trash count, so restoring one never shows a missing image. Journal
+ * bodies are read from their live documents while loaded, so edits not saved yet count too.
+ */
+export function assetUses(
+  db: DbOrTx,
+  asset: Asset,
+  live: (name: string) => Y.Doc | undefined,
+): AssetUse[] {
+  const url = assetPath(asset.id);
+  const uses: AssetUse[] = [];
+  for (const actor of db
+    .select({ id: actors.id, name: actors.name })
+    .from(actors)
+    .where(and(eq(actors.tableId, asset.tableId), eq(actors.imageUrl, url)))
+    .all()) {
+    uses.push({ kind: 'actor', ...actor });
+  }
+  for (const item of db
+    .select({ id: items.id, name: items.name })
+    .from(items)
+    .where(and(eq(items.tableId, asset.tableId), eq(items.imageUrl, url)))
+    .all()) {
+    uses.push({ kind: 'item', ...item });
+  }
+  const entries = db
+    .select({ id: journalEntries.id, name: journalEntries.title, state: ydocs.state })
+    .from(journalEntries)
+    .leftJoin(ydocs, eq(ydocs.journalEntryId, journalEntries.id))
+    .where(eq(journalEntries.tableId, asset.tableId))
+    .all();
+  for (const entry of entries) {
+    const loaded = live(documentName({ kind: 'journal', id: entry.id, layer: 'main' }));
+    const doc = loaded ?? new Y.Doc();
+    if (!loaded && entry.state) Y.applyUpdate(doc, entry.state);
+    const used = hasImage(doc.getXmlFragment(JOURNAL_BODY), url);
+    if (!loaded) doc.destroy();
+    if (used) uses.push({ kind: 'journal', id: entry.id, name: entry.name });
+  }
+  return uses;
+}
+
+/** Deletes an asset no one uses: its row, then its file (ADR-065). */
+export function deleteAsset(
+  db: Db,
+  dataDir: string,
+  asset: Asset,
+  live: (name: string) => Y.Doc | undefined,
+): void {
+  const uses = assetUses(db, asset, live);
+  if (uses.length > 0) {
+    throw new AppError(409, 'asset_in_use', 'The image is still used, so it was not deleted.', {
+      uses,
+    });
+  }
+  db.delete(assets).where(eq(assets.id, asset.id)).run();
+  rmSync(assetFile(dataDir, asset), { force: true });
+}

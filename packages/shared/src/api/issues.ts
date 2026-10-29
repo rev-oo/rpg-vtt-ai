@@ -15,7 +15,9 @@ export type IssueDescription =
  * server in English. Install the result with `z.config({ customError })`. Issues it does not
  * know return `undefined` and keep Zod's default message.
  */
-export function describeIssue(issue: z.core.$ZodRawIssue): IssueDescription | undefined {
+export function describeIssue(
+  issue: z.core.$ZodRawIssue | z.core.$ZodIssue,
+): IssueDescription | undefined {
   switch (issue.code) {
     case 'too_small': {
       if (issue.origin !== 'string') return undefined;
@@ -29,6 +31,12 @@ export function describeIssue(issue: z.core.$ZodRawIssue): IssueDescription | un
       return issue.format === 'regex' && issue.pattern === USERNAME_PATTERN.toString()
         ? { key: 'username' }
         : undefined;
+    case 'invalid_union': {
+      // A value no branch takes is described by the first, the usual form: an image field
+      // explains URLs, not asset paths.
+      const first = issue.errors[0]?.[0];
+      return first ? describeIssue(first) : undefined;
+    }
     default:
       return undefined;
   }

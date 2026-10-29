@@ -1,7 +1,8 @@
 import Collaboration from '@tiptap/extension-collaboration';
+import Image from '@tiptap/extension-image';
 import { EditorContent, useEditor, useEditorState, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react';
 import type * as Y from 'yjs';
 
 import type { RichTextProps } from '@vtt/sheet-renderer';
@@ -49,6 +50,12 @@ const FORMATS: readonly {
   },
 ];
 
+const ImagePicker = lazy(() =>
+  import('../features/assets/ImagePicker.js').then((module) => ({
+    default: module.ImagePicker,
+  })),
+);
+
 /**
  * The editor of a `richText` field (ADR-037): TipTap bound to the field's `Y.XmlFragment`, so
  * several people edit it at once. Formatting comes from the toolbar, keyboard shortcuts and
@@ -59,7 +66,13 @@ export function RichTextEditor({
   labelId,
   readOnly,
   className,
-}: Omit<RichTextProps, 'path'> & { fragment: Y.XmlFragment }): ReactElement {
+  images = false,
+}: Omit<RichTextProps, 'path'> & {
+  fragment: Y.XmlFragment;
+  /** Images in the text, picked from the table's images or a URL (journal entries, ADR-065). */
+  images?: boolean;
+}): ReactElement {
+  const [picking, setPicking] = useState(false);
   const editor = useEditor(
     {
       extensions: [
@@ -69,6 +82,8 @@ export function RichTextEditor({
           link: { openOnClick: false, autolink: true, defaultProtocol: 'https' },
         }),
         Collaboration.configure({ fragment }),
+        // Only `http(s)` URLs and the table's own images (no `data:`), as image fields take.
+        ...(images ? [Image.configure({ allowBase64: false })] : []),
       ],
       editable: !readOnly,
       editorProps: {
@@ -80,7 +95,7 @@ export function RichTextEditor({
         },
       },
     },
-    [fragment, labelId, className],
+    [fragment, labelId, className, images],
   );
   useEffect(() => {
     editor.setEditable(!readOnly);
@@ -115,7 +130,33 @@ export function RichTextEditor({
               {text}
             </button>
           ))}
+          {images && (
+            <button
+              type="button"
+              aria-label={t('richText.image')}
+              title={t('richText.image')}
+              className="min-h-8 min-w-8 cursor-pointer rounded border border-line px-2 text-sm font-semibold hover:bg-canvas"
+              onClick={() => {
+                setPicking(true);
+              }}
+            >
+              🖼
+            </button>
+          )}
         </div>
+      )}
+      {images && picking && (
+        <Suspense>
+          <ImagePicker
+            open
+            onClose={() => {
+              setPicking(false);
+            }}
+            onPick={({ url, name }) => {
+              editor.chain().focus().setImage({ src: url, alt: name }).run();
+            }}
+          />
+        </Suspense>
       )}
       <EditorContent editor={editor} />
     </div>

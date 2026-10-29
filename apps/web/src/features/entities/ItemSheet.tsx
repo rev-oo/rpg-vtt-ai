@@ -9,6 +9,7 @@ import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { useSystem } from '../../plugin-host/system-context.js';
+import { EntityImage } from '../assets/EntityImage.js';
 import { useTableData } from '../table/table-data.js';
 
 import { LiveEntitySheet } from './LiveEntitySheet.js';
@@ -64,6 +65,8 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
   const { roll, status, failure } = useRecipeRoll(table.id);
   // An owned item's sheet rolls as its holder, made with the item; library items roll nothing.
   const mayRoll = owner !== undefined && item.access === 'owner' && canSendChat(table.role);
+  // Items are not in the table's data, so the sheet keeps its own copy of the image.
+  const [imageUrl, setImageUrl] = useState(item.imageUrl);
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby={titleId}>
@@ -75,6 +78,13 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
           {owner ? t('items.ownedBy', { name: owner.name }) : t('items.inLibrary')}
         </p>
       </div>
+      <EntityImage
+        imageUrl={imageUrl}
+        editable={item.access === 'owner' && table.archivedAt === null}
+        onChange={async (next) => {
+          setImageUrl((await api.updateItem(item.id, { imageUrl: next })).imageUrl);
+        }}
+      />
       {item.dataVersion !== table.systemVersion && (
         // Plugin data migrations are LATER (§9.7, ADR-058): say so instead.
         <Alert tone="info">

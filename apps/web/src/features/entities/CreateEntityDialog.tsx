@@ -7,6 +7,7 @@ import { Alert, Button, Dialog } from '@vtt/ui';
 import { errorMessage } from '../../api/errors.js';
 import { SelectInput, TextInput } from '../../forms/fields.js';
 import { t } from '../../i18n/index.js';
+import { ImagePicker } from '../assets/ImagePicker.js';
 
 /** Actors and items share these fields (FR-ENT-02, 06); the rules come from the API contract. */
 const { name: nameSchema, type: typeSchema, imageUrl: imageUrlSchema } = createItemBody.shape;
@@ -38,6 +39,7 @@ export function CreateEntityDialog({
   onCreate,
 }: CreateEntityDialogProps): ReactElement {
   const [error, setError] = useState<string | null>(null);
+  const [picking, setPicking] = useState(false);
   const form = useForm({
     defaultValues: { name: '', type: types[0] ?? '', imageUrl: '' },
     onSubmit: async ({ value, formApi }) => {
@@ -90,12 +92,21 @@ export function CreateEntityDialog({
           }}
         >
           {(field) => (
-            <TextInput
-              field={field}
-              type="url"
-              label={t('entities.imageUrl')}
-              hint={t('entities.imageUrlHint')}
-            />
+            <div className="flex flex-col gap-2">
+              <TextInput
+                field={field}
+                label={t('entities.imageUrl')}
+                hint={t('entities.imageUrlHint')}
+              />
+              <Button
+                className="self-start"
+                onClick={() => {
+                  setPicking(true);
+                }}
+              >
+                {t('image.choose')}
+              </Button>
+            </div>
           )}
         </form.Field>
         <div className="flex flex-wrap justify-end gap-3">
@@ -109,6 +120,15 @@ export function CreateEntityDialog({
           </form.Subscribe>
         </div>
       </form>
+      <ImagePicker
+        open={picking}
+        onClose={() => {
+          setPicking(false);
+        }}
+        onPick={({ url }) => {
+          form.setFieldValue('imageUrl', url);
+        }}
+      />
     </Dialog>
   );
 }

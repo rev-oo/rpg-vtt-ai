@@ -18,7 +18,7 @@ Uploads are the instance's first user-supplied files. They take disk space, they
    - GMs and assistants upload.
    - Every member of the table reads the table's assets.
    - Archived tables take no uploads (`409 table_archived`). Tables whose system is unavailable still do: assets need no system.
-   - Tables are never deleted, only archived, so an asset lives as long as its table. Deleting assets is T-1302's.
+   - Tables are never deleted, only archived, so an asset lives as long as its table. Deleting assets is T-1302's (ADR-065: unused images only).
 2. **Storage.**
    - An `assets` table holds `id`, `table_id`, `uploader_id` (set to null when the account goes), `name`, `type`, `size`, `sha256` and `created_at`.
    - The file is `DATA_DIR/assets/<table id>/<asset id>`. It has no extension: the type comes from the row, never from a file name.

@@ -8,6 +8,7 @@ import { MAX_UPLOAD_BYTES, uploadAssetQuery } from '@vtt/shared/api';
 
 import {
   assetFile,
+  deleteAsset,
   listAssets,
   requireAsset,
   storeAsset,
@@ -30,7 +31,7 @@ const IMMUTABLE = 'private, max-age=31536000, immutable';
  * Table assets (FR-ASSET-01, ADR-064): GMs and assistants upload images, which every member
  * of the table may read at `/api/v1/assets/:id`.
  */
-export function assetRoutes({ app: root, db, config, now, instance }: AppContext): void {
+export function assetRoutes({ app: root, db, config, now, instance, collab }: AppContext): void {
   // A scope of its own, so the image body parsers apply to these routes alone.
   void root.register((app, _options, done) => {
     routes(app);
@@ -76,6 +77,16 @@ export function assetRoutes({ app: root, db, config, now, instance }: AppContext
         return reply.code(201).send({ asset: toAssetView(asset) });
       },
     );
+
+    /** Deletes an image no actor, item or journal entry uses (ADR-065). */
+    app.delete('/api/v1/assets/:id', (request, reply) => {
+      const { id } = parseInput(idParams, request.params);
+      const asset = requireAsset(db, id);
+      const { table } = requireMember(db, request, asset.tableId, isGmLike);
+      requireUnarchived(table);
+      deleteAsset(db, config.dataDir, asset, (name) => collab.hocuspocus.documents.get(name));
+      return reply.code(204).send();
+    });
 
     app.get('/api/v1/assets/:id', (request, reply) => {
       const session = requireSession(request);
