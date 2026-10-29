@@ -114,6 +114,8 @@ export const en = {
   'assets.quota': "The instance's space for images is used up. Ask an admin to raise it.",
   'assets.unknown': "That image is not one of this table's images.",
   'image.choose': 'Choose image',
+  'image.chooseFor': 'Choose image for {name}',
+  'image.changeFor': 'Change image of {name}',
   'image.change': 'Change image',
   'image.remove': 'Remove image',
   'image.pickerTitle': 'Choose an image',

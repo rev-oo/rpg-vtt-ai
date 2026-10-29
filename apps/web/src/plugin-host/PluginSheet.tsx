@@ -14,6 +14,7 @@ import {
   useSheet,
   valueAt,
   type CustomNodeProps,
+  type ImagePicker,
   type ItemsRenderer,
   type RichTextRenderer,
   type RollHandler,
@@ -41,6 +42,8 @@ const strings = (): SheetStrings => ({
   increase: t('sheet.increase'),
   noRows: t('sheet.noRows'),
   noImage: t('sheet.noImage'),
+  chooseImage: t('image.choose'),
+  changeImage: t('image.change'),
   missingNode: t('sheet.missingNode'),
   notNumber: t('validation.notNumber'),
   notInteger: t('validation.notInteger'),
@@ -102,6 +105,8 @@ export interface PluginSheetProps {
   /** An actor's item totals (`@items`) and its `items` nodes (ADR-063). */
   itemTotals?: Readonly<Record<string, Value>> | undefined;
   renderItems?: ItemsRenderer | undefined;
+  /** Sets `image` fields through the image picker, on a live sheet (ADR-065). */
+  pickImage?: ImagePicker | undefined;
 }
 
 /**
@@ -120,6 +125,7 @@ export function PluginSheet({
   onRoll,
   itemTotals,
   renderItems,
+  pickImage,
 }: PluginSheetProps): ReactElement {
   const { system, rules, translate } = host;
   const { definition, client } = system;
@@ -166,6 +172,7 @@ export function PluginSheet({
         {...(onRoll && { onRoll })}
         {...(itemTotals && { itemTotals })}
         {...(renderItems && { renderItems })}
+        {...(pickImage && { pickImage })}
       />
     </div>
   );

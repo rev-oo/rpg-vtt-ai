@@ -1,10 +1,14 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { PluginDefinition } from '@vtt/plugin-schema';
 import type { AssetView } from '@vtt/shared/api';
+import { createMemoryStore, type SheetStore } from '@vtt/sheet-renderer';
 
 import { setCsrfToken } from '../src/api/client.js';
+import type { LiveSheet } from '../src/collab/use-live-sheet.js';
+import { clearLoadedSystems } from '../src/plugin-host/load.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
@@ -16,13 +20,49 @@ import { openPanel, openSheet } from './support/workspace.js';
 // T-1302 (FR-ASSET-02, ADR-065): the Images panel uploads, lists and deletes a table's
 // images, and image fields pick from them.
 
-vi.mock('../src/collab/use-live-sheet.js', () => ({ useLiveSheet: () => null }));
+/** The actor's live data, as the sheet's store writes it. */
+let store: SheetStore = createMemoryStore({});
+const collab = vi.hoisted(() => ({ sheet: null as LiveSheet | null }));
+vi.mock('../src/collab/use-live-sheet.js', () => ({ useLiveSheet: () => collab.sheet }));
 
 afterEach(() => {
+  collab.sheet = null;
+  clearLoadedSystems();
   closeEventsClient();
   vi.unstubAllGlobals();
   setCsrfToken(null);
 });
+
+const DEFINITION: PluginDefinition = {
+  manifest: {
+    id: 'tiny-d20',
+    name: 'Tiny d20',
+    version: '1.0.0',
+    kind: 'system',
+    coreApi: '^0.1.0',
+    hasCode: false,
+    locales: ['en'],
+  },
+  actorTypes: {
+    npc: {
+      label: 'NPC',
+      controlledBy: 'gm',
+      sheet: 'npc',
+      schema: {
+        type: 'object',
+        properties: { portrait: { type: 'string', 'x-kind': 'image', default: '' } },
+      },
+    },
+  },
+  itemTypes: {},
+  sheets: { npc: { layout: { type: 'image', path: 'portrait' } } },
+  rolls: {},
+  dice: {},
+  cards: {},
+  settings: {},
+  lang: { en: {} },
+  styles: [],
+};
 
 const asset = (id: string, name: string): AssetView => ({
   id,
@@ -40,6 +80,14 @@ const TOWN = asset('33333333-3333-4333-8333-333333333333', 'town.gif');
 
 function openTable({ role = 'gm' }: { role?: 'gm' | 'player' } = {}) {
   fakeWebSocket();
+  store = createMemoryStore({});
+  collab.sheet = {
+    status: 'ready',
+    store: { ...store, richText: () => undefined, destroy: () => undefined },
+    readOnly: role !== 'gm',
+    issues: [],
+    awareness: undefined,
+  };
   const actors = { body: { nextCursor: null, actors: [HERO] } };
   const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
@@ -64,6 +112,19 @@ function openTable({ role = 'gm' }: { role?: 'gm' | 'player' } = {}) {
       },
     },
     'DELETE /assets/22222222-2222-4222-8222-222222222222': { status: 204 },
+    'GET /systems/tiny-d20': {
+      body: {
+        system: {
+          id: 'tiny-d20',
+          name: 'Tiny d20',
+          version: '1.0.0',
+          definition: DEFINITION,
+          styles: [],
+          client: null,
+          shared: null,
+        },
+      },
+    },
     'PATCH /actors/a1': (body) => ({
       body: { actor: { ...HERO, ...(body as object) } },
     }),
@@ -144,7 +205,9 @@ describe('the image picker (T-1302)', () => {
   it("sets an actor's portrait from the table's images, or from a URL", async () => {
     const api = openTable();
     await openSheet('Goblin King');
-    await userEvent.click(await screen.findByRole('button', { name: 'Choose image' }));
+    await userEvent.click(
+      await screen.findByRole('button', { name: 'Choose image for Goblin King' }),
+    );
     const picker = screen.getByRole('dialog', { name: 'Choose an image' });
     await userEvent.click(await within(picker).findByRole('button', { name: 'Use cave.png' }));
     expect(api.calls).toContainEqual(
@@ -155,7 +218,7 @@ describe('the image picker (T-1302)', () => {
       }),
     );
 
-    await userEvent.click(screen.getByRole('button', { name: 'Choose image' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Choose image for Goblin King' }));
     const again = screen.getByRole('dialog', { name: 'Choose an image' });
     await userEvent.type(within(again).getByLabelText('Or an image URL'), 'javascript:alert(1)');
     await userEvent.click(within(again).getByRole('button', { name: 'Use URL' }));
@@ -173,5 +236,31 @@ describe('the image picker (T-1302)', () => {
         body: { imageUrl: 'https://example.com/ogre.png' },
       }),
     );
+  });
+});
+
+describe("a sheet's image fields (ADR-065)", () => {
+  it('pick a picture through the image picker, and remove it', async () => {
+    openTable();
+    await openSheet('Goblin King');
+    const field = await waitFor(() => {
+      const found = document.querySelector<HTMLElement>('.vtt-sheet [data-field="portrait"]');
+      if (!found) throw new Error('no portrait field');
+      return found;
+    });
+    expect(field).toHaveTextContent('Choose image');
+    await userEvent.click(field);
+    const picker = screen.getByRole('dialog', { name: 'Choose an image' });
+    await userEvent.click(await within(picker).findByRole('button', { name: 'Use cave.png' }));
+    expect(store.getSnapshot()).toEqual({ portrait: CAVE.url });
+    expect(field.querySelector('img')).toHaveAttribute('src', CAVE.url);
+
+    await userEvent.click(field);
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Choose an image' })).getByRole('button', {
+        name: 'Remove image',
+      }),
+    );
+    expect(store.getSnapshot()).toEqual({ portrait: '' });
   });
 });

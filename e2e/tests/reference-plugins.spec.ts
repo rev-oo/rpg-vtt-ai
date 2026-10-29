@@ -9,6 +9,12 @@ import { ADMIN, createPlayer, post, signIn, type SignedIn } from './support/api.
 import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
 import { showPanel } from './support/workspace.js';
 
+/** A 1×1 PNG. */
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+  'base64',
+);
+
 const reference = fileURLToPath(new URL('../../plugins/', import.meta.url));
 
 let temp = '';
@@ -166,6 +172,47 @@ test('tiny-d20 equips armour, prepares a spell and attacks with a weapon', async
 
 // T-0411: tiny-d20 uses types, derived values, a skills collection with a roll recipe and its
 // card, a counter, `visibleIf`, tabs, a secret layer, a custom node, scoped CSS and lang files.
+// ADR-065: tiny-d20's portrait is an image field; its box picks one of the table's images,
+// and the image then counts as used, even before the sheet is saved.
+test("tiny-d20's portrait is set from the table's images", async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  await setUp(gm, 'tiny-d20');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'D20 Portraits',
+    systemId: 'tiny-d20',
+  });
+  await post(gm, `/tables/${table.id}/actors`, { type: 'character', name: 'Ysolde' });
+  const upload = await gm.context.request.post(
+    `/api/v1/tables/${table.id}/assets?name=ysolde.png`,
+    {
+      data: PNG,
+      headers: { 'x-csrf-token': gm.csrf, 'content-type': 'image/png' },
+    },
+  );
+  expect(upload.status()).toBe(201);
+  const { asset } = (await upload.json()) as { asset: { url: string } };
+
+  const page = await gm.context.newPage();
+  await openSheet(page, table.id, 'Ysolde');
+  const sheet = page.locator('[data-plugin="tiny-d20"]');
+  const portrait = sheet.getByRole('button', { name: 'Choose image' });
+  await expect(portrait).toContainText('Choose image');
+  await portrait.click();
+  await page
+    .getByRole('dialog', { name: 'Choose an image' })
+    .getByRole('button', { name: 'Use ysolde.png' })
+    .click();
+  const picture = sheet.getByRole('button', { name: 'Change image' }).locator('img');
+  await expect(picture).toHaveAttribute('src', asset.url);
+  await expect(picture).toHaveJSProperty('naturalWidth', 1);
+
+  // The sheet is still open, so the portrait may not be saved yet: it counts all the same.
+  const refused = await gm.context.request.delete(asset.url, {
+    headers: { 'x-csrf-token': gm.csrf },
+  });
+  expect(refused.status()).toBe(409);
+});
+
 test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await setUp(gm, 'tiny-d20');
@@ -203,7 +250,8 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(sheet.getByLabel('Dexterity')).toHaveValue('10');
     await expect(sheet.getByRole('status', { name: 'Str mod' })).toHaveText('+3');
     await expect(sheet.getByRole('status', { name: 'Proficiency' })).toHaveText('+3');
-    await expect(sheet.getByText('No image')).toBeVisible();
+    // The portrait field is empty; editors pick one from its box (ADR-065).
+    await expect(sheet.getByRole('button', { name: 'Choose image' })).toBeVisible();
   });
 
   await test.step('hit points: counter, custom bar with scoped CSS, and visibleIf', async () => {

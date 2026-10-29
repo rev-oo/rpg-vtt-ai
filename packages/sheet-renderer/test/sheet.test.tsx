@@ -219,6 +219,40 @@ describe('<Sheet>', () => {
     expect(shown).toEqual(['/plugins/x/a.png', 'data:image/png;base64,AAAA', null, null]);
   });
 
+  it('lets editors pick an image field through the host, and remove it (ADR-065)', async () => {
+    const layout: SheetNode = { type: 'image', path: 'portrait' };
+    let answer: string | null = '/api/v1/assets/11111111-1111-4111-8111-111111111111';
+    const pickImage = vi.fn((done: (url: string | null) => void) => {
+      done(answer);
+    });
+    const { store, container } = renderSheet(layout, { pickImage });
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: 'Choose image' }));
+    expect(pickImage).toHaveBeenCalledWith(expect.any(Function), '');
+    expect(store.getSnapshot().portrait).toBe(answer);
+    expect(container.querySelector('img')).toHaveAttribute('src', answer);
+
+    answer = null;
+    await user.click(screen.getByRole('button', { name: 'Change image' }));
+    expect(pickImage).toHaveBeenLastCalledWith(
+      expect.any(Function),
+      '/api/v1/assets/11111111-1111-4111-8111-111111111111',
+    );
+    expect(store.getSnapshot().portrait).toBe('');
+    expect(screen.getByText('Choose image')).toBeInTheDocument();
+  });
+
+  it('shows image fields without a button to observers or without a host picker', () => {
+    const layout: SheetNode = { type: 'image', path: 'portrait' };
+    const { unmount } = renderSheet(layout, { pickImage: vi.fn(), readOnly: true });
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.getByText('No image')).toBeInTheDocument();
+    unmount();
+    renderSheet(layout);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
   it('switches tabs with the mouse and the arrow keys', async () => {
     renderSheet({
       type: 'tabs',

@@ -11,7 +11,7 @@ import { MIB, type AssetView } from '@vtt/shared/api';
 
 import { backupDataDir } from '../src/db/backup.js';
 import { openDatabase, runMigrations } from '../src/db/client.js';
-import { members, ydocs } from '../src/db/schema.js';
+import { actors, members, ydocs } from '../src/db/schema.js';
 import { sniffImageType } from '../src/domain/assets.js';
 
 import {
@@ -326,6 +326,44 @@ describe('asset images and deletion (T-1302)', () => {
       .where(eq(ydocs.name, name))
       .run();
     expect((await remove(t.gm.client, asset)).statusCode).toBe(204);
+  });
+});
+
+describe('images in plugin data (ADR-065)', () => {
+  it("counts an image field of an actor's or item's data as a use", async () => {
+    const asset = await uploaded(t.gm.client, PNG);
+    const created = await t.call(t.gm.client, 'POST', `/tables/${t.table.id}/actors`, {
+      type: 'npc',
+      name: 'Bard',
+    });
+    const bard = created.json<{ actor: { id: string } }>().actor;
+    // As a sheet's `image` node stores it once the document is saved.
+    t.db
+      .update(actors)
+      .set({ system: { portrait: asset.url } })
+      .where(eq(actors.id, bard.id))
+      .run();
+    const res = await t.app.inject({
+      method: 'DELETE',
+      url: asset.url,
+      headers: authHeaders(t.gm.client),
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({
+      error: { details: { uses: [{ kind: 'actor', id: bard.id, name: 'Bard' }] } },
+    });
+
+    t.db
+      .update(actors)
+      .set({ system: { portrait: '' } })
+      .where(eq(actors.id, bard.id))
+      .run();
+    const again = await t.app.inject({
+      method: 'DELETE',
+      url: asset.url,
+      headers: authHeaders(t.gm.client),
+    });
+    expect(again.statusCode).toBe(204);
   });
 });
 

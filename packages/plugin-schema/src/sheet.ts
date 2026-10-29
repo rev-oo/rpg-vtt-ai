@@ -210,7 +210,9 @@ export const sheetNode: z.ZodType<SheetNode> = z.lazy(() =>
             path: path.describe('A string field holding the picture URL.'),
             size: z.enum(['sm', 'md', 'lg']).optional().describe('Defaults to `md`.'),
           })
-          .describe('Shows a picture from a URL field.'),
+          .describe(
+            'Shows the picture of an image field. Those who may edit the sheet click it to pick another, or to remove it.',
+          ),
         z
           .strictObject({
             ...base,

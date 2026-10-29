@@ -605,7 +605,7 @@
                 "path"
               ],
               "additionalProperties": false,
-              "description": "Shows a picture from a URL field."
+              "description": "Shows the picture of an image field. Those who may edit the sheet click it to pick another, or to remove it."
             },
             {
               "type": "object",

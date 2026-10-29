@@ -192,7 +192,7 @@ One of:
 - [Node `items`](#sheet-node-items): The actor's items, grouped, each edited in place, with open, remove and add (actor sheets only). `item` is one item's layout: its paths are relative to the item's data, and `@item.id`, `@item.name` and `@item.type` name the item.
 - [Node `rollButton`](#sheet-node-rollbutton): Rolls a recipe for the entity and posts it to chat.
 - [Node `derived`](#sheet-node-derived): Shows a derived value.
-- [Node `image`](#sheet-node-image): Shows a picture from a URL field.
+- [Node `image`](#sheet-node-image): Shows the picture of an image field. Those who may edit the sheet click it to pick another, or to remove it.
 - [Node `text`](#sheet-node-text): Static text.
 - [Node `custom:<name>`](#sheet-node-custom-name): A component from the plugin's `code/client`, by its name in `nodes`.
 
@@ -360,7 +360,7 @@ Shows a derived value.
 
 ### Node `image`
 
-Shows a picture from a URL field.
+Shows the picture of an image field. Those who may edit the sheet click it to pick another, or to remove it.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |

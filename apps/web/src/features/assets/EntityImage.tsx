@@ -12,10 +12,13 @@ import { ImagePicker } from './ImagePicker.js';
  * changes it through the image picker.
  */
 export function EntityImage({
+  name,
   imageUrl,
   editable,
   onChange,
 }: {
+  /** The entity's name, which the button names: a sheet may have image fields of its own. */
+  name: string;
   imageUrl: string | null;
   editable: boolean;
   /** Saves the new image, or `null` to remove it. */
@@ -40,6 +43,7 @@ export function EntityImage({
         <>
           <Button
             variant="ghost"
+            aria-label={t(imageUrl ? 'image.changeFor' : 'image.chooseFor', { name })}
             onClick={() => {
               setOpen(true);
             }}

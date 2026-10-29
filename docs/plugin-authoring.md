@@ -970,7 +970,7 @@ Annotations change how the core stores and edits a field:
 | `"x-kind": "longText"`   | `string`            | Shared plain text: several people type into it at once without losing each other's words.                                                                         |
 | `"x-kind": "richText"`   | `string`            | Shared rich text with a toolbar (bold, lists and so on). Formulas see its plain text.                                                                             |
 | `"x-kind": "collection"` | `array` of `object` | Rows people add, remove and reorder at once. Each row also has an `id`.                                                                                           |
-| `"x-kind": "image"`      | `string`            | A picture URL, shown by an `image` node.                                                                                                                          |
+| `"x-kind": "image"`      | `string`            | A picture URL, shown by an `image` node, where editors pick one of the table's images or a web address.                                                           |
 | `"x-layer": "secret"`    | any                 | Only the GM and assistants see the field, not even the player who owns the actor. Players' browsers never receive it, and formulas a player rolls cannot read it. |
 
 Annotations combine: `{ "type": "string", "x-kind": "longText", "x-layer": "secret" }` is shared text only the GM and assistants see. Other fields are plain values: the last write wins.

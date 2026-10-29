@@ -41,6 +41,7 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
         {host.status === 'ready' && actor.access === 'owner' && <SheetHistory actorId={actor.id} />}
       </div>
       <EntityImage
+        name={actor.name}
         imageUrl={actor.imageUrl}
         editable={actor.access === 'owner' && table.archivedAt === null}
         onChange={(imageUrl) => api.updateActor(actor.id, { imageUrl })}

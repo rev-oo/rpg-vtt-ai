@@ -1,8 +1,8 @@
-import { lazy, Suspense, useCallback, useMemo, type ReactElement } from 'react';
+import { lazy, Suspense, useCallback, useMemo, useState, type ReactElement } from 'react';
 
 import { documentLayout } from '@vtt/plugin-engine';
 import type { ActorView, ItemView } from '@vtt/shared/api';
-import type { RichTextProps, RollHandler } from '@vtt/sheet-renderer';
+import type { ImagePicker as PickImage, RichTextProps, RollHandler } from '@vtt/sheet-renderer';
 import { Alert } from '@vtt/ui';
 
 import { useSheetPresence } from '../../collab/presence.js';
@@ -12,6 +12,7 @@ import { entityType } from '../../plugin-host/entity-type.js';
 import { PluginSheet } from '../../plugin-host/PluginSheet.js';
 import type { TableSystem } from '../../plugin-host/system-context.js';
 import { useSession } from '../../shell/use-session.js';
+import { ImagePicker } from '../assets/ImagePicker.js';
 import { useTableData } from '../table/table-data.js';
 
 import { useSheetItems } from './use-sheet-items.js';
@@ -72,6 +73,14 @@ export function LiveEntitySheet({
     },
     [store],
   );
+  // An `image` field being set: where the picked URL goes, and the field's current value.
+  const [picking, setPicking] = useState<{
+    done: (url: string | null) => void;
+    current: string;
+  } | null>(null);
+  const pickImage = useCallback<PickImage>((done, current) => {
+    setPicking({ done, current });
+  }, []);
 
   if (live.status === 'denied') {
     return <Alert tone="error">{t(kind === 'item' ? 'items.notFound' : 'sheet.notFound')}</Alert>;
@@ -94,6 +103,21 @@ export function LiveEntitySheet({
         onRoll={onRoll}
         itemTotals={itemTotals}
         renderItems={renderItems}
+        pickImage={pickImage}
+      />
+      <ImagePicker
+        open={picking !== null}
+        onClose={() => {
+          setPicking(null);
+        }}
+        onPick={({ url }) => {
+          picking?.done(url);
+        }}
+        {...(picking?.current && {
+          onRemove: () => {
+            picking.done(null);
+          },
+        })}
       />
     </>
   );
