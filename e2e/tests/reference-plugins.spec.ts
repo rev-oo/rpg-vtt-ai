@@ -125,6 +125,7 @@ test('tiny-d20 equips armour, prepares a spell and attacks with a weapon', async
     await sheet.getByRole('button', { name: button }).click();
     const row = sheet.getByRole('listitem', { name });
     await expect(row).toBeVisible();
+    await expect(row).toContainText(name);
     return row;
   };
 

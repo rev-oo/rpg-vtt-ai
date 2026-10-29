@@ -109,6 +109,8 @@ export function ItemsNode({
               aria-label={item.name}
             >
               <div className="min-w-0 flex-1">
+                {/* The core names each item, so a plugin's row lays out only its fields. */}
+                <p className="min-w-0 truncate font-semibold">{item.name}</p>
                 <ItemRowView item={item} live={live.get(item.id)} host={host} layout={node.item} />
               </div>
               <div className="flex shrink-0 gap-1">
@@ -175,7 +177,7 @@ function ItemRowView({
 }): ReactElement | null {
   const schema = host.system.definition.itemTypes[item.type]?.schema;
   const stored = useMemo(() => createMemoryStore(item.system), [item.system]);
-  if (!schema || live?.denied) return <p className="font-semibold">{item.name}</p>;
+  if (!schema || live?.denied) return null;
   const ready = live?.ready === true;
   return (
     <ItemRow
