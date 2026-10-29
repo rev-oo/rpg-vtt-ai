@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent, useId, useState, type ReactElement } from 'react';
 
-import { isGmLike } from '@vtt/shared';
+import { canSendChat, isGmLike } from '@vtt/shared';
 import type { ItemView, TableView } from '@vtt/shared/api';
 import { Alert } from '@vtt/ui';
 
@@ -12,6 +12,7 @@ import { useSystem } from '../../plugin-host/system-context.js';
 import { useTableData } from '../table/table-data.js';
 
 import { LiveEntitySheet } from './LiveEntitySheet.js';
+import { useRecipeRoll } from './use-recipe-roll.js';
 
 type ItemState =
   { status: 'loading' } | { status: 'ready'; item: ItemView } | { status: 'failed'; error: string };
@@ -60,6 +61,9 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
   const titleId = useId();
   const { actors } = useTableData();
   const owner = item.actorId ? actors.find((actor) => actor.id === item.actorId) : undefined;
+  const { roll, status, failure } = useRecipeRoll(table.id);
+  // An owned item's sheet rolls as its holder, made with the item; library items roll nothing.
+  const mayRoll = owner !== undefined && item.access === 'owner' && canSendChat(table.role);
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby={titleId}>
@@ -87,8 +91,27 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
         <Alert tone="error">{t('table.systemFailed', { detail: host.error })}</Alert>
       )}
       {host.status === 'ready' && (
-        // Rolling with an item is not built yet: its roll buttons stay inert (ADR-062).
-        <LiveEntitySheet host={host} kind="item" entity={item} secret={isGmLike(table.role)} />
+        <>
+          {failure && <Alert tone="error">{failure}</Alert>}
+          {status && (
+            <p role="status" className="text-sm text-muted">
+              {status}
+            </p>
+          )}
+          <LiveEntitySheet
+            host={host}
+            kind="item"
+            entity={item}
+            secret={isGmLike(table.role)}
+            onRoll={
+              mayRoll
+                ? (name, args) => {
+                    roll(owner.id, name, args, item.id);
+                  }
+                : undefined
+            }
+          />
+        </>
       )}
     </section>
   );

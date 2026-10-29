@@ -25,7 +25,12 @@ export interface CustomNodeProps {
   rowPath?: FieldPath;
 }
 
-export type RollHandler = (roll: string, args: Readonly<Record<string, Value>>) => void;
+/** Asks for a roll; from a row of an `items` node, with the row's item (ADR-063). */
+export type RollHandler = (
+  roll: string,
+  args: Readonly<Record<string, Value>>,
+  item?: SheetItemRef,
+) => void;
 
 /** What the host's rich text editor receives for a `richText` field (ADR-037). */
 export interface RichTextProps {

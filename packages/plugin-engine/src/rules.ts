@@ -28,7 +28,17 @@ export interface RollRequest {
   args?: Readonly<Record<string, Value>>;
   /** An actor's items, for `@items.*` (ADR-063); none when left out. */
   items?: readonly HeldItem[];
+  /** The item the roll is made with, for `@item.*` (ADR-063). */
+  item?: RolledItem | undefined;
   rng: Rng;
+}
+
+/** An item a roll is made with: its data reads as `@item.<field>`, with its derived values. */
+export interface RolledItem {
+  id: string;
+  name: string;
+  type: string;
+  data: Readonly<Record<string, unknown>>;
 }
 
 /** One system plugin applied to one table: what the core asks of a plugin's rules. */
@@ -96,16 +106,33 @@ export function createRules(
     };
   };
 
+  /** `@item`: the item's data with defaults, its derived values, and its id, name and type. */
+  const itemScope = ({ id, name, type: typeName, data }: RolledItem) => {
+    const type = Object.hasOwn(plugin.itemTypes, typeName) ? plugin.itemTypes[typeName] : undefined;
+    if (!type) return { ...data, id, name, type: typeName };
+    const filled = withDefaults(type.schema, data);
+    const derived = computeDerived(type.derived ?? {}, filled, { settings, functions }).values;
+    return { ...filled, derived, id, name, type: typeName };
+  };
+
   const scopeOf = (
     kind: EntityKind,
     type: ActorType | ItemType,
     data: Readonly<Record<string, unknown>>,
     args: Readonly<Record<string, Value>>,
     items: readonly HeldItem[],
+    item: RolledItem | undefined,
   ) => {
     const filled = withDefaults(type.schema, data);
     const { totals, derived } = derivedOf(kind, type, filled, items);
-    return { ...filled, derived: derived.values, items: totals, settings, args };
+    return {
+      ...filled,
+      derived: derived.values,
+      items: totals,
+      settings,
+      args,
+      ...(item && { item: itemScope(item) }),
+    };
   };
 
   return {
@@ -117,23 +144,23 @@ export function createRules(
     },
     itemTotals: totalsOf,
     layout: (kind, name) => documentLayout(typeOf(kind, name).schema),
-    roll: (name, { kind = 'actor', type: typeName, data, args = {}, items = [], rng }) => {
+    roll: (name, { kind = 'actor', type: typeName, data, args = {}, items = [], item, rng }) => {
       const recipe = Object.hasOwn(plugin.rolls, name) ? plugin.rolls[name] : undefined;
       if (!recipe) throw new EngineError('unknown_recipe', `There is no roll "${name}"`);
       if (!('formula' in recipe)) {
         throw new EngineError('handler_recipe', `The roll "${name}" runs plugin code`);
       }
-      const scope = scopeOf(kind, typeOf(kind, typeName), data, args, items);
+      const scope = scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
       return rollRecipe(name, recipe, { scope, rng, cards: plugin.cards, customDice, functions });
     },
     rollFormula: (
       formula,
-      { kind = 'actor', type: typeName, data = {}, args = {}, items = [], rng },
+      { kind = 'actor', type: typeName, data = {}, args = {}, items = [], item, rng },
     ) => {
       const scope =
         typeName === undefined
           ? { ...data, settings, args }
-          : scopeOf(kind, typeOf(kind, typeName), data, args, items);
+          : scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
       return roll(formula, { data: scope, rng, customDice, functions });
     },
   };

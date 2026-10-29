@@ -101,3 +101,48 @@ describe('@items in actor formulas (T-1205)', () => {
     expect(typed.total).toBe(5);
   });
 });
+
+describe('@item in rolls (T-1207)', () => {
+  const plugin: PluginDefinition = {
+    ...PLUGIN,
+    itemTypes: {
+      weapon: {
+        label: 'Weapon',
+        sheet: 'hero',
+        schema: {
+          type: 'object',
+          properties: {
+            bonus: { type: 'integer', default: 1 },
+            damage: { type: 'string', default: '1d6' },
+          },
+        },
+        derived: { hit: '@bonus + 1' },
+      },
+    },
+    rolls: {
+      ...PLUGIN.rolls,
+      attack: { formula: '1d20 + @item.derived.hit + @item.bonus', item: ['weapon'] },
+    },
+  };
+  const rules = createRules(plugin);
+  const sword = { id: 'i1', name: 'Sword', type: 'weapon', data: { bonus: 2 } };
+
+  it("reads the item's fields, defaults, derived values and name", () => {
+    const attack = rules.roll('attack', {
+      type: 'character',
+      data: {},
+      item: sword,
+      rng: scripted(10),
+    });
+    expect(attack.roll.total).toBe(10 + 3 + 2);
+    const typed = rules.rollFormula(
+      "@item.name == 'Sword' and @item.damage == '1d6' ? @item.bonus : 0",
+      {
+        type: 'character',
+        item: sword,
+        rng: scripted(),
+      },
+    );
+    expect(typed.total).toBe(2);
+  });
+});

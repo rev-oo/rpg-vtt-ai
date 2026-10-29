@@ -28,7 +28,7 @@ async function openSheet(page: Page, tableId: string, name: string) {
 
 // T-1206 (FR-SHEET-12, ADR-063): a player adds armour to their sheet and equips it; AC
 // follows at once, on the GM's open copy too.
-test('a player equips armour and AC changes everywhere', async ({ browser }) => {
+test('a player equips armour and attacks with a weapon', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await installPlugin(gm, packPlugin(fixture, path.join(temp, 'e2e-inventory.vttplugin')));
   await post(gm, '/plugins/e2e-inventory/enable', { acknowledgeCode: true });
@@ -43,6 +43,7 @@ test('a player equips armour and AC changes everywhere', async ({ browser }) => 
   await post(player, `/invites/${token}/accept`);
   await post(player, `/tables/${table.id}/actors`, { type: 'hero', name: 'Kael' });
   await post(gm, `/tables/${table.id}/items`, { type: 'armor', name: 'Chain mail' });
+  await post(gm, `/tables/${table.id}/items`, { type: 'weapon', name: 'Longsword' });
 
   const errors: string[] = [];
   const pageOf = async (who: typeof gm) => {
@@ -50,13 +51,14 @@ test('a player equips armour and AC changes everywhere', async ({ browser }) => 
     page.on('pageerror', (error) => errors.push(error.message));
     return page;
   };
-  const playerSheet = await openSheet(await pageOf(player), table.id, 'Kael');
+  const playerPage = await pageOf(player);
+  const playerSheet = await openSheet(playerPage, table.id, 'Kael');
   const gmSheet = await openSheet(await pageOf(gm), table.id, 'Kael');
   const ac = (sheet: typeof gmSheet) => sheet.getByRole('status', { name: 'AC' });
   await expect(ac(playerSheet)).toHaveText('10');
 
   await test.step('the player adds armour from the library', async () => {
-    await expect(playerSheet.getByText('No items here yet.')).toBeVisible();
+    await expect(playerSheet.getByText('No items here yet.')).toHaveCount(2);
     await playerSheet.getByRole('button', { name: 'Add armor' }).click();
     await expect(playerSheet.getByRole('listitem', { name: 'Chain mail' })).toBeVisible();
     await expect(gmSheet.getByRole('listitem', { name: 'Chain mail' })).toBeVisible();
@@ -70,6 +72,18 @@ test('a player equips armour and AC changes everywhere', async ({ browser }) => 
 
     await gmSheet.getByLabel('Bonus').fill('5');
     await expect(ac(playerSheet)).toHaveText('15', { timeout: 1000 });
+  });
+
+  // T-1207: a roll made with the item, from its row.
+  await test.step("an attack from the weapon's row shows the weapon's damage", async () => {
+    await playerSheet.getByRole('button', { name: 'Add weapon' }).click();
+    const row = playerSheet.getByRole('listitem', { name: 'Longsword' });
+    await row.getByLabel('Damage').fill('1d8');
+    await row.getByLabel('Damage').blur();
+    await row.getByRole('button', { name: 'Attack' }).click();
+    const log = playerPage.getByRole('log', { name: 'Messages' });
+    await expect(log).toContainText('Longsword');
+    await expect(log).toContainText('1d8');
   });
 
   expect(errors).toEqual([]);

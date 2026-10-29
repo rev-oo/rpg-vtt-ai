@@ -427,6 +427,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | `formula` | [formula](#formula) | yes | What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`. |
 | `outcomes` | list of [Outcome](#rolls-outcome) |  | Checked in order; the first whose `when` is true is shown. |
 | `card` | [name](#name) |  | A card in `cards/`, without `.json`, to show the roll with. |
+| `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`. |
 
 <a id="rolls-handler-recipe"></a>
 

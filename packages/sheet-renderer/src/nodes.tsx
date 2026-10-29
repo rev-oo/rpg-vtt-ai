@@ -339,7 +339,9 @@ function RollButtonNode({
         // Rolling changes no data: an observer may roll whenever the host passes `onRoll`.
         disabled={!onRoll || !args}
         onClick={() => {
-          if (onRoll && args) onRoll(node.roll, args);
+          if (!onRoll || !args) return;
+          if (sheet.item) onRoll(node.roll, args, sheet.item);
+          else onRoll(node.roll, args);
         }}
       >
         {sheet.translate(node.label)}

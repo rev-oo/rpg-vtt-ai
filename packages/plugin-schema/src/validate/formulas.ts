@@ -39,8 +39,11 @@ export interface FormulaScope {
   derived?: ReadonlySet<string> | undefined;
   /** `@items.*`: the names item types contribute; only actor formulas read them (ADR-063). */
   items?: ReadonlySet<string> | undefined;
-  /** `@item.id`, `.name` and `.type`: inside a row of an `items` node. */
-  item?: boolean;
+  /**
+   * `@item`: in a row of an `items` node, its `id`, `name` and `type` (`true`); in a recipe
+   * made with an item, also that item type's fields and `@item.derived.*`.
+   */
+  item?: true | { schema: FieldSchema; derived: ReadonlySet<string> } | undefined;
   /** The row schema of the enclosing `list` (`@row.*`); `unchecked` when it is unknown. */
   row?: FieldSchema | 'unchecked' | undefined;
   /** `@args.*`: any key, since arguments come from roll buttons. */
@@ -92,8 +95,15 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
       return onlyName(path, scope.settings);
     case 'items':
       return scope.data === undefined || onlyName(path, scope.items);
-    case 'item':
-      return scope.item === true && onlyName(path, ITEM_KEYS);
+    case 'item': {
+      if (scope.item === undefined) return false;
+      if (onlyName(path, ITEM_KEYS)) return true;
+      if (scope.item === true) return false;
+      const [first, ...rest] = path;
+      if (first?.kind === 'field' && first.name === 'derived')
+        return onlyName(rest, scope.item.derived);
+      return resolvesIn(scope.item.schema, path);
+    }
     case 'args':
       return scope.args === true && path.length > 0;
     case 'row':

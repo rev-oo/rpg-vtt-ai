@@ -1,9 +1,8 @@
 import { lazy, Suspense, useCallback, useMemo, type ReactElement } from 'react';
 
-import type { Value } from '@vtt/formula';
 import { documentLayout } from '@vtt/plugin-engine';
 import type { ActorView, ItemView } from '@vtt/shared/api';
-import type { RichTextProps } from '@vtt/sheet-renderer';
+import type { RichTextProps, RollHandler } from '@vtt/sheet-renderer';
 import { Alert } from '@vtt/ui';
 
 import { useSheetPresence } from '../../collab/presence.js';
@@ -41,7 +40,7 @@ export function LiveEntitySheet({
   kind: 'actor' | 'item';
   entity: ActorView | ItemView;
   secret: boolean;
-  onRoll?: ((name: string, args: Readonly<Record<string, Value>>) => void) | undefined;
+  onRoll?: RollHandler | undefined;
 }): ReactElement {
   const type = entityType(host.system.definition, kind, entity.type);
   const layout = useMemo(() => (type ? documentLayout(type.schema) : NO_FIELDS), [type]);

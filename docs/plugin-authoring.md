@@ -829,6 +829,7 @@ An `items` node shows the actor's own items on its sheet, so players equip armou
 - **Which items:** those of `itemTypes`, or every item type when it is left out, under their [groups](#item-groups) and by name.
 - **Rows:** `item` lays out one item. Its paths are relative to the item's data, and inputs edit the item itself, live, as on its own sheet. Formulas in a row still read the actor, plus `@item.id`, `@item.name` and `@item.type`.
 - **Validation:** every path in `item` must exist in every listed type. A node whose `visibleIf` is `@item.type == 'armor'` (or several such tests joined by `or`) is only checked against those types.
+- **Rolls:** a `rollButton` in a row rolls for the actor with the row's item, for recipes [made with an item](#rolls-made-with-an-item).
 - **Actions:** the core adds a button to open each item's own sheet and, for whoever may edit the actor, to remove it and to add one from the table's library (`addLabel` names the button). Items dragged from the library or the compendium can be dropped onto the node.
 - **Totals follow:** [item contributions](#item-contributions) come from the items as they are edited, so ticking "equipped" changes the actor's derived values at once.
 - **Limits:** only actor sheets have `items` nodes, and not inside a `list` or another `items` node. An item's secret fields show on its own sheet only.
@@ -841,20 +842,21 @@ One small language is used for derived values, `visibleIf`, roll formulas, outco
 
 Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` reads a value:
 
-| Reference                | Reads                                                                 | Available in                      |
-| ------------------------ | --------------------------------------------------------------------- | --------------------------------- |
-| `@str`, `@hp.value`      | The entity's fields                                                   | Everywhere tied to a type         |
-| `@derived.strMod`        | A derived value                                                       | Everywhere tied to a type         |
-| `@settings.startingHp`   | A [table setting](#table-settings)                                    | Everywhere                        |
-| `@items.acBonus`         | A total of the actor's [items](#item-contributions)                   | Everywhere tied to an actor type  |
-| `@skills['id'].rank`     | One row of a collection, by id                                        | Everywhere tied to a type         |
-| `@skills[@args.id].rank` | The row a roll button named                                           | Recipes                           |
-| `@skills[*].rank`        | That field of every row, as a list for `sum`, `min`, `max` or `count` | Everywhere tied to a type         |
-| `@row.name`, `@row.id`   | The current row                                                       | Nodes inside a `list`             |
-| `@args.bonus`            | A roll button's argument                                              | Recipes, their outcomes and cards |
-| `@total`                 | The roll's result                                                     | Outcomes and card rows            |
-| `@roll.expression`       | The formula as written                                                | Outcomes and card rows            |
-| `@roll.resolved`         | The formula with values filled in: `1d20 + 2 + 3`                     | Outcomes and card rows            |
+| Reference                | Reads                                                                 | Available in                         |
+| ------------------------ | --------------------------------------------------------------------- | ------------------------------------ |
+| `@str`, `@hp.value`      | The entity's fields                                                   | Everywhere tied to a type            |
+| `@derived.strMod`        | A derived value                                                       | Everywhere tied to a type            |
+| `@settings.startingHp`   | A [table setting](#table-settings)                                    | Everywhere                           |
+| `@items.acBonus`         | A total of the actor's [items](#item-contributions)                   | Everywhere tied to an actor type     |
+| `@skills['id'].rank`     | One row of a collection, by id                                        | Everywhere tied to a type            |
+| `@skills[@args.id].rank` | The row a roll button named                                           | Recipes                              |
+| `@skills[*].rank`        | That field of every row, as a list for `sum`, `min`, `max` or `count` | Everywhere tied to a type            |
+| `@row.name`, `@row.id`   | The current row                                                       | Nodes inside a `list`                |
+| `@args.bonus`            | A roll button's argument                                              | Recipes, their outcomes and cards    |
+| `@item.bonus`            | The item the roll is [made with](#rolls-made-with-an-item)            | Recipes with `item`, outcomes, cards |
+| `@total`                 | The roll's result                                                     | Outcomes and card rows               |
+| `@roll.expression`       | The formula as written                                                | Outcomes and card rows               |
+| `@roll.resolved`         | The formula with values filled in: `1d20 + 2 + 3`                     | Outcomes and card rows               |
 
 The validator checks every reference against the type that uses it: `@agilty` is an error that names the type.
 
@@ -930,6 +932,23 @@ A formula is at most 2,000 characters and is checked when the plugin is validate
 - `card` shows the roll with a [chat card](#chat-cards).
 - A recipe can instead name a handler, `{ "handler": "attack" }`, which [server code](#server-code) runs.
 - A `rollButton` passes `args`, each a formula, number or `true`/`false`. The recipe reads them as `@args.<name>`. The validator cannot tell which arguments a recipe needs, so it does not check them: a button that leaves one out, or misspells it, validates, and its roll fails with an error naming the missing reference. Give every button of a recipe the same argument names.
+
+#### Rolls made with an item
+
+An attack with a sword reads the sword. A recipe that lists item types in `item` is made with one of the actor's items, and reads it as `@item`:
+
+```json
+"attack": {
+  "formula": "1d20 + @derived.strMod + @item.bonus",
+  "card": "attack",
+  "item": ["weapon"]
+}
+```
+
+- `@item.<field>` reads the item's fields, with their defaults, and `@item.derived.<name>` its derived values; `@item.id`, `@item.name` and `@item.type` name it. The validator checks every read against each listed type. The recipe, its outcomes and its card read `@item`, so a card row can show `@item.damage`.
+- Its buttons go in an [`items` row](#items-on-actor-sheets) of a listed type, or on the sheet of a listed item type. Either way the actor holding the item rolls. The validator refuses its buttons anywhere else, and a button on an item sheet whose recipe takes no item.
+- An item sheet's buttons are checked against every actor type, since any actor may hold the item. A library item has no holder, so its sheet rolls nothing.
+- The server checks that the actor holds the item and that the recipe takes its type. It reads the item as its sheet shows it, live, and never its secret fields.
 
 ### Custom dice
 

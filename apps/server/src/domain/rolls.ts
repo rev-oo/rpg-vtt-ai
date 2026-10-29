@@ -42,6 +42,7 @@ import { forbidden, unprocessable } from '../errors.js';
 import { PluginCodeError, type CodeKind, type LoadedCode } from '../plugins/code-runtime.js';
 
 import { recipientsFor, speakerFor } from './chat.js';
+import type { LiveHeldItem } from './documents.js';
 import { actorAccess, dataFilter, requireWritableTable, type DataFilter } from './entities.js';
 import { findTable } from './tables.js';
 
@@ -76,8 +77,8 @@ export interface RollOptions {
   definition?: (systemId: string) => PluginDefinition | undefined;
   /** An actor's live sheet data while its document is loaded (specs §9.6). */
   liveData?: (actor: Actor) => Record<string, unknown> | undefined;
-  /** The items an actor holds, live, for `@items` (ADR-063); none when left out. */
-  heldItems?: (actor: Actor) => HeldItem[];
+  /** The items an actor holds, live, for `@items` and `@item` (ADR-063); none when left out. */
+  heldItems?: (actor: Actor) => LiveHeldItem[];
   /** The system's shared and server code, if it has any (ADR-047). */
   code?: (systemId: string) => Promise<LoadedCode | undefined>;
   /** For handlers' `ctx.actors.adjust`. */
@@ -139,8 +140,8 @@ interface Prepared {
   subject: Subject;
   message: Omit<Parameters<typeof createChatMessage>[1], 'kind' | 'text'>;
   actor: Actor | null;
-  /** The actor's items, for `@items`. */
-  items: HeldItem[];
+  /** The actor's items, for `@items` and `@item`. */
+  items: LiveHeldItem[];
   table: ReturnType<typeof findTable>;
   plugin: PluginDefinition | undefined;
 }
@@ -218,10 +219,11 @@ export async function sendRollMessages(
       : undefined;
 
   if (input.recipe) {
-    const { name, args } = input.recipe;
+    const { name, args, itemId } = input.recipe;
     if (!system)
       throw unprocessable('system_unavailable', 'The table’s system cannot roll recipes.');
     if (!actor) throw unprocessable('actor_required', 'Choose an actor to roll for.');
+    const item = rolledItem(system.plugin, name, itemId, prepared.items);
     if (isHandler(system.plugin, name)) {
       return runHandler(db, prepared, { name, args, code, functions }, options);
     }
@@ -232,6 +234,7 @@ export async function sendRollMessages(
         data: actor.system,
         args,
         items: prepared.items,
+        item,
         rng,
       }),
     );
@@ -277,6 +280,30 @@ export async function sendRollMessages(
     ),
   );
   return [row];
+}
+
+/**
+ * The item a recipe is made with (ADR-063): one the rolling actor holds, of a type the recipe
+ * declares. A recipe that declares item types needs one, and one that does not takes none.
+ */
+function rolledItem(
+  plugin: PluginDefinition,
+  name: string,
+  itemId: string | undefined,
+  held: readonly LiveHeldItem[],
+): LiveHeldItem | undefined {
+  const recipe = Object.hasOwn(plugin.rolls, name) ? plugin.rolls[name] : undefined;
+  const takes = recipe && 'formula' in recipe ? recipe.item : undefined;
+  if (itemId === undefined) {
+    if (takes) throw unprocessable('item_required', 'Roll this with one of the actor’s items.');
+    return undefined;
+  }
+  const item = held.find((candidate) => candidate.id === itemId);
+  if (!item) throw unprocessable('item_not_held', 'The actor does not hold that item.');
+  if (!takes?.includes(item.type)) {
+    throw unprocessable('item_not_taken', 'This roll is not made with that item.');
+  }
+  return item;
 }
 
 /** A player's formula runs against the types without their secret fields (FR-SHEET-04). */

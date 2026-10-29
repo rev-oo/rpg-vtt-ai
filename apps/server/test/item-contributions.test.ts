@@ -1,12 +1,14 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
+import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { documentName } from '@vtt/shared';
 import { MAX_ACTOR_ITEMS, type ChatMessage, type ItemView } from '@vtt/shared/api';
 
 import { createItem } from '../src/db/repositories/index.js';
+import { items } from '../src/db/schema.js';
 
 import { authHeaders, type Client, type TestApp } from './support/app.js';
 import { openCollab } from './support/collab.js';
@@ -33,6 +35,7 @@ async function withArmor(dir: string) {
         properties: {
           equipped: { type: 'boolean', default: false },
           acBonus: { type: 'integer', default: 2, minimum: 0, maximum: 10 },
+          curse: { type: 'integer', default: 0, 'x-layer': 'secret' },
         },
       },
       contributes: { acBonus: { formula: '@equipped ? @acBonus : 0' } },
@@ -56,6 +59,12 @@ async function withArmor(dir: string) {
   };
   character.derived.ac = '10 + @derived.dexMod + @items.acBonus';
   await writeFile(file, JSON.stringify(character));
+  // A roll made with armour (T-1207).
+  const rollsFile = path.join(plugin, 'rolls.json');
+  const rolls = JSON.parse(await readFile(rollsFile, 'utf8')) as Record<string, unknown>;
+  rolls.brace = { formula: '1d20 + @item.acBonus', item: ['armor'] };
+  rolls.peek = { formula: '1d20 + @item.curse', item: ['armor'] };
+  await writeFile(rollsFile, JSON.stringify(rolls));
 }
 
 beforeEach(async () => {
@@ -156,5 +165,56 @@ describe('item contributions (T-1205, ADR-063)', () => {
     ).toBe(201);
     const restore = await call(bob, 'POST', `/items/${armor.id}/restore`);
     expect(restore.statusCode).toBe(422);
+  });
+});
+
+describe('rolls made with an item (T-1207, ADR-063)', () => {
+  it("reads the actor's item, and refuses items it does not hold", async () => {
+    const { table, bob, ayla, armor } = await armoured();
+    const roll = (recipe: object) =>
+      call(bob, 'POST', `/tables/${table.id}/rolls`, { recipe, actorId: ayla.id });
+
+    const braced = await roll({ name: 'brace', itemId: armor.id });
+    expect(braced.statusCode, braced.body).toBe(201);
+    expect(braced.json<{ message: ChatMessage }>().message.rolls[0]?.resolved).toBe('1d20 + 2');
+
+    // Another of bob's actors holds this one.
+    const brin = await createActorAs(t, bob, table.id, 'character', 'Brin');
+    const library = await call(gm, 'POST', `/tables/${table.id}/items`, {
+      type: 'armor',
+      name: 'Hide',
+    });
+    const hide = await call(bob, 'POST', `/actors/${brin.id}/items`, {
+      itemId: library.json<{ item: ItemView }>().item.id,
+    });
+    const elsewhere = await roll({
+      name: 'brace',
+      itemId: hide.json<{ item: ItemView }>().item.id,
+    });
+    expect(elsewhere.statusCode).toBe(422);
+    expect(elsewhere.json()).toMatchObject({ error: { code: 'item_not_held' } });
+
+    // A library item is held by nobody.
+    const unheld = await roll({
+      name: 'brace',
+      itemId: library.json<{ item: ItemView }>().item.id,
+    });
+    expect(unheld.json()).toMatchObject({ error: { code: 'item_not_held' } });
+
+    // Rolls never read an item's secret fields: the default stands in.
+    t.db
+      .update(items)
+      .set({ system: { curse: 7 } })
+      .where(eq(items.id, armor.id))
+      .run();
+    const peek = await roll({ name: 'peek', itemId: armor.id });
+    expect(peek.json<{ message: ChatMessage }>().message.rolls[0]?.resolved).toBe('1d20 + 0');
+
+    expect((await roll({ name: 'brace' })).json()).toMatchObject({
+      error: { code: 'item_required' },
+    });
+    expect((await roll({ name: 'attack', itemId: armor.id })).json()).toMatchObject({
+      error: { code: 'item_not_taken' },
+    });
   });
 });

@@ -27,6 +27,13 @@ export const formulaRecipeSchema = z
       .describe('Checked in order; the first whose `when` is true is shown.'),
     /** A file in `cards/`, without `.json`. */
     card: name.optional().describe('A card in `cards/`, without `.json`, to show the roll with.'),
+    item: z
+      .array(name)
+      .min(1)
+      .optional()
+      .describe(
+        'Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`.',
+      ),
   })
   .meta({ title: 'Formula recipe' });
 

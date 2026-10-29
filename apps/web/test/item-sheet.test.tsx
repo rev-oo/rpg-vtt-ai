@@ -70,13 +70,38 @@ const DEFINITION: PluginDefinition = {
       schema: { type: 'object', properties: { damage: { type: 'string', default: '1d6' } } },
     },
   },
-  sheets: { weapon: { layout: { type: 'field', path: 'damage', label: 'Damage' } } },
-  rolls: {},
+  sheets: {
+    weapon: {
+      layout: {
+        type: 'column',
+        children: [
+          { type: 'field', path: 'damage', label: 'Damage' },
+          { type: 'rollButton', roll: 'strike', label: 'Strike' },
+        ],
+      },
+    },
+  },
+  rolls: { strike: { formula: '1d20 + 1', item: ['weapon'] } },
   dice: {},
   cards: {},
   settings: {},
   lang: { en: {} },
   styles: [],
+};
+
+const ROLLED = {
+  id: 'm1',
+  tableId: TABLE.id,
+  senderId: 'u1',
+  speaker: { name: 'Goblin King', actorId: HERO.id, imageUrl: null },
+  audience: 'public',
+  recipientIds: [],
+  kind: 'roll',
+  text: '1d20 + 1',
+  rolls: [{ expression: '1d20 + 1', resolved: '1d20 + 1', total: 12, dice: [] }],
+  card: null,
+  createdAt: '2026-10-20T12:00:00.000Z',
+  editedAt: null,
 };
 
 const item = (overrides: Partial<ItemView> = {}): ItemView => ({
@@ -105,7 +130,7 @@ function openTable(role: TableRole, sword: ItemView) {
   };
   collab.sheet = { status: 'ready', store, readOnly: false, issues: [], awareness: undefined };
   const actors = { body: { nextCursor: null, actors: [HERO] } };
-  fakeApi({
+  const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
     'GET /me': { body: SESSION },
     'GET /tables/t1': { body: { table: { ...TABLE, role } } },
@@ -123,6 +148,7 @@ function openTable(role: TableRole, sword: ItemView) {
     },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
     'GET /tables/t1/encounter': { body: { encounter: null } },
+    'POST /tables/t1/rolls': { status: 201, body: { message: ROLLED } },
     'GET /systems/tiny-d20': {
       body: {
         system: {
@@ -138,12 +164,12 @@ function openTable(role: TableRole, sword: ItemView) {
     },
   });
   renderApp('/tables/t1');
-  return store;
+  return { store, api };
 }
 
 describe('item sheets (T-1204)', () => {
   it('opens a library item from the items panel and edits it live', async () => {
-    const store = openTable('gm', item());
+    const { store } = openTable('gm', item());
     await openPanel('Items');
     await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
     const sheet = await screen.findByRole('tabpanel', { name: 'Sword' });
@@ -173,5 +199,26 @@ describe('item sheets (T-1204)', () => {
     const sheet = await screen.findByRole('tabpanel', { name: 'Sword' });
     expect(await within(sheet).findByText('Held by Goblin King')).toBeVisible();
     expect(collab.opened.at(-1)).toMatchObject({ kind: 'item', id: 'i2' });
+  });
+
+  it('rolls as the holder with the item, and not from the library (T-1207)', async () => {
+    const { api } = openTable('gm', item());
+    await userEvent.click(await screen.findByText('Items', { selector: 'summary' }));
+    await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
+    const owned = await screen.findByRole('tabpanel', { name: 'Sword' });
+    await userEvent.click(await within(owned).findByRole('button', { name: 'Strike' }));
+    expect(await within(owned).findByText('Rolled. The result is in the chat.')).toBeVisible();
+    expect(api.calls).toContainEqual(
+      expect.objectContaining({
+        method: 'POST',
+        path: '/tables/t1/rolls',
+        body: { recipe: { name: 'strike', args: {}, itemId: 'i2' }, actorId: 'a1' },
+      }),
+    );
+
+    await openPanel('Items');
+    await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
+    const library = await screen.findByRole('tabpanel', { name: 'Sword' });
+    expect(await within(library).findByRole('button', { name: 'Strike' })).toBeDisabled();
   });
 });
