@@ -18,7 +18,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
-| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | In progress | 100%     |
+| M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 0.7.0   | Not started | 0%       |
@@ -27,8 +27,8 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M13 (0.3.0 released)
-- **Next task:** `T-1401` (M14), once M13 is signed off
+- **Active milestone:** M14 (M13 done; 0.4.0 not released yet)
+- **Next task:** `T-1401`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,11 +36,12 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), and up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                                 |
-| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated.                  |
-| 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated; M13 awaits sign-off. |
+| Date       | Change                                                                                                                                                                                                                                                                      |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.3.0 (M12). The plugin core API stays at `0.1.0` (ADR-063 amended). M12's task list and change log moved to `docs/history/0.3.0.md`; M13 is active.                                                                                                                |
+| 2026-10-29 | T-1301 done: table assets stored under `DATA_DIR/assets`, checked by their bytes (SVG refused), with an upload limit and an instance quota in the admin settings, served at `/api/v1/assets/:id` and included in backups (ADR-064). FR-ADMIN-01 and FR-ASSET-01/03 updated. |
+| 2026-10-29 | T-1302 done: the Images panel uploads, lists and deletes a table's images; an image picker sets actor and item images and puts images in journal text; image fields take asset paths of the same table; images in use cannot be deleted (ADR-065). FR-ASSET-02 updated.     |
+| 2026-10-29 | M13 done (signed off with PR #49); M14 is active.                                                                                                                                                                                                                           |
 
 ---
 
