@@ -44,7 +44,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | T-1202 done: a Compendium panel browses pack entries with previews; GMs copy entries into the table, owners copy items onto their actors; the whole-pack import is removed (ADR-060).     |
 | 2026-10-28 | T-1203 done, M12 done: item types declare `group`, `labelPlural` and `order`; item lists show items under their groups; tiny-d20 adds spells; Q16 decided (no rename) (ADR-061).          |
 | 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                     |
-| 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add `@items` in formulas, an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).                                    |
+| 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).  |
 
 ---
 
@@ -384,23 +384,23 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                                                             | Priority | Status                       |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                              | MVP      | 0.1.0                        |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                              | MVP      | 0.1.0                        |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                               | MVP      | 0.1.0                        |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                          | MVP      | 0.1.0                        |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                 | MVP      | 0.1.0                        |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                 | MVP      | 0.1.0                        |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                          | MVP      | 0.1.0                        |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                    | MVP      | 0.1.0 (`code/client`); 0.2.0 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own. | v1       | 0.3.0 (browser, ADR-060)     |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                        | v1       | 0.2.0                        |
-| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).   | 1.0      | 0.3.0 (ADR-061)              |
-| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                         | 1.0      | planned (M15)                |
-| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.               | 1.0      | planned (M15)                |
-| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                      | 1.0      | planned (M16)                |
-| FR-PLUGIN-15 | Formulas read an actor's items by type, filtered by a boolean field (`@items.armor[equipped].acBonus`), and rolls read the item they were made with (`@item`).          | 1.0      | planned (M12)                |
+| ID           | Requirement                                                                                                                                                                                   | Priority | Status                       |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                                                    | MVP      | 0.1.0                        |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                                                    | MVP      | 0.1.0                        |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                                                     | MVP      | 0.1.0                        |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                                                | MVP      | 0.1.0                        |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                                       | MVP      | 0.1.0                        |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                                       | MVP      | 0.1.0                        |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                                                | MVP      | 0.1.0                        |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                                          | MVP      | 0.1.0 (`code/client`); 0.2.0 |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                       | v1       | 0.3.0 (browser, ADR-060)     |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                              | v1       | 0.2.0                        |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                         | 1.0      | 0.3.0 (ADR-061)              |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | planned (M15)                |
+| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | planned (M15)                |
+| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                |
+| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | planned (M12)                |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -751,13 +751,13 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Do:** Items open on a live sheet of their own (FR-ENT-06), which no release had: item data could not be edited. Each item gets `item:<id>:main` and, with secret fields, `item:<id>:secret`; library items are edited by GMs and assistants, owned items follow their actor. Items open as workspace panels from the items panel and from an actor's items. Owned items stay out of the actor document (ADR-062).
   - **Done when:** server tests cover item document access, stores and cascades; web tests open library and owned items; e2e shows a GM's edit reaching a player's read-only item sheet, and a player editing their own copy.
 
-- [ ] **T-1205 · Items in formulas**
+- [ ] **T-1205 · Item contributions**
   - **Deps:** T-1204
-  - **Do:** Formulas read an actor's items: `@items.<type>[*].<field>` and `@items.<type>[<boolean field>].<field>`, for `sum`, `min`, `max` and `count` (FR-PLUGIN-15). The validator checks type, filter and field; `@items` is refused in item formulas. The rules engine takes the actor's items in its scope; the server joins them (live, stored, projection) for rolls, combat and plugin code, and the SDK gets an accessor. An actor holds at most 500 items (ADR-063).
-  - **Done when:** formula and validator tests cover good and bad references; server tests show a derived value in a roll seeing an item edit before it is stored; a tiny-d20 armour adds to AC on the server.
+  - **Do:** Item types may declare `contributes`: named values, each a `formula` over the item's own main-layer data and derived values, with a `combine` (`sum`, `max`, `min`, `any`, `count`; `max` and `min` declare a `default`). Actor formulas read the totals over the actor's live items as `@items.<name>` (FR-PLUGIN-15). The validator gathers the names, requires types sharing a name to agree on `combine` and value type, checks `@items.<name>` like `@derived`, keeps contributions off secret fields and refuses `@items` in item formulas. The rules engine computes the totals; the server joins item data (live, stored, projection) for rolls, combat and plugin code, and the SDK reads the totals. An actor holds at most 500 items (ADR-063).
+  - **Done when:** validator tests cover contributions, shared names and their mismatches, unknown `@items` names and secret reads; engine tests cover each combine with and without items; server tests show a roll's derived value seeing an item edit before it is stored; a tiny-d20 armour adds to AC on the server.
 - [ ] **T-1206 · Items on actor sheets**
   - **Deps:** T-1205
-  - **Do:** An `items` sheet node lists the actor's items of `itemTypes`, grouped, each row laid out by `item` with paths into the item's data and `@item.name/type/id` (FR-SHEET-12). Row inputs edit the item's live document; the sheet's `@items` reads the open documents, so derived values follow at once. Open, remove and add (from the library), and dropping library or compendium rows onto the node.
+  - **Do:** An `items` sheet node lists the actor's items of `itemTypes`, grouped, each row laid out by `item` with paths into the item's data and `@item.name/type/id` (FR-SHEET-12). Row inputs edit the item's live document; the sheet computes contributions from the open documents, so derived values follow at once. Open, remove and add (from the library), and dropping library or compendium rows onto the node.
   - **Done when:** validator tests check row paths against every listed type; web tests render, edit and add rows, read-only for observers, with a derived value following a checkbox; e2e shows a player equipping armour and AC changing on the GM's open sheet.
 - [ ] **T-1207 · Rolls with an item**
   - **Deps:** T-1206
@@ -765,7 +765,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Done when:** validator tests cover `@item`; server tests refuse an item another actor holds; e2e shows an attack from a weapon row with the weapon's damage on the card.
 - [ ] **T-1208 · tiny-d20 inventory**
   - **Deps:** T-1207
-  - **Do:** tiny-d20 gets armour (`equipped`, `acBonus`) and an AC derived from it, a gear list with an Attack per weapon, and prepared spells with a count on the character sheet; the pack gains armour. The guide's tutorial gains an inventory step.
+  - **Do:** tiny-d20 gets armour (`equipped`, `acBonus`) contributing to an AC derived value while equipped, a gear list with an Attack per weapon, and prepared spells contributing to a prepared count on the character sheet; the pack gains armour. The guide's tutorial gains an inventory step.
   - **Done when:** the reference plugin validates; e2e on all three browsers: equip armour, prepare a spell, attack with a weapon.
 
 ### M13 — Assets (0.4.0)
