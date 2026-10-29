@@ -13,10 +13,10 @@ import {
   type Subject,
   type TableRole,
 } from '@vtt/shared';
-import type { ActorView, ItemView } from '@vtt/shared/api';
+import { MAX_ACTOR_ITEMS, type ActorView, type ItemView } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import type { Actor, Item } from '../db/repositories/index.js';
+import { countHeldItems, type Actor, type Item } from '../db/repositories/index.js';
 import { plugins } from '../db/schema.js';
 import { conflict, unprocessable } from '../errors.js';
 
@@ -24,6 +24,16 @@ import { isAvailable } from './plugins.js';
 import type { GameTable } from './tables.js';
 
 export type EntityAccess = ActorView['access'];
+
+/** Refuses `adding` more items for an actor that would then hold over 500 (ADR-063). */
+export function requireRoomForItems(db: DbOrTx, actorId: string, adding: number): void {
+  if (countHeldItems(db, actorId) + adding > MAX_ACTOR_ITEMS) {
+    throw unprocessable(
+      'too_many_items',
+      `An actor can hold at most ${String(MAX_ACTOR_ITEMS)} items.`,
+    );
+  }
+}
 
 /** What a member may do with an actor, or `null` if they may not see it (FR-ENT-03). */
 export function actorAccess(subject: Subject, actor: Actor): EntityAccess | null {

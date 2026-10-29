@@ -12,7 +12,15 @@ import type { FieldSchema } from '../types.js';
 import type { PluginIssue } from './issues.js';
 
 /** Reference roots formulas get from the core rather than from the actor's data. */
-export const RESERVED_ROOTS = ['derived', 'args', 'row', 'settings', 'total', 'roll'] as const;
+export const RESERVED_ROOTS = [
+  'derived',
+  'args',
+  'row',
+  'settings',
+  'total',
+  'roll',
+  'items',
+] as const;
 
 /** What `@` references may name in one place a formula appears. */
 export interface FormulaScope {
@@ -25,6 +33,8 @@ export interface FormulaScope {
   data?: FieldSchema | undefined;
   /** `@derived.*` names; undefined where derived values are not available. */
   derived?: ReadonlySet<string> | undefined;
+  /** `@items.*`: the names item types contribute; only actor formulas read them (ADR-063). */
+  items?: ReadonlySet<string> | undefined;
   /** The row schema of the enclosing `list` (`@row.*`); `unchecked` when it is unknown. */
   row?: FieldSchema | 'unchecked' | undefined;
   /** `@args.*`: any key, since arguments come from roll buttons. */
@@ -74,6 +84,8 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
       return scope.data === undefined || onlyName(path, scope.derived);
     case 'settings':
       return onlyName(path, scope.settings);
+    case 'items':
+      return scope.data === undefined || onlyName(path, scope.items);
     case 'args':
       return scope.args === true && path.length > 0;
     case 'row':
@@ -136,6 +148,70 @@ export function checkFormula(
     }
   }
   return derived;
+}
+
+/** Whether a field, or anything inside it, is on the secret layer (specs §9.3). */
+function holdsSecret(field: FieldSchema): boolean {
+  if (field['x-layer'] === 'secret') return true;
+  if (field.type === 'object') return Object.values(field.properties ?? {}).some(holdsSecret);
+  return field.type === 'array' && field.items !== undefined && holdsSecret(field.items);
+}
+
+/** Whether reading `segments` of `schema` can reach a secret value. */
+function readsSecret(schema: FieldSchema, segments: readonly PathSegment[]): boolean {
+  const [segment, ...rest] = segments;
+  if (schema['x-layer'] === 'secret') return true;
+  if (!segment) return holdsSecret(schema);
+  if (segment.kind === 'field') {
+    const properties = schema.type === 'object' ? schema.properties : undefined;
+    const field =
+      properties && Object.hasOwn(properties, segment.name) ? properties[segment.name] : undefined;
+    return field !== undefined && readsSecret(field, rest);
+  }
+  return schema.type === 'array' && schema.items !== undefined && readsSecret(schema.items, rest);
+}
+
+/**
+ * The references of a formula that reach secret fields of `schema`, directly or through the
+ * derived values it reads (ADR-063). Formulas that do not parse are skipped: they are reported
+ * where they are checked.
+ */
+export function secretReads(
+  source: string,
+  schema: FieldSchema,
+  derived: Readonly<Record<string, string>>,
+): string[] {
+  const found: string[] = [];
+  const seen = new Set<string>();
+  const walk = (text: string, via: string | undefined) => {
+    let tree: Expression;
+    try {
+      tree = parse(text);
+    } catch (error) {
+      if (!(error instanceof FormulaError)) throw error;
+      return;
+    }
+    const pending = [tree];
+    for (let node = pending.pop(); node; node = pending.pop()) {
+      pending.push(...childrenOf(node));
+      if (node.kind !== 'reference') continue;
+      const [first] = node.path;
+      if (node.name === 'derived' && first?.kind === 'field') {
+        const next = Object.hasOwn(derived, first.name) ? derived[first.name] : undefined;
+        if (next !== undefined && !seen.has(first.name)) {
+          seen.add(first.name);
+          walk(next, via ?? `@derived.${first.name}`);
+        }
+      } else if (
+        !(RESERVED_ROOTS as readonly string[]).includes(node.name) &&
+        readsSecret(schema, [{ kind: 'field', name: node.name }, ...node.path])
+      ) {
+        found.push(via ?? text.slice(node.span.start, node.span.end));
+      }
+    }
+  };
+  walk(source, undefined);
+  return [...new Set(found)];
 }
 
 /** The first cycle among derived values, as names in order (`a → b → a`), if any. */

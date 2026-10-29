@@ -16,6 +16,7 @@ import {
 import { actors, items } from '../db/schema.js';
 import { notFound, unprocessable } from '../errors.js';
 
+import { requireRoomForItems } from './entities.js';
 import type { GameTable } from './tables.js';
 
 // The compendium (FR-PLUGIN-09, ADR-060): the entries of the system's packs, which members
@@ -126,6 +127,7 @@ export function copyFromCompendium(
     return found;
   });
   return db.transaction((tx) => {
+    if (target.kind === 'actor') requireRoomForItems(tx, target.actor.id, chosen.length);
     const created = { actors: [] as Actor[], items: [] as Item[] };
     for (const { ref, entry } of chosen) {
       const base = {

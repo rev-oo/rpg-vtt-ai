@@ -93,6 +93,47 @@
       "type": "integer",
       "minimum": -1000,
       "maximum": 1000
+    },
+    "contributes": {
+      "description": "Values the type adds to whoever holds it, by name. Actor formulas read the total over their items as `@items.<name>`. Types that contribute the same name must combine it the same way.",
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+        "title": "Identifier"
+      },
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "formula": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "title": "Formula",
+            "description": "Worked out for each item from its own data and derived values; it cannot read secret fields."
+          },
+          "combine": {
+            "description": "How the items’ values combine: `sum` (the default), `max` or `min` of numbers; `any` (true if one is) or `count` (how many are) of true/false.",
+            "type": "string",
+            "enum": [
+              "sum",
+              "max",
+              "min",
+              "any",
+              "count"
+            ]
+          },
+          "default": {
+            "description": "The value of a `max` or `min` when no item contributes; required for those two.",
+            "type": "number"
+          }
+        },
+        "required": [
+          "formula"
+        ],
+        "additionalProperties": false,
+        "title": "Contribution"
+      }
     }
   },
   "required": [

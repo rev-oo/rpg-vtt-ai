@@ -8,7 +8,7 @@ import {
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RawData, WebSocket } from 'ws';
 
-import { copyInto } from '@vtt/plugin-engine';
+import { copyInto, type HeldItem } from '@vtt/plugin-engine';
 import {
   actorLayerAccess,
   itemLayerAccess,
@@ -34,6 +34,7 @@ import {
   DATA_MAP,
   hasSecretLayer,
   liveActorData,
+  liveHeldItems,
   loadDocument,
   repairDocument,
   storeDocument,
@@ -437,6 +438,15 @@ export function liveDataOf(
 ): (actor: Actor) => Record<string, unknown> | undefined {
   return (actor) =>
     liveActorData(db, actor, definition, (name) => collab.hocuspocus.documents.get(name));
+}
+
+/** Reads the items an actor holds, live, for `@items` (ADR-063). */
+export function heldItemsOf(
+  { collab, db }: Pick<AppContext, 'collab' | 'db'>,
+  definition: DefinitionOf,
+): (actor: Actor) => HeldItem[] {
+  return (actor) =>
+    liveHeldItems(db, actor, definition, (name) => collab.hocuspocus.documents.get(name));
 }
 
 /**

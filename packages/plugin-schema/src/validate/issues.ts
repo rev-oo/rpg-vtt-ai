@@ -36,6 +36,10 @@ export const PLUGIN_ISSUE_CODES = [
   'unknown_die',
   'dice_not_allowed',
   'derived_cycle',
+  // Item contributions (ADR-063)
+  'contribution_mismatch',
+  'contribution_default',
+  'secret_contribution',
   // Links between files
   'missing_target',
   'unknown_field',
@@ -128,6 +132,14 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   unknown_die: (x) => `Unknown die "${p(x, 'name')}"; declare it in dice.json`,
   dice_not_allowed: () => 'Dice can only be used in roll formulas',
   derived_cycle: (x) => `Derived values depend on each other: ${p(x, 'cycle')}`,
+  contribution_mismatch: (x) =>
+    `"${p(x, 'name')}" is combined with ${p(x, 'combine')} here but with ${p(x, 'other')} in ${p(x, 'file')}`,
+  contribution_default: (x) =>
+    x.combine === 'max' || x.combine === 'min'
+      ? `"${p(x, 'name')}" combines with ${p(x, 'combine')}, so it needs a default`
+      : `"${p(x, 'name')}" combines with ${p(x, 'combine')}, which takes no default`,
+  secret_contribution: (x) =>
+    `${p(x, 'reference')} reads a secret field; contributions can only read main-layer fields`,
   missing_target: (x) => `There is no ${p(x, 'target')} named "${p(x, 'name')}"`,
   unknown_field: (x) => `"${p(x, 'field')}" is not a field of ${p(x, 'scope')}`,
   field_mismatch: (x) => `"${p(x, 'field')}" must be ${p(x, 'expected')} here`,

@@ -10,6 +10,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- Items can add to their holder's numbers. An item type declares what it `contributes`, such as worn armour's bonus to defense, each with a formula over the item's own fields and how the items combine (`sum`, `max`, `min`, `any`, `count`). Actor formulas read the totals as `@items.<name>`, in derived values, rolls, initiative and plugin code, as soon as an item's sheet changes. The validator checks the names and keeps contributions off secret fields. An actor holds at most 500 items (FR-PLUGIN-15, ADR-063).
 - Item types can declare a `group`, a plural label (`labelPlural`) and an `order`. The items panel, an actor's items and the compendium then show items under their groups, such as "Spells" and "Gear", with the compendium's actors first. Systems that declare no group keep a single list. Tiny D20 adds spells, in a "Spells" group, and two spells in its bestiary pack (FR-PLUGIN-11, ADR-061).
 
 ### Changed
