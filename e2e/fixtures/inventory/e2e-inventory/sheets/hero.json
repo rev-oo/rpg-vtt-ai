@@ -1,0 +1,20 @@
+{
+  "layout": {
+    "type": "column",
+    "children": [
+      { "type": "derived", "key": "ac", "label": "AC" },
+      {
+        "type": "items",
+        "itemTypes": ["armor"],
+        "addLabel": "Add armor",
+        "item": {
+          "type": "row",
+          "children": [
+            { "type": "field", "path": "equipped", "input": "checkbox", "label": "Equipped" },
+            { "type": "field", "path": "acBonus", "input": "number", "label": "Bonus" }
+          ]
+        }
+      }
+    ]
+  }
+}

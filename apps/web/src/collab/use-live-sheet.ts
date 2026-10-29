@@ -4,8 +4,9 @@ import * as Y from 'yjs';
 
 import type { DocumentLayout } from '@vtt/plugin-engine';
 import { documentName } from '@vtt/shared';
-import { collabServerMessage, type CollabServerMessage, type DataIssue } from '@vtt/shared/api';
+import type { DataIssue } from '@vtt/shared/api';
 
+import { collabUrl, parseMessage, REVOKED } from './connection.js';
 import type { Awareness } from './presence.js';
 import { createYjsStore, type Layer, type YjsStore } from './yjs-store.js';
 
@@ -23,24 +24,6 @@ export type LiveSheet =
       /** The main document's awareness, for presence (T-0507). */
       awareness: Awareness | undefined;
     };
-
-export function collabUrl(): string {
-  const url = new URL('/ws/collab', window.location.href);
-  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-  return url.toString();
-}
-
-export function parseMessage(payload: string): CollabServerMessage | undefined {
-  try {
-    const parsed = collabServerMessage.safeParse(JSON.parse(payload));
-    return parsed.success ? parsed.data : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-/** Reasons the server gives when it closes a document (@hocuspocus/common). */
-export const REVOKED = new Set(['Forbidden', 'Unauthorized']);
 
 interface LayerState {
   synced: boolean;

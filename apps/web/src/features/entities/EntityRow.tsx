@@ -2,6 +2,8 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { t } from '../../i18n/index.js';
 
+import { startItemDrag, type ItemDrag } from './item-drag.js';
+
 export interface EntityRowProps {
   name: string;
   type: string;
@@ -12,6 +14,8 @@ export interface EntityRowProps {
   actions?: ReactNode;
   /** Under a group heading, the name is one level lower (ADR-061). */
   nested?: boolean;
+  /** Lets the row be dropped onto an actor sheet's items (ADR-063). */
+  drag?: ItemDrag | undefined;
   children?: ReactNode;
 }
 
@@ -23,11 +27,20 @@ export function EntityRow({
   details,
   actions,
   nested = false,
+  drag,
   children,
 }: EntityRowProps): ReactElement {
   const Heading = nested ? 'h4' : 'h3';
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-3">
+    <li
+      className="flex flex-col gap-2 rounded-lg border border-line bg-surface p-3"
+      {...(drag && {
+        draggable: true,
+        onDragStart: (event) => {
+          startItemDrag(event, drag);
+        },
+      })}
+    >
       <div className="flex flex-wrap items-center gap-3">
         {imageUrl ? (
           <img src={imageUrl} alt="" className="size-10 shrink-0 rounded-lg object-cover" />

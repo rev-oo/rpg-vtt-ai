@@ -17,7 +17,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | ------ | -------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------- | -------- |
 | M0–M7  | MVP: foundation, server, entities, formulas, plugins, live sheets, journal and admin, hardening ([history](docs/history/mvp.md)) | 0.1.0   | Done        | 100%     |
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
-| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 63%      |
+| M12    | Table workspace, compendium and inventories                                                                                      | 0.3.0   | In progress | 75%      |
 | M13    | Assets: uploads and asset manager                                                                                                | 0.4.0   | Not started | 0%       |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 0.5.0   | Not started | 0%       |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 0.6.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M12
-- **Next task:** `T-1206`
+- **Next task:** `T-1207`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -46,6 +46,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-28 | T-1204 added to M12 and done: items open on live sheets of their own (`item:<id>:main\|secret`), from the items panel and an actor's items (ADR-062).                                     |
 | 2026-10-29 | M12 grows with inventories: T-1205–T-1208 add item contributions to actor formulas (`@items.<name>`), an `items` sheet node and rolls with `@item` (FR-SHEET-12, FR-PLUGIN-15, ADR-063).  |
 | 2026-10-29 | T-1205 done: item types declare `contributes`; actor formulas read the totals as `@items.<name>` in rolls, recipes, initiative and plugin code, live; an actor holds at most 500 items.   |
+| 2026-10-29 | T-1206 done: an `items` sheet node lists and edits an actor's items in place, with open, remove, add from the library and drops; sheets compute `@items` from the open item documents.    |
 
 ---
 
@@ -335,20 +336,20 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.4 Live sheets (`FR-SHEET`)
 
-| ID          | Requirement                                                                                                                                                                                 | Priority | Status        |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------- |
-| FR-SHEET-01 | Opening a sheet connects to a Yjs document; all users with access see changes within 500 ms on a LAN.                                                                                       | MVP      | 0.1.0         |
-| FR-SHEET-02 | Each field shows the presence of other users editing it (colored outline and name badge).                                                                                                   | MVP      | 0.1.0         |
-| FR-SHEET-03 | Users with `observer` access see the sheet read-only; the UI shows a banner.                                                                                                                | MVP      | 0.1.0         |
-| FR-SHEET-04 | Secret layer fields (declared in the plugin with `"x-layer": "secret"`) are only sent to GMs and assistants. The server omits them from observer and player sessions, not just from the UI. | MVP      | 0.1.0         |
-| FR-SHEET-05 | Derived values update live for all viewers without being stored.                                                                                                                            | MVP      | 0.1.0         |
-| FR-SHEET-06 | Collections (lists) support add, remove, and reorder; reorder must not duplicate or lose rows under concurrent edits.                                                                       | MVP      | 0.1.0         |
-| FR-SHEET-07 | Long text fields (notes, biography) support collaborative editing.                                                                                                                          | MVP      | 0.1.0         |
-| FR-SHEET-08 | Counter fields support server-applied deltas (`adjust`) so concurrent "−3 HP" actions are not overwritten.                                                                                  | MVP      | 0.1.0         |
-| FR-SHEET-09 | Field-level validation runs on input and again on the server before persist. Invalid values are rejected or clamped per the field's rule and reported to the editor.                        | MVP      | 0.1.0         |
-| FR-SHEET-10 | Sheets render on phone-width viewports (≥ 360 px) with no horizontal page scroll.                                                                                                           | MVP      | 0.1.0         |
-| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery.                                                                                                                   | v1       | 0.2.0         |
-| FR-SHEET-12 | An actor sheet lists the actor's items and edits them in place (an `items` node), with open, remove and add; items can be dropped onto it.                                                  | 1.0      | planned (M12) |
+| ID          | Requirement                                                                                                                                                                                 | Priority | Status |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
+| FR-SHEET-01 | Opening a sheet connects to a Yjs document; all users with access see changes within 500 ms on a LAN.                                                                                       | MVP      | 0.1.0  |
+| FR-SHEET-02 | Each field shows the presence of other users editing it (colored outline and name badge).                                                                                                   | MVP      | 0.1.0  |
+| FR-SHEET-03 | Users with `observer` access see the sheet read-only; the UI shows a banner.                                                                                                                | MVP      | 0.1.0  |
+| FR-SHEET-04 | Secret layer fields (declared in the plugin with `"x-layer": "secret"`) are only sent to GMs and assistants. The server omits them from observer and player sessions, not just from the UI. | MVP      | 0.1.0  |
+| FR-SHEET-05 | Derived values update live for all viewers without being stored.                                                                                                                            | MVP      | 0.1.0  |
+| FR-SHEET-06 | Collections (lists) support add, remove, and reorder; reorder must not duplicate or lose rows under concurrent edits.                                                                       | MVP      | 0.1.0  |
+| FR-SHEET-07 | Long text fields (notes, biography) support collaborative editing.                                                                                                                          | MVP      | 0.1.0  |
+| FR-SHEET-08 | Counter fields support server-applied deltas (`adjust`) so concurrent "−3 HP" actions are not overwritten.                                                                                  | MVP      | 0.1.0  |
+| FR-SHEET-09 | Field-level validation runs on input and again on the server before persist. Invalid values are rejected or clamped per the field's rule and reported to the editor.                        | MVP      | 0.1.0  |
+| FR-SHEET-10 | Sheets render on phone-width viewports (≥ 360 px) with no horizontal page scroll.                                                                                                           | MVP      | 0.1.0  |
+| FR-SHEET-11 | Sheet history: the last 50 snapshots per actor are retained for recovery.                                                                                                                   | v1       | 0.2.0  |
+| FR-SHEET-12 | An actor sheet lists the actor's items and edits them in place (an `items` node), with open, remove and add; items can be dropped onto it.                                                  | 1.0      | 0.3.0  |
 
 ### 7.5 Chat and rolls (`FR-CHAT`)
 
@@ -756,7 +757,7 @@ The table becomes a full-page workspace, ready for maps in M14, and the compendi
   - **Deps:** T-1204
   - **Do:** Item types may declare `contributes`: named values, each a `formula` over the item's own main-layer data and derived values, with a `combine` (`sum`, `max`, `min`, `any`, `count`; `max` and `min` declare a `default`). Actor formulas read the totals over the actor's live items as `@items.<name>` (FR-PLUGIN-15). The validator gathers the names, requires types sharing a name to agree on `combine` and value type, checks `@items.<name>` like `@derived`, keeps contributions off secret fields and refuses `@items` in item formulas. The rules engine computes the totals; the server joins item data (live, stored, projection) for rolls, combat and plugin code, and the SDK reads the totals. An actor holds at most 500 items (ADR-063).
   - **Done when:** validator tests cover contributions, shared names and their mismatches, unknown `@items` names and secret reads; engine tests cover each combine with and without items; server tests show a roll's derived value seeing an item edit before it is stored; a tiny-d20 armour adds to AC on the server.
-- [ ] **T-1206 · Items on actor sheets**
+- [x] **T-1206 · Items on actor sheets**
   - **Deps:** T-1205
   - **Do:** An `items` sheet node lists the actor's items of `itemTypes`, grouped, each row laid out by `item` with paths into the item's data and `@item.name/type/id` (FR-SHEET-12). Row inputs edit the item's live document; the sheet computes contributions from the open documents, so derived values follow at once. Open, remove and add (from the library), and dropping library or compendium rows onto the node.
   - **Done when:** validator tests check row paths against every listed type; web tests render, edit and add rows, read-only for observers, with a derived value following a checkbox; e2e shows a player equipping armour and AC changing on the GM's open sheet.

@@ -20,6 +20,7 @@ import { checkData, checkDataSchema } from './data.js';
 import {
   checkFormula,
   findCycle,
+  itemTypeGuard,
   secretReads,
   type FormulaRules,
   type FormulaScope,
@@ -355,10 +356,24 @@ export function validatePlugin(
     const walk = (
       node: SheetNode,
       path: JsonPath,
-      /** The enclosing list's rows; without a schema when the list's field is unknown. */
-      row: { schema: FieldSchema | undefined; label: string } | undefined,
+      /**
+       * The enclosing list's rows, without a schema when the list's field is unknown; or the
+       * enclosing `items` node's rows, walked once per item type.
+       */
+      row: { schema: FieldSchema | undefined; label: string; itemType?: string } | undefined,
     ) => {
-      const nodeScope: FormulaScope = row ? { ...scope, row: row.schema ?? 'unchecked' } : scope;
+      // A node guarded by `@item.type` is only checked for the types it shows.
+      const guard =
+        row?.itemType !== undefined && node.visibleIf !== undefined
+          ? itemTypeGuard(node.visibleIf)
+          : undefined;
+      if (row?.itemType !== undefined && guard && !guard.has(row.itemType)) return;
+      const nodeScope: FormulaScope =
+        row?.itemType !== undefined
+          ? { ...scope, item: true }
+          : row
+            ? { ...scope, row: row.schema ?? 'unchecked' }
+            : scope;
       if (node.visibleIf !== undefined)
         formula(node.visibleIf, nodeScope, false, file, [...path, 'visibleIf']);
       const children = (list: SheetNode[], key: string) => {
@@ -369,7 +384,7 @@ export function validatePlugin(
       const field = (dotPath: string, expected: string, fits: (field: FieldSchema) => boolean) => {
         const base = row ? row.schema : entry?.type.schema;
         if (!base) return undefined;
-        const found = fieldAt(base, dotPath, row !== undefined);
+        const found = fieldAt(base, dotPath, row !== undefined && row.itemType === undefined);
         if (!found) {
           error('unknown_field', file, [...path, 'path'], {
             field: dotPath,
@@ -436,6 +451,39 @@ export function validatePlugin(
             schema: items,
             label: `the rows of "${node.path}"`,
           });
+          break;
+        }
+        case 'items': {
+          useText(node.addLabel, file, [...path, 'addLabel']);
+          if (row) {
+            error('nested_items', file, [...path, 'type']);
+            break;
+          }
+          if (entry && !entry.actor) {
+            error('actor_sheet_node', file, [...path, 'type'], {
+              type: node.type,
+              scope: entry.label,
+            });
+            break;
+          }
+          node.itemTypes?.forEach((name, index) => {
+            if (!Object.hasOwn(itemTypes, name)) {
+              error('missing_target', file, [...path, 'itemTypes', index], {
+                target: 'item type',
+                name,
+              });
+            }
+          });
+          const listed = (node.itemTypes ?? Object.keys(itemTypes)).filter((name) =>
+            Object.hasOwn(itemTypes, name),
+          );
+          for (const name of new Set(listed)) {
+            walk(node.item, [...path, 'item'], {
+              schema: itemTypes[name]?.schema,
+              label: `item type "${name}"`,
+              itemType: name,
+            });
+          }
           break;
         }
         case 'rollButton':

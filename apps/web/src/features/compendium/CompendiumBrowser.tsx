@@ -129,6 +129,7 @@ export function CompendiumBrowser(): ReactElement {
             name={entry.name}
             type={entry.type}
             imageUrl={null}
+            drag={entry.kind === 'item' ? { kind: 'compendium', ref: entry.ref } : undefined}
             details={
               <>
                 <span>{packLabel(entry.pack)}</span>

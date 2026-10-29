@@ -334,6 +334,103 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'an items node on an actor sheet, with rows checked per type (T-1206)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/armor.json'] = {
+        label: 'Armor',
+        sheet: 'item',
+        schema: {
+          type: 'object',
+          properties: {
+            equipped: { type: 'boolean', default: false },
+            bonus: { type: 'integer', default: 1 },
+          },
+        },
+      };
+      f['types/items/weapon.json'] = {
+        label: 'Weapon',
+        sheet: 'item',
+        schema: {
+          type: 'object',
+          properties: {
+            equipped: { type: 'boolean', default: false },
+            damage: { type: 'string', default: '1d6' },
+          },
+        },
+      };
+      sheetChildren(f).push({
+        type: 'items',
+        itemTypes: ['armor', 'weapon'],
+        addLabel: 'Add gear',
+        item: {
+          type: 'row',
+          children: [
+            { type: 'field', path: 'equipped', input: 'checkbox' },
+            { type: 'text', text: 'Gear', visibleIf: "@item.name != '' and @str > 0" },
+            { type: 'field', path: 'bonus', input: 'number', visibleIf: "@item.type == 'armor'" },
+            {
+              type: 'field',
+              path: 'damage',
+              visibleIf: "@item.type == 'weapon' or @item.type == 'wand'",
+            },
+            { type: 'rollButton', roll: 'skill', label: 'roll.skill', args: { id: '@item.id' } },
+          ],
+        },
+      });
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'items nodes with unguarded fields, unknown types, nesting and item sheets (T-1206)',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = {
+        layout: { type: 'items', item: { type: 'text', text: 'x' } },
+      };
+      f['types/items/armor.json'] = {
+        label: 'Armor',
+        sheet: 'item',
+        schema: { type: 'object', properties: { bonus: { type: 'integer', default: 1 } } },
+      };
+      f['types/items/weapon.json'] = {
+        label: 'Weapon',
+        sheet: 'item',
+        schema: { type: 'object', properties: { damage: { type: 'string', default: '1d6' } } },
+      };
+      sheetChildren(f).push(
+        {
+          type: 'items',
+          itemTypes: ['armor', 'wand'],
+          item: {
+            type: 'column',
+            children: [
+              { type: 'field', path: 'damage' },
+              { type: 'text', text: 'x', visibleIf: '@item.owner' },
+              { type: 'items', item: { type: 'text', text: 'x' } },
+            ],
+          },
+        },
+        {
+          type: 'list',
+          path: 'skills',
+          item: { type: 'items', item: { type: 'text', text: 'x', visibleIf: '@item.id' } },
+        },
+        { type: 'text', text: 'x', visibleIf: "@item.type == 'armor'" },
+      );
+    },
+    issues: [
+      'error actor_sheet_node sheets/item.json $.layout.type',
+      'error actor_sheet_node sheets/item.json $.layout.type',
+      'error missing_target sheets/hero.json $.layout.children[5].itemTypes[1]',
+      'error unknown_field sheets/hero.json $.layout.children[5].item.children[0].path',
+      'error unknown_reference sheets/hero.json $.layout.children[5].item.children[1].visibleIf',
+      'error nested_items sheets/hero.json $.layout.children[5].item.children[2].type',
+      'error nested_items sheets/hero.json $.layout.children[6].item.type',
+      'error unknown_reference sheets/hero.json $.layout.children[7].visibleIf',
+    ],
+  },
+  {
     name: 'a pack with bad entries, reported by JSON path (T-0803)',
     change: (f: PluginFixture): void => {
       f['packs/bad.json'] = {

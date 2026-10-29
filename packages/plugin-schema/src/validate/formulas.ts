@@ -20,7 +20,11 @@ export const RESERVED_ROOTS = [
   'total',
   'roll',
   'items',
+  'item',
 ] as const;
+
+/** What `@item` names in a row of an `items` node (ADR-063). */
+export const ITEM_KEYS: ReadonlySet<string> = new Set(['id', 'name', 'type']);
 
 /** What `@` references may name in one place a formula appears. */
 export interface FormulaScope {
@@ -35,6 +39,8 @@ export interface FormulaScope {
   derived?: ReadonlySet<string> | undefined;
   /** `@items.*`: the names item types contribute; only actor formulas read them (ADR-063). */
   items?: ReadonlySet<string> | undefined;
+  /** `@item.id`, `.name` and `.type`: inside a row of an `items` node. */
+  item?: boolean;
   /** The row schema of the enclosing `list` (`@row.*`); `unchecked` when it is unknown. */
   row?: FieldSchema | 'unchecked' | undefined;
   /** `@args.*`: any key, since arguments come from roll buttons. */
@@ -86,6 +92,8 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
       return onlyName(path, scope.settings);
     case 'items':
       return scope.data === undefined || onlyName(path, scope.items);
+    case 'item':
+      return scope.item === true && onlyName(path, ITEM_KEYS);
     case 'args':
       return scope.args === true && path.length > 0;
     case 'row':
@@ -148,6 +156,39 @@ export function checkFormula(
     }
   }
   return derived;
+}
+
+/**
+ * The item types a `visibleIf` limits its node to: `@item.type == 'weapon'`, or several such
+ * tests joined by `or`. Undefined for any other formula, which guards no type (ADR-063).
+ */
+export function itemTypeGuard(source: string): ReadonlySet<string> | undefined {
+  let tree: Expression;
+  try {
+    tree = parse(source);
+  } catch (error) {
+    if (!(error instanceof FormulaError)) throw error;
+    return undefined;
+  }
+  const isItemType = (node: Expression) =>
+    node.kind === 'reference' &&
+    node.name === 'item' &&
+    node.path.length === 1 &&
+    node.path[0]?.kind === 'field' &&
+    node.path[0].name === 'type';
+  const guard = (node: Expression): Set<string> | undefined => {
+    if (node.kind !== 'binary') return undefined;
+    if (node.operator === 'or') {
+      const left = guard(node.left);
+      const right = guard(node.right);
+      return left && right ? new Set([...left, ...right]) : undefined;
+    }
+    if (node.operator !== '==') return undefined;
+    if (isItemType(node.left) && node.right.kind === 'string') return new Set([node.right.value]);
+    if (isItemType(node.right) && node.left.kind === 'string') return new Set([node.left.value]);
+    return undefined;
+  };
+  return guard(tree);
 }
 
 /** Whether a field, or anything inside it, is on the secret layer (specs §9.3). */

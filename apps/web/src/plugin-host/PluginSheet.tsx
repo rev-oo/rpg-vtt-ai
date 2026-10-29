@@ -14,6 +14,7 @@ import {
   useSheet,
   valueAt,
   type CustomNodeProps,
+  type ItemsRenderer,
   type RichTextRenderer,
   type RollHandler,
   type SheetPresence,
@@ -98,6 +99,9 @@ export interface PluginSheetProps {
   /** The editor of `richText` fields on a live sheet (ADR-037). */
   renderRichText?: RichTextRenderer | undefined;
   onRoll?: RollHandler | undefined;
+  /** An actor's item totals (`@items`) and its `items` nodes (ADR-063). */
+  itemTotals?: Readonly<Record<string, Value>> | undefined;
+  renderItems?: ItemsRenderer | undefined;
 }
 
 /**
@@ -114,6 +118,8 @@ export function PluginSheet({
   presence,
   renderRichText,
   onRoll,
+  itemTotals,
+  renderItems,
 }: PluginSheetProps): ReactElement {
   const { system, rules, translate } = host;
   const { definition, client } = system;
@@ -158,6 +164,8 @@ export function PluginSheet({
         {...(presence && { presence })}
         {...(renderRichText && { renderRichText })}
         {...(onRoll && { onRoll })}
+        {...(itemTotals && { itemTotals })}
+        {...(renderItems && { renderItems })}
       />
     </div>
   );

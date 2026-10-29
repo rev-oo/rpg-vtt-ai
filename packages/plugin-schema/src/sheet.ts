@@ -43,6 +43,12 @@ export type SheetNode = NodeBase &
     | { type: 'longText'; path: string; label?: string | undefined }
     | { type: 'list'; path: string; item: SheetNode; addLabel?: string | undefined }
     | {
+        type: 'items';
+        itemTypes?: string[] | undefined;
+        item: SheetNode;
+        addLabel?: string | undefined;
+      }
+    | {
         type: 'rollButton';
         roll: string;
         label: string;
@@ -152,6 +158,21 @@ export const sheetNode: z.ZodType<SheetNode> = z.lazy(() =>
           })
           .describe(
             "The rows of an array, with add, remove and reorder. `item` is one row's layout; its paths are relative to the row.",
+          ),
+        z
+          .strictObject({
+            ...base,
+            type: z.literal('items'),
+            itemTypes: z
+              .array(name)
+              .min(1)
+              .optional()
+              .describe('The item types to list; every type when left out.'),
+            item: sheetNode,
+            addLabel: text.optional().describe('The text of the add button.'),
+          })
+          .describe(
+            "The actor's items, grouped, each edited in place, with open, remove and add (actor sheets only). `item` is one item's layout: its paths are relative to the item's data, and `@item.id`, `@item.name` and `@item.type` name the item.",
           ),
         z
           .strictObject({

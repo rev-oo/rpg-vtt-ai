@@ -404,6 +404,9 @@ export function SheetNodeView({
       return <LongTextNode node={node} row={row} />;
     case 'list':
       return <ListNode node={node} row={row} />;
+    case 'items':
+      // The host lays it out, with `ItemRow` for each item (FR-SHEET-12).
+      return sheet.renderItems ? <>{sheet.renderItems({ node })}</> : null;
     case 'rollButton':
       return <RollButtonNode node={node} row={row} />;
     case 'derived':

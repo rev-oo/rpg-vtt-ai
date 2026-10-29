@@ -8,6 +8,7 @@ import { cn } from '@vtt/ui';
 import {
   SheetContext,
   type CustomNodeProps,
+  type ItemsRenderer,
   type RichTextRenderer,
   type RollHandler,
   type SheetEnvironment,
@@ -24,6 +25,10 @@ export interface SheetProps {
   /** The entity's type: its data schema and derived values. */
   type: { schema: FieldSchema; derived?: Readonly<Record<string, string>> | undefined };
   store: SheetStore;
+  /** `@items.*`: an actor's item totals (`Rules.itemTotals`, ADR-063). */
+  itemTotals?: Readonly<Record<string, Value>>;
+  /** Lays out `items` nodes; actor sheets of a live table pass it (FR-SHEET-12). */
+  renderItems?: ItemsRenderer;
   /** The table's setting values (`settingValues()` of the plugin engine). */
   settings?: Readonly<Record<string, Value>>;
   /** The plugin's `shared` functions. */
@@ -46,6 +51,7 @@ export interface SheetProps {
 }
 
 const identity = (text: string): string => text;
+const NO_TOTALS: Readonly<Record<string, Value>> = {};
 
 /**
  * Renders a plugin sheet (specs §8.5) against a store. Missing data reads as the schema's
@@ -56,6 +62,8 @@ export function Sheet({
   layout,
   type,
   store,
+  itemTotals = NO_TOTALS,
+  renderItems,
   settings = {},
   functions = {},
   readOnly = false,
@@ -71,14 +79,15 @@ export function Sheet({
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const data = useMemo(() => withDefaults(type.schema, snapshot), [type.schema, snapshot]);
   const derived = useMemo(
-    () => computeDerived(type.derived ?? {}, data, { settings, functions }),
-    [type.derived, data, settings, functions],
+    () => computeDerived(type.derived ?? {}, data, { settings, items: itemTotals, functions }),
+    [type.derived, data, settings, itemTotals, functions],
   );
   const sheet: SheetEnvironment = {
     store,
     schema: type.schema,
     data,
     derived,
+    itemTotals,
     settings,
     functions,
     readOnly,
@@ -89,6 +98,7 @@ export function Sheet({
     nodes,
     presence,
     renderRichText,
+    renderItems,
   };
 
   return (

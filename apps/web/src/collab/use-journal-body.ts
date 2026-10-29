@@ -4,7 +4,7 @@ import * as Y from 'yjs';
 
 import { documentName } from '@vtt/shared';
 
-import { collabUrl, parseMessage, REVOKED } from './use-live-sheet.js';
+import { collabUrl, parseMessage, REVOKED } from './connection.js';
 
 /** A journal entry's body (ADR-038): connecting, refused, or synced. */
 export type JournalBody =

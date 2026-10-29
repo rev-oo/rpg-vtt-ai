@@ -416,6 +416,54 @@
                 },
                 "type": {
                   "type": "string",
+                  "const": "items"
+                },
+                "itemTypes": {
+                  "description": "The item types to list; every type when left out.",
+                  "minItems": 1,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                    "title": "Name"
+                  }
+                },
+                "item": {
+                  "$ref": "#/$defs/__schema0"
+                },
+                "addLabel": {
+                  "description": "The text of the add button.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 500,
+                  "title": "Text"
+                }
+              },
+              "required": [
+                "type",
+                "item"
+              ],
+              "additionalProperties": false,
+              "description": "The actor's items, grouped, each edited in place, with open, remove and add (actor sheets only). `item` is one item's layout: its paths are relative to the item's data, and `@item.id`, `@item.name` and `@item.type` name the item."
+            },
+            {
+              "type": "object",
+              "properties": {
+                "class": {
+                  "description": "Extra CSS classes, for `styles/*.css`.",
+                  "type": "string",
+                  "maxLength": 200,
+                  "title": "CSS classes"
+                },
+                "visibleIf": {
+                  "description": "Shows the node only while this formula is true. It cannot roll dice.",
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "title": "Formula"
+                },
+                "type": {
+                  "type": "string",
                   "const": "rollButton"
                 },
                 "roll": {
