@@ -56,7 +56,7 @@ A first draft let actor formulas query items by type with a filter, such as `sum
    - Recipes that use it declare `"item": [<types>]`, which the validator checks reads against.
    - The roll request carries `itemId`, and the server checks that the item belongs to the rolling actor.
    - Library items have no holder, so their sheets still roll nothing.
-5. **Core API.** These keys are additive. Plugins that use them declare a `coreApi` range that includes the version shipping them; the core's own API version is raised with the release.
+5. **Core API.** These keys are additive, and nothing a plugin relied on changed, so the core API version stays at `0.1.0` (amended at the 0.3.0 release, as for 0.2.0). Raising it would have disabled every plugin declaring `^0.1.0`, since a caret range on 0.x excludes the next minor.
 
 ## Consequences
 

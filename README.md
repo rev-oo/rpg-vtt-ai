@@ -26,6 +26,7 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 | M6        | Journal, members, table settings, plugin admin                                                     |
 | M7        | Reference plugins, hardening, Docker, docs → **v0.1.0**                                            |
 | M8–M11    | Plugin server code, combat, packs, chat edits, sheet history, archive, backups, arm64 → **v0.2.0** |
+| M12       | Table workspace, compendium browser, item sheets and inventories → **v0.3.0**                      |
 | M12       | Full-page table workspace, compendium browser, item groups → 0.3.0                                 |
 | M13       | Asset uploads and manager → 0.4.0                                                                  |
 | M14       | Maps: scenes, tokens, fog of war → 0.5.0                                                           |
@@ -39,10 +40,10 @@ TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (R
 
 ## Running with Docker
 
-Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.2.0`, `0.2`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
+Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.3.0`, `0.3`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
 
 ```bash
-docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.2.0
+docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.3.0
 ```
 
 To build the image from a checkout instead, use the example compose file:
