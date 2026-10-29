@@ -12,6 +12,7 @@ import { ActorList } from '../entities/ActorList.js';
 import { ActorSheetPanel } from '../entities/ActorSheet.js';
 import { readFilters, toListQuery, type EntityFilters } from '../entities/filters.js';
 import { ItemList } from '../entities/ItemList.js';
+import { ItemSheetPanel } from '../entities/ItemSheet.js';
 import { LIST_PAGE } from '../entities/paging.js';
 import { JournalEntryPanel } from '../journal/JournalEntryPanel.js';
 import { JournalList } from '../journal/JournalList.js';
@@ -158,6 +159,19 @@ export function SheetPanel({ params, api: panel }: IDockviewPanelProps): ReactEl
   return (
     <Body>
       <ActorSheetPanel actorId={actorId} />
+    </Body>
+  );
+}
+
+export function ItemPanel({ params, api: panel }: IDockviewPanelProps): ReactElement {
+  return (
+    <Body>
+      <ItemSheetPanel
+        itemId={stringParam(params, 'itemId')}
+        onTitle={(next) => {
+          panel.setTitle(next);
+        }}
+      />
     </Body>
   );
 }

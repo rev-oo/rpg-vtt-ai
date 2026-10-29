@@ -120,6 +120,11 @@ export const en = {
   'items.trashEmpty': 'The trash is empty.',
   'items.giveTo': 'Give {name} to',
   'items.give': 'Give',
+  'items.open': 'Open',
+  'items.openItem': 'Open item: {name}',
+  'items.notFound': 'This item does not exist, or you cannot see it.',
+  'items.ownedBy': 'Held by {name}',
+  'items.inLibrary': 'In the table’s library',
   'items.given': '{actor} received a copy of {item}.',
 
   'ownership.open': 'Ownership',

@@ -123,6 +123,11 @@ export const ptBR: Messages = {
   'items.trashEmpty': 'A lixeira está vazia.',
   'items.giveTo': 'Dar {name} para',
   'items.give': 'Dar',
+  'items.open': 'Abrir',
+  'items.openItem': 'Abrir item: {name}',
+  'items.notFound': 'Este item não existe, ou você não pode vê-lo.',
+  'items.ownedBy': 'Com {name}',
+  'items.inLibrary': 'Na biblioteca da mesa',
   'items.given': '{actor} recebeu uma cópia de {item}.',
 
   'ownership.open': 'Propriedade',

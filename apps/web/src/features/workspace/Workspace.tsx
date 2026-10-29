@@ -111,7 +111,9 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     const title =
       target.kind === 'sheet'
         ? (data.actors.find((actor) => actor.id === target.actorId)?.name ?? t('workspace.sheet'))
-        : t('journal.title');
+        : target.kind === 'item'
+          ? target.name
+          : t('journal.title');
     showTarget(api, target, phone, title);
   };
   return (

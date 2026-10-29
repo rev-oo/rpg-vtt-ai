@@ -9,6 +9,8 @@ import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableData } from '../table/table-data.js';
+import { OpenButton } from '../workspace/OpenButton.js';
+import { itemPanelId } from '../workspace/panel-ids.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
@@ -125,6 +127,18 @@ export function ItemList({
                 </Button>
               ) : (
                 <>
+                  <OpenButton
+                    target={{
+                      kind: 'item',
+                      id: itemPanelId(item.id),
+                      itemId: item.id,
+                      name: item.name,
+                    }}
+                    className="self-center"
+                    label={t('items.openItem', { name: item.name })}
+                  >
+                    {t('items.open')}
+                  </OpenButton>
                   {targets.length > 0 && (
                     <GiveToActor
                       item={item}
