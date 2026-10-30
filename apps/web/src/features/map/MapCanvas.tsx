@@ -113,23 +113,28 @@ export default function MapCanvas({
           tokenLayer = new TokenLayer(viewport);
           app.stage.addChild(viewport);
 
-          ticker.add(() => {
-            if (!viewport.dirty) return;
+          const draw = () => {
             viewport.dirty = false;
             app.render();
             show(element, viewport);
+          };
+          ticker.add(() => {
+            if (viewport.dirty) draw();
           });
           ticker.start();
 
           observer = new ResizeObserver(() => {
             const width = Math.max(1, element.clientWidth);
             const height = Math.max(1, element.clientHeight);
+            if (width === app.screen.width && height === app.screen.height) return;
             // A panel behind another tab has no size; fit the scene when it first gets one.
             const unseen = viewport.screenWidth <= 1 || viewport.screenHeight <= 1;
             app.renderer.resize(width, height);
             viewport.resize(width, height);
             if (unseen) apply(viewport, fitView(sizeRef.current, { width, height }));
-            viewport.dirty = true;
+            // Resizing clears the canvas; drawing at once, before the browser paints, keeps a
+            // panel being resized from showing it blank between frames.
+            draw();
           });
           observer.observe(element);
           setStage({ app, viewport, background: backgroundLayer, grid, tokens: tokenLayer });
