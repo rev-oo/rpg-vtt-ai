@@ -426,7 +426,9 @@ export const ptBR: Messages = {
   'map.tool.select': 'Selecionar',
   'map.tool.ruler': 'Régua',
   'ruler.label': '{distance} {unit}',
-  'ruler.measured': 'Medido: {distance} {unit} (células: {cells}). Esc limpa a medida.',
+  'ruler.measured': 'Medido: {distance} {unit} (células: {cells}, pontos: {points}).',
+  'ruler.hint':
+    'Clique para adicionar pontos, ou arraste. Enter ou um duplo clique termina o caminho, Backspace remove o último ponto, Esc limpa.',
   'scenes.cellDistance': 'Distância por célula',
   'scenes.cellDistanceHint': 'Quanto uma célula mede para a régua, por exemplo 1,5.',
   'scenes.distanceUnit': 'Unidade',

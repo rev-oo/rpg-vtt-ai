@@ -419,7 +419,9 @@ export const en = {
   'map.tool.select': 'Select',
   'map.tool.ruler': 'Ruler',
   'ruler.label': '{distance} {unit}',
-  'ruler.measured': 'Measured {distance} {unit} (cells: {cells}). Escape clears it.',
+  'ruler.measured': 'Measured {distance} {unit} (cells: {cells}, points: {points}).',
+  'ruler.hint':
+    'Click to add points, or drag. Enter or a double click ends the path, Backspace removes the last point, Escape clears it.',
   'scenes.cellDistance': 'Distance per cell',
   'scenes.cellDistanceHint': 'What one cell measures for the ruler, e.g. 5.',
   'scenes.distanceUnit': 'Unit',

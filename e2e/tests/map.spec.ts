@@ -137,19 +137,29 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
       'aria-pressed',
       'true',
     );
+    // A drag measures a first leg, a click adds another, Enter ends the path.
     const from = at(2, 2);
     const to = at(8, 5);
     await gmPage.mouse.move(from.x, from.y);
     await gmPage.mouse.down();
     await gmPage.mouse.move(to.x, to.y, { steps: 8 });
     await gmPage.mouse.up();
-    const measured = mapPanel.getByRole('status').filter({ hasText: 'Measured' });
-    await expect(measured).toHaveText('Measured 30 ft (cells: 6). Escape clears it.');
+    const status = mapPanel.getByText(/^Measured/);
+    await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');
+    const corner = at(8, 8);
+    await gmPage.mouse.click(corner.x, corner.y);
+    await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
+    await gmPage.keyboard.press('Enter');
+    // Ended, the path no longer follows the pointer.
+    const away = at(12, 8);
+    await gmPage.mouse.move(away.x, away.y, { steps: 4 });
+    await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
     expect(await view(map)).toEqual({ zoom, x, y });
 
-    await map.focus();
+    await gmPage.keyboard.press('Backspace');
+    await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');
     await gmPage.keyboard.press('Escape');
-    await expect(measured).toHaveCount(0);
+    await expect(status).toHaveCount(0);
     await tools.getByRole('button', { name: 'Select' }).click();
   });
 

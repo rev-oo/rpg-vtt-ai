@@ -70,6 +70,13 @@ export interface MapCanvasProps extends Omit<TokenHandlers, 'menu'> {
 /** What a press on the map does: select and move tokens, or measure (ADR-069). */
 type Tool = 'select' | 'ruler';
 
+/** The ruler's path, for keys and double clicks; each answers whether it changed anything. */
+interface RulerControl {
+  end: () => boolean;
+  undo: () => boolean;
+  clear: () => boolean;
+}
+
 const GRID_COLOR = 0x1f2937;
 
 /** How the last background load went. */
@@ -109,7 +116,7 @@ export default function MapCanvas({
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const keysId = useId();
   const [tool, setTool] = useState<Tool>('select');
-  const [measured, setMeasured] = useState<Measure | null>(null);
+  const [measured, setMeasured] = useState<(Measure & { points: number }) | null>(null);
   const [menu, setMenu] = useState<{ token: TokenView; at: Point } | null>(null);
   /** What the view frames, for the resize observer, which outlives each scene. */
   const sizeRef = useRef<Size>({ width: 1, height: 1 });
@@ -309,9 +316,12 @@ export default function MapCanvas({
     });
   }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content]);
 
-  // The ruler: a press on the map starts a line, dragging stretches it, and it stays until the
-  // next one, Escape or another tool. Ends snap to cell centres on a grid.
+  // The ruler measures a path (ADR-069). A click or press starts it, each click adds a point and
+  // a drag adds the point it ends on; until it ends, a last leg follows the pointer. Enter or a
+  // double click ends it, Backspace takes back the last point, Escape clears it. Points snap
+  // to cell centres on a grid.
   const { cellDistance, diagonals, distanceUnit } = scene;
+  const rulerRef = useRef<RulerControl | null>(null);
   useEffect(() => {
     if (!stage) return;
     const { viewport, ruler, tokens: layer } = stage;
@@ -323,35 +333,85 @@ export default function MapCanvas({
     }
     viewport.plugins.pause('drag');
     const scale = { columns, rows, gridType, gridSize, cellDistance, diagonals };
-    const end = (point: Point) =>
+    const snap = (point: Point) =>
       gridType === 'none' ? point : cellCentre(scale, cellUnder(scale, point));
-    let from: Point | null = null;
-    const stretch = (event: FederatedPointerEvent) => {
-      if (!from) return;
-      const to = viewport.toWorld(event.global);
-      const result = measure(scale, from, to);
-      ruler.draw(
-        end(from),
-        end(to),
-        t('ruler.label', { distance: result.distance, unit: distanceUnit }),
-      );
-      setMeasured(result);
+    let path: Point[] = [];
+    let ended = false;
+    let pointer: Point | null = null;
+    let pressed: { x: number; y: number; started: boolean } | null = null;
+
+    const show = () => {
+      const points = ended || !pointer ? path : [...path, snap(pointer)];
+      if (path.length === 0) {
+        ruler.clear();
+        setMeasured(null);
+        return;
+      }
+      const result = measure(scale, points);
+      ruler.draw(points, t('ruler.label', { distance: result.distance, unit: distanceUnit }));
+      setMeasured({ ...result, points: path.length });
+    };
+    const add = (point: Point) => {
+      const snapped = snap(point);
+      const last = path.at(-1);
+      // A double click, or a click on the last cell, adds nothing.
+      if (last && Math.hypot(last.x - snapped.x, last.y - snapped.y) < 2) return;
+      path = [...path, snapped];
+    };
+    const clear = () => {
+      path = [];
+      ended = false;
+      show();
     };
     const press = (event: FederatedPointerEvent) => {
       if (event.button !== 0) return;
-      from = viewport.toWorld(event.global);
-      stretch(event);
+      if (ended) clear();
+      const started = path.length === 0;
+      if (started) add(viewport.toWorld(event.global));
+      pressed = { x: event.global.x, y: event.global.y, started };
+      show();
     };
-    const release = () => {
-      from = null;
+    const follow = (event: FederatedPointerEvent) => {
+      if (ended || path.length === 0) return;
+      pointer = viewport.toWorld(event.global);
+      show();
+    };
+    const release = (event: FederatedPointerEvent) => {
+      if (!pressed) return;
+      const dragged = Math.hypot(event.global.x - pressed.x, event.global.y - pressed.y) > 4;
+      // The click that starts a path adds no second point; any other click, or a drag, does.
+      if (dragged || !pressed.started) add(viewport.toWorld(event.global));
+      pressed = null;
+      show();
+    };
+    rulerRef.current = {
+      end: () => {
+        if (path.length === 0 || ended) return false;
+        ended = true;
+        show();
+        return true;
+      },
+      undo: () => {
+        if (path.length === 0) return false;
+        path = path.slice(0, -1);
+        if (path.length === 0) ended = false;
+        show();
+        return true;
+      },
+      clear: () => {
+        if (path.length === 0) return false;
+        clear();
+        return true;
+      },
     };
     viewport.on('pointerdown', press);
-    viewport.on('globalpointermove', stretch);
+    viewport.on('globalpointermove', follow);
     viewport.on('pointerup', release);
     viewport.on('pointerupoutside', release);
     return () => {
+      rulerRef.current = null;
       viewport.off('pointerdown', press);
-      viewport.off('globalpointermove', stretch);
+      viewport.off('globalpointermove', follow);
       viewport.off('pointerup', release);
       viewport.off('pointerupoutside', release);
       viewport.plugins.resume('drag');
@@ -395,6 +455,9 @@ export default function MapCanvas({
         data-background={background}
         tabIndex={0}
         className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
+        onDoubleClick={() => {
+          rulerRef.current?.end();
+        }}
         onContextMenu={(event) => {
           // A token's own menu opens from Pixi; the browser's has nothing for the canvas.
           event.preventDefault();
@@ -413,10 +476,13 @@ export default function MapCanvas({
             openMenu(selected, { x: at.x, y: at.y });
             return;
           }
-          if (event.key === 'Escape' && measured) {
+          // Keys for the ruler's path, while it has one.
+          const ruler = rulerRef.current;
+          const rulerKeys: Partial<Record<string, () => boolean>> = ruler
+            ? { Enter: ruler.end, Backspace: ruler.undo, Escape: ruler.clear }
+            : {};
+          if (rulerKeys[event.key]?.()) {
             event.preventDefault();
-            stage.ruler.clear();
-            setMeasured(null);
             return;
           }
           // Arrows move the selected token, if the member may move it, else the view.
@@ -471,17 +537,19 @@ export default function MapCanvas({
           </Button>
         ))}
       </div>
-      {measured && (
-        <p
-          role="status"
-          className="absolute bottom-3 left-3 rounded-md bg-surface px-3 py-1.5 text-sm shadow"
-        >
-          {t('ruler.measured', {
-            distance: measured.distance,
-            unit: distanceUnit,
-            cells: measured.cells,
-          })}
-        </p>
+      {tool === 'ruler' && (
+        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+          <p role="status">
+            {measured &&
+              t('ruler.measured', {
+                distance: measured.distance,
+                unit: distanceUnit,
+                cells: measured.cells,
+                points: measured.points,
+              })}
+          </p>
+          <p className="text-muted">{t('ruler.hint')}</p>
+        </div>
       )}
       {menu && (
         <TokenMenu
