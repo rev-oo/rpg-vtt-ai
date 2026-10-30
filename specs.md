@@ -42,7 +42,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet.                                  |
 | 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).                                      |
 | 2026-10-30 | T-1402 done: Q18 decided (PixiJS v8 with pixi-viewport, WebGL only). A Map panel in the workspace centre draws the scene's background and grid, with pan and zoom by mouse, touch, keyboard and buttons; GMs and assistants manage scenes in a Scenes panel and preview any scene (ADR-067). |
-| 2026-10-30 | T-1405 and T-1406 added to M14 at the user's request and done before T-1404: a token menu on right click (or Shift+F10), and a map toolbar with a path ruler in the scene's unit, counting diagonals by the scene's rule; scenes gain a ruler scale (ADR-069).                               |
+| 2026-10-30 | T-1405 and T-1406 added to M14 at the user's request and done before T-1404: a token menu on right click (or Shift+F10), and a map toolbar with a path ruler, circle and cone in the scene's unit, counting diagonals by the scene's rule; scenes gain a ruler scale (ADR-069).              |
 | 2026-10-30 | Scenes may have a hidden grid (cells not drawn, tokens still snap) or none (tokens stand anywhere), and the map can be panned past the scene's edges (ADR-066, ADR-067, ADR-068).                                                                                                            |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).              |
 
@@ -432,7 +432,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | ADR-067                                    |
 | FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | ADR-068                                    |
 | FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)                              |
-| FR-MAP-05   | Members measure distances on a scene with a ruler, in the scene's unit, counting diagonals by the scene's rule.                                  | 1.0      | ADR-069                                    |
+| FR-MAP-05   | Members measure distances on a scene with a ruler, a circle or a cone, in the scene's unit, counting diagonals by the scene's rule.              | 1.0      | ADR-069                                    |
 
 `img` fields stay plain URL strings; an uploaded asset has a URL of its own, its path `/api/v1/assets/<id>`, so nothing that stores images changes shape (ADR-065).
 
@@ -758,8 +758,8 @@ Scenes with a grid, tokens and fog of war, in the workspace centre.
 
 - [x] **T-1406 · Map toolbar and ruler**
   - **Deps:** T-1402
-  - **Do:** A toolbar over the map switches between selecting and a ruler (FR-MAP-05). The ruler measures a path of points, between cells or anywhere on a gridless scene, in the scene's unit; scenes gain the distance a cell stands for, its unit and how diagonals count (ADR-069). Only the member measuring sees the ruler. Added at the user's request.
-  - **Done when:** unit tests cover the counting on square, hex and gridless scenes, each diagonal rule and paths; e2e measures a path on a scene and the map does not pan while measuring.
+  - **Do:** A toolbar over the map switches between selecting, a ruler, a circle and a cone (FR-MAP-05). The ruler measures a path of points, and the circle and cone a radius or length from a point, between cells or anywhere on a gridless scene, in the scene's unit; scenes gain the distance a cell stands for, its unit and how diagonals count (ADR-069). Only the member measuring sees the ruler. Added at the user's request.
+  - **Done when:** unit tests cover the counting on square, hex and gridless scenes, each diagonal rule, paths and the cone's outline; e2e measures a path, a circle and a cone on a scene and the map does not pan while measuring.
 
 ### M15 — Plugin platform
 

@@ -426,9 +426,6 @@ export const ptBR: Messages = {
   'map.tool.select': 'Selecionar',
   'map.tool.ruler': 'Régua',
   'ruler.label': '{distance} {unit}',
-  'ruler.measured': 'Medido: {distance} {unit} (células: {cells}, pontos: {points}).',
-  'ruler.hint':
-    'Clique para adicionar pontos, ou arraste. Enter ou um duplo clique termina o caminho, Backspace remove o último ponto, Esc limpa.',
   'scenes.cellDistance': 'Distância por célula',
   'scenes.cellDistanceHint': 'Quanto uma célula mede para a régua, por exemplo 1,5.',
   'scenes.distanceUnit': 'Unidade',
@@ -436,6 +433,16 @@ export const ptBR: Messages = {
   'scenes.diagonals.one': 'Uma célula cada',
   'scenes.diagonals.alternate': 'Alternar 1 e 2 células',
   'scenes.diagonals.straight': 'Linha reta',
+  'map.tool.circle': 'Círculo',
+  'map.tool.cone': 'Cone',
+  'ruler.measured.ruler': 'Medido: {distance} {unit} (células: {cells}, pontos: {points}).',
+  'ruler.measured.circle': 'Círculo: raio de {distance} {unit} (células: {cells}).',
+  'ruler.measured.cone': 'Cone: {distance} {unit} de comprimento (células: {cells}).',
+  'ruler.hint.ruler':
+    'Clique para adicionar pontos, ou arraste. Enter ou um duplo clique termina o caminho, Backspace remove o último ponto, Esc limpa.',
+  'ruler.hint.circle': 'Arraste do centro até o raio. Esc limpa.',
+  'ruler.hint.cone':
+    'Arraste da origem na direção do cone; ele é tão largo no fim quanto é longo. Esc limpa.',
   'map.keys':
     'As setas movem o token selecionado, ou a vista sem um; mais e menos aproximam e afastam, 0 mostra a cena inteira.',
   'map.scene': 'Cena',

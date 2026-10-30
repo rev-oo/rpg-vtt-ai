@@ -13,7 +13,7 @@ import {
   sceneSize,
   stepCell,
 } from '../src/features/map/geometry.js';
-import { measure } from '../src/features/map/measure.js';
+import { CONE_ANGLE, coneOutline, measure } from '../src/features/map/measure.js';
 import {
   clampView,
   fitView,
@@ -177,6 +177,20 @@ describe('ruler', () => {
     });
     // One point measures nothing.
     expect(measure(square, [origin])).toEqual({ cells: 0, distance: 0 });
+  });
+
+  it('outlines a cone as wide at its end as it is long', () => {
+    expect(CONE_ANGLE).toBeCloseTo((53.13 * Math.PI) / 180, 3);
+    const outline = coneOutline({ x: 0, y: 0 }, { x: 10, y: 0 }, 100);
+    expect(outline[0]).toEqual({ x: 0, y: 0 });
+    const arc = outline.slice(1);
+    expect(arc).toHaveLength(13);
+    for (const point of arc) expect(Math.hypot(point.x, point.y)).toBeCloseTo(100);
+    // Its end is as wide as it is long: 2 × 100 × sin(26.57°) ≈ 89.4 across the chord.
+    expect(arc[0]?.y).toBeCloseTo(-44.72, 1);
+    expect(arc.at(-1)?.y).toBeCloseTo(44.72, 1);
+    expect(arc[6]?.x).toBeCloseTo(100);
+    expect(arc[6]?.y).toBeCloseTo(0);
   });
 
   it('counts hexes on a hex grid, and a straight line on a gridless scene', () => {

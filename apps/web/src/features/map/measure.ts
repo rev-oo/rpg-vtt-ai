@@ -65,3 +65,19 @@ function hexDistance(a: Cell, b: Cell): number {
   const dr = b.row - a.row;
   return (Math.abs(dq) + Math.abs(dr) + Math.abs(dq + dr)) / 2;
 }
+
+/** A cone's full angle: as wide at its end as it is long, as in D&D 5e (ADR-069). */
+export const CONE_ANGLE = 2 * Math.atan(0.5);
+
+/**
+ * A cone's outline: its origin, then an arc `length` pixels away, `CONE_ANGLE` wide and
+ * centred on the direction of `toward`.
+ */
+export function coneOutline(origin: Point, toward: Point, length: number, steps = 12): Point[] {
+  const facing = Math.atan2(toward.y - origin.y, toward.x - origin.x);
+  const arc = Array.from({ length: steps + 1 }, (_, step) => {
+    const angle = facing - CONE_ANGLE / 2 + (CONE_ANGLE * step) / steps;
+    return { x: origin.x + Math.cos(angle) * length, y: origin.y + Math.sin(angle) * length };
+  });
+  return [origin, ...arc];
+}

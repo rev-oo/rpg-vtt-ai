@@ -39,7 +39,7 @@ import {
   type SceneGrid,
 } from './geometry.js';
 import { loadImage } from './image.js';
-import { measure, type Measure } from './measure.js';
+import { coneOutline, measure, type Measure } from './measure.js';
 import { menuPosition } from './menu-position.js';
 import { RulerLayer } from './ruler-layer.js';
 import { TokenLayer, type TokenHandlers } from './token-layer.js';
@@ -68,13 +68,22 @@ export interface MapCanvasProps extends Omit<TokenHandlers, 'menu'> {
 }
 
 /** What a press on the map does: select and move tokens, or measure (ADR-069). */
-type Tool = 'select' | 'ruler';
+type Tool = 'select' | 'ruler' | 'circle' | 'cone';
+const TOOLS: readonly Tool[] = ['select', 'ruler', 'circle', 'cone'];
 
 /** The ruler's path, for keys and double clicks; each answers whether it changed anything. */
 interface RulerControl {
   end: () => boolean;
   undo: () => boolean;
   clear: () => boolean;
+}
+
+/** How a measuring tool takes the pointer on the map. */
+interface ToolHandlers {
+  press: (event: FederatedPointerEvent) => void;
+  follow: (event: FederatedPointerEvent) => void;
+  release: (event: FederatedPointerEvent) => void;
+  control: RulerControl;
 }
 
 const GRID_COLOR = 0x1f2937;
@@ -325,7 +334,7 @@ export default function MapCanvas({
   useEffect(() => {
     if (!stage) return;
     const { viewport, ruler, tokens: layer } = stage;
-    const measuring = tool === 'ruler';
+    const measuring = tool !== 'select';
     layer.setInteractive(!measuring);
     if (!measuring) {
       ruler.clear();
@@ -335,89 +344,149 @@ export default function MapCanvas({
     const scale = { columns, rows, gridType, gridSize, cellDistance, diagonals };
     const snap = (point: Point) =>
       gridType === 'none' ? point : cellCentre(scale, cellUnder(scale, point));
-    let path: Point[] = [];
-    let ended = false;
-    let pointer: Point | null = null;
-    let pressed: { x: number; y: number; started: boolean } | null = null;
-
-    const show = () => {
-      const points = ended || !pointer ? path : [...path, snap(pointer)];
-      if (path.length === 0) {
-        ruler.clear();
-        setMeasured(null);
-        return;
-      }
-      const result = measure(scale, points);
-      ruler.draw(points, t('ruler.label', { distance: result.distance, unit: distanceUnit }));
-      setMeasured({ ...result, points: path.length });
-    };
-    const add = (point: Point) => {
-      const snapped = snap(point);
-      const last = path.at(-1);
-      // A double click, or a click on the last cell, adds nothing.
-      if (last && Math.hypot(last.x - snapped.x, last.y - snapped.y) < 2) return;
-      path = [...path, snapped];
-    };
-    const clear = () => {
-      path = [];
-      ended = false;
-      show();
-    };
-    const press = (event: FederatedPointerEvent) => {
-      if (event.button !== 0) return;
-      if (ended) clear();
-      const started = path.length === 0;
-      if (started) add(viewport.toWorld(event.global));
-      pressed = { x: event.global.x, y: event.global.y, started };
-      show();
-    };
-    const follow = (event: FederatedPointerEvent) => {
-      if (ended || path.length === 0) return;
-      pointer = viewport.toWorld(event.global);
-      show();
-    };
-    const release = (event: FederatedPointerEvent) => {
-      if (!pressed) return;
-      const dragged = Math.hypot(event.global.x - pressed.x, event.global.y - pressed.y) > 4;
-      // The click that starts a path adds no second point; any other click, or a drag, does.
-      if (dragged || !pressed.started) add(viewport.toWorld(event.global));
-      pressed = null;
-      show();
-    };
-    rulerRef.current = {
-      end: () => {
-        if (path.length === 0 || ended) return false;
-        ended = true;
-        show();
-        return true;
-      },
-      undo: () => {
-        if (path.length === 0) return false;
-        path = path.slice(0, -1);
-        if (path.length === 0) ended = false;
-        show();
-        return true;
-      },
-      clear: () => {
-        if (path.length === 0) return false;
-        clear();
-        return true;
-      },
-    };
-    viewport.on('pointerdown', press);
-    viewport.on('globalpointermove', follow);
-    viewport.on('pointerup', release);
-    viewport.on('pointerupoutside', release);
+    const label = (result: Measure) =>
+      t('ruler.label', { distance: result.distance, unit: distanceUnit });
+    const handlers =
+      tool === 'ruler' ? pathHandlers() : shapeHandlers(tool === 'circle' ? 'circle' : 'cone');
+    rulerRef.current = handlers.control;
+    viewport.on('pointerdown', handlers.press);
+    viewport.on('globalpointermove', handlers.follow);
+    viewport.on('pointerup', handlers.release);
+    viewport.on('pointerupoutside', handlers.release);
     return () => {
       rulerRef.current = null;
-      viewport.off('pointerdown', press);
-      viewport.off('globalpointermove', follow);
-      viewport.off('pointerup', release);
-      viewport.off('pointerupoutside', release);
+      viewport.off('pointerdown', handlers.press);
+      viewport.off('globalpointermove', handlers.follow);
+      viewport.off('pointerup', handlers.release);
+      viewport.off('pointerupoutside', handlers.release);
       viewport.plugins.resume('drag');
       ruler.clear();
       setMeasured(null);
     };
+
+    /**
+     * A circle or a cone: a press sets its centre or origin, dragging sets the radius or the
+     * length and aim, measured as the ruler counts. It stays until the next press or Escape.
+     */
+    function shapeHandlers(kind: 'circle' | 'cone'): ToolHandlers {
+      let origin: Point | null = null;
+      let dragging = false;
+      const show = (pointer: Point) => {
+        if (!origin) return;
+        const result = measure(scale, [origin, snap(pointer)]);
+        // Drawn as far as it measures, so the shape and its label agree.
+        const length = result.cells * gridSize;
+        const shape =
+          kind === 'circle'
+            ? { kind, centre: origin, radius: length }
+            : { kind, outline: coneOutline(origin, pointer, length), tip: snap(pointer) };
+        ruler.draw(shape, label(result));
+        setMeasured({ ...result, points: 0 });
+      };
+      return {
+        press: (event) => {
+          if (event.button !== 0) return;
+          origin = snap(viewport.toWorld(event.global));
+          dragging = true;
+          show(viewport.toWorld(event.global));
+        },
+        follow: (event) => {
+          if (dragging) show(viewport.toWorld(event.global));
+        },
+        release: () => {
+          dragging = false;
+        },
+        control: {
+          end: () => false,
+          undo: () => false,
+          clear: () => {
+            if (!origin) return false;
+            origin = null;
+            dragging = false;
+            ruler.clear();
+            setMeasured(null);
+            return true;
+          },
+        },
+      };
+    }
+
+    function pathHandlers(): ToolHandlers {
+      let path: Point[] = [];
+      let ended = false;
+      let pointer: Point | null = null;
+      let pressed: { x: number; y: number; started: boolean } | null = null;
+
+      const show = () => {
+        const points = ended || !pointer ? path : [...path, snap(pointer)];
+        if (path.length === 0) {
+          ruler.clear();
+          setMeasured(null);
+          return;
+        }
+        const result = measure(scale, points);
+        ruler.draw({ kind: 'path', points }, label(result));
+        setMeasured({ ...result, points: path.length });
+      };
+      const add = (point: Point) => {
+        const snapped = snap(point);
+        const last = path.at(-1);
+        // A double click, or a click on the last cell, adds nothing.
+        if (last && Math.hypot(last.x - snapped.x, last.y - snapped.y) < 2) return;
+        path = [...path, snapped];
+      };
+      const clear = () => {
+        path = [];
+        ended = false;
+        show();
+      };
+      const press = (event: FederatedPointerEvent) => {
+        if (event.button !== 0) return;
+        if (ended) clear();
+        const started = path.length === 0;
+        if (started) add(viewport.toWorld(event.global));
+        pressed = { x: event.global.x, y: event.global.y, started };
+        show();
+      };
+      const follow = (event: FederatedPointerEvent) => {
+        if (ended || path.length === 0) return;
+        pointer = viewport.toWorld(event.global);
+        show();
+      };
+      const release = (event: FederatedPointerEvent) => {
+        if (!pressed) return;
+        const dragged = Math.hypot(event.global.x - pressed.x, event.global.y - pressed.y) > 4;
+        // The click that starts a path adds no second point; any other click, or a drag, does.
+        if (dragged || !pressed.started) add(viewport.toWorld(event.global));
+        pressed = null;
+        show();
+      };
+      return {
+        press,
+        follow,
+        release,
+        control: {
+          end: () => {
+            if (path.length === 0 || ended) return false;
+            ended = true;
+            show();
+            return true;
+          },
+          undo: () => {
+            if (path.length === 0) return false;
+            path = path.slice(0, -1);
+            if (path.length === 0) ended = false;
+            show();
+            return true;
+          },
+          clear: () => {
+            if (path.length === 0) return false;
+            clear();
+            return true;
+          },
+        },
+      };
+    }
   }, [stage, tool, columns, rows, gridType, gridSize, cellDistance, diagonals, distanceUnit]);
 
   // A click (not a drag) on the map off every token lets go of the selected one.
@@ -523,7 +592,7 @@ export default function MapCanvas({
         aria-label={t('map.tools')}
         className="absolute top-3 left-3 flex gap-1 rounded-lg bg-surface p-1 shadow"
       >
-        {(['select', 'ruler'] as const).map((each) => (
+        {TOOLS.map((each) => (
           <Button
             key={each}
             variant={tool === each ? 'primary' : 'ghost'}
@@ -537,18 +606,18 @@ export default function MapCanvas({
           </Button>
         ))}
       </div>
-      {tool === 'ruler' && (
+      {tool !== 'select' && (
         <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p role="status">
             {measured &&
-              t('ruler.measured', {
+              t(`ruler.measured.${tool}`, {
                 distance: measured.distance,
                 unit: distanceUnit,
                 cells: measured.cells,
                 points: measured.points,
               })}
           </p>
-          <p className="text-muted">{t('ruler.hint')}</p>
+          <p className="text-muted">{t(`ruler.hint.${tool}`)}</p>
         </div>
       )}
       {menu && (

@@ -160,6 +160,26 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
     await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');
     await gmPage.keyboard.press('Escape');
     await expect(status).toHaveCount(0);
+
+    // A circle by its radius, and a cone by its length, both counted as the ruler counts.
+    const drag = async (a: { x: number; y: number }, b: { x: number; y: number }) => {
+      await gmPage.mouse.move(a.x, a.y);
+      await gmPage.mouse.down();
+      await gmPage.mouse.move(b.x, b.y, { steps: 6 });
+      await gmPage.mouse.up();
+    };
+    await tools.getByRole('button', { name: 'Circle' }).click();
+    await drag(at(4, 4), at(7, 6));
+    await expect(mapPanel.getByText(/^Circle:/)).toHaveText('Circle: radius 15 ft (cells: 3).');
+    await tools.getByRole('button', { name: 'Cone' }).click();
+    await expect(mapPanel.getByText(/^Circle:/)).toHaveCount(0);
+    await drag(at(4, 4), at(4, 8));
+    const cone = mapPanel.getByText(/^Cone:/);
+    await expect(cone).toHaveText('Cone: 20 ft long (cells: 4).');
+    expect(await view(map)).toEqual({ zoom, x, y });
+    await map.focus();
+    await gmPage.keyboard.press('Escape');
+    await expect(cone).toHaveCount(0);
     await tools.getByRole('button', { name: 'Select' }).click();
   });
 
