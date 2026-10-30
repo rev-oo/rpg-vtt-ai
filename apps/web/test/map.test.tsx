@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import fc from 'fast-check';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import type { SceneView } from '@vtt/shared/api';
+import type { SceneView, TokenView } from '@vtt/shared/api';
 
 import { setCsrfToken } from '../src/api/client.js';
 import { cellAt, cellCentre, gridSegments, sceneSize } from '../src/features/map/geometry.js';
@@ -128,7 +128,11 @@ const scene = (id: string, name: string, active = false): SceneView => ({
   updatedAt: '2026-10-30T00:00:00.000Z',
 });
 
-function openTable(role: string, scenes: () => SceneView[], handlers = {}) {
+function openTable(
+  role: string,
+  scenes: () => SceneView[],
+  handlers: Parameters<typeof fakeApi>[0] = {},
+) {
   const sockets = fakeWebSocket();
   const api = fakeApi({
     'GET /setup/status': { body: { needsSetup: false } },
@@ -288,5 +292,109 @@ describe('map and scenes panels (FR-MAP-01, 02)', () => {
     await waitFor(() => {
       expect(names()).toEqual(['Old town']);
     });
+  });
+});
+
+const token = (id: string, name: string, fields: Partial<TokenView> = {}): TokenView => ({
+  id,
+  sceneId: 's1',
+  actorId: null,
+  name,
+  imageUrl: null,
+  column: 2,
+  row: 3,
+  hidden: false,
+  movable: false,
+  ...fields,
+});
+
+const tokenButton = async (name: RegExp) =>
+  within(await screen.findByRole('list', { name: 'Tokens' })).findByRole('button', { name });
+
+describe('tokens on the map (FR-MAP-03)', () => {
+  it('lets a player move their token by keyboard, and follows token.updated', async () => {
+    let tokens = [
+      token('k1', 'Ayla', { actorId: 'a1', movable: true }),
+      token('k2', 'Boulder', { column: 0, row: 0 }),
+    ];
+    const { calls, sockets } = openTable('player', () => [scene('s1', 'Cave', true)], {
+      'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
+      'PATCH /tokens/k1': (body: unknown) => {
+        tokens = tokens.map((x) => (x.id === 'k1' ? { ...x, ...(body as Partial<TokenView>) } : x));
+        return { body: { token: tokens[0] } };
+      },
+    });
+    const user = userEvent.setup();
+    const ayla = await tokenButton(/^Ayla \(3, 4\)/);
+    await user.click(ayla);
+    expect(screen.getByText('Arrow keys move the selected token.')).toBeInTheDocument();
+    // Players neither hide nor remove tokens.
+    expect(screen.queryByRole('button', { name: 'Hide Ayla' })).toBeNull();
+    await user.keyboard('{ArrowRight}');
+    expect(await tokenButton(/^Ayla \(4, 4\)/)).toHaveFocus();
+    expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ column: 3, row: 3 });
+
+    // A token they may not move stays put.
+    await user.click(await tokenButton(/^Boulder/));
+    await user.keyboard('{ArrowDown}');
+    expect(calls.filter((c) => c.method === 'PATCH')).toHaveLength(1);
+
+    const socket = await connected(sockets);
+    tokens = [...tokens, token('k3', 'Guard')];
+    socket.receive(
+      serverEvent({ type: 'token.updated', tableId: 't1', payload: { sceneId: 's1' } }),
+    );
+    expect(await tokenButton(/^Guard/)).toBeInTheDocument();
+  });
+
+  it('lets the GM place, hide and remove tokens and open their actors', async () => {
+    let tokens: TokenView[] = [token('k1', 'Goblin King', { actorId: 'a1', movable: true })];
+    const { calls } = openTable('gm', () => [scene('s1', 'Cave', true)], {
+      'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
+      'POST /scenes/s1/tokens': (body: unknown) => {
+        const placed = token('k2', 'Boulder', { ...(body as Partial<TokenView>), movable: true });
+        tokens = [...tokens, placed];
+        return { status: 201, body: { token: placed } };
+      },
+      'PATCH /tokens/k2': (body: unknown) => ({
+        body: { token: { ...tokens[1], ...(body as Partial<TokenView>) } },
+      }),
+      'DELETE /tokens/k2': () => {
+        tokens = tokens.slice(0, 1);
+        return { status: 204 };
+      },
+    });
+    const user = userEvent.setup();
+    await tokenButton(/^Goblin King/);
+    await user.click(screen.getByRole('button', { name: 'Add token' }));
+    const dialog = screen.getByRole('dialog', { name: 'Add token' });
+    await user.selectOptions(within(dialog).getByLabelText('Actor'), 'None (a token of its own)');
+    await user.click(within(dialog).getByRole('button', { name: 'Place token' }));
+    expect(within(dialog).getByRole('alert')).toHaveTextContent('Give the token a name.');
+    await user.type(within(dialog).getByLabelText(/^Name/), 'Boulder');
+    await user.click(within(dialog).getByLabelText('Hidden from players'));
+    await user.click(within(dialog).getByRole('button', { name: 'Place token' }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
+        name: 'Boulder',
+        column: 15,
+        row: 10,
+        hidden: true,
+      });
+    });
+
+    // The new token is selected; the GM reveals it, then removes it.
+    await user.click(await screen.findByRole('button', { name: 'Reveal Boulder' }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ hidden: false });
+    });
+    await user.click(screen.getByRole('button', { name: 'Remove Boulder' }));
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /^Boulder/ })).toBeNull();
+    });
+
+    await user.click(await tokenButton(/^Goblin King/));
+    await user.click(screen.getByRole('button', { name: 'Open Goblin King' }));
+    expect(await screen.findByRole('tab', { name: 'Goblin King' })).toBeInTheDocument();
   });
 });

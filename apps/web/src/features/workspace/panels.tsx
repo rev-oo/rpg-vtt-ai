@@ -25,6 +25,7 @@ import { DicePane } from '../table/DicePane.js';
 import { useTableData } from '../table/table-data.js';
 
 import { useDock } from './dock-context.js';
+import { sheetPanelId } from './panel-ids.js';
 import { usePanelList } from './use-panel-list.js';
 
 /**
@@ -235,7 +236,7 @@ export function SettingsPanel(): ReactElement {
 
 /** The scene, filling its panel; a GM's chosen scene is kept with the layout. */
 export function MapPanel({ params, api: panel }: IDockviewPanelProps): ReactElement {
-  const { table } = useTableData();
+  const { table, actors } = useTableData();
   const { save, open } = useDock();
   const [sceneId, setSceneId] = useState<string | null>(
     () => stringParam(params, 'sceneId') || null,
@@ -250,8 +251,12 @@ export function MapPanel({ params, api: panel }: IDockviewPanelProps): ReactElem
           panel.updateParameters({ sceneId: next });
           save();
         }}
+        actors={actors}
         onManage={() => {
           open({ kind: 'tool', id: 'scenes' });
+        }}
+        onOpenActor={(actor) => {
+          open({ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id });
         }}
       />
     </div>

@@ -435,3 +435,27 @@ export const scenes = sqliteTable(
       .where(sql`${t.active} = 1`),
   ],
 );
+
+/**
+ * Tokens on a scene's grid (FR-MAP-03, ADR-068). An actor's token shows the actor's name and
+ * image; one standing alone has its own. Deleting the scene or the actor deletes its tokens.
+ */
+export const tokens = sqliteTable(
+  'tokens',
+  {
+    id: text('id').primaryKey(),
+    sceneId: text('scene_id')
+      .notNull()
+      .references(() => scenes.id, { onDelete: 'cascade' }),
+    actorId: text('actor_id').references(() => actors.id, { onDelete: 'cascade' }),
+    /** A standing-alone token's own name and image; unused for an actor's token. */
+    name: text('name').notNull().default(''),
+    imageUrl: text('image_url'),
+    column: integer('column').notNull(),
+    row: integer('row').notNull(),
+    hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index('tokens_scene_idx').on(t.sceneId), index('tokens_actor_idx').on(t.actorId)],
+);

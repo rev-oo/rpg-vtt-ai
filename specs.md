@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
-| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | In progress | 50%      |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | In progress | 75%      |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M14 (0.4.0 released)
-- **Next task:** `T-1403`
+- **Next task:** `T-1404`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -42,6 +42,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet.                                  |
 | 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).                                      |
 | 2026-10-30 | T-1402 done: Q18 decided (PixiJS v8 with pixi-viewport, WebGL only). A Map panel in the workspace centre draws the scene's background and grid, with pan and zoom by mouse, touch, keyboard and buttons; GMs and assistants manage scenes in a Scenes panel and preview any scene (ADR-067). |
+| 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).              |
 
 ---
 
@@ -427,7 +428,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | 0.4.0 (ADR-064)                            |
 | FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | ADR-066, ADR-067                           |
 | FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | ADR-067                                    |
-| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14)                              |
+| FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | ADR-068                                    |
 | FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)                              |
 
 `img` fields stay plain URL strings; an uploaded asset has a URL of its own, its path `/api/v1/assets/<id>`, so nothing that stores images changes shape (ADR-065).
@@ -641,6 +642,7 @@ Key resource groups:
 | Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                        |
 | Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064), `DELETE /assets/:id` (unused images only; ADR-065)                                      |
 | Scenes          | `GET/POST /tables/:id/scenes`, `POST /tables/:id/scenes/order`, `POST /tables/:id/scenes/active`, `GET/PATCH/DELETE /scenes/:id` (players see only the active scene; ADR-066)                                     |
+| Tokens          | `GET/POST /scenes/:id/tokens`, `PATCH/DELETE /tokens/:id` (players see the active scene's tokens that are not hidden and move their actors' tokens; ADR-068)                                                      |
 | Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
 | Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
 | Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
@@ -652,7 +654,7 @@ Key resource groups:
 - Authenticated during the HTTP upgrade using the session cookie.
 - JSON messages in an envelope: `{ "v": 1, "type": "…", "tableId": "…", "payload": { … }, "id": "…" }`.
 - Client → server: `subscribe`, `unsubscribe`, `chat.send`, `roll.request`, `presence.ping`.
-- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `chat.updated` and `chat.deleted` (ADR-052), `entity.changed`, `table.updated` (ADR-039), `combat.updated` (ADR-049), `scene.updated` (ADR-066), `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
+- Server → client: `chat.message` (rolls are messages of kind `roll`, ADR-018), `chat.updated` and `chat.deleted` (ADR-052), `entity.changed`, `table.updated` (ADR-039), `combat.updated` (ADR-049), `scene.updated` (ADR-066), `token.updated` (ADR-068), `ack`, `error`. A client message with an `id` is answered by `ack` or `error` carrying `replyTo` (ADR-016).
 - A socket whose session ends is closed with code `4401`.
 - **Audience filtering happens on the server** before send: whispers go only to recipients and sender; `gm` audience only to GM and assistants.
 - Protocol version is `v`. The server rejects unknown versions with an error that includes the supported versions.
@@ -736,7 +738,7 @@ Scenes with a grid, tokens and fog of war, in the workspace centre.
   - **Done when:** web tests cover the scene model behind the canvas; e2e pans and zooms on desktop and phone viewports; a performance check with a large background and 100 tokens is recorded.
   - **Performance check (2026-10-30):** Chromium, software WebGL (SwiftShader; no GPU reaches the browser in development or CI), 4096 px background, 100 sprites standing in for tokens, panning and zooming every frame. Frame time p50/p95: 200 × 200 hex grid (120,799 edges) 68/95 ms on a desktop, 84/112 ms on a 390 × 844 phone viewport at 4× CPU throttling; 40 × 30 hex grid 47/64 and 60/68 ms; no grid 39/46 and 56/68 ms. Software rendering dominates these times, so they are an upper bound; a real mid-range phone is still to be checked (ADR-067).
 
-- [ ] **T-1403 · Tokens**
+- [x] **T-1403 · Tokens**
   - **Deps:** T-1402
   - **Do:** Tokens link to an actor (taking its image and name) or stand alone (FR-MAP-03). GMs place, hide and remove tokens; owners of the actor move its tokens; moves snap to the grid and show live to everyone who may see them. Hidden tokens are filtered on the server and never sent to players (NFR-08). Opening a token opens its actor's sheet in the workspace.
   - **Done when:** endpoint and wire tests cover placement, movement permissions and hidden tokens; e2e has a GM and a player moving tokens in two browsers.
@@ -955,6 +957,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-065 | [The Images panel picks and deletes table assets, and journal text holds images](docs/adr/ADR-065-asset-manager.md)                             | Accepted                                   |
 | ADR-066 | [Scenes are rows sized in grid cells, with one active per table](docs/adr/ADR-066-scenes.md)                                                    | Accepted                                   |
 | ADR-067 | [Maps render with PixiJS v8 in a lazy-loaded panel, drawn on demand](docs/adr/ADR-067-map-renderer.md)                                          | Accepted                                   |
+| ADR-068 | [Tokens are rows on a scene's cells, filtered per member and refetched on events](docs/adr/ADR-068-tokens.md)                                   | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

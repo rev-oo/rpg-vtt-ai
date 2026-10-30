@@ -4,22 +4,32 @@ import 'pixi.js/unsafe-eval';
 
 import { Viewport } from 'pixi-viewport';
 import { Application, Graphics, Sprite, Texture, Ticker } from 'pixi.js';
-import { useEffect, useId, useMemo, useRef, useState, type ReactElement } from 'react';
+import {
+  useEffect,
+  useEffectEvent,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
-import type { SceneView } from '@vtt/shared/api';
+import type { SceneView, TokenView } from '@vtt/shared/api';
 import { Button } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 
 import { gridSegments, sceneSize } from './geometry.js';
+import { loadImage } from './image.js';
+import { TokenLayer, type TokenHandlers } from './token-layer.js';
 import { clampView, fitView, viewForKey, zoomBy, ZOOM_STEP, type Size, type View } from './view.js';
 
-export interface MapCanvasProps {
+export interface MapCanvasProps extends TokenHandlers {
   scene: SceneView;
+  tokens: readonly TokenView[];
+  selectedId: string | null;
 }
 
-/** Images wider or taller are scaled down: phones' GPUs take 4096 px textures, not always more. */
-const MAX_TEXTURE = 4096;
 const GRID_COLOR = 0x1f2937;
 
 /** How the last background load went. */
@@ -33,13 +43,19 @@ interface Stage {
   viewport: Viewport;
   background: Sprite;
   grid: Graphics;
+  tokens: TokenLayer;
 }
 
 /**
  * A scene on a WebGL canvas (FR-MAP-02, ADR-067): its background and grid, panned and zoomed
  * by mouse, touch and keyboard. It draws only after something changed, to spare phones.
  */
-export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
+export default function MapCanvas({
+  scene,
+  tokens,
+  selectedId,
+  ...handlers
+}: MapCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<Stage | null>(null);
   const [failed, setFailed] = useState(false);
@@ -57,6 +73,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
     let ready = false;
     let disposed = false;
     let observer: ResizeObserver | null = null;
+    let tokenLayer: TokenLayer | null = null;
     app
       .init({
         width: Math.max(1, element.clientWidth),
@@ -90,6 +107,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
           if (!calm) viewport.decelerate();
           const backgroundLayer = viewport.addChild(new Sprite());
           const grid = viewport.addChild(new Graphics());
+          tokenLayer = new TokenLayer(viewport);
           app.stage.addChild(viewport);
 
           ticker.add(() => {
@@ -111,7 +129,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
             viewport.dirty = true;
           });
           observer.observe(element);
-          setStage({ app, viewport, background: backgroundLayer, grid });
+          setStage({ app, viewport, background: backgroundLayer, grid, tokens: tokenLayer });
         },
         () => {
           ready = true;
@@ -121,6 +139,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
     return () => {
       disposed = true;
       observer?.disconnect();
+      tokenLayer?.destroy();
       // The viewport leaves the ticker as the app destroys it, so the ticker goes last.
       if (ready) app.destroy(true, { children: true });
       ticker.destroy();
@@ -191,6 +210,18 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
       texture?.destroy(true);
     };
   }, [stage, url, size]);
+
+  // The tokens, redrawn whenever they or the selection change; handlers are always the latest.
+  const select = useEffectEvent(handlers.select);
+  const open = useEffectEvent(handlers.open);
+  const move = useEffectEvent(handlers.move);
+  useEffect(() => {
+    stage?.tokens.draw(tokens, { columns, rows, gridType, gridSize }, selectedId, {
+      select,
+      open,
+      move,
+    });
+  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize]);
 
   const background =
     url === null ? 'none' : loaded?.url !== url ? 'loading' : loaded.shown ? 'shown' : 'blocked';
@@ -290,26 +321,4 @@ function show(element: HTMLElement, viewport: Viewport): void {
   element.dataset.zoom = view.zoom.toFixed(3);
   element.dataset.x = view.x.toFixed(1);
   element.dataset.y = view.y.toFixed(1);
-}
-
-/**
- * Loads an image by an element, as the CSP lets images, not fetches, come from elsewhere.
- * Other hosts must allow it with CORS, or WebGL may not draw it (ADR-067).
- */
-async function loadImage(url: string): Promise<HTMLImageElement | HTMLCanvasElement> {
-  const image = new Image();
-  if (new URL(url, window.location.href).origin !== window.location.origin) {
-    image.crossOrigin = 'anonymous';
-  }
-  image.src = url;
-  await image.decode();
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
-  const scale = Math.min(1, MAX_TEXTURE / Math.max(width, height));
-  if (scale === 1) return image;
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(width * scale);
-  canvas.height = Math.round(height * scale);
-  canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  return canvas;
 }

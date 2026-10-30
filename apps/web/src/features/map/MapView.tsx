@@ -1,30 +1,45 @@
-import { lazy, Suspense, type ReactElement } from 'react';
+import { lazy, Suspense, useState, type ReactElement } from 'react';
 
 import { canManageScenes } from '@vtt/shared';
-import type { TableView } from '@vtt/shared/api';
+import type { ActorView, SceneView, TableView, TokenView } from '@vtt/shared/api';
 import { Alert, Button, Select } from '@vtt/ui';
 
+import { api } from '../../api/endpoints.js';
+import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 
+import { AddTokenDialog } from './AddTokenDialog.js';
+import { TokenList } from './TokenList.js';
 import { useScenes } from './use-scenes.js';
+import { useTokens } from './use-tokens.js';
 
 // Pixi loads only with the map (ADR-067).
 const MapCanvas = lazy(() => import('./MapCanvas.js'));
 
 export interface MapViewProps {
   table: TableView;
+  /** The actors the member can see: tokens of these open their sheets. */
+  actors: readonly ActorView[];
   /** The scene a GM chose to look at; the active one when absent or gone. */
   sceneId: string | null;
   onSceneId: (sceneId: string) => void;
   /** Opens the Scenes panel. */
   onManage: () => void;
+  /** Opens an actor's sheet. */
+  onOpenActor: (actor: ActorView) => void;
 }
 
 /**
  * The scene in the workspace centre (FR-MAP-02): players see the active one. GMs and
  * assistants may look at any, marked as a preview while players do not see it.
  */
-export function MapView({ table, sceneId, onSceneId, onManage }: MapViewProps): ReactElement {
+export function MapView({
+  table,
+  sceneId,
+  onSceneId,
+  onManage,
+  ...rest
+}: MapViewProps): ReactElement {
   const { scenes, error } = useScenes(table.id);
   const manages = canManageScenes(table.role);
   const active = scenes?.find((scene) => scene.active);
@@ -67,11 +82,105 @@ export function MapView({ table, sceneId, onSceneId, onManage }: MapViewProps): 
           </p>
         </div>
       )}
+      <SceneStage key={scene.id} table={table} scene={scene} manages={manages} {...rest} />
+    </div>
+  );
+}
+
+interface SceneStageProps {
+  table: TableView;
+  scene: SceneView;
+  manages: boolean;
+  actors: readonly ActorView[];
+  onOpenActor: (actor: ActorView) => void;
+}
+
+/** One scene: its canvas, its tokens and, for GMs, placing them (FR-MAP-03, ADR-068). */
+function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStageProps): ReactElement {
+  const { tokens, error, move, change } = useTokens(table.id, scene.id);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [adding, setAdding] = useState(false);
+  const actorOf = (token: TokenView) => actors.find((actor) => actor.id === token.actorId);
+  const open = (token: TokenView) => {
+    const actor = actorOf(token);
+    if (actor) onOpenActor(actor);
+  };
+  const select = (token: TokenView) => {
+    setSelectedId(token.id);
+  };
+
+  return (
+    <>
+      {manages && (
+        <div className="flex justify-end border-b border-line bg-surface px-3 py-1">
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            {t('tokens.add')}
+          </Button>
+        </div>
+      )}
+      {error && <Alert tone="error">{error}</Alert>}
       <div className="min-h-0 flex-1">
         <Suspense fallback={<p className="p-3 text-muted">{t('app.loading')}</p>}>
-          <MapCanvas key={scene.id} scene={scene} />
+          <MapCanvas
+            scene={scene}
+            tokens={tokens}
+            selectedId={selectedId}
+            select={select}
+            open={open}
+            move={(token, { column, row }) => {
+              move(token, column, row);
+            }}
+          />
         </Suspense>
       </div>
-    </div>
+      <TokenList
+        scene={scene}
+        tokens={tokens}
+        selectedId={selectedId}
+        manages={manages}
+        canOpen={(token) => actorOf(token) !== undefined}
+        onSelect={select}
+        onMove={(token, { column, row }) => {
+          move(token, column, row);
+        }}
+        onOpen={open}
+        onHide={(token, hidden) => {
+          change(token.id, api.updateToken(token.id, { hidden }));
+        }}
+        onRemove={(token) => {
+          setSelectedId(null);
+          change(
+            token.id,
+            api.deleteToken(token.id).then(() => null),
+          );
+        }}
+      />
+      {adding && (
+        <AddTokenDialog
+          open
+          actors={actors}
+          cell={{ column: Math.floor(scene.columns / 2), row: Math.floor(scene.rows / 2) }}
+          onClose={() => {
+            setAdding(false);
+          }}
+          onAdd={async (input) => {
+            try {
+              const token = await api.createToken(scene.id, input);
+              setAdding(false);
+              setSelectedId(token.id);
+              change(token.id, Promise.resolve(token));
+              return null;
+            } catch (e) {
+              return errorMessage(e);
+            }
+          }}
+        />
+      )}
+    </>
   );
 }

@@ -59,7 +59,7 @@ export const assetSchema = z.object({
 export type AssetView = z.infer<typeof assetSchema>;
 
 /** Where an asset is used, which keeps it from being deleted (ADR-065). */
-export const ASSET_USE_KINDS = ['actor', 'item', 'journal', 'scene'] as const;
+export const ASSET_USE_KINDS = ['actor', 'item', 'journal', 'scene', 'token'] as const;
 export const assetUseSchema = z.object({
   kind: z.enum(ASSET_USE_KINDS),
   id: z.string(),

@@ -141,3 +141,95 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
     expect(errors).toEqual([]);
   });
 });
+
+// T-1403 (FR-MAP-03, ADR-068): a GM and a player move tokens in two browsers; a hidden token
+// never shows for the player.
+test('tokens move live between a GM and a player', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  const tess = await createPlayer(browser, gm, 'tokentess', 'Token Tess');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Token Table',
+    systemId: 'e2e-system',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(tess, `/invites/${token}/accept`);
+  const { actor } = await post<{ actor: { id: string } }>(tess, `/tables/${table.id}/actors`, {
+    type: 'character',
+    name: 'Wren',
+  });
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Bridge',
+    columns: 8,
+    rows: 6,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: actor.id, column: 0, row: 0 });
+  await post(gm, `/scenes/${scene.id}/tokens`, {
+    name: 'Assassin',
+    column: 7,
+    row: 5,
+    hidden: true,
+  });
+
+  const open = async (who: typeof gm): Promise<Page> => {
+    const page = await who.context.newPage();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/tables/${table.id}`);
+    await drawn(page, 'Bridge');
+    return page;
+  };
+  const gmPage = await open(gm);
+  const tessPage = await open(tess);
+  const list = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+
+  await test.step('the player sees their token, not the hidden one', async () => {
+    await expect(list(tessPage).getByRole('button', { name: /^Wren \(1, 1\)/ })).toBeVisible();
+    await expect(list(tessPage).getByRole('button', { name: /Assassin/ })).toHaveCount(0);
+    await expect(list(gmPage).getByRole('button', { name: /^Assassin/ })).toBeVisible();
+  });
+
+  await test.step('the player moves it by keyboard; the GM sees it move', async () => {
+    await list(tessPage).getByRole('button', { name: /^Wren/ }).click();
+    await tessPage.keyboard.press('ArrowRight');
+    await tessPage.keyboard.press('ArrowDown');
+    await expect(list(gmPage).getByRole('button', { name: /^Wren \(2, 2\)/ })).toBeVisible();
+  });
+
+  await test.step('the GM drags it on the canvas; the player sees it move', async () => {
+    const map = gmPage.getByRole('application', { name: 'Bridge' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    // Square cells of 70 px: the centre of cell (column, row), on screen.
+    const at = (column: number, row: number) => ({
+      x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
+      y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
+    });
+    const from = at(1, 1);
+    const to = at(5, 3);
+    await gmPage.mouse.move(from.x, from.y);
+    await gmPage.mouse.down();
+    await gmPage.mouse.move(to.x, to.y, { steps: 10 });
+    await gmPage.mouse.up();
+    await expect(list(gmPage).getByRole('button', { name: /^Wren \(6, 4\)/ })).toBeVisible();
+    await expect(list(tessPage).getByRole('button', { name: /^Wren \(6, 4\)/ })).toBeVisible();
+    // The map did not pan while the token was dragged.
+    expect((await view(map)).x).toBe(x);
+  });
+
+  await test.step('revealing the hidden token shows it to the player', async () => {
+    await list(gmPage)
+      .getByRole('button', { name: /^Assassin/ })
+      .click();
+    await gmPage.getByRole('button', { name: 'Reveal Assassin' }).click();
+    await expect(list(tessPage).getByRole('button', { name: /^Assassin \(8, 6\)/ })).toBeVisible();
+  });
+
+  await test.step("opening the player's token opens the actor's sheet", async () => {
+    await list(tessPage).getByRole('button', { name: /^Wren/ }).click();
+    await tessPage.getByRole('button', { name: 'Open Wren' }).click();
+    await expect(tessPage.getByRole('tab', { name: 'Wren', exact: true })).toBeVisible();
+  });
+});

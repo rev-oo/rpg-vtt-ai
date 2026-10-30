@@ -12,6 +12,8 @@ import {
   canManageItemLibrary,
   canManageMembers,
   canManageScenes,
+  canMoveToken,
+  canSeeToken,
   canManageTable,
   canSeeAudience,
   canSeeGmContent,
@@ -223,5 +225,28 @@ describe('table-level permissions', () => {
     expect(canSetOwnership(role)).toBe(gmContent);
     // And prepare scenes (FR-MAP-01).
     expect(canManageScenes(role)).toBe(gmContent);
+  });
+});
+
+describe('tokens (FR-MAP-03, ADR-068)', () => {
+  const owned = { default: 'none', users: { [ME]: 'owner' } } as const;
+  const watched = { default: 'observer', users: {} } as const;
+  const shown = { hidden: false, sceneActive: true };
+
+  it.each(TABLE_ROLES)('%s sees and moves what the role allows', (role) => {
+    const gmLike = role === 'gm' || role === 'assistant';
+    expect(canSeeToken(role, shown)).toBe(true);
+    expect(canSeeToken(role, { hidden: true, sceneActive: true })).toBe(gmLike);
+    expect(canSeeToken(role, { hidden: false, sceneActive: false })).toBe(gmLike);
+    const subject = { userId: ME, role };
+    // Owners move their actors' tokens; spectators own nothing.
+    expect(canMoveToken(subject, { ...shown, actorOwnership: owned })).toBe(
+      gmLike || role === 'player',
+    );
+    expect(canMoveToken(subject, { ...shown, actorOwnership: watched })).toBe(gmLike);
+    expect(canMoveToken(subject, { ...shown, actorOwnership: null })).toBe(gmLike);
+    expect(canMoveToken(subject, { hidden: true, sceneActive: true, actorOwnership: owned })).toBe(
+      gmLike,
+    );
   });
 });

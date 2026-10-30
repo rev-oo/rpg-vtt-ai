@@ -63,6 +63,11 @@ import {
   encounterResponseSchema,
   sceneListResponseSchema,
   sceneResponseSchema,
+  tokenListResponseSchema,
+  tokenResponseSchema,
+  type TokenCreateInput,
+  type TokenUpdateInput,
+  type TokenView,
   type SceneCreateInput,
   type SceneUpdateInput,
   type SceneView,
@@ -401,6 +406,16 @@ export const api = {
         sceneId,
       })
     ).scenes,
+
+  /** A scene's tokens the caller may see (FR-MAP-03, ADR-068). */
+  listTokens: async (sceneId: string): Promise<TokenView[]> =>
+    (await request('GET', `/scenes/${sceneId}/tokens`, tokenListResponseSchema)).tokens,
+  createToken: async (sceneId: string, input: TokenCreateInput): Promise<TokenView> =>
+    (await request('POST', `/scenes/${sceneId}/tokens`, tokenResponseSchema, input)).token,
+  /** Owners move their tokens; GMs and assistants also hide them. */
+  updateToken: async (tokenId: string, input: TokenUpdateInput): Promise<TokenView> =>
+    (await request('PATCH', `/tokens/${tokenId}`, tokenResponseSchema, input)).token,
+  deleteToken: (tokenId: string): Promise<void> => requestNoContent('DELETE', `/tokens/${tokenId}`),
 
   /** Runs a slash command of the table's system; it answers like a roll (FR-PLUGIN-10). */
   command: async (tableId: string, input: CommandRequestInput): Promise<ChatMessage> =>
