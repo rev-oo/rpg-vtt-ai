@@ -415,6 +415,27 @@ export const en = {
 
   'map.title': 'Map',
   'map.role': 'map',
+  'map.tools': 'Map tools',
+  'map.tool.select': 'Select',
+  'map.tool.ruler': 'Ruler',
+  'ruler.label': '{distance} {unit}',
+  'scenes.cellDistance': 'Distance per cell',
+  'scenes.cellDistanceHint': 'What one cell measures for the ruler, e.g. 5.',
+  'scenes.distanceUnit': 'Unit',
+  'scenes.diagonals': 'Diagonals',
+  'scenes.diagonals.one': 'One cell each',
+  'scenes.diagonals.alternate': 'Alternate 1 and 2 cells',
+  'scenes.diagonals.straight': 'Straight line',
+  'map.tool.circle': 'Circle',
+  'map.tool.cone': 'Cone',
+  'ruler.measured.ruler': 'Measured {distance} {unit} (cells: {cells}, points: {points}).',
+  'ruler.measured.circle': 'Circle: radius {distance} {unit} (cells: {cells}).',
+  'ruler.measured.cone': 'Cone: {distance} {unit} long (cells: {cells}).',
+  'ruler.hint.ruler':
+    'Click to add points, or drag. Enter or a double click ends the path, Backspace removes the last point, Escape clears it.',
+  'ruler.hint.circle': 'Drag from the centre out to the radius. Escape clears it.',
+  'ruler.hint.cone':
+    'Drag from the origin the way it points; it is as wide at its end as it is long. Escape clears it.',
   'map.keys':
     'Arrow keys move the selected token, or pan when none is; plus and minus zoom, 0 shows the whole scene.',
   'map.scene': 'Scene',

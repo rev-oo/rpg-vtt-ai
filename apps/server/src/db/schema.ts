@@ -21,6 +21,7 @@ import {
 } from '@vtt/shared';
 import {
   ASSET_TYPES,
+  DIAGONAL_RULES,
   GRID_TYPES,
   MESSAGE_KINDS,
   PLUGIN_STATUSES,
@@ -422,6 +423,10 @@ export const scenes = sqliteTable(
     rows: integer('rows').notNull(),
     gridType: text('grid_type', { enum: GRID_TYPES }).notNull(),
     gridSize: integer('grid_size').notNull(),
+    /** What one cell measures for the ruler, in `distance_unit` (ADR-069). */
+    cellDistance: real('cell_distance').notNull().default(5),
+    distanceUnit: text('distance_unit').notNull().default('ft'),
+    diagonals: text('diagonals', { enum: DIAGONAL_RULES }).notNull().default('one'),
     active: integer('active', { mode: 'boolean' }).notNull().default(false),
     /** Place in the GM's list. */
     sort: integer('sort').notNull(),

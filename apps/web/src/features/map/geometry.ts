@@ -57,11 +57,15 @@ export function cellCentre(grid: SceneGrid, { column, row }: Cell): Point {
  */
 export function cellAt(grid: SceneGrid, { x, y }: Point, area = sceneSize(grid)): Cell | null {
   if (grid.gridType === 'none') return freeAt(grid, x, y, area);
-  const cell = grid.gridType === 'hex' ? hexAt(grid, x, y) : squareAt(grid, x, y);
+  const cell = cellUnder(grid, { x, y });
   const inside =
     cell.column >= 0 && cell.row >= 0 && cell.column < grid.columns && cell.row < grid.rows;
   return inside ? cell : null;
 }
+
+/** The square or hex under a point, on the grid or past its edge. */
+export const cellUnder = (grid: SceneGrid, { x, y }: Point): Cell =>
+  grid.gridType === 'hex' ? hexAt(grid, x, y) : squareAt(grid, x, y);
 
 const toHundredths = (value: number) => Math.round(value * 100) / 100;
 /** Between 0 and the last whole cell of `pixels`, and no further than tokens may stand. */

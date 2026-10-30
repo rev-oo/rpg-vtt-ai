@@ -13,6 +13,7 @@ import {
   sceneSize,
   stepCell,
 } from '../src/features/map/geometry.js';
+import { CONE_ANGLE, coneOutline, measure } from '../src/features/map/measure.js';
 import {
   clampView,
   fitView,
@@ -135,6 +136,82 @@ describe('token steps', () => {
   });
 });
 
+describe('ruler', () => {
+  const square = {
+    columns: 30,
+    rows: 20,
+    gridType: 'square',
+    gridSize: 70,
+    cellDistance: 5,
+    diagonals: 'one',
+  } as const;
+  // From the centre of cell (0, 0) to the centre of (column, row).
+  const to = (column: number, row: number) => ({ x: column * 70 + 35, y: row * 70 + 35 });
+  const origin = to(0, 0);
+
+  it('counts straight runs in cells and in the scene unit', () => {
+    expect(measure(square, [origin, to(6, 0)])).toEqual({ cells: 6, distance: 30 });
+    expect(measure(square, [origin, { x: 10, y: 60 }])).toEqual({ cells: 0, distance: 0 });
+  });
+
+  it('counts diagonals by the scene rule', () => {
+    expect(measure(square, [origin, to(4, 3)])).toEqual({ cells: 4, distance: 20 });
+    expect(measure({ ...square, diagonals: 'alternate' }, [origin, to(4, 3)])).toEqual({
+      cells: 5,
+      distance: 25,
+    });
+    expect(measure({ ...square, diagonals: 'straight' }, [origin, to(4, 3)])).toEqual({
+      cells: 5,
+      distance: 25,
+    });
+    expect(measure({ ...square, diagonals: 'straight' }, [origin, to(1, 1)]).cells).toBe(1.4);
+  });
+
+  it('counts a path as one move, with diagonals alternating along all of it', () => {
+    const alternate = { ...square, diagonals: 'alternate' } as const;
+    // Two legs of one diagonal each: the second diagonal of the path costs two cells.
+    expect(measure(alternate, [origin, to(1, 1), to(2, 2)])).toEqual({ cells: 3, distance: 15 });
+    expect(measure(square, [origin, to(3, 0), to(3, 4), to(0, 4)])).toEqual({
+      cells: 10,
+      distance: 50,
+    });
+    // One point measures nothing.
+    expect(measure(square, [origin])).toEqual({ cells: 0, distance: 0 });
+  });
+
+  it('outlines a cone as wide at its end as it is long', () => {
+    expect(CONE_ANGLE).toBeCloseTo((53.13 * Math.PI) / 180, 3);
+    const outline = coneOutline({ x: 0, y: 0 }, { x: 10, y: 0 }, 100);
+    expect(outline[0]).toEqual({ x: 0, y: 0 });
+    const arc = outline.slice(1);
+    expect(arc).toHaveLength(13);
+    for (const point of arc) expect(Math.hypot(point.x, point.y)).toBeCloseTo(100);
+    // Its end is as wide as it is long: 2 × 100 × sin(26.57°) ≈ 89.4 across the chord.
+    expect(arc[0]?.y).toBeCloseTo(-44.72, 1);
+    expect(arc.at(-1)?.y).toBeCloseTo(44.72, 1);
+    expect(arc[6]?.x).toBeCloseTo(100);
+    expect(arc[6]?.y).toBeCloseTo(0);
+  });
+
+  it('counts hexes on a hex grid, and a straight line on a gridless scene', () => {
+    const hex = { ...square, gridType: 'hex' } as const;
+    const centre = (column: number, row: number) => cellCentre(hex, { column, row });
+    expect(measure(hex, [centre(0, 0), centre(3, 0)]).cells).toBe(3);
+    expect(measure(hex, [centre(0, 0), centre(0, 2)]).cells).toBe(2);
+    expect(measure(hex, [centre(2, 2), centre(1, 3)]).cells).toBe(1);
+    const none = { ...square, gridType: 'none', cellDistance: 1.5 } as const;
+    expect(
+      measure(none, [
+        { x: 0, y: 0 },
+        { x: 105, y: 140 },
+      ]),
+    ).toEqual({
+      cells: 2.5,
+      distance: 3.8,
+    });
+  });
+});
+
 describe('map view', () => {
   const scene = { width: 2000, height: 1000 };
   const panel = { width: 800, height: 800 };
@@ -177,6 +254,9 @@ const scene = (id: string, name: string, active = false): SceneView => ({
   rows: 20,
   gridType: 'square',
   gridSize: 70,
+  cellDistance: 5,
+  distanceUnit: 'ft',
+  diagonals: 'one',
   active,
   createdAt: '2026-10-30T00:00:00.000Z',
   updatedAt: '2026-10-30T00:00:00.000Z',
@@ -269,6 +349,12 @@ describe('map and scenes panels (FR-MAP-01, 02)', () => {
     await user.clear(within(dialog).getByLabelText(/^Columns/));
     await user.type(within(dialog).getByLabelText(/^Columns/), '12');
     await user.selectOptions(within(dialog).getByLabelText('Grid'), 'Hex');
+    // The ruler's scale takes a decimal comma too.
+    await user.clear(within(dialog).getByLabelText(/^Distance per cell/));
+    await user.type(within(dialog).getByLabelText(/^Distance per cell/), '1,5');
+    await user.clear(within(dialog).getByLabelText(/^Unit/));
+    await user.type(within(dialog).getByLabelText(/^Unit/), 'm');
+    await user.selectOptions(within(dialog).getByLabelText('Diagonals'), 'Straight line');
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
@@ -278,6 +364,9 @@ describe('map and scenes panels (FR-MAP-01, 02)', () => {
         rows: 20,
         gridType: 'hex',
         gridSize: 70,
+        cellDistance: 1.5,
+        distanceUnit: 'm',
+        diagonals: 'straight',
       });
     });
     const list = await sceneList();

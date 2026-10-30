@@ -15,6 +15,17 @@ export const GRID_TYPES = ['square', 'hex', 'hidden', 'none'] as const;
 export const snapsToCells = (gridType: GridType): boolean => gridType !== 'none';
 export type GridType = (typeof GRID_TYPES)[number];
 
+/**
+ * How the ruler counts a diagonal step on a square grid (ADR-069): one cell each (`one`),
+ * alternately one and two (`alternate`), or the straight line between cell centres
+ * (`straight`).
+ */
+export const DIAGONAL_RULES = ['one', 'alternate', 'straight'] as const;
+export type DiagonalRule = (typeof DIAGONAL_RULES)[number];
+/** The distance a cell stands for, in the scene's own unit. */
+export const MAX_CELL_DISTANCE = 1000;
+export const MAX_DISTANCE_UNIT = 12;
+
 export const MAX_SCENES = 100;
 /** A scene's size in grid cells, each side. */
 export const MIN_SCENE_CELLS = 1;
@@ -35,6 +46,10 @@ export const sceneSchema = z.object({
   gridType: z.enum(GRID_TYPES),
   /** A cell's size in pixels of the background. */
   gridSize: z.number().int(),
+  /** What one cell measures, in `distanceUnit` (e.g. 5 ft). */
+  cellDistance: z.number(),
+  distanceUnit: z.string(),
+  diagonals: z.enum(DIAGONAL_RULES),
   /** The scene players see; a table has at most one. */
   active: z.boolean(),
   createdAt: z.string(),
@@ -50,6 +65,9 @@ const sceneFields = {
   rows: cells,
   gridType: z.enum(GRID_TYPES),
   gridSize: z.number().int().min(MIN_GRID_SIZE).max(MAX_GRID_SIZE),
+  cellDistance: z.number().positive().max(MAX_CELL_DISTANCE),
+  distanceUnit: z.string().trim().min(1).max(MAX_DISTANCE_UNIT),
+  diagonals: z.enum(DIAGONAL_RULES),
 };
 
 /** `POST /tables/:id/scenes`; a new scene goes last and is not active. */
@@ -60,6 +78,9 @@ export const sceneCreateBody = z.object({
   rows: sceneFields.rows.default(20),
   gridType: sceneFields.gridType.default('square'),
   gridSize: sceneFields.gridSize.default(70),
+  cellDistance: sceneFields.cellDistance.default(5),
+  distanceUnit: sceneFields.distanceUnit.default('ft'),
+  diagonals: sceneFields.diagonals.default('one'),
 });
 export type SceneCreateInput = z.input<typeof sceneCreateBody>;
 
