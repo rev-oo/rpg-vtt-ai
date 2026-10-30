@@ -88,6 +88,26 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await page.getByRole('button', { name: 'Close Chat' }).click();
     await expect(log).toHaveCount(0);
     await page.getByRole('button', { name: 'Panels' }).click();
+    // Where a resize bar of the dock lies under the menu, the menu still takes the click.
+    const menu = await page.getByRole('list', { name: 'Panels' }).boundingBox();
+    if (!menu) throw new Error('the Panels menu is not shown');
+    let crossed = 0;
+    for (const sash of await page.locator('.dv-sash').all()) {
+      const bar = await sash.boundingBox();
+      if (!bar) continue;
+      const left = Math.max(bar.x, menu.x);
+      const right = Math.min(bar.x + bar.width, menu.x + menu.width);
+      const top = Math.max(bar.y, menu.y);
+      const bottom = Math.min(bar.y + bar.height, menu.y + menu.height);
+      if (left >= right || top >= bottom) continue;
+      crossed += 1;
+      await page.getByRole('list', { name: 'Panels' }).click({
+        trial: true,
+        timeout: 2000,
+        position: { x: (left + right) / 2 - menu.x, y: (top + bottom) / 2 - menu.y },
+      });
+    }
+    expect(crossed).toBeGreaterThan(0);
     await page.getByRole('list', { name: 'Panels' }).getByRole('button', { name: /^Chat/ }).click();
     await expect(log).toBeVisible();
   });

@@ -20,7 +20,14 @@ import { Button } from '@vtt/ui';
 import { t } from '../../i18n/index.js';
 import { carriesActor, droppedActor } from '../entities/entity-drag.js';
 
-import { cellAt, gridSegments, sceneSize, type Cell, type SceneGrid } from './geometry.js';
+import {
+  cellAt,
+  gridSegments,
+  sceneSize,
+  stepCell,
+  type Cell,
+  type SceneGrid,
+} from './geometry.js';
 import { loadImage } from './image.js';
 import { TokenLayer, type TokenHandlers } from './token-layer.js';
 import {
@@ -38,6 +45,8 @@ export interface MapCanvasProps extends TokenHandlers {
   scene: SceneView;
   tokens: readonly TokenView[];
   selectedId: string | null;
+  /** A click on the map off every token: nothing is selected any more. */
+  deselect: () => void;
   /** For GMs: an actor dragged from a list and dropped on a cell, to place its token. */
   onDropActor?: ((actorId: string, cell: Cell) => void) | undefined;
 }
@@ -69,6 +78,7 @@ export default function MapCanvas({
   scene,
   tokens,
   selectedId,
+  deselect,
   onDropActor,
   ...handlers
 }: MapCanvasProps): ReactElement {
@@ -257,6 +267,20 @@ export default function MapCanvas({
     });
   }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content]);
 
+  // A click (not a drag) on the map off every token lets go of the selected one.
+  const release = useEffectEvent(deselect);
+  useEffect(() => {
+    if (!stage) return;
+    const { viewport, tokens: layer } = stage;
+    const clicked = ({ world }: { world: { x: number; y: number } }) => {
+      if (!layer.covers(world)) release();
+    };
+    viewport.on('clicked', clicked);
+    return () => {
+      viewport.off('clicked', clicked);
+    };
+  }, [stage]);
+
   const background =
     url === null ? 'none' : loaded?.url !== url ? 'loading' : loaded.shown ? 'shown' : 'blocked';
 
@@ -280,6 +304,16 @@ export default function MapCanvas({
         className="absolute inset-0 focus-visible:outline-2 focus-visible:-outline-offset-2"
         onKeyDown={(event) => {
           if (!stage || event.altKey || event.ctrlKey || event.metaKey) return;
+          // Arrows move the selected token, if the member may move it, else the view.
+          const selected = tokens.find((token) => token.id === selectedId);
+          const cell = selected?.movable
+            ? stepCell({ columns, rows, gridType, gridSize }, selected, event.key)
+            : undefined;
+          if (selected && cell !== undefined) {
+            event.preventDefault();
+            if (cell) handlers.move(selected, cell);
+            return;
+          }
           const panel = screenOf(stage.viewport);
           const next = viewForKey(event.key, viewOf(stage.viewport), content, panel);
           if (!next) return;

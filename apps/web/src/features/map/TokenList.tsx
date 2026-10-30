@@ -1,11 +1,11 @@
 import type { KeyboardEvent, ReactElement } from 'react';
 
-import { MAX_SCENE_CELLS, snapsToCells, type SceneView, type TokenView } from '@vtt/shared/api';
+import type { SceneView, TokenView } from '@vtt/shared/api';
 import { Button, cn } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 
-import type { Cell } from './geometry.js';
+import { stepCell, type Cell } from './geometry.js';
 
 export interface TokenListProps {
   scene: SceneView;
@@ -15,19 +15,13 @@ export interface TokenListProps {
   manages: boolean;
   /** The actors the member may open, by id. */
   canOpen: (token: TokenView) => boolean;
-  onSelect: (token: TokenView) => void;
+  /** A token picked, or `null` when the selected one is picked again. */
+  onSelect: (token: TokenView | null) => void;
   onMove: (token: TokenView, cell: Cell) => void;
   onOpen: (token: TokenView) => void;
   onHide: (token: TokenView, hidden: boolean) => void;
   onRemove: (token: TokenView) => void;
 }
-
-const STEPS: Readonly<Record<string, readonly [number, number]>> = {
-  ArrowLeft: [-1, 0],
-  ArrowRight: [1, 0],
-  ArrowUp: [0, -1],
-  ArrowDown: [0, 1],
-};
 
 /** A position as people count cells, from 1; on a gridless scene, to a tenth of a cell. */
 const place = (cells: number): number => Math.round((cells + 1) * 10) / 10;
@@ -52,17 +46,11 @@ export function TokenList({
   const selected = tokens.find((token) => token.id === selectedId);
 
   const step = (token: TokenView) => (event: KeyboardEvent) => {
-    const by = STEPS[event.key];
-    if (!by || !token.movable) return;
+    if (!token.movable) return;
+    const cell = stepCell(scene, token, event.key);
+    if (cell === undefined) return;
     event.preventDefault();
-    const column = token.column + by[0];
-    const row = token.row + by[1];
-    // A gridless scene's tokens may stand on its background beyond the cells (ADR-068).
-    const free = !snapsToCells(scene.gridType);
-    const lastColumn = free ? MAX_SCENE_CELLS - 1 : scene.columns - 1;
-    const lastRow = free ? MAX_SCENE_CELLS - 1 : scene.rows - 1;
-    if (column < 0 || row < 0 || column > lastColumn || row > lastRow) return;
-    onMove(token, { column, row });
+    if (cell) onMove(token, cell);
   };
 
   return (
@@ -81,7 +69,7 @@ export function TokenList({
                 token.hidden && 'italic text-muted',
               )}
               onClick={() => {
-                onSelect(token);
+                onSelect(token.id === selectedId ? null : token);
               }}
               onKeyDown={step(token)}
             >

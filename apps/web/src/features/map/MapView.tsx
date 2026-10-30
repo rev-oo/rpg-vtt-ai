@@ -127,8 +127,8 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
     const actor = actorOf(token);
     if (actor) onOpenActor(actor);
   };
-  const select = (token: TokenView) => {
-    setSelectedId(token.id);
+  const select = (token: TokenView | null) => {
+    setSelectedId(token?.id ?? null);
   };
 
   return (
@@ -156,6 +156,9 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
             selectedId={selectedId}
             onDropActor={manages ? place : undefined}
             select={select}
+            deselect={() => {
+              setSelectedId(null);
+            }}
             open={open}
             move={(token, { column, row }) => {
               move(token, column, row);

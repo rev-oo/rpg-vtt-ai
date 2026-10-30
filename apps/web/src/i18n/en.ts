@@ -415,7 +415,8 @@ export const en = {
 
   'map.title': 'Map',
   'map.role': 'map',
-  'map.keys': 'Arrow keys pan, plus and minus zoom, 0 shows the whole scene.',
+  'map.keys':
+    'Arrow keys move the selected token, or pan when none is; plus and minus zoom, 0 shows the whole scene.',
   'map.scene': 'Scene',
   'map.shownToPlayers': 'Players see this scene.',
   'map.preview': 'Preview: players do not see this scene.',

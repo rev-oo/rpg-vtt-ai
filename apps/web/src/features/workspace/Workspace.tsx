@@ -169,7 +169,9 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           </div>
         </header>
         {notices}
-        <div className="vtt-dock min-h-0 flex-1">
+        {/* Its own stacking context: dockview's sashes and groups carry z-indexes of 99 and up,
+            which would otherwise cover the header's Panels menu. */}
+        <div className="vtt-dock isolate min-h-0 flex-1">
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}

@@ -234,6 +234,33 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     expect((await view(map)).x).toBe(x);
   });
 
+  await test.step('arrows move the selected token, and pan once a click lets go of it', async () => {
+    const map = gmPage.getByRole('application', { name: 'Bridge' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    const at = (column: number, row: number) => ({
+      x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
+      y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
+    });
+    const wren = list(gmPage).getByRole('button', { name: /^Wren/ });
+
+    const token = at(5, 3);
+    await gmPage.mouse.click(token.x, token.y);
+    await expect(wren).toHaveAttribute('aria-pressed', 'true');
+    await gmPage.keyboard.press('ArrowLeft');
+    await expect(list(tessPage).getByRole('button', { name: /^Wren \(5, 4\)/ })).toBeVisible();
+    expect((await view(map)).x).toBe(x);
+
+    const empty = at(1, 0);
+    await gmPage.mouse.click(empty.x, empty.y);
+    await expect(wren).toHaveAttribute('aria-pressed', 'false');
+    await gmPage.keyboard.press('ArrowLeft');
+    await expect.poll(async () => (await view(map)).x).toBeLessThan(x);
+    await expect(wren).toHaveAccessibleName(/^Wren \(5, 4\)/);
+    await gmPage.keyboard.press('0');
+  });
+
   await test.step('revealing the hidden token shows it to the player', async () => {
     await list(gmPage)
       .getByRole('button', { name: /^Assassin/ })
@@ -243,7 +270,11 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
   });
 
   await test.step("opening the player's token opens the actor's sheet", async () => {
-    await list(tessPage).getByRole('button', { name: /^Wren/ }).click();
+    // Still selected since the player moved it; picking it again would let go of it.
+    await expect(list(tessPage).getByRole('button', { name: /^Wren/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
     await tessPage.getByRole('button', { name: 'Open Wren' }).click();
     await expect(tessPage.getByRole('tab', { name: 'Wren', exact: true })).toBeVisible();
   });
