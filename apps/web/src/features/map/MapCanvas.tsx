@@ -18,8 +18,9 @@ import type { SceneView, TokenView } from '@vtt/shared/api';
 import { Button } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
+import { carriesActor, droppedActor } from '../entities/entity-drag.js';
 
-import { gridSegments, sceneSize, type SceneGrid } from './geometry.js';
+import { cellAt, gridSegments, sceneSize, type Cell, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
 import { TokenLayer, type TokenHandlers } from './token-layer.js';
 import { clampView, fitView, viewForKey, zoomBy, ZOOM_STEP, type Size, type View } from './view.js';
@@ -28,6 +29,8 @@ export interface MapCanvasProps extends TokenHandlers {
   scene: SceneView;
   tokens: readonly TokenView[];
   selectedId: string | null;
+  /** For GMs: an actor dragged from a list and dropped on a cell, to place its token. */
+  onDropActor?: ((actorId: string, cell: Cell) => void) | undefined;
 }
 
 const GRID_COLOR = 0x1f2937;
@@ -57,6 +60,7 @@ export default function MapCanvas({
   scene,
   tokens,
   selectedId,
+  onDropActor,
   ...handlers
 }: MapCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
@@ -270,6 +274,20 @@ export default function MapCanvas({
           if (!next) return;
           event.preventDefault();
           apply(stage.viewport, next);
+        }}
+        onDragOver={(event) => {
+          if (!stage || !onDropActor || !carriesActor(event)) return;
+          event.preventDefault();
+          event.dataTransfer.dropEffect = 'copy';
+        }}
+        onDrop={(event) => {
+          const actorId = droppedActor(event);
+          if (!stage || !onDropActor || !actorId) return;
+          event.preventDefault();
+          const box = event.currentTarget.getBoundingClientRect();
+          const point = stage.viewport.toWorld(event.clientX - box.left, event.clientY - box.top);
+          const cell = cellAt({ columns, rows, gridType, gridSize }, point, content);
+          if (cell) onDropActor(actorId, cell);
         }}
       />
       <p id={keysId} className="sr-only">

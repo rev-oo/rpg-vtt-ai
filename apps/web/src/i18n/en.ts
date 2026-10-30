@@ -474,6 +474,7 @@ export const en = {
   'tokens.reveal': 'Reveal {name}',
   'tokens.remove': 'Remove {name}',
   'tokens.add': 'Add token',
+  'tokens.dropHint': 'Or drag an actor from Actors onto the map.',
   'tokens.actor': 'Actor',
   'tokens.alone': 'None (a token of its own)',
   'tokens.name': 'Name',

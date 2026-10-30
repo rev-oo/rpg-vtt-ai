@@ -481,6 +481,7 @@ export const ptBR: Messages = {
   'tokens.reveal': 'Revelar {name}',
   'tokens.remove': 'Remover {name}',
   'tokens.add': 'Adicionar token',
+  'tokens.dropHint': 'Ou arraste um ator de Atores para o mapa.',
   'tokens.actor': 'Ator',
   'tokens.alone': 'Nenhum (um token próprio)',
   'tokens.name': 'Nome',

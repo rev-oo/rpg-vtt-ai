@@ -13,8 +13,8 @@ import type { TableSystem } from '../../plugin-host/system-context.js';
 import { OpenButton } from '../workspace/OpenButton.js';
 import { itemPanelId } from '../workspace/panel-ids.js';
 
+import { carriesItem, droppedItem, type ItemDrag } from './entity-drag.js';
 import { GroupedList } from './GroupedList.js';
-import { carriesItem, droppedItem, type ItemDrag } from './item-drag.js';
 import { groupItems } from './item-groups.js';
 import type { ActorItems } from './use-actor-items.js';
 

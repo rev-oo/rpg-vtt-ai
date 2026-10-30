@@ -232,4 +232,25 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await tessPage.getByRole('button', { name: 'Open Wren' }).click();
     await expect(tessPage.getByRole('tab', { name: 'Wren', exact: true })).toBeVisible();
   });
+
+  await test.step('the GM drags an actor from Actors onto the map to place its token', async () => {
+    const map = gmPage.getByRole('application', { name: 'Bridge' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    const row = gmPage
+      .getByRole('list', { name: 'Actors' })
+      .getByRole('listitem')
+      .filter({ hasText: 'Wren' });
+    await row.dragTo(map, {
+      targetPosition: {
+        x: box.width / 2 + (2.5 * 70 - x) * zoom,
+        y: box.height / 2 + (4.5 * 70 - y) * zoom,
+      },
+    });
+    await expect(list(gmPage).getByRole('button', { name: /^Wren \(3, 5\)/ })).toBeVisible();
+    // The player's sheet is in front of the map since the last step.
+    await tessPage.getByRole('tab', { name: 'Map', exact: true }).click();
+    await expect(list(tessPage).getByRole('button', { name: /^Wren \(3, 5\)/ })).toBeVisible();
+  });
 });

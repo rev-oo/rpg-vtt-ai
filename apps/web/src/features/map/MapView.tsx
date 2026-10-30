@@ -9,6 +9,7 @@ import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 
 import { AddTokenDialog } from './AddTokenDialog.js';
+import type { Cell } from './geometry.js';
 import { TokenList } from './TokenList.js';
 import { useScenes } from './use-scenes.js';
 import { useTokens } from './use-tokens.js';
@@ -107,6 +108,20 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   const { tokens, error, move, change } = useTokens(table.id, scene.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+  const [placeError, setPlaceError] = useState<string | null>(null);
+  /** A GM drops an actor from a list on a cell of the map. */
+  const place = (actorId: string, { column, row }: Cell) => {
+    setPlaceError(null);
+    api.createToken(scene.id, { actorId, column, row }).then(
+      (token) => {
+        setSelectedId(token.id);
+        change(token.id, Promise.resolve(token));
+      },
+      (e: unknown) => {
+        setPlaceError(errorMessage(e));
+      },
+    );
+  };
   const actorOf = (token: TokenView) => actors.find((actor) => actor.id === token.actorId);
   const open = (token: TokenView) => {
     const actor = actorOf(token);
@@ -119,7 +134,8 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   return (
     <>
       {manages && (
-        <div className="flex justify-end border-b border-line bg-surface px-3 py-1">
+        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-surface px-3 py-1">
+          <p className="text-sm text-muted">{t('tokens.dropHint')}</p>
           <Button
             variant="ghost"
             onClick={() => {
@@ -131,12 +147,14 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
         </div>
       )}
       {error && <Alert tone="error">{error}</Alert>}
+      {placeError && <Alert tone="error">{placeError}</Alert>}
       <div className="min-h-0 flex-1">
         <Suspense fallback={<p className="p-3 text-muted">{t('app.loading')}</p>}>
           <MapCanvas
             scene={scene}
             tokens={tokens}
             selectedId={selectedId}
+            onDropActor={manages ? place : undefined}
             select={select}
             open={open}
             move={(token, { column, row }) => {

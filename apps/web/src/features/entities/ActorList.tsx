@@ -117,6 +117,7 @@ export function ActorList({
             type={actor.type}
             imageUrl={actor.imageUrl}
             details={<span>{t(`entities.access.${actor.access}`)}</span>}
+            drag={trash ? undefined : { kind: 'actor', actorId: actor.id }}
             actions={
               trash ? (
                 <Button
