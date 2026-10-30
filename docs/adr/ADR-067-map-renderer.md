@@ -5,6 +5,7 @@
 - **Tasks:** T-1402
 - **Covers:** FR-MAP-01 (the Scenes panel), FR-MAP-02
 - **Answers:** Q18
+- **Amends:** ADR-066 (the background keeps its own size)
 
 ## Context
 
@@ -20,7 +21,7 @@ Q18 weighed PixiJS (WebGL), Konva (Canvas 2D scene graph), hand-written Canvas 2
 4. **External backgrounds** are loaded with `crossOrigin = 'anonymous'`. WebGL only draws images from another host that allows CORS. When it does not, the map shows the grid and a notice asking the GM to upload the image instead. Uploaded images are same-origin and always draw.
 5. **Drawn on demand.** The app's own ticker never starts. A separate ticker drives pixi-viewport and renders only when the viewport is marked dirty (after a move, a resize, a new background), so an idle map costs no GPU time. Deceleration is off under `prefers-reduced-motion`.
 6. **The camera** (`view.ts`) is plain data: the scene point at the panel's centre and the zoom. Keys, buttons and the clamp after each gesture go through it. Zoom stays between half the smaller of the fit zoom and 1:1, and the larger of 4× and the fit zoom, and the panel's centre stays on the scene. The canvas wrapper writes the view to `data-zoom`, `data-x` and `data-y` for tests.
-7. **Geometry** (`geometry.ts`) is shared with tokens to come. Hexes are pointy-top, `gridSize` wide, with odd rows shifted half a hex right. `cellAt` rounds in cube coordinates. The grid is one `Graphics` of 1 px lines (`pixelLine`), each shared hex edge drawn once. The background is stretched to the scene's size (ADR-066). Images larger than 4096 px on a side are scaled down first, since not every phone GPU takes larger textures.
+7. **Geometry** (`geometry.ts`) is shared with tokens to come. Hexes are pointy-top, `gridSize` wide, with odd rows shifted half a hex right. `cellAt` rounds in cube coordinates. The grid is one `Graphics` of 1 px lines (`pixelLine`), each shared hex edge drawn once. The background is drawn at its own size from the top left, under the grid, since the cell size is in its pixels; stretching it to the grid distorted it whenever the grid changed. Images larger than 4096 px on a side are scaled down first, since not every phone GPU takes larger textures.
 8. **Panels.** A **Map** panel sits in the centre of the default layout, ahead of the Table overview; on a phone it is the first tab. Players see the active scene, or "No scene is shown yet". GMs and assistants pick any scene to look at, marked "Preview" while players do not see it; the choice is saved with the layout. A **Scenes** panel, among the lists and only for them, creates, edits, orders, deletes and shows scenes through the ADR-066 endpoints.
 9. **Keyboard.** The map is a focusable `application` region: arrows pan, `+` and `-` zoom, `0` fits the scene. The zoom buttons cover touch users and screen readers.
 

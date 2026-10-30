@@ -98,7 +98,7 @@ export class TokenLayer {
     let texture = this.textures.get(url);
     if (!texture) {
       texture = loadImage(url).then(
-        (source) => Texture.from(source),
+        ({ source }) => Texture.from(source),
         () => null,
       );
       this.textures.set(url, texture);

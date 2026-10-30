@@ -178,7 +178,7 @@ export default function MapCanvas({
     };
   }, [stage, scene.id, columns, rows, gridType, gridSize, size]);
 
-  // The background under the grid, stretched to the scene (ADR-066).
+  // The background under the grid, at its own size: cells are sized in its pixels (ADR-066).
   const url = scene.backgroundUrl;
   useEffect(() => {
     if (!stage) return;
@@ -187,12 +187,12 @@ export default function MapCanvas({
     let current = true;
     let texture: Texture | null = null;
     loadImage(url).then(
-      (source) => {
+      ({ source, width, height }) => {
         if (!current) return;
         texture = Texture.from(source);
         layer.texture = texture;
-        layer.width = size.width;
-        layer.height = size.height;
+        layer.width = width;
+        layer.height = height;
         stage.viewport.dirty = true;
         setLoaded({ url, shown: true });
       },
@@ -209,7 +209,7 @@ export default function MapCanvas({
       }
       texture?.destroy(true);
     };
-  }, [stage, url, size]);
+  }, [stage, url]);
 
   // The tokens, redrawn whenever they or the selection change; handlers are always the latest.
   const select = useEffectEvent(handlers.select);
