@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- Tables can hold scenes, the maps of M14. GMs and assistants create them through the API with a background image (a web address or one of the table's images), a size in square or hex grid cells and a cell size; they edit, order and delete them, and choose the one scene players see. Players and spectators get only that scene, and members hear of each change at once. A scene's background is an image in use, so it cannot be deleted. Drawing scenes in the table arrives with the map canvas (FR-MAP-01, ADR-066).
+
 ## [0.4.0] - 2026-10-29
 
 Tables get their own images: upload them, browse them in an Images panel, and use them for actor and item pictures, in journal text and in a sheet's image fields. Plugins written for 0.1.0 to 0.3.0 work unchanged: the plugin core API stays at `0.1.0`.

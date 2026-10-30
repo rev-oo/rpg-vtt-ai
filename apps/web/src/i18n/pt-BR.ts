@@ -111,6 +111,7 @@ export const ptBR: Messages = {
   'assets.use.actor': 'Personagem: {name}',
   'assets.use.item': 'Item: {name}',
   'assets.use.journal': 'Entrada do diário: {name}',
+  'assets.use.scene': 'Cena: {name}',
   'assets.unsupported':
     'Envie uma imagem PNG, JPEG, GIF ou WebP. Outros arquivos, inclusive SVG, são recusados.',
   'assets.tooLarge': 'A imagem é maior que o limite de envio.',

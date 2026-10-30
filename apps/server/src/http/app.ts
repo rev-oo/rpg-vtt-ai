@@ -42,6 +42,7 @@ import { memberRoutes } from './routes/members.js';
 import { pluginAssetRoutes } from './routes/plugin-assets.js';
 import { pluginRoutes } from './routes/plugins.js';
 import { rollRoutes } from './routes/rolls.js';
+import { sceneRoutes } from './routes/scenes.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
@@ -190,6 +191,7 @@ export async function buildApp({
   chatRoutes(context);
   rollRoutes(context);
   combatRoutes(context);
+  sceneRoutes(context);
   compendiumRoutes(context);
   historyRoutes(context);
   eventsSocket(context);
