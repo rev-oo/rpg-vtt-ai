@@ -443,6 +443,8 @@ export const en = {
   'scenes.gridType': 'Grid',
   'scenes.grid.square': 'Square',
   'scenes.grid.hex': 'Hex',
+  'scenes.grid.hidden': 'Hidden (tokens still snap)',
+  'scenes.grid.none': 'None (tokens move freely)',
   'scenes.gridSize': 'Cell size (px)',
   'scenes.gridSizeHint': 'In pixels of the background, 16–400.',
   'scenes.save': 'Save',

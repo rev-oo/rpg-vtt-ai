@@ -215,4 +215,31 @@ describe('tokens (T-1403)', () => {
     expect((await t.call(t.gm.client, 'DELETE', `/scenes/${cave.id}`)).statusCode).toBe(204);
     expect((await move(t, t.gm.client, token.id, 1, 1)).statusCode).toBe(404);
   });
+
+  it('stands tokens anywhere on a gridless scene, and on whole cells once it has a grid', async () => {
+    const t = await setupTable();
+    const field = await scene(t, 'Field');
+    const rock = await place(t, field.id, { name: 'Rock', column: 2, row: 3 });
+
+    // A gridded scene takes whole cells only.
+    expect((await move(t, t.gm.client, rock.id, 2.5, 3)).json()).toMatchObject({
+      error: { code: 'token_off_grid' },
+    });
+    const hidden = await t.call(t.gm.client, 'PATCH', `/scenes/${field.id}`, {
+      gridType: 'hidden',
+    });
+    expect(hidden.statusCode, hidden.body).toBe(200);
+    expect((await move(t, t.gm.client, rock.id, 2.5, 3)).statusCode).toBe(422);
+
+    await t.call(t.gm.client, 'PATCH', `/scenes/${field.id}`, { gridType: 'none' });
+    expect((await move(t, t.gm.client, rock.id, 2.5, 6.75)).statusCode).toBe(200);
+    expect((await move(t, t.gm.client, rock.id, 9.5, 0)).json()).toMatchObject({
+      error: { code: 'token_off_scene' },
+    });
+    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([{ column: 2.5, row: 6.75 }]);
+
+    // Given a grid again, the scene moves its tokens to the nearest cells.
+    await t.call(t.gm.client, 'PATCH', `/scenes/${field.id}`, { gridType: 'square' });
+    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([{ column: 3, row: 7 }]);
+  });
 });

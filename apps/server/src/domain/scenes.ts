@@ -1,16 +1,17 @@
-import { and, asc, count, eq, max } from 'drizzle-orm';
+import { and, asc, count, eq, max, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 
 import { canManageScenes, type TableRole } from '@vtt/shared';
 import {
   MAX_SCENES,
+  snapsToCells,
   type sceneCreateBody,
   type sceneUpdateBody,
   type SceneView,
 } from '@vtt/shared/api';
 
 import type { DbOrTx } from '../db/client.js';
-import { scenes } from '../db/schema.js';
+import { scenes, tokens } from '../db/schema.js';
 import { conflict, notFound, unprocessable } from '../errors.js';
 
 import { requireTableImage } from './assets.js';
@@ -92,6 +93,10 @@ export function createScene(
   });
 }
 
+/**
+ * Changes a scene. A gridless scene given a grid moves its tokens to the nearest cells, since
+ * tokens on a grid stand on whole cells (ADR-068).
+ */
 export function updateScene(
   db: DbOrTx,
   scene: Scene,
@@ -99,12 +104,24 @@ export function updateScene(
   now: Date,
 ): Scene {
   requireTableImage(db, scene.tableId, input.backgroundUrl);
-  return db
-    .update(scenes)
-    .set({ ...input, updatedAt: now })
-    .where(eq(scenes.id, scene.id))
-    .returning()
-    .get();
+  return db.transaction((tx) => {
+    if (!snapsToCells(scene.gridType) && input.gridType && snapsToCells(input.gridType)) {
+      tx.update(tokens)
+        .set({
+          column: sql`round(${tokens.column})`,
+          row: sql`round(${tokens.row})`,
+          updatedAt: now,
+        })
+        .where(eq(tokens.sceneId, scene.id))
+        .run();
+    }
+    return tx
+      .update(scenes)
+      .set({ ...input, updatedAt: now })
+      .where(eq(scenes.id, scene.id))
+      .returning()
+      .get();
+  });
 }
 
 export function deleteScene(db: DbOrTx, scene: Scene): void {

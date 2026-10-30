@@ -8,9 +8,9 @@ import { MAX_SCENE_CELLS } from './scenes.js';
 
 export const MAX_TOKENS_PER_SCENE = 500;
 
+/** In cells; a fraction of one only on a gridless scene, which the server checks. */
 const cell = z
   .number()
-  .int()
   .min(0)
   .max(MAX_SCENE_CELLS - 1);
 
@@ -21,9 +21,12 @@ export const tokenSchema = z.object({
   actorId: z.string().nullable(),
   name: z.string(),
   imageUrl: z.string().nullable(),
-  /** The grid cell it stands on. */
-  column: z.number().int(),
-  row: z.number().int(),
+  /**
+   * The cell it stands on. On a gridless scene it stands anywhere, so these are fractions of
+   * cells: its centre is half a cell right of and below this point.
+   */
+  column: z.number(),
+  row: z.number(),
   /** Only GMs and assistants see hidden tokens. */
   hidden: z.boolean(),
   /** Whether the caller may move it. */

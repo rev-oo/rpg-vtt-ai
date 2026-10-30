@@ -19,7 +19,7 @@ import { Button } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 
-import { gridSegments, sceneSize } from './geometry.js';
+import { gridSegments, sceneSize, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
 import { TokenLayer, type TokenHandlers } from './token-layer.js';
 import { clampView, fitView, viewForKey, zoomBy, ZOOM_STEP, type Size, type View } from './view.js';
@@ -36,6 +36,9 @@ const GRID_COLOR = 0x1f2937;
 interface Loaded {
   url: string;
   shown: boolean;
+  /** The image's own size, when shown. */
+  width: number;
+  height: number;
 }
 
 interface Stage {
@@ -61,7 +64,7 @@ export default function MapCanvas({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const keysId = useId();
-  /** The scene's size, for the resize observer, which outlives each scene. */
+  /** What the view frames, for the resize observer, which outlives each scene. */
   const sizeRef = useRef<Size>({ width: 1, height: 1 });
 
   useEffect(() => {
@@ -153,33 +156,44 @@ export default function MapCanvas({
     [columns, rows, gridType, gridSize],
   );
 
-  // The grid, and the whole scene in view whenever another scene or size comes along.
+  const url = scene.backgroundUrl;
+
+  // The grid's lines; a gridless scene has none.
+  useEffect(() => {
+    if (stage) drawGrid(stage, { columns, rows, gridType, gridSize });
+  }, [stage, columns, rows, gridType, gridSize]);
+
+  // The view frames the grid and the background, which may reach beyond it.
+  const shownImage = url !== null && loaded?.url === url && loaded.shown ? loaded : null;
+  const content = useMemo(
+    () => ({
+      width: Math.max(size.width, shownImage?.width ?? 0),
+      height: Math.max(size.height, shownImage?.height ?? 0),
+    }),
+    [size, shownImage?.width, shownImage?.height],
+  );
+
+  // The whole scene in view whenever another scene or size comes along.
   useEffect(() => {
     if (!stage) return;
-    const { grid, viewport } = stage;
-    sizeRef.current = size;
-    grid.clear();
-    for (const [x1, y1, x2, y2] of gridSegments({ columns, rows, gridType, gridSize })) {
-      grid.moveTo(x1, y1).lineTo(x2, y2);
-    }
-    grid.stroke({ width: 1, color: GRID_COLOR, alpha: 0.45, pixelLine: true });
-    viewport.resize(viewport.screenWidth, viewport.screenHeight, size.width, size.height);
-    apply(viewport, fitView(size, screenOf(viewport)));
+    const { viewport } = stage;
+    sizeRef.current = content;
+    viewport.resize(viewport.screenWidth, viewport.screenHeight, content.width, content.height);
+    apply(viewport, fitView(content, screenOf(viewport)));
 
     // Pinches, wheels and drags stay inside the limits `view.ts` sets.
     const keep = () => {
       const now = viewOf(viewport);
-      const kept = clampView(now, size, screenOf(viewport));
+      const kept = clampView(now, content, screenOf(viewport));
       if (kept.x !== now.x || kept.y !== now.y || kept.zoom !== now.zoom) apply(viewport, kept);
     };
     viewport.on('moved', keep);
     return () => {
       viewport.off('moved', keep);
     };
-  }, [stage, scene.id, columns, rows, gridType, gridSize, size]);
+  }, [stage, scene.id, content]);
 
   // The background under the grid, at its own size: cells are sized in its pixels (ADR-066).
-  const url = scene.backgroundUrl;
   useEffect(() => {
     if (!stage) return;
     const layer = stage.background;
@@ -194,10 +208,10 @@ export default function MapCanvas({
         layer.width = width;
         layer.height = height;
         stage.viewport.dirty = true;
-        setLoaded({ url, shown: true });
+        setLoaded({ url, shown: true, width, height });
       },
       () => {
-        if (current) setLoaded({ url, shown: false });
+        if (current) setLoaded({ url, shown: false, width: 0, height: 0 });
       },
     );
     return () => {
@@ -229,7 +243,7 @@ export default function MapCanvas({
   const step = (next: (view: View) => View) => {
     if (!stage) return;
     const panel = screenOf(stage.viewport);
-    apply(stage.viewport, clampView(next(viewOf(stage.viewport)), size, panel));
+    apply(stage.viewport, clampView(next(viewOf(stage.viewport)), content, panel));
   };
 
   return (
@@ -247,7 +261,7 @@ export default function MapCanvas({
         onKeyDown={(event) => {
           if (!stage || event.altKey || event.ctrlKey || event.metaKey) return;
           const panel = screenOf(stage.viewport);
-          const next = viewForKey(event.key, viewOf(stage.viewport), size, panel);
+          const next = viewForKey(event.key, viewOf(stage.viewport), content, panel);
           if (!next) return;
           event.preventDefault();
           apply(stage.viewport, next);
@@ -288,7 +302,7 @@ export default function MapCanvas({
         <Button
           disabled={!stage}
           onClick={() => {
-            step(() => fitView(size, screenOf(stage?.viewport)));
+            step(() => fitView(content, screenOf(stage?.viewport)));
           }}
         >
           {t('map.fit')}
@@ -308,6 +322,13 @@ const viewOf = (viewport: Viewport): View => ({
   y: viewport.center.y,
   zoom: viewport.scaled,
 });
+
+function drawGrid({ grid, viewport }: Stage, scene: SceneGrid): void {
+  grid.clear();
+  for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
+  grid.stroke({ width: 1, color: GRID_COLOR, alpha: 0.45, pixelLine: true });
+  viewport.dirty = true;
+}
 
 function apply(viewport: Viewport, view: View): void {
   viewport.setZoom(view.zoom, true);

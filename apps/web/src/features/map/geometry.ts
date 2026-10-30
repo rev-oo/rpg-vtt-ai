@@ -2,6 +2,8 @@ import type { GridType } from '@vtt/shared/api';
 
 // A scene's grid in pixels of its background (FR-MAP-02, ADR-067). Square cells are
 // `gridSize` wide; hexes are pointy-top, `gridSize` wide, and odd rows sit half a hex right.
+// A `hidden` grid keeps square cells that are not drawn, so tokens still snap to them; on a
+// gridless (`none`) scene the cells are only a unit, and tokens stand anywhere on it.
 
 export interface SceneGrid {
   columns: number;
@@ -31,7 +33,7 @@ export function sceneSize({ columns, rows, gridType, gridSize }: SceneGrid): {
   width: number;
   height: number;
 } {
-  if (gridType === 'square') return { width: columns * gridSize, height: rows * gridSize };
+  if (gridType !== 'hex') return { width: columns * gridSize, height: rows * gridSize };
   const radius = radiusOf(gridSize);
   return {
     width: columns * gridSize + (rows > 1 ? gridSize / 2 : 0),
@@ -41,7 +43,7 @@ export function sceneSize({ columns, rows, gridType, gridSize }: SceneGrid): {
 
 export function cellCentre(grid: SceneGrid, { column, row }: Cell): Point {
   const size = grid.gridSize;
-  if (grid.gridType === 'square') return { x: (column + 0.5) * size, y: (row + 0.5) * size };
+  if (grid.gridType !== 'hex') return { x: (column + 0.5) * size, y: (row + 0.5) * size };
   const radius = radiusOf(size);
   return {
     x: size / 2 + column * size + (row % 2 === 1 ? size / 2 : 0),
@@ -49,12 +51,27 @@ export function cellCentre(grid: SceneGrid, { column, row }: Cell): Point {
   };
 }
 
-/** The cell under a point, or `null` outside the grid. */
+/**
+ * The cell under a point, or `null` outside the grid. On a gridless scene it is the point
+ * itself, in hundredths of a cell, kept so that a token there stays on the scene.
+ */
 export function cellAt(grid: SceneGrid, { x, y }: Point): Cell | null {
-  const cell = grid.gridType === 'square' ? squareAt(grid, x, y) : hexAt(grid, x, y);
+  if (grid.gridType === 'none') return freeAt(grid, x, y);
+  const cell = grid.gridType === 'hex' ? hexAt(grid, x, y) : squareAt(grid, x, y);
   const inside =
     cell.column >= 0 && cell.row >= 0 && cell.column < grid.columns && cell.row < grid.rows;
   return inside ? cell : null;
+}
+
+const toHundredths = (value: number) => Math.round(value * 100) / 100;
+const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
+
+function freeAt({ columns, rows, gridSize }: SceneGrid, x: number, y: number): Cell | null {
+  if (x < 0 || y < 0 || x > columns * gridSize || y > rows * gridSize) return null;
+  return {
+    column: toHundredths(clamp(x / gridSize - 0.5, columns - 1)),
+    row: toHundredths(clamp(y / gridSize - 0.5, rows - 1)),
+  };
 }
 
 const squareAt = ({ gridSize }: SceneGrid, x: number, y: number): Cell => ({
@@ -98,9 +115,10 @@ export function hexCorners(grid: SceneGrid, cell: Cell): Point[] {
 
 /**
  * The grid's lines, each drawn once: a square grid's rows and columns, or every hex edge,
- * shared edges included only once.
+ * shared edges included only once. A gridless scene has none.
  */
 export function gridSegments(grid: SceneGrid): Segment[] {
+  if (grid.gridType === 'hidden' || grid.gridType === 'none') return [];
   if (grid.gridType === 'square') {
     const { width, height } = sceneSize(grid);
     const segments: Segment[] = [];

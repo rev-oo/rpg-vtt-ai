@@ -4,7 +4,7 @@
 - **Date:** 2026-10-30
 - **Tasks:** T-1403
 - **Covers:** FR-MAP-03, NFR-08 (hidden tokens)
-- **Amends:** ADR-065 (a standing-alone token's image counts as an asset use)
+- **Amends:** ADR-065 (a standing-alone token's image counts as an asset use), ADR-066 (hidden and gridless grids)
 
 ## Context
 
@@ -14,6 +14,7 @@ T-1403 puts tokens on scenes (ADR-066). A token stands for an actor, taking its 
 
 1. **Rows.** `tokens(id, scene_id, actor_id?, name, image_url?, column, row, hidden)`. Deleting a scene or an actor deletes its tokens. A scene holds at most 500 tokens.
 2. **Cells, not pixels.** A token stands on a grid cell (`column`, `row`) inside the scene, so moves snap to the grid by construction. A cell off the scene is refused (`422 token_off_scene`). Each token takes one cell; larger tokens would need another decision.
+   - **Hidden and gridless grids.** A scene's grid may also be `hidden`: square cells that are not drawn, which tokens still snap to. On a gridless (`none`) scene tokens stand anywhere: `column` and `row` are then fractions of a cell (stored as `real`, kept to hundredths by the web app), the token's centre half a cell right of and below them, and the cell size is the token's size. On any other grid a fraction is refused (`422 token_off_grid`). A gridless scene given a grid moves its tokens to the nearest whole cells, and the map refetches its tokens when a scene's grid changes. The token list shows a gridless token's place to a tenth of a cell.
 3. **An actor's token** shows the actor's current name and image, read at each request, and stores neither. A token standing alone has its own name and image (an http(s) URL or one of the table's images). Its image is an asset use, so the image cannot be deleted while the token shows it. While an actor is in the trash, its tokens are left out of every list.
 4. **Who sees** (`canSeeToken`): GMs and assistants see every token of every scene. Players and spectators see the tokens of the active scene that are not hidden. Any other token is `404` to them, like any other scene, so its existence does not leak.
 5. **Who moves** (`canMoveToken`): GMs and assistants move any token. A player moves the tokens of actors they own (`canEditActor`) while they can see them. Spectators and tokens standing alone are moved only by the GM. Only GMs and assistants hide, rename, re-image and remove tokens; owners get `403` for anything but a move.

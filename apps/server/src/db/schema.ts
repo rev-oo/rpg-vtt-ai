@@ -451,8 +451,9 @@ export const tokens = sqliteTable(
     /** A standing-alone token's own name and image; unused for an actor's token. */
     name: text('name').notNull().default(''),
     imageUrl: text('image_url'),
-    column: integer('column').notNull(),
-    row: integer('row').notNull(),
+    /** In cells; fractional only on a gridless scene. */
+    column: real('column').notNull(),
+    row: real('row').notNull(),
     hidden: integer('hidden', { mode: 'boolean' }).notNull().default(false),
     createdAt: createdAt(),
     updatedAt: updatedAt(),

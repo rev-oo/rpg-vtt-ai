@@ -4,6 +4,7 @@ import type { z } from 'zod';
 import { canMoveToken, canSeeToken, isGmLike, type Subject } from '@vtt/shared';
 import {
   MAX_TOKENS_PER_SCENE,
+  snapsToCells,
   type tokenCreateBody,
   type tokenUpdateBody,
   type TokenView,
@@ -79,9 +80,13 @@ export function placedToken(db: DbOrTx, token: Token, scene: Scene, subject: Sub
   return { token, actor };
 }
 
+/** On the scene, and on a whole cell unless the scene is gridless. */
 function requireOnScene(scene: Scene, column: number, row: number): void {
-  if (column >= scene.columns || row >= scene.rows) {
+  if (column > scene.columns - 1 || row > scene.rows - 1) {
     throw unprocessable('token_off_scene', 'The token must stand on a cell of the scene.');
+  }
+  if (snapsToCells(scene.gridType) && !(Number.isInteger(column) && Number.isInteger(row))) {
+    throw unprocessable('token_off_grid', 'The token must stand on a whole cell of the grid.');
   }
 }
 

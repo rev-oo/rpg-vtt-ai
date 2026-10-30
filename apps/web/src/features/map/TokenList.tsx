@@ -29,6 +29,9 @@ const STEPS: Readonly<Record<string, readonly [number, number]>> = {
   ArrowDown: [0, 1],
 };
 
+/** A position as people count cells, from 1; on a gridless scene, to a tenth of a cell. */
+const place = (cells: number): number => Math.round((cells + 1) * 10) / 10;
+
 /**
  * The scene's tokens as a list beside the canvas (FR-MAP-03, NFR-10): each names its cell, and
  * arrow keys on a token the member may move move it a cell at a time.
@@ -54,7 +57,7 @@ export function TokenList({
     event.preventDefault();
     const column = token.column + by[0];
     const row = token.row + by[1];
-    if (column < 0 || row < 0 || column >= scene.columns || row >= scene.rows) return;
+    if (column < 0 || row < 0 || column > scene.columns - 1 || row > scene.rows - 1) return;
     onMove(token, { column, row });
   };
 
@@ -80,8 +83,8 @@ export function TokenList({
             >
               {t('tokens.at', {
                 name: token.name,
-                column: token.column + 1,
-                row: token.row + 1,
+                column: place(token.column),
+                row: place(token.row),
               })}
               {token.hidden && ` · ${t('tokens.hidden')}`}
             </button>

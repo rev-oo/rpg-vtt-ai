@@ -6,8 +6,13 @@ import { MAX_ENTITY_NAME } from './constants.js';
 // Scenes (FR-MAP-01, ADR-066): a table's maps, prepared by GMs and assistants, one of them
 // shown to players.
 
-/** A scene's grid: square cells, or hexagons. */
-export const GRID_TYPES = ['square', 'hex'] as const;
+/**
+ * A scene's grid: square cells, hexagons, square cells left undrawn (`hidden`, tokens still
+ * snap to them), or `none`, where tokens stand anywhere.
+ */
+export const GRID_TYPES = ['square', 'hex', 'hidden', 'none'] as const;
+/** Whether tokens on a scene of this grid stand on whole cells. */
+export const snapsToCells = (gridType: GridType): boolean => gridType !== 'none';
 export type GridType = (typeof GRID_TYPES)[number];
 
 export const MAX_SCENES = 100;

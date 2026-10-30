@@ -82,6 +82,25 @@ describe('scene geometry', () => {
     expect(gridSegments({ ...one, columns: 2 })).toHaveLength(11);
     expect(gridSegments({ ...one, rows: 2 })).toHaveLength(11);
   });
+
+  it('keeps undrawn square cells on a hidden grid', () => {
+    const hidden = { ...square, gridType: 'hidden' } as const;
+    expect(gridSegments(hidden)).toEqual([]);
+    expect(sceneSize(hidden)).toEqual(sceneSize(square));
+    expect(cellAt(hidden, { x: 75, y: 10 })).toEqual({ column: 1, row: 0 });
+    expect(cellCentre(hidden, { column: 1, row: 0 })).toEqual({ x: 105, y: 35 });
+  });
+
+  it('lets tokens stand anywhere on a gridless scene, but not off it', () => {
+    const none = { ...square, gridType: 'none' } as const;
+    expect(gridSegments(none)).toEqual([]);
+    expect(sceneSize(none)).toEqual(sceneSize(square));
+    expect(cellAt(none, { x: 75, y: 10 })).toEqual({ column: 0.57, row: 0 });
+    expect(cellCentre(none, { column: 0.57, row: 0 }).x).toBeCloseTo(74.9);
+    // A point near the edge keeps the whole token on the scene.
+    expect(cellAt(none, { x: 2099, y: 1399 })).toEqual({ column: 29, row: 19 });
+    expect(cellAt(none, { x: 2101, y: 10 })).toBeNull();
+  });
 });
 
 describe('map view', () => {
@@ -91,11 +110,14 @@ describe('map view', () => {
   it('fits the whole scene and keeps the zoom in its limits', () => {
     expect(fitView(scene, panel)).toEqual({ x: 1000, y: 500, zoom: 0.4 });
     expect(zoomLimits(scene, panel)).toEqual({ min: 0.2, max: 4 });
+    // Past the scene's edge, but only until the edge meets the panel's far side: at 4×, half
+    // the panel is 100 scene pixels.
     expect(clampView({ x: -50, y: 5000, zoom: 9 }, scene, panel)).toEqual({
-      x: 0,
-      y: 1000,
+      x: -50,
+      y: 1100,
       zoom: 4,
     });
+    expect(clampView({ x: -5000, y: 500, zoom: 0.4 }, scene, panel).x).toBe(-1000);
     // A scene smaller than the panel may be zoomed until it fills it.
     expect(zoomLimits({ width: 100, height: 100 }, panel)).toEqual({ min: 0.5, max: 8 });
   });

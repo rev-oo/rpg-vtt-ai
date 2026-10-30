@@ -450,6 +450,8 @@ export const ptBR: Messages = {
   'scenes.gridType': 'Grade',
   'scenes.grid.square': 'Quadrada',
   'scenes.grid.hex': 'Hexagonal',
+  'scenes.grid.hidden': 'Oculta (tokens ainda se alinham)',
+  'scenes.grid.none': 'Sem grade (tokens livres)',
   'scenes.gridSize': 'Tamanho da célula (px)',
   'scenes.gridSizeHint': 'Em pixels do fundo, de 16 a 400.',
   'scenes.save': 'Salvar',

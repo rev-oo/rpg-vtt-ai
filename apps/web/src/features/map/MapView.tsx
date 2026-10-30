@@ -82,7 +82,14 @@ export function MapView({
           </p>
         </div>
       )}
-      <SceneStage key={scene.id} table={table} scene={scene} manages={manages} {...rest} />
+      {/* A new grid may move the tokens to whole cells (ADR-068), so they are fetched again. */}
+      <SceneStage
+        key={`${scene.id}:${scene.gridType}`}
+        table={table}
+        scene={scene}
+        manages={manages}
+        {...rest}
+      />
     </div>
   );
 }

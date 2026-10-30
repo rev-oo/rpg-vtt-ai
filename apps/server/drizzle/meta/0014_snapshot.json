@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "38573e5d-5174-4eca-9882-2679fb617943",
+  "id": "246acd5b-f9e6-4962-b93e-520289831723",
   "prevId": "de571ad8-3e3d-42c2-993c-cf7e223caece",
   "tables": {
     "actor_snapshots": {
@@ -1631,14 +1631,14 @@
         },
         "column": {
           "name": "column",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
         "row": {
           "name": "row",
-          "type": "integer",
+          "type": "real",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false

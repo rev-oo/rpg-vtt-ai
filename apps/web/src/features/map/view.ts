@@ -38,13 +38,19 @@ export function fitView(scene: Size, panel: Size): View {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-/** Keeps the zoom in its limits and the middle of the panel on the scene. */
+/**
+ * Keeps the zoom in its limits, and the scene from leaving the panel: it may be dragged until
+ * its edge meets the panel's far edge, but no further, so it can always be brought back.
+ */
 export function clampView(view: View, scene: Size, panel: Size): View {
   const { min, max } = zoomLimits(scene, panel);
+  const zoom = clamp(view.zoom, min, max);
+  const slackX = panel.width / 2 / zoom;
+  const slackY = panel.height / 2 / zoom;
   return {
-    x: clamp(view.x, 0, scene.width),
-    y: clamp(view.y, 0, scene.height),
-    zoom: clamp(view.zoom, min, max),
+    x: clamp(view.x, -slackX, scene.width + slackX),
+    y: clamp(view.y, -slackY, scene.height + slackY),
+    zoom,
   };
 }
 
