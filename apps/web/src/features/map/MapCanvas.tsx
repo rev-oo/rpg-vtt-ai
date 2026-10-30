@@ -23,7 +23,16 @@ import { carriesActor, droppedActor } from '../entities/entity-drag.js';
 import { cellAt, gridSegments, sceneSize, type Cell, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
 import { TokenLayer, type TokenHandlers } from './token-layer.js';
-import { clampView, fitView, viewForKey, zoomBy, ZOOM_STEP, type Size, type View } from './view.js';
+import {
+  clampView,
+  fitView,
+  viewForKey,
+  zoomBy,
+  zoomLimits,
+  ZOOM_STEP,
+  type Size,
+  type View,
+} from './view.js';
 
 export interface MapCanvasProps extends TokenHandlers {
   scene: SceneView;
@@ -135,6 +144,7 @@ export default function MapCanvas({
             const unseen = viewport.screenWidth <= 1 || viewport.screenHeight <= 1;
             app.renderer.resize(width, height);
             viewport.resize(width, height);
+            limitZoom(viewport, sizeRef.current);
             if (unseen) apply(viewport, fitView(sizeRef.current, { width, height }));
             // Resizing clears the canvas; drawing at once, before the browser paints, keeps a
             // panel being resized from showing it blank between frames.
@@ -188,6 +198,7 @@ export default function MapCanvas({
     const { viewport } = stage;
     sizeRef.current = content;
     viewport.resize(viewport.screenWidth, viewport.screenHeight, content.width, content.height);
+    limitZoom(viewport, content);
     apply(viewport, fitView(content, screenOf(viewport)));
 
     // Pinches, wheels and drags stay inside the limits `view.ts` sets.
@@ -351,6 +362,16 @@ function drawGrid({ grid, viewport }: Stage, scene: SceneGrid): void {
   for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
   grid.stroke({ width: 1, color: GRID_COLOR, alpha: 0.45, pixelLine: true });
   viewport.dirty = true;
+}
+
+/**
+ * Gives pixi-viewport the zoom limits too: a wheel or pinch then stops at them with the point
+ * under the pointer kept still, where clamping afterwards would leave the map shifted towards
+ * the pointer on every turn of the wheel at the limit.
+ */
+function limitZoom(viewport: Viewport, scene: Size): void {
+  const { min, max } = zoomLimits(scene, screenOf(viewport));
+  viewport.clampZoom({ minScale: min, maxScale: max });
 }
 
 function apply(viewport: Viewport, view: View): void {

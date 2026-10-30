@@ -100,6 +100,21 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
     await gmPage.mouse.wheel(0, -400);
     await expect.poll(async () => (await view(map)).zoom).toBeGreaterThan(wheeled.zoom);
 
+    // At the largest zoom, more turns of the wheel off-centre leave the map where it is.
+    await gmPage.mouse.move(box.x + 60, box.y + 60);
+    for (let turn = 0; turn < 12; turn += 1) await gmPage.mouse.wheel(0, -400);
+    await expect.poll(async () => (await view(map)).zoom).toBe(4);
+    // Wheel events are not waited for, so let the last ones land.
+    await gmPage.waitForTimeout(1500);
+    const largest = await view(map);
+    for (let turn = 0; turn < 5; turn += 1) await gmPage.mouse.wheel(0, -400);
+    await gmPage.waitForTimeout(1500);
+    // Within a scene pixel: the last turn may have taken the zoom from just under 4 to 4.
+    const after = await view(map);
+    expect(after.zoom).toBe(4);
+    expect(Math.abs(after.x - largest.x)).toBeLessThan(1);
+    expect(Math.abs(after.y - largest.y)).toBeLessThan(1);
+
     // 0 shows the whole scene again.
     await map.focus();
     await gmPage.keyboard.press('0');
