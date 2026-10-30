@@ -45,6 +45,8 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const keysId = useId();
+  /** The scene's size, for the resize observer, which outlives each scene. */
+  const sizeRef = useRef<Size>({ width: 1, height: 1 });
 
   useEffect(() => {
     const element = host.current;
@@ -101,8 +103,11 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
           observer = new ResizeObserver(() => {
             const width = Math.max(1, element.clientWidth);
             const height = Math.max(1, element.clientHeight);
+            // A panel behind another tab has no size; fit the scene when it first gets one.
+            const unseen = viewport.screenWidth <= 1 || viewport.screenHeight <= 1;
             app.renderer.resize(width, height);
             viewport.resize(width, height);
+            if (unseen) apply(viewport, fitView(sizeRef.current, { width, height }));
             viewport.dirty = true;
           });
           observer.observe(element);
@@ -133,6 +138,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
   useEffect(() => {
     if (!stage) return;
     const { grid, viewport } = stage;
+    sizeRef.current = size;
     grid.clear();
     for (const [x1, y1, x2, y2] of gridSegments({ columns, rows, gridType, gridSize })) {
       grid.moveTo(x1, y1).lineTo(x2, y2);
@@ -153,7 +159,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
     };
   }, [stage, scene.id, columns, rows, gridType, gridSize, size]);
 
-  // The background, drawn at its own size under the grid.
+  // The background under the grid, stretched to the scene (ADR-066).
   const url = scene.backgroundUrl;
   useEffect(() => {
     if (!stage) return;
@@ -162,12 +168,12 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
     let current = true;
     let texture: Texture | null = null;
     loadImage(url).then(
-      ({ source, width, height }) => {
+      (source) => {
         if (!current) return;
         texture = Texture.from(source);
         layer.texture = texture;
-        layer.width = width;
-        layer.height = height;
+        layer.width = size.width;
+        layer.height = size.height;
         stage.viewport.dirty = true;
         setLoaded({ url, shown: true });
       },
@@ -184,7 +190,7 @@ export default function MapCanvas({ scene }: MapCanvasProps): ReactElement {
       }
       texture?.destroy(true);
     };
-  }, [stage, url]);
+  }, [stage, url, size]);
 
   const background =
     url === null ? 'none' : loaded?.url !== url ? 'loading' : loaded.shown ? 'shown' : 'blocked';
@@ -290,9 +296,7 @@ function show(element: HTMLElement, viewport: Viewport): void {
  * Loads an image by an element, as the CSP lets images, not fetches, come from elsewhere.
  * Other hosts must allow it with CORS, or WebGL may not draw it (ADR-067).
  */
-async function loadImage(
-  url: string,
-): Promise<{ source: HTMLImageElement | HTMLCanvasElement; width: number; height: number }> {
+async function loadImage(url: string): Promise<HTMLImageElement | HTMLCanvasElement> {
   const image = new Image();
   if (new URL(url, window.location.href).origin !== window.location.origin) {
     image.crossOrigin = 'anonymous';
@@ -302,10 +306,10 @@ async function loadImage(
   const width = image.naturalWidth;
   const height = image.naturalHeight;
   const scale = Math.min(1, MAX_TEXTURE / Math.max(width, height));
-  if (scale === 1) return { source: image, width, height };
+  if (scale === 1) return image;
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(width * scale);
   canvas.height = Math.round(height * scale);
   canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height);
-  return { source: canvas, width, height };
+  return canvas;
 }

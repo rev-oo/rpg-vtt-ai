@@ -7,6 +7,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Added
 
 - Tables can hold scenes, the maps of M14. GMs and assistants create them through the API with a background image (a web address or one of the table's images), a size in square or hex grid cells and a cell size; they edit, order and delete them, and choose the one scene players see. Players and spectators get only that scene, and members hear of each change at once. A scene's background is an image in use, so it cannot be deleted. Drawing scenes in the table arrives with the map canvas (FR-MAP-01, ADR-066).
+- A Map panel in the middle of the table draws the scene players see: its background and its square or hex grid. Drag, pinch or scroll to pan and zoom; arrow keys pan, plus and minus zoom and 0 shows the whole scene, and buttons zoom on touch screens. GMs and assistants manage scenes in a new Scenes panel (make, edit with a background from the table's images, order, delete, show to players) and can look at any scene in the Map panel as a preview before players see it. A background from another site is drawn only if that site allows it; otherwise the map says to upload the image. Maps need a browser with WebGL (FR-MAP-01, FR-MAP-02, ADR-067).
 
 ## [0.4.0] - 2026-10-29
 

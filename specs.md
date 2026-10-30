@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
-| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | In progress | 25%      |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | In progress | 50%      |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M14 (0.4.0 released)
-- **Next task:** `T-1402`
+- **Next task:** `T-1403`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,11 +36,12 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), and up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                      |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                        |
-| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet. |
-| 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).     |
+| Date       | Change                                                                                                                                                                                                                                                                                       |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                                                         |
+| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet.                                  |
+| 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).                                      |
+| 2026-10-30 | T-1402 done: Q18 decided (PixiJS v8 with pixi-viewport, WebGL only). A Map panel in the workspace centre draws the scene's background and grid, with pan and zoom by mouse, touch, keyboard and buttons; GMs and assistants manage scenes in a Scenes panel and preview any scene (ADR-067). |
 
 ---
 
@@ -424,8 +425,8 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-ASSET-01 | Members with permission upload images to the instance; files are type-checked, size-limited and counted against a per-instance quota.            | 1.0      | 0.4.0 (ADR-064)                            |
 | FR-ASSET-02 | An asset manager lists a table's assets and picks them for actor and item images, journal entries and scene backgrounds.                         | 1.0      | 0.4.0 (ADR-065); scene backgrounds ADR-066 |
 | FR-ASSET-03 | Backups include the uploaded assets.                                                                                                             | 1.0      | 0.4.0 (ADR-064)                            |
-| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | API (ADR-066); canvas planned (M14)        |
-| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | planned (M14)                              |
+| FR-MAP-01   | GMs create scenes with a background image and a square or hex grid, and choose the scene players see.                                            | 1.0      | ADR-066, ADR-067                           |
+| FR-MAP-02   | The scene renders on a canvas in the workspace centre, with pan and zoom, on desktop and phone.                                                  | 1.0      | ADR-067                                    |
 | FR-MAP-03   | Tokens represent actors (or stand alone) on a scene. Owners move their tokens, GMs move any; moves show live. Hidden tokens never reach players. | 1.0      | planned (M14)                              |
 | FR-MAP-04   | Fog of war: GMs reveal and hide areas; players receive only what is revealed, enforced on the server.                                            | 1.0      | planned (M14)                              |
 
@@ -729,10 +730,11 @@ Scenes with a grid, tokens and fog of war, in the workspace centre.
   - **Do:** A `scenes` table (FR-MAP-01): name, background asset, size, grid type (square, hex) and size, and which scene is active for players. GMs and assistants create, edit, order and delete scenes; `scene.updated` events keep clients current. Players only see the active scene.
   - **Done when:** endpoint tests cover the scene life cycle, permissions and events.
 
-- [ ] **T-1402 · Map canvas**
+- [x] **T-1402 · Map canvas**
   - **Deps:** T-1201, T-1401, Q18
   - **Do:** The scene renders in the workspace centre on a canvas (FR-MAP-02), with the renderer chosen in Q18 (an ADR): background, grid, pan and zoom by mouse, keyboard and touch. Rendering stays smooth on a mid-range phone.
   - **Done when:** web tests cover the scene model behind the canvas; e2e pans and zooms on desktop and phone viewports; a performance check with a large background and 100 tokens is recorded.
+  - **Performance check (2026-10-30):** Chromium, software WebGL (SwiftShader; no GPU reaches the browser in development or CI), 4096 px background, 100 sprites standing in for tokens, panning and zooming every frame. Frame time p50/p95: 200 × 200 hex grid (120,799 edges) 68/95 ms on a desktop, 84/112 ms on a 390 × 844 phone viewport at 4× CPU throttling; 40 × 30 hex grid 47/64 and 60/68 ms; no grid 39/46 and 56/68 ms. Software rendering dominates these times, so they are an upper bound; a real mid-range phone is still to be checked (ADR-067).
 
 - [ ] **T-1403 · Tokens**
   - **Deps:** T-1402
@@ -835,7 +837,6 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | #   | Question                                                     | Blocks | Proposed default                                                                                                                        |
 | --- | ------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | Q17 | How is `code/client` sandboxed?                              | T-1502 | A sandboxed `<iframe>` per plugin (no `allow-same-origin`), rendering its nodes and cards inside, with the SDK hooks over `postMessage` |
-| Q18 | Which renderer draws maps?                                   | T-1402 | PixiJS (WebGL with canvas fallback), as LATER named it; React only for the panels around it                                             |
 | Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading? | T-1701 | Yes for one major version: 1.x accepts 0.x plugins whose files validate, and lists them with a "made for 0.x" note                      |
 
 **Decided**
@@ -858,6 +859,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | Q14 | Combat data model: an encounter as rows (encounters, combatants) updated through REST and events, or as a Yjs document like sheets?                                                                               | rows and events: turns are GM-driven, so live co-editing adds little (ADR-049)                                                     |
 | Q15 | Publish the plugin CLI and SDK to npm?                                                                                                                                                                            | no. Plugin authors build them from this repository (ADR-045)                                                                       |
 | Q16 | A spell in a compendium is an item of a plugin type `spell`. Should "item" be renamed, since items now cover spells, feats and gear?                                                                              | no rename. "Item" stays the core term; plugins name what players see through type labels and item groups (FR-PLUGIN-11, ADR-061)   |
+| Q18 | Which renderer draws maps?                                                                                                                                                                                        | PixiJS v8 with pixi-viewport, WebGL only (v8 has no canvas fallback); React for the panels around it (ADR-067)                     |
 
 ---
 
@@ -952,6 +954,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-064 | [Uploaded images are table assets on disk, checked by content](docs/adr/ADR-064-asset-storage.md)                                               | Accepted                                   |
 | ADR-065 | [The Images panel picks and deletes table assets, and journal text holds images](docs/adr/ADR-065-asset-manager.md)                             | Accepted                                   |
 | ADR-066 | [Scenes are rows sized in grid cells, with one active per table](docs/adr/ADR-066-scenes.md)                                                    | Accepted                                   |
+| ADR-067 | [Maps render with PixiJS v8 in a lazy-loaded panel, drawn on demand](docs/adr/ADR-067-map-renderer.md)                                          | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
