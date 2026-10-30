@@ -3,6 +3,7 @@ import { useState, type ReactElement } from 'react';
 import { z } from 'zod';
 
 import {
+  DIAGONAL_RULES,
   GRID_TYPES,
   imageUrlSchema,
   sceneUpdateBody,
@@ -18,12 +19,17 @@ import { ImagePicker } from '../assets/ImagePicker.js';
 const fields = sceneUpdateBody.shape;
 /** The form's number fields hold text, as inputs do. */
 const whole = (schema: z.ZodNumber) => z.coerce.number<string>().pipe(schema);
+/** A decimal number as typed, with a point or a comma. */
+const toDecimal = (value: string) => Number(value.trim().replace(',', '.'));
+const decimal = (schema: z.ZodNumber) => z.string().transform(toDecimal).pipe(schema);
 const schemas = {
   name: fields.name.unwrap(),
   backgroundUrl: z.union([z.literal(''), imageUrlSchema]),
   columns: whole(fields.columns.unwrap()),
   rows: whole(fields.rows.unwrap()),
   gridSize: whole(fields.gridSize.unwrap()),
+  cellDistance: decimal(fields.cellDistance.unwrap()),
+  distanceUnit: fields.distanceUnit.unwrap(),
 };
 
 export interface SceneDialogProps {
@@ -40,6 +46,7 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const gridType: string = scene?.gridType ?? 'square';
+  const diagonals: string = scene?.diagonals ?? 'one';
   const form = useForm({
     defaultValues: {
       name: scene?.name ?? '',
@@ -48,6 +55,9 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
       rows: String(scene?.rows ?? 20),
       gridType,
       gridSize: String(scene?.gridSize ?? 70),
+      cellDistance: String(scene?.cellDistance ?? 5),
+      distanceUnit: scene?.distanceUnit ?? 'ft',
+      diagonals,
     },
     onSubmit: async ({ value, formApi }) => {
       setError(null);
@@ -59,6 +69,9 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
         rows: Number(value.rows),
         gridType: GRID_TYPES.find((type) => type === value.gridType) ?? 'square',
         gridSize: Number(value.gridSize),
+        cellDistance: toDecimal(value.cellDistance),
+        distanceUnit: value.distanceUnit.trim(),
+        diagonals: DIAGONAL_RULES.find((rule) => rule === value.diagonals) ?? 'one',
       });
       if (failure === null) formApi.reset();
       else setError(failure);
@@ -143,6 +156,39 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
             </form.Field>
             {number('gridSize', t('scenes.gridSize'), t('scenes.gridSizeHint'))}
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <form.Field
+              name="cellDistance"
+              validators={{ onChange: schemas.cellDistance, onSubmit: schemas.cellDistance }}
+            >
+              {(field) => (
+                <TextInput
+                  field={field}
+                  label={t('scenes.cellDistance')}
+                  hint={t('scenes.cellDistanceHint')}
+                  inputMode="decimal"
+                  required
+                />
+              )}
+            </form.Field>
+            <form.Field
+              name="distanceUnit"
+              validators={{ onChange: schemas.distanceUnit, onSubmit: schemas.distanceUnit }}
+            >
+              {(field) => <TextInput field={field} label={t('scenes.distanceUnit')} required />}
+            </form.Field>
+          </div>
+          <form.Field name="diagonals">
+            {(field) => (
+              <SelectInput field={field} label={t('scenes.diagonals')}>
+                {DIAGONAL_RULES.map((rule) => (
+                  <option key={rule} value={rule}>
+                    {t(`scenes.diagonals.${rule}`)}
+                  </option>
+                ))}
+              </SelectInput>
+            )}
+          </form.Field>
           <div className="flex flex-wrap justify-end gap-3">
             <Button onClick={onClose}>{t('entities.cancel')}</Button>
             <form.Subscribe selector={(s) => s.isSubmitting}>

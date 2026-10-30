@@ -73,6 +73,9 @@ describe('scenes (T-1401)', () => {
       rows: 20,
       gridType: 'square',
       gridSize: 70,
+      cellDistance: 5,
+      distanceUnit: 'ft',
+      diagonals: 'one',
       active: false,
     });
     const town = await create(t, {
@@ -97,6 +100,22 @@ describe('scenes (T-1401)', () => {
       gridSize: 100,
       columns: 30,
     });
+
+    // The ruler's scale and diagonal rule (ADR-069).
+    const measured = await t.call(t.gm.client, 'PATCH', `/scenes/${cave.id}`, {
+      cellDistance: 1.5,
+      distanceUnit: ' m ',
+      diagonals: 'alternate',
+    });
+    expect(sceneResponseSchema.parse(measured.json()).scene).toMatchObject({
+      cellDistance: 1.5,
+      distanceUnit: 'm',
+      diagonals: 'alternate',
+    });
+    const unscaled = await t.call(t.gm.client, 'PATCH', `/scenes/${cave.id}`, {
+      cellDistance: 0,
+    });
+    expect(unscaled.statusCode).toBe(400);
 
     const ordered = await t.call(t.gm.client, 'POST', `/tables/${t.table.id}/scenes/order`, {
       sceneIds: [keep.id, cave.id, town.id],

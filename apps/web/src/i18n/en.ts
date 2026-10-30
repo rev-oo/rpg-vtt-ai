@@ -415,6 +415,18 @@ export const en = {
 
   'map.title': 'Map',
   'map.role': 'map',
+  'map.tools': 'Map tools',
+  'map.tool.select': 'Select',
+  'map.tool.ruler': 'Ruler',
+  'ruler.label': '{distance} {unit}',
+  'ruler.measured': 'Measured {distance} {unit} (cells: {cells}). Escape clears it.',
+  'scenes.cellDistance': 'Distance per cell',
+  'scenes.cellDistanceHint': 'What one cell measures for the ruler, e.g. 5.',
+  'scenes.distanceUnit': 'Unit',
+  'scenes.diagonals': 'Diagonals',
+  'scenes.diagonals.one': 'One cell each',
+  'scenes.diagonals.alternate': 'Alternate 1 and 2 cells',
+  'scenes.diagonals.straight': 'Straight line',
   'map.keys':
     'Arrow keys move the selected token, or pan when none is; plus and minus zoom, 0 shows the whole scene.',
   'map.scene': 'Scene',

@@ -121,6 +121,38 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
     await expect.poll(async () => (await view(map)).zoom).toBeLessThan(wheeled.zoom);
   });
 
+  await test.step('the ruler measures by the scene scale, and pans no more', async () => {
+    const map = gmPage.getByRole('application', { name: 'Cave' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    // Square cells of 70 px, 5 ft each, one cell per diagonal step.
+    const at = (column: number, row: number) => ({
+      x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
+      y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
+    });
+    const tools = mapPanel.getByRole('toolbar', { name: 'Map tools' });
+    await tools.getByRole('button', { name: 'Ruler' }).click();
+    await expect(tools.getByRole('button', { name: 'Ruler' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    const from = at(2, 2);
+    const to = at(8, 5);
+    await gmPage.mouse.move(from.x, from.y);
+    await gmPage.mouse.down();
+    await gmPage.mouse.move(to.x, to.y, { steps: 8 });
+    await gmPage.mouse.up();
+    const measured = mapPanel.getByRole('status').filter({ hasText: 'Measured' });
+    await expect(measured).toHaveText('Measured 30 ft (cells: 6). Escape clears it.');
+    expect(await view(map)).toEqual({ zoom, x, y });
+
+    await map.focus();
+    await gmPage.keyboard.press('Escape');
+    await expect(measured).toHaveCount(0);
+    await tools.getByRole('button', { name: 'Select' }).click();
+  });
+
   await test.step('a player on a phone sees the shown scene and zooms it', async () => {
     const page = await nora.context.newPage();
     page.on('pageerror', (error) => errors.push(error.message));
@@ -261,12 +293,30 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await gmPage.keyboard.press('0');
   });
 
-  await test.step('revealing the hidden token shows it to the player', async () => {
-    await list(gmPage)
-      .getByRole('button', { name: /^Assassin/ })
-      .click();
-    await gmPage.getByRole('button', { name: 'Reveal Assassin' }).click();
+  await test.step("the token's menu, by right click, reveals it to the player", async () => {
+    const map = gmPage.getByRole('application', { name: 'Bridge' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    // The hidden Assassin stands on cell (7, 5).
+    await gmPage.mouse.click(
+      box.x + box.width / 2 + (7.5 * 70 - x) * zoom,
+      box.y + box.height / 2 + (5.5 * 70 - y) * zoom,
+      { button: 'right' },
+    );
+    const menu = gmPage.getByRole('menu', { name: 'Assassin' });
+    await expect(menu.getByRole('menuitem')).toHaveText(['Reveal Assassin', 'Remove Assassin']);
+    await expect(menu.getByRole('menuitem', { name: 'Reveal Assassin' })).toBeFocused();
+    await gmPage.keyboard.press('Enter');
     await expect(list(tessPage).getByRole('button', { name: /^Assassin \(8, 6\)/ })).toBeVisible();
+    await expect(menu).toHaveCount(0);
+
+    // The right click selected it; Shift+F10 on the map opens its menu again.
+    await expect(map).toBeFocused();
+    await gmPage.keyboard.press('Shift+F10');
+    await expect(menu.getByRole('menuitem', { name: 'Hide Assassin' })).toBeFocused();
+    await gmPage.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
   });
 
   await test.step("opening the player's token opens the actor's sheet", async () => {

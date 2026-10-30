@@ -5,7 +5,7 @@
 - **Tasks:** T-1401
 - **Covers:** FR-MAP-01, FR-ASSET-02 (scene backgrounds)
 - **Amends:** ADR-065 (scene backgrounds count as asset uses)
-- **Amended by:** ADR-067 (the background keeps its size), ADR-068 (hidden and gridless grids)
+- **Amended by:** ADR-067 (the background keeps its size), ADR-068 (hidden and gridless grids), ADR-069 (a ruler scale and diagonal rule)
 
 ## Context
 

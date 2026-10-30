@@ -422,6 +422,18 @@ export const ptBR: Messages = {
 
   'map.title': 'Mapa',
   'map.role': 'mapa',
+  'map.tools': 'Ferramentas do mapa',
+  'map.tool.select': 'Selecionar',
+  'map.tool.ruler': 'Régua',
+  'ruler.label': '{distance} {unit}',
+  'ruler.measured': 'Medido: {distance} {unit} (células: {cells}). Esc limpa a medida.',
+  'scenes.cellDistance': 'Distância por célula',
+  'scenes.cellDistanceHint': 'Quanto uma célula mede para a régua, por exemplo 1,5.',
+  'scenes.distanceUnit': 'Unidade',
+  'scenes.diagonals': 'Diagonais',
+  'scenes.diagonals.one': 'Uma célula cada',
+  'scenes.diagonals.alternate': 'Alternar 1 e 2 células',
+  'scenes.diagonals.straight': 'Linha reta',
   'map.keys':
     'As setas movem o token selecionado, ou a vista sem um; mais e menos aproximam e afastam, 0 mostra a cena inteira.',
   'map.scene': 'Cena',

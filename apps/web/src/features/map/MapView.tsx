@@ -11,6 +11,7 @@ import { t } from '../../i18n/index.js';
 import { AddTokenDialog } from './AddTokenDialog.js';
 import type { Cell } from './geometry.js';
 import { TokenList } from './TokenList.js';
+import type { MenuAction } from './TokenMenu.js';
 import { useScenes } from './use-scenes.js';
 import { useTokens } from './use-tokens.js';
 
@@ -130,6 +131,45 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   const select = (token: TokenView | null) => {
     setSelectedId(token?.id ?? null);
   };
+  const hide = (token: TokenView, hidden: boolean) => {
+    change(token.id, api.updateToken(token.id, { hidden }));
+  };
+  const remove = (token: TokenView) => {
+    setSelectedId(null);
+    change(
+      token.id,
+      api.deleteToken(token.id).then(() => null),
+    );
+  };
+  /** The token list's actions, for a token's menu on the map (ADR-069). */
+  const actionsFor = (token: TokenView): MenuAction[] => [
+    ...(actorOf(token)
+      ? [
+          {
+            label: t('tokens.open', { name: token.name }),
+            run: () => {
+              open(token);
+            },
+          },
+        ]
+      : []),
+    ...(manages
+      ? [
+          {
+            label: t(token.hidden ? 'tokens.reveal' : 'tokens.hide', { name: token.name }),
+            run: () => {
+              hide(token, !token.hidden);
+            },
+          },
+          {
+            label: t('tokens.remove', { name: token.name }),
+            run: () => {
+              remove(token);
+            },
+          },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -155,6 +195,7 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
             tokens={tokens}
             selectedId={selectedId}
             onDropActor={manages ? place : undefined}
+            actionsFor={actionsFor}
             select={select}
             deselect={() => {
               setSelectedId(null);
@@ -177,16 +218,8 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
           move(token, column, row);
         }}
         onOpen={open}
-        onHide={(token, hidden) => {
-          change(token.id, api.updateToken(token.id, { hidden }));
-        }}
-        onRemove={(token) => {
-          setSelectedId(null);
-          change(
-            token.id,
-            api.deleteToken(token.id).then(() => null),
-          );
-        }}
+        onHide={hide}
+        onRemove={remove}
       />
       {adding && (
         <AddTokenDialog

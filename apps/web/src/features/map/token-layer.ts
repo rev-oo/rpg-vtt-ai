@@ -3,7 +3,7 @@ import { Container, Graphics, Sprite, Text, Texture, type FederatedPointerEvent 
 
 import type { TokenView } from '@vtt/shared/api';
 
-import { cellAt, cellCentre, type Cell, type SceneGrid } from './geometry.js';
+import { cellAt, cellCentre, type Cell, type Point, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
 import type { Size } from './view.js';
 
@@ -13,6 +13,8 @@ export interface TokenHandlers {
   open: (token: TokenView) => void;
   /** Dropped on another cell. */
   move: (token: TokenView, cell: Cell) => void;
+  /** A right click: the token's menu, at a point of the canvas (ADR-069). */
+  menu: (token: TokenView, at: Point) => void;
 }
 
 const COLORS = [0xb45309, 0x15803d, 0x1d4ed8, 0x7e22ce, 0xbe123c, 0x0f766e];
@@ -122,6 +124,11 @@ export class TokenLayer {
     });
   }
 
+  /** Tokens take no pointer while another tool, such as the ruler, has the map. */
+  setInteractive(on: boolean): void {
+    this.container.eventMode = on ? 'passive' : 'none';
+  }
+
   /** Whether a scene point is on a token. */
   covers({ x, y }: { x: number; y: number }): boolean {
     return this.container.children.some(
@@ -140,7 +147,12 @@ export class TokenLayer {
     piece.cursor = token.movable ? 'grab' : 'pointer';
     /** Set when a drag moved the token: the tap that ends it is no first half of a double tap. */
     let dragged = false;
-    piece.on('pointertap', () => {
+    piece.on('rightclick', (event) => {
+      event.stopPropagation();
+      handlers.menu(token, { x: event.global.x, y: event.global.y });
+    });
+    piece.on('pointertap', (event) => {
+      if (event.button !== 0) return;
       if (dragged) {
         dragged = false;
         handlers.select(token);
@@ -179,6 +191,7 @@ export class TokenLayer {
       handlers.move(token, cell);
     };
     piece.on('pointerdown', (event) => {
+      if (event.button !== 0) return;
       event.stopPropagation();
       held = true;
       piece.cursor = 'grabbing';
