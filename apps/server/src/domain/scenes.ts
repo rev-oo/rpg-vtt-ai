@@ -94,8 +94,8 @@ export function createScene(
 }
 
 /**
- * Changes a scene. A gridless scene given a grid moves its tokens to the nearest cells, since
- * tokens on a grid stand on whole cells (ADR-068).
+ * Changes a scene. A gridless scene given a grid moves its tokens to the nearest cells of
+ * the scene, since tokens on a grid stand on whole cells (ADR-068).
  */
 export function updateScene(
   db: DbOrTx,
@@ -106,10 +106,14 @@ export function updateScene(
   requireTableImage(db, scene.tableId, input.backgroundUrl);
   return db.transaction((tx) => {
     if (!snapsToCells(scene.gridType) && input.gridType && snapsToCells(input.gridType)) {
+      // Tokens on the background past the cells move to the nearest cell inside them.
+      const last = (cells: number) => cells - 1;
+      const columns = last(input.columns ?? scene.columns);
+      const rows = last(input.rows ?? scene.rows);
       tx.update(tokens)
         .set({
-          column: sql`round(${tokens.column})`,
-          row: sql`round(${tokens.row})`,
+          column: sql`min(round(${tokens.column}), ${columns})`,
+          row: sql`min(round(${tokens.row}), ${rows})`,
           updatedAt: now,
         })
         .where(eq(tokens.sceneId, scene.id))

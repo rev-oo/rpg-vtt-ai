@@ -230,12 +230,12 @@ export default function MapCanvas({
   const open = useEffectEvent(handlers.open);
   const move = useEffectEvent(handlers.move);
   useEffect(() => {
-    stage?.tokens.draw(tokens, { columns, rows, gridType, gridSize }, selectedId, {
+    stage?.tokens.draw(tokens, { columns, rows, gridType, gridSize }, content, selectedId, {
       select,
       open,
       move,
     });
-  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize]);
+  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content]);
 
   const background =
     url === null ? 'none' : loaded?.url !== url ? 'loading' : loaded.shown ? 'shown' : 'blocked';

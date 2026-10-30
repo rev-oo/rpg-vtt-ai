@@ -100,6 +100,11 @@ describe('scene geometry', () => {
     // A point near the edge keeps the whole token on the scene.
     expect(cellAt(none, { x: 2099, y: 1399 })).toEqual({ column: 29, row: 19 });
     expect(cellAt(none, { x: 2101, y: 10 })).toBeNull();
+    // A background larger than the cells is room for tokens too.
+    const area = { width: 3500, height: 1400 };
+    expect(cellAt(none, { x: 3000, y: 10 }, area)).toEqual({ column: 42.36, row: 0 });
+    expect(cellAt(none, { x: 3499, y: 10 }, area)).toEqual({ column: 49, row: 0 });
+    expect(cellAt(square, { x: 3000, y: 10 }, area)).toBeNull();
   });
 });
 

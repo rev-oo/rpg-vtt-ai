@@ -1,4 +1,6 @@
-import type { GridType } from '@vtt/shared/api';
+import { MAX_SCENE_CELLS, type GridType } from '@vtt/shared/api';
+
+import type { Size } from './view.js';
 
 // A scene's grid in pixels of its background (FR-MAP-02, ADR-067). Square cells are
 // `gridSize` wide; hexes are pointy-top, `gridSize` wide, and odd rows sit half a hex right.
@@ -29,10 +31,7 @@ export type Segment = readonly [x1: number, y1: number, x2: number, y2: number];
 const radiusOf = (width: number): number => width / Math.sqrt(3);
 
 /** The grid's size in pixels. */
-export function sceneSize({ columns, rows, gridType, gridSize }: SceneGrid): {
-  width: number;
-  height: number;
-} {
+export function sceneSize({ columns, rows, gridType, gridSize }: SceneGrid): Size {
   if (gridType !== 'hex') return { width: columns * gridSize, height: rows * gridSize };
   const radius = radiusOf(gridSize);
   return {
@@ -53,10 +52,11 @@ export function cellCentre(grid: SceneGrid, { column, row }: Cell): Point {
 
 /**
  * The cell under a point, or `null` outside the grid. On a gridless scene it is the point
- * itself, in hundredths of a cell, kept so that a token there stays on the scene.
+ * itself, in hundredths of a cell, anywhere in `area` (the grid and the background, in
+ * pixels), kept so that a token there stays inside it.
  */
-export function cellAt(grid: SceneGrid, { x, y }: Point): Cell | null {
-  if (grid.gridType === 'none') return freeAt(grid, x, y);
+export function cellAt(grid: SceneGrid, { x, y }: Point, area = sceneSize(grid)): Cell | null {
+  if (grid.gridType === 'none') return freeAt(grid, x, y, area);
   const cell = grid.gridType === 'hex' ? hexAt(grid, x, y) : squareAt(grid, x, y);
   const inside =
     cell.column >= 0 && cell.row >= 0 && cell.column < grid.columns && cell.row < grid.rows;
@@ -64,13 +64,15 @@ export function cellAt(grid: SceneGrid, { x, y }: Point): Cell | null {
 }
 
 const toHundredths = (value: number) => Math.round(value * 100) / 100;
-const clamp = (value: number, max: number) => Math.min(max, Math.max(0, value));
+/** Between 0 and the last whole cell of `pixels`, and no further than tokens may stand. */
+const within = (cells: number, pixels: number, gridSize: number) =>
+  Math.max(0, Math.min(cells, pixels / gridSize - 1, MAX_SCENE_CELLS - 1));
 
-function freeAt({ columns, rows, gridSize }: SceneGrid, x: number, y: number): Cell | null {
-  if (x < 0 || y < 0 || x > columns * gridSize || y > rows * gridSize) return null;
+function freeAt({ gridSize }: SceneGrid, x: number, y: number, area: Size): Cell | null {
+  if (x < 0 || y < 0 || x > area.width || y > area.height) return null;
   return {
-    column: toHundredths(clamp(x / gridSize - 0.5, columns - 1)),
-    row: toHundredths(clamp(y / gridSize - 0.5, rows - 1)),
+    column: toHundredths(within(x / gridSize - 0.5, area.width, gridSize)),
+    row: toHundredths(within(y / gridSize - 0.5, area.height, gridSize)),
   };
 }
 

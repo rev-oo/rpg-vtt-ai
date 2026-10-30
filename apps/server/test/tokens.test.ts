@@ -232,14 +232,20 @@ describe('tokens (T-1403)', () => {
     expect((await move(t, t.gm.client, rock.id, 2.5, 3)).statusCode).toBe(422);
 
     await t.call(t.gm.client, 'PATCH', `/scenes/${field.id}`, { gridType: 'none' });
+    // Past the cells too, on a background that may reach beyond them.
+    expect((await move(t, t.gm.client, rock.id, 30.5, 0)).statusCode).toBe(200);
     expect((await move(t, t.gm.client, rock.id, 2.5, 6.75)).statusCode).toBe(200);
-    expect((await move(t, t.gm.client, rock.id, 9.5, 0)).json()).toMatchObject({
-      error: { code: 'token_off_scene' },
-    });
-    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([{ column: 2.5, row: 6.75 }]);
+    const boulder = await place(t, field.id, { name: 'Boulder', column: 40.25, row: 1 });
+    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([
+      { column: 2.5, row: 6.75 },
+      { column: 40.25, row: 1 },
+    ]);
 
     // Given a grid again, the scene moves its tokens to the nearest cells.
     await t.call(t.gm.client, 'PATCH', `/scenes/${field.id}`, { gridType: 'square' });
-    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([{ column: 3, row: 7 }]);
+    expect(await tokens(t, t.bob.client, field.id)).toMatchObject([
+      { column: 3, row: 7 },
+      { id: boulder.id, column: 9, row: 1 },
+    ]);
   });
 });

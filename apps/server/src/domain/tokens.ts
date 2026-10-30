@@ -80,12 +80,16 @@ export function placedToken(db: DbOrTx, token: Token, scene: Scene, subject: Sub
   return { token, actor };
 }
 
-/** On the scene, and on a whole cell unless the scene is gridless. */
+/**
+ * On a whole cell of the scene. A gridless scene's tokens stand anywhere, its background
+ * included, which may reach past its cells; the body's limits bound them.
+ */
 function requireOnScene(scene: Scene, column: number, row: number): void {
+  if (!snapsToCells(scene.gridType)) return;
   if (column > scene.columns - 1 || row > scene.rows - 1) {
     throw unprocessable('token_off_scene', 'The token must stand on a cell of the scene.');
   }
-  if (snapsToCells(scene.gridType) && !(Number.isInteger(column) && Number.isInteger(row))) {
+  if (!(Number.isInteger(column) && Number.isInteger(row))) {
     throw unprocessable('token_off_grid', 'The token must stand on a whole cell of the grid.');
   }
 }

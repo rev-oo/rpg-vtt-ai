@@ -1,6 +1,6 @@
 import type { KeyboardEvent, ReactElement } from 'react';
 
-import type { SceneView, TokenView } from '@vtt/shared/api';
+import { MAX_SCENE_CELLS, snapsToCells, type SceneView, type TokenView } from '@vtt/shared/api';
 import { Button, cn } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
@@ -57,7 +57,11 @@ export function TokenList({
     event.preventDefault();
     const column = token.column + by[0];
     const row = token.row + by[1];
-    if (column < 0 || row < 0 || column > scene.columns - 1 || row > scene.rows - 1) return;
+    // A gridless scene's tokens may stand on its background beyond the cells (ADR-068).
+    const free = !snapsToCells(scene.gridType);
+    const lastColumn = free ? MAX_SCENE_CELLS - 1 : scene.columns - 1;
+    const lastRow = free ? MAX_SCENE_CELLS - 1 : scene.rows - 1;
+    if (column < 0 || row < 0 || column > lastColumn || row > lastRow) return;
     onMove(token, { column, row });
   };
 

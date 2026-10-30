@@ -5,6 +5,7 @@ import type { TokenView } from '@vtt/shared/api';
 
 import { cellAt, cellCentre, type Cell, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
+import type { Size } from './view.js';
 
 export interface TokenHandlers {
   select: (token: TokenView) => void;
@@ -43,6 +44,8 @@ export class TokenLayer {
   draw(
     tokens: readonly TokenView[],
     grid: SceneGrid,
+    /** Where tokens may stand on a gridless scene: the grid and the background. */
+    area: Size,
     selectedId: string | null,
     handlers: TokenHandlers,
   ): void {
@@ -81,7 +84,7 @@ export class TokenLayer {
       label.anchor.set(0.5, 0);
       label.y = radius + 2;
       piece.addChild(label);
-      this.listen(piece, token, grid, handlers);
+      this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
     this.viewport.dirty = true;
@@ -117,7 +120,13 @@ export class TokenLayer {
     });
   }
 
-  private listen(piece: Container, token: TokenView, grid: SceneGrid, handlers: TokenHandlers) {
+  private listen(
+    piece: Container,
+    token: TokenView,
+    grid: SceneGrid,
+    area: Size,
+    handlers: TokenHandlers,
+  ) {
     piece.eventMode = 'static';
     piece.cursor = token.movable ? 'grab' : 'pointer';
     piece.on('pointertap', () => {
@@ -142,7 +151,7 @@ export class TokenLayer {
       held = false;
       this.viewport.plugins.resume('drag');
       piece.cursor = 'grab';
-      const cell = cellAt(grid, piece.position);
+      const cell = cellAt(grid, piece.position, area);
       if (!cell || (cell.column === token.column && cell.row === token.row)) {
         piece.position = start;
         this.viewport.dirty = true;
