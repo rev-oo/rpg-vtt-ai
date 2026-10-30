@@ -51,7 +51,7 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
   await test.step('the table fills the page with its panels', async () => {
     await expect(page.getByRole('navigation', { name: 'Main' })).toHaveCount(0);
     await expect(actors.getByRole('heading', { name: 'Wren' })).toBeVisible();
-    await expect(panel(page, 'Table')).toBeVisible();
+    await expect(panel(page, 'Map')).toBeVisible();
     await expect(log).toBeVisible();
   });
 
@@ -124,17 +124,17 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
   await test.step('Reset layout brings the default back', async () => {
     await page.getByRole('button', { name: 'Reset layout' }).click();
     await expect(strip(page, 'Actors')).not.toContainText('Combat');
-    await expect(panel(page, 'Table')).toBeVisible();
+    await expect(panel(page, 'Map')).toBeVisible();
   });
 
   await test.step('a phone shows one panel at a time, with its own layout', async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await expect(page.getByRole('tablist')).toHaveCount(1);
-    await expect(panel(page, 'Table')).toBeVisible();
+    await expect(panel(page, 'Map')).toBeVisible();
     await expect(log).toBeHidden();
     await tab(page, 'Chat').click();
     await expect(log).toBeVisible();
-    await expect(panel(page, 'Table')).toBeHidden();
+    await expect(panel(page, 'Map')).toBeHidden();
     await page.setViewportSize({ width: 1280, height: 800 });
     await expect(page.getByRole('tablist')).not.toHaveCount(1);
     await expect(actors).toBeVisible();

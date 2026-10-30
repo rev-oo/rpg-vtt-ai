@@ -15,7 +15,7 @@ import {
 } from '@vtt/shared/api';
 
 import type { Db, DbOrTx } from '../db/client.js';
-import { actors, assets, items, journalEntries, scenes, ydocs } from '../db/schema.js';
+import { actors, assets, items, journalEntries, scenes, tokens, ydocs } from '../db/schema.js';
 import { AppError, notFound, unprocessable } from '../errors.js';
 
 import { generateId } from './auth/tokens.js';
@@ -245,6 +245,16 @@ export function assetUses(db: DbOrTx, asset: Asset, live: ReadonlyMap<string, Y.
     .orderBy(asc(scenes.name))
     .all()) {
     add({ kind: 'scene', ...scene });
+  }
+  // A token standing alone may show it too (ADR-068).
+  for (const token of db
+    .select({ id: tokens.id, name: tokens.name })
+    .from(tokens)
+    .innerJoin(scenes, eq(scenes.id, tokens.sceneId))
+    .where(and(eq(scenes.tableId, asset.tableId), eq(tokens.imageUrl, url)))
+    .orderBy(asc(tokens.name))
+    .all()) {
+    add({ kind: 'token', ...token });
   }
   const entries = db
     .select({ id: journalEntries.id, name: journalEntries.title, state: ydocs.state })

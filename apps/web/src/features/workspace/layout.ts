@@ -18,6 +18,8 @@ export const layoutKey = (userId: string, tableId: string, phone: boolean): stri
   `vtt:dock:${userId}:${tableId}:${phone ? 'phone' : 'desktop'}`;
 
 const TITLES = {
+  map: 'map.title',
+  scenes: 'scenes.title',
   actors: 'actors.title',
   items: 'items.title',
   journal: 'journal.title',
@@ -59,7 +61,8 @@ export function placeOf(
   const [group] = api.groups;
   if (phone) return group ? { referenceGroup: group } : undefined;
   const document = api.panels.find((panel) => isDocument(panel.id));
-  if (isDocument(id)) return documentPlace(api);
+  // The map shares the centre with the documents.
+  if (isDocument(id) || id === 'map') return documentPlace(api);
   if ((LIST_PANELS as readonly string[]).includes(id)) {
     const list = find(api, LIST_PANELS);
     if (list) return { referenceGroup: list.group };
@@ -95,7 +98,7 @@ export function showTarget(
   phone: boolean,
   title: string,
 ): void {
-  if (target.kind === 'page') {
+  if (target.kind === 'page' || target.kind === 'tool') {
     showPanel(api, target.id, phone);
     return;
   }
@@ -117,13 +120,17 @@ export function showTarget(
   });
 }
 
-/** Lists on the left, the overview in the middle, combat over chat and dice on the right. */
-export function defaultLayout(api: DockviewApi, phone: boolean): void {
+/**
+ * Lists on the left, the map and the overview in the middle, combat over chat and dice on
+ * the right. Scenes join the lists for those who manage them.
+ */
+export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean): void {
   const add = (id: ToolPanel | PagePanel, position?: AddPanelPositionOptions) =>
     api.addPanel({ id, component: id, title: titleOf(id), ...(position && { position }) });
   if (phone) {
-    add('overview');
+    add('map');
     for (const id of [
+      'overview',
       'actors',
       'items',
       'journal',
@@ -132,10 +139,11 @@ export function defaultLayout(api: DockviewApi, phone: boolean): void {
       'chat',
       'combat',
       'dice',
+      ...(scenes ? (['scenes'] as const) : []),
     ] as const) {
-      add(id, { referencePanel: 'overview', direction: 'within' });
+      add(id, { referencePanel: 'map', direction: 'within' });
     }
-    api.getPanel('overview')?.api.setActive();
+    api.getPanel('map')?.api.setActive();
     return;
   }
   add('actors');
@@ -143,8 +151,10 @@ export function defaultLayout(api: DockviewApi, phone: boolean): void {
   add('journal', { referencePanel: 'actors', direction: 'within' });
   add('compendium', { referencePanel: 'actors', direction: 'within' });
   add('assets', { referencePanel: 'actors', direction: 'within' });
-  add('overview', { referencePanel: 'actors', direction: 'right' });
-  add('combat', { referencePanel: 'overview', direction: 'right' });
+  if (scenes) add('scenes', { referencePanel: 'actors', direction: 'within' });
+  add('map', { referencePanel: 'actors', direction: 'right' });
+  add('overview', { referencePanel: 'map', direction: 'within' });
+  add('combat', { referencePanel: 'map', direction: 'right' });
   add('chat', { referencePanel: 'combat', direction: 'below' });
   add('dice', { referencePanel: 'chat', direction: 'within' });
   // `initialWidth` loses to the even split of a new grid, so size the side groups after.
@@ -152,11 +162,16 @@ export function defaultLayout(api: DockviewApi, phone: boolean): void {
   api.getPanel('combat')?.group.api.setSize({ width: CHAT_WIDTH });
   api.getPanel('actors')?.api.setActive();
   api.getPanel('chat')?.api.setActive();
-  api.getPanel('overview')?.api.setActive();
+  api.getPanel('map')?.api.setActive();
 }
 
 /** The stored layout, else the default one: a layout that fails to load is dropped. */
-export function restoreLayout(api: DockviewApi, key: string, phone: boolean): void {
+export function restoreLayout(
+  api: DockviewApi,
+  key: string,
+  phone: boolean,
+  scenes: boolean,
+): void {
   try {
     const stored = localStorage.getItem(key);
     if (stored !== null) {
@@ -169,7 +184,7 @@ export function restoreLayout(api: DockviewApi, key: string, phone: boolean): vo
   } catch {
     api.clear();
   }
-  defaultLayout(api, phone);
+  defaultLayout(api, phone, scenes);
 }
 
 export function saveLayout(api: DockviewApi, key: string): void {

@@ -83,7 +83,8 @@ describe('scenes (T-1401)', () => {
       gridType: 'hex',
       gridSize: 50,
     });
-    const keep = await create(t, { name: 'Keep' });
+    const keep = await create(t, { name: 'Keep', gridType: 'none' });
+    expect(keep.gridType).toBe('none');
     expect(await list(t, t.gm.client)).toEqual(['Cave', 'Town', 'Keep']);
 
     const edited = await t.call(t.gm.client, 'PATCH', `/scenes/${cave.id}`, {

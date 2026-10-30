@@ -2,7 +2,7 @@ import type { ReactElement, ReactNode } from 'react';
 
 import { t } from '../../i18n/index.js';
 
-import { startItemDrag, type ItemDrag } from './item-drag.js';
+import { startEntityDrag, type EntityDrag } from './entity-drag.js';
 
 export interface EntityRowProps {
   name: string;
@@ -14,8 +14,8 @@ export interface EntityRowProps {
   actions?: ReactNode;
   /** Under a group heading, the name is one level lower (ADR-061). */
   nested?: boolean;
-  /** Lets the row be dropped onto an actor sheet's items (ADR-063). */
-  drag?: ItemDrag | undefined;
+  /** Lets the row be dropped: an item onto a sheet's items (ADR-063), an actor onto the map. */
+  drag?: EntityDrag | undefined;
   children?: ReactNode;
 }
 
@@ -37,7 +37,7 @@ export function EntityRow({
       {...(drag && {
         draggable: true,
         onDragStart: (event) => {
-          startItemDrag(event, drag);
+          startEntityDrag(event, drag);
         },
       })}
     >

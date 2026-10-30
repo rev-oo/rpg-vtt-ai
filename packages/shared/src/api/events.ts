@@ -104,6 +104,13 @@ export const serverEventSchema = z.discriminatedUnion('type', [
     tableId: z.string(),
     payload: z.object({}),
   }),
+  /** A scene's tokens changed; those who may see them refetch them (FR-MAP-03, ADR-068). */
+  z.object({
+    ...serverBase,
+    type: z.literal('token.updated'),
+    tableId: z.string(),
+    payload: z.object({ sceneId: z.string() }),
+  }),
   /** The table's encounter changed; clients refetch it (FR-COMBAT-03, ADR-049). */
   z.object({
     ...serverBase,

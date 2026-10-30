@@ -46,6 +46,7 @@ import { sceneRoutes } from './routes/scenes.js';
 import { setupRoutes } from './routes/setup.js';
 import { systemRoutes } from './routes/systems.js';
 import { tableRoutes } from './routes/tables.js';
+import { tokenRoutes } from './routes/tokens.js';
 import { userRoutes } from './routes/users.js';
 import { registerSecurityHeaders } from './security-headers.js';
 import { scheduleTrashPurge } from './trash-purge.js';
@@ -192,6 +193,7 @@ export async function buildApp({
   rollRoutes(context);
   combatRoutes(context);
   sceneRoutes(context);
+  tokenRoutes(context);
   compendiumRoutes(context);
   historyRoutes(context);
   eventsSocket(context);
