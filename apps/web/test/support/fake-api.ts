@@ -17,11 +17,17 @@ export interface RecordedCall {
   headers: Headers;
 }
 
+/** Answers every test gets unless it gives its own: the workspace's map asks for scenes. */
+const DEFAULTS: Record<string, Handler> = {
+  'GET /tables/t1/scenes': { body: { scenes: [] } },
+};
+
 /**
  * Replaces `fetch` with handlers keyed by `"METHOD /path"` (relative to /api/v1). Unhandled
  * requests fail the test with a 599.
  */
-export function fakeApi(handlers: Record<string, Handler>): { calls: RecordedCall[] } {
+export function fakeApi(given: Record<string, Handler>): { calls: RecordedCall[] } {
+  const handlers = { ...DEFAULTS, ...given };
   const calls: RecordedCall[] = [];
   vi.stubGlobal(
     'fetch',

@@ -11,7 +11,7 @@ import {
 } from 'react';
 import { Link } from 'react-router';
 
-import { canManageTable } from '@vtt/shared';
+import { canManageScenes, canManageTable } from '@vtt/shared';
 import { Button, cn } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
@@ -49,6 +49,8 @@ export function Workspace(props: WorkspaceProps): ReactElement {
 }
 
 const MENU: readonly (ToolPanel | PagePanel)[] = [
+  'map',
+  'scenes',
   'overview',
   'actors',
   'items',
@@ -79,6 +81,7 @@ const DOCK_MESSAGES: Partial<DockviewMessages> = {
 function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolean }): ReactElement {
   const { table } = data;
   const key = layoutKey(userId, table.id, phone);
+  const scenes = canManageScenes(table.role);
   const [dock, setDock] = useState<DockviewApi | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
@@ -142,7 +145,10 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           </span>
           <div className="ml-auto flex items-center gap-1">
             <PanelsMenu
-              items={MENU.filter((id) => id !== 'settings' || canManageTable(table.role))}
+              items={MENU.filter(
+                (id) =>
+                  (id !== 'settings' || canManageTable(table.role)) && (id !== 'scenes' || scenes),
+              )}
               openIds={openIds}
               disabled={!dock}
               onPick={(id) => {
@@ -155,7 +161,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
               onClick={() => {
                 if (!dock) return;
                 dock.clear();
-                defaultLayout(dock, phone);
+                defaultLayout(dock, phone, scenes);
               }}
             >
               {t('workspace.resetLayout')}
@@ -175,7 +181,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
               phone ? ['close'] : ['close', 'closeOthers', 'separator', 'maximize', 'float']
             }
             onReady={(event) => {
-              restoreLayout(event.api, key, phone);
+              restoreLayout(event.api, key, phone, scenes);
               const active = event.api.activePanel?.id;
               if (active?.startsWith(ACTOR_PREFIX)) {
                 setDiceActorId(active.slice(ACTOR_PREFIX.length));

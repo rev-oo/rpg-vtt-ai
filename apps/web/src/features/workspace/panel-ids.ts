@@ -3,6 +3,8 @@
  * journal entries are documents, and many can be open at once.
  */
 export const TOOL_PANELS = [
+  'map',
+  'scenes',
   'actors',
   'items',
   'journal',
@@ -18,7 +20,14 @@ export type ToolPanel = (typeof TOOL_PANELS)[number];
 export const PAGE_PANELS = ['overview', 'members', 'settings'] as const;
 export type PagePanel = (typeof PAGE_PANELS)[number];
 
-export const LIST_PANELS = ['actors', 'items', 'journal', 'compendium', 'assets'] as const;
+export const LIST_PANELS = [
+  'actors',
+  'items',
+  'journal',
+  'compendium',
+  'assets',
+  'scenes',
+] as const;
 
 export const sheetPanelId = (actorId: string): string => `actor:${actorId}`;
 export const entryPanelId = (entryId: string): string => `entry:${entryId}`;
@@ -30,7 +39,8 @@ export type PanelTarget =
   | { kind: 'entry'; id: string; entryId: string }
   /** An item's sheet (ADR-062); `name` titles the panel until the item loads. */
   | { kind: 'item'; id: string; itemId: string; name: string }
-  | { kind: 'page'; id: PagePanel };
+  | { kind: 'page'; id: PagePanel }
+  | { kind: 'tool'; id: ToolPanel };
 
 /** Sheets, items, entries and pages open in the centre; tools keep to the sides. */
 export const isDocument = (panelId: string): boolean =>

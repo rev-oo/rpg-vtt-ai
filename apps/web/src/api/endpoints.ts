@@ -61,6 +61,11 @@ import {
   type CombatantUpdateInput,
   type CommandRequestInput,
   encounterResponseSchema,
+  sceneListResponseSchema,
+  sceneResponseSchema,
+  type SceneCreateInput,
+  type SceneUpdateInput,
+  type SceneView,
   compendiumCopyResponseSchema,
   compendiumPageSchema,
   type CompendiumCopyInput,
@@ -372,6 +377,30 @@ export const api = {
     encounterChange(tableId, 'POST', '/start'),
   moveTurn: (tableId: string, direction: 'next' | 'previous'): Promise<EncounterView | null> =>
     encounterChange(tableId, 'POST', '/turn', { direction }),
+
+  /** The scenes the caller sees: all of them for GMs and assistants, else the active one. */
+  listScenes: async (tableId: string): Promise<SceneView[]> =>
+    (await request('GET', `/tables/${tableId}/scenes`, sceneListResponseSchema)).scenes,
+  /** Scene changes for GMs and assistants (FR-MAP-01, ADR-066). */
+  createScene: async (tableId: string, input: SceneCreateInput): Promise<SceneView> =>
+    (await request('POST', `/tables/${tableId}/scenes`, sceneResponseSchema, input)).scene,
+  updateScene: async (sceneId: string, input: SceneUpdateInput): Promise<SceneView> =>
+    (await request('PATCH', `/scenes/${sceneId}`, sceneResponseSchema, input)).scene,
+  deleteScene: (sceneId: string): Promise<void> => requestNoContent('DELETE', `/scenes/${sceneId}`),
+  /** Puts every scene of the table in the given order; answers with the list. */
+  orderScenes: async (tableId: string, sceneIds: readonly string[]): Promise<SceneView[]> =>
+    (
+      await request('POST', `/tables/${tableId}/scenes/order`, sceneListResponseSchema, {
+        sceneIds,
+      })
+    ).scenes,
+  /** Shows a scene to players, or none; answers with the list. */
+  setActiveScene: async (tableId: string, sceneId: string | null): Promise<SceneView[]> =>
+    (
+      await request('POST', `/tables/${tableId}/scenes/active`, sceneListResponseSchema, {
+        sceneId,
+      })
+    ).scenes,
 
   /** Runs a slash command of the table's system; it answers like a roll (FR-PLUGIN-10). */
   command: async (tableId: string, input: CommandRequestInput): Promise<ChatMessage> =>

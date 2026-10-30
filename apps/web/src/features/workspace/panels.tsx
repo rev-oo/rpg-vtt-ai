@@ -17,6 +17,8 @@ import { ItemSheetPanel } from '../entities/ItemSheet.js';
 import { LIST_PAGE } from '../entities/paging.js';
 import { JournalEntryPanel } from '../journal/JournalEntryPanel.js';
 import { JournalList } from '../journal/JournalList.js';
+import { MapView } from '../map/MapView.js';
+import { ScenesManager } from '../map/ScenesManager.js';
 import { MembersPanel } from '../members/MembersPanel.js';
 import { TableSettings } from '../settings/TableSettings.js';
 import { DicePane } from '../table/DicePane.js';
@@ -227,6 +229,40 @@ export function SettingsPanel(): ReactElement {
   return (
     <Body>
       <TableSettings />
+    </Body>
+  );
+}
+
+/** The scene, filling its panel; a GM's chosen scene is kept with the layout. */
+export function MapPanel({ params, api: panel }: IDockviewPanelProps): ReactElement {
+  const { table } = useTableData();
+  const { save, open } = useDock();
+  const [sceneId, setSceneId] = useState<string | null>(
+    () => stringParam(params, 'sceneId') || null,
+  );
+  return (
+    <div className="h-full">
+      <MapView
+        table={table}
+        sceneId={sceneId}
+        onSceneId={(next) => {
+          setSceneId(next);
+          panel.updateParameters({ sceneId: next });
+          save();
+        }}
+        onManage={() => {
+          open({ kind: 'tool', id: 'scenes' });
+        }}
+      />
+    </div>
+  );
+}
+
+export function ScenesPanel(): ReactElement {
+  const { table } = useTableData();
+  return (
+    <Body>
+      <ScenesManager tableId={table.id} />
     </Body>
   );
 }

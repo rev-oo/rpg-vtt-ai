@@ -51,7 +51,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     openTable('/tables/t1');
     expect(await screen.findByRole('heading', { name: 'Goblin King' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
-    for (const name of ['Actors', 'Table', 'Combat', 'Chat']) {
+    for (const name of ['Actors', 'Map', 'Combat', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }
     expect(tabs()).toEqual([
@@ -60,6 +60,8 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Journal',
       'Compendium',
       'Images',
+      'Scenes',
+      'Map',
       'Table',
       'Combat',
       'Chat',
@@ -125,9 +127,10 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       removeEventListener: () => undefined,
     }));
     openTable('/tables/t1');
-    expect(await panel('Table')).toBeInTheDocument();
+    expect(await panel('Map')).toBeInTheDocument();
     expect(screen.queryByRole('tabpanel', { name: 'Chat' })).toBeNull();
     expect(tabs()).toEqual([
+      'Map',
       'Table',
       'Actors',
       'Items',
@@ -137,6 +140,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Chat',
       'Combat',
       'Dice',
+      'Scenes',
     ]);
     await userEvent.setup().click(screen.getByText('Chat', { selector: '.dv-tab *' }));
     expect(await panel('Chat')).toBeInTheDocument();

@@ -9,14 +9,18 @@ import {
   ItemPanel,
   ItemsPanel,
   JournalPanel,
+  MapPanel,
   MembersDockPanel,
   OverviewPanel,
+  ScenesPanel,
   SettingsPanel,
   SheetPanel,
 } from './panels.js';
 
 /** Dockview's components, by the `component` name each panel is saved with (ADR-059). */
 export const PANEL_COMPONENTS = {
+  map: MapPanel,
+  scenes: ScenesPanel,
   actors: ActorsPanel,
   items: ItemsPanel,
   journal: JournalPanel,
