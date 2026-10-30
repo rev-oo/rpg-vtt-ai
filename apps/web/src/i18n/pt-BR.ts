@@ -422,7 +422,8 @@ export const ptBR: Messages = {
 
   'map.title': 'Mapa',
   'map.role': 'mapa',
-  'map.keys': 'As setas movem, mais e menos aproximam e afastam, 0 mostra a cena inteira.',
+  'map.keys':
+    'As setas movem o token selecionado, ou a vista sem um; mais e menos aproximam e afastam, 0 mostra a cena inteira.',
   'map.scene': 'Cena',
   'map.shownToPlayers': 'Os jogadores veem esta cena.',
   'map.preview': 'Prévia: os jogadores não veem esta cena.',

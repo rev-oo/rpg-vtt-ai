@@ -6,7 +6,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SceneView, TokenView } from '@vtt/shared/api';
 
 import { setCsrfToken } from '../src/api/client.js';
-import { cellAt, cellCentre, gridSegments, sceneSize } from '../src/features/map/geometry.js';
+import {
+  cellAt,
+  cellCentre,
+  gridSegments,
+  sceneSize,
+  stepCell,
+} from '../src/features/map/geometry.js';
 import {
   clampView,
   fitView,
@@ -105,6 +111,27 @@ describe('scene geometry', () => {
     expect(cellAt(none, { x: 3000, y: 10 }, area)).toEqual({ column: 42.36, row: 0 });
     expect(cellAt(none, { x: 3499, y: 10 }, area)).toEqual({ column: 49, row: 0 });
     expect(cellAt(square, { x: 3000, y: 10 }, area)).toBeNull();
+  });
+});
+
+describe('token steps', () => {
+  const square = { columns: 4, rows: 3, gridType: 'square', gridSize: 70 } as const;
+
+  it('moves a cell per arrow key, and stops at the edge of the scene', () => {
+    expect(stepCell(square, { column: 1, row: 1 }, 'ArrowRight')).toEqual({ column: 2, row: 1 });
+    expect(stepCell(square, { column: 1, row: 1 }, 'ArrowUp')).toEqual({ column: 1, row: 0 });
+    expect(stepCell(square, { column: 3, row: 1 }, 'ArrowRight')).toBeNull();
+    expect(stepCell(square, { column: 0, row: 2 }, 'ArrowDown')).toBeNull();
+    expect(stepCell(square, { column: 1, row: 1 }, 'Enter')).toBeUndefined();
+  });
+
+  it('lets a gridless token step past the cells, onto the background', () => {
+    const none = { ...square, gridType: 'none' } as const;
+    expect(stepCell(none, { column: 3.5, row: 1.25 }, 'ArrowRight')).toEqual({
+      column: 4.5,
+      row: 1.25,
+    });
+    expect(stepCell(none, { column: 0.5, row: 0 }, 'ArrowLeft')).toBeNull();
   });
 });
 
@@ -365,6 +392,13 @@ describe('tokens on the map (FR-MAP-03)', () => {
     await user.click(await tokenButton(/^Boulder/));
     await user.keyboard('{ArrowDown}');
     expect(calls.filter((c) => c.method === 'PATCH')).toHaveLength(1);
+
+    // Picking the selected token again lets go of it.
+    const boulder = await tokenButton(/^Boulder/);
+    expect(boulder).toHaveAttribute('aria-pressed', 'true');
+    await user.click(boulder);
+    expect(boulder).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByText('Arrow keys move the selected token.')).toBeNull();
 
     const socket = await connected(sockets);
     tokens = [...tokens, token('k3', 'Guard')];

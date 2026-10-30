@@ -1,4 +1,4 @@
-import { MAX_SCENE_CELLS, type GridType } from '@vtt/shared/api';
+import { MAX_SCENE_CELLS, snapsToCells, type GridType } from '@vtt/shared/api';
 
 import type { Size } from './view.js';
 
@@ -153,4 +153,34 @@ export function gridSegments(grid: SceneGrid): Segment[] {
     }
   }
   return segments;
+}
+
+const STEPS: Readonly<Record<string, readonly [number, number]>> = {
+  ArrowLeft: [-1, 0],
+  ArrowRight: [1, 0],
+  ArrowUp: [0, -1],
+  ArrowDown: [0, 1],
+};
+
+/**
+ * Where an arrow key moves a token: a cell over, kept on the scene. A gridless scene's tokens
+ * may stand on its background beyond the cells (ADR-068), so only the cell limit holds them
+ * there. `undefined` for any other key, `null` at an edge.
+ */
+export function stepCell(
+  grid: SceneGrid,
+  { column, row }: Cell,
+  key: string,
+): Cell | null | undefined {
+  const by = STEPS[key];
+  if (!by) return undefined;
+  const free = !snapsToCells(grid.gridType);
+  const next = { column: column + by[0], row: row + by[1] };
+  const last = {
+    column: free ? MAX_SCENE_CELLS - 1 : grid.columns - 1,
+    row: free ? MAX_SCENE_CELLS - 1 : grid.rows - 1,
+  };
+  const inside =
+    next.column >= 0 && next.row >= 0 && next.column <= last.column && next.row <= last.row;
+  return inside ? next : null;
 }

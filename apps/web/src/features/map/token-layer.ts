@@ -35,6 +35,7 @@ export class TokenLayer {
   private readonly container = new Container();
   private readonly textures = new Map<string, Promise<Texture | null>>();
   private lastTap = { id: '', at: 0 };
+  private radius = 0;
   private destroyed = false;
 
   constructor(private readonly viewport: Viewport) {
@@ -51,6 +52,7 @@ export class TokenLayer {
   ): void {
     for (const child of this.container.removeChildren()) child.destroy({ children: true });
     const radius = grid.gridSize * 0.42;
+    this.radius = radius;
     for (const token of tokens) {
       const piece = new Container();
       piece.position = cellCentre(grid, token);
@@ -120,6 +122,13 @@ export class TokenLayer {
     });
   }
 
+  /** Whether a scene point is on a token. */
+  covers({ x, y }: { x: number; y: number }): boolean {
+    return this.container.children.some(
+      (piece) => (piece.x - x) ** 2 + (piece.y - y) ** 2 <= this.radius ** 2,
+    );
+  }
+
   private listen(
     piece: Container,
     token: TokenView,
@@ -129,7 +138,14 @@ export class TokenLayer {
   ) {
     piece.eventMode = 'static';
     piece.cursor = token.movable ? 'grab' : 'pointer';
+    /** Set when a drag moved the token: the tap that ends it is no first half of a double tap. */
+    let dragged = false;
     piece.on('pointertap', () => {
+      if (dragged) {
+        dragged = false;
+        handlers.select(token);
+        return;
+      }
       const now = performance.now();
       if (this.lastTap.id === token.id && now - this.lastTap.at < DOUBLE_TAP_MS) {
         handlers.open(token);
@@ -143,6 +159,7 @@ export class TokenLayer {
     let held = false;
     const follow = (event: FederatedPointerEvent) => {
       if (!held) return;
+      dragged = true;
       piece.position = this.viewport.toWorld(event.global);
       this.viewport.dirty = true;
     };
