@@ -19,7 +19,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M8–M11 | Plugin code, combat, packs, chat edits, sheet history, archive, backups, arm64, pagination ([history](docs/history/0.2.0.md))    | 0.2.0   | Done        | 100%     |
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
-| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | In progress | 100%     |
+| M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
@@ -27,7 +27,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M14 (0.4.0 released)
+- **Active milestone:** M15 (M14 done; M14–M17 ship as 1.0.0)
 - **Next task:** `T-1501`
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
@@ -45,6 +45,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-30 | T-1405 and T-1406 added to M14 at the user's request and done before T-1404: a token menu on right click (or Shift+F10), and a map toolbar with a path ruler, circle and cone in the scene's unit, counting diagonals by the scene's rule; scenes gain a ruler scale (ADR-069).              |
 | 2026-10-30 | Scenes may have a hidden grid (cells not drawn, tokens still snap) or none (tokens stand anywhere), and the map can be panned past the scene's edges (ADR-066, ADR-067, ADR-068).                                                                                                            |
 | 2026-10-31 | T-1404 done: fog of war per scene. GMs and assistants reveal and hide rectangles of cells (or any area on a gridless scene) with Reveal and Hide tools; players get only the revealed areas and the tokens in them, save their own actors' tokens (ADR-070).                                 |
+| 2026-10-31 | M14 done: scenes, the map canvas, tokens, the token menu, the map toolbar with ruler, circle and cone, and fog of war. M15 is active.                                                                                                                                                        |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).              |
 
 ---
