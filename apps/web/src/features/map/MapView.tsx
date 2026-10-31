@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState, type ReactElement } from 'react';
 
 import { canManageScenes } from '@vtt/shared';
-import type { ActorView, SceneView, TableView, TokenView } from '@vtt/shared/api';
+import type { ActorView, FogInput, SceneView, TableView, TokenView } from '@vtt/shared/api';
 import { Alert, Button, Select } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
@@ -110,6 +110,13 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
+  /** GMs and assistants reveal and hide areas; `scene.updated` brings the new fog (ADR-070). */
+  const changeFog = (input: FogInput) => {
+    setPlaceError(null);
+    api.changeFog(scene.id, input).catch((e: unknown) => {
+      setPlaceError(errorMessage(e));
+    });
+  };
   /** A GM drops an actor from a list on a cell of the map. */
   const place = (actorId: string, { column, row }: Cell) => {
     setPlaceError(null);
@@ -196,6 +203,7 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
             selectedId={selectedId}
             onDropActor={manages ? place : undefined}
             actionsFor={actionsFor}
+            onFog={manages ? changeFog : undefined}
             select={select}
             deselect={() => {
               setSelectedId(null);

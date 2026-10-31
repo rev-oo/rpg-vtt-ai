@@ -41,7 +41,7 @@ export interface SceneDialogProps {
   onSave: (input: Required<SceneCreateInput>) => Promise<string | null>;
 }
 
-/** A scene's name, background and grid (FR-MAP-01). */
+/** A scene's name, background, grid, ruler scale and fog of war (FR-MAP-01, FR-MAP-04). */
 export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps): ReactElement {
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,6 +58,7 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
       cellDistance: String(scene?.cellDistance ?? 5),
       distanceUnit: scene?.distanceUnit ?? 'ft',
       diagonals,
+      fog: scene?.fog ?? false,
     },
     onSubmit: async ({ value, formApi }) => {
       setError(null);
@@ -72,6 +73,7 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
         cellDistance: toDecimal(value.cellDistance),
         distanceUnit: value.distanceUnit.trim(),
         diagonals: DIAGONAL_RULES.find((rule) => rule === value.diagonals) ?? 'one',
+        fog: value.fog,
       });
       if (failure === null) formApi.reset();
       else setError(failure);
@@ -187,6 +189,25 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
                   </option>
                 ))}
               </SelectInput>
+            )}
+          </form.Field>
+          <form.Field name="fog">
+            {(field) => (
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  name={field.name}
+                  checked={field.state.value}
+                  onChange={(event) => {
+                    field.handleChange(event.target.checked);
+                  }}
+                />
+                <span>
+                  {t('scenes.fog')}
+                  <span className="block text-sm text-muted">{t('scenes.fogHint')}</span>
+                </span>
+              </label>
             )}
           </form.Field>
           <div className="flex flex-wrap justify-end gap-3">

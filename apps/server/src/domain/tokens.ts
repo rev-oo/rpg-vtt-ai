@@ -3,6 +3,7 @@ import type { z } from 'zod';
 
 import { canMoveToken, canSeeToken, isGmLike, type Subject } from '@vtt/shared';
 import {
+  inFog,
   MAX_TOKENS_PER_SCENE,
   snapsToCells,
   type tokenCreateBody,
@@ -20,12 +21,13 @@ import { generateId } from './auth/tokens.js';
 import type { Scene } from './scenes.js';
 
 // Tokens on a scene (FR-MAP-03, ADR-068). Players see the tokens of the active scene that
-// are not hidden, and move the tokens of actors they own; GMs and assistants do everything.
+// are neither hidden nor in its fog of war (FR-MAP-04, ADR-070), save their own, and move the
+// tokens of actors they own; GMs and assistants do everything.
 
 export type Token = typeof tokens.$inferSelect;
 
 /** A token with its actor, if it stands for one. */
-interface Placed {
+export interface Placed {
   token: Token;
   actor: Actor | undefined;
 }
@@ -33,6 +35,7 @@ interface Placed {
 const facts = ({ token, actor }: Placed, scene: Scene) => ({
   hidden: token.hidden,
   sceneActive: scene.active,
+  fogged: inFog(scene, token.column, token.row),
   actorOwnership: actor?.ownership ?? null,
 });
 
@@ -51,9 +54,12 @@ export function toTokenView(placed: Placed, scene: Scene, subject: Subject): Tok
   };
 }
 
-/** Whether a member may see a token; hidden ones and those of other scenes stay with the GM. */
-export const visibleTo = (subject: Subject, token: Token, scene: Scene): boolean =>
-  canSeeToken(subject.role, { hidden: token.hidden, sceneActive: scene.active });
+/**
+ * Whether a member may see a token; hidden ones, those in the fog and those of other scenes
+ * stay with the GM, though owners see their own in the fog.
+ */
+export const visibleTo = (subject: Subject, placed: Placed, scene: Scene): boolean =>
+  canSeeToken(subject, facts(placed, scene));
 
 /** The scene's tokens the member may see. Tokens of actors in the trash are left out. */
 export function listTokens(db: DbOrTx, scene: Scene, subject: Subject): TokenView[] {
@@ -64,7 +70,7 @@ export function listTokens(db: DbOrTx, scene: Scene, subject: Subject): TokenVie
     .where(and(eq(tokens.sceneId, scene.id), isNull(actors.softDeletedAt)))
     .all()
     .map(({ token, actor }) => ({ token, actor: actor ?? undefined }))
-    .filter(({ token }) => visibleTo(subject, token, scene))
+    .filter((placed) => visibleTo(subject, placed, scene))
     .map((placed) => toTokenView(placed, scene, subject));
 }
 
@@ -74,10 +80,11 @@ export function findToken(db: DbOrTx, id: string): Token | undefined {
 
 /** The token with its actor; a token the member may not see is 404, as if it did not exist. */
 export function placedToken(db: DbOrTx, token: Token, scene: Scene, subject: Subject): Placed {
-  if (!visibleTo(subject, token, scene)) throw notFound('Token not found.');
   const actor = token.actorId ? findActor(db, token.actorId) : undefined;
   if (token.actorId && !actor) throw notFound('Token not found.');
-  return { token, actor };
+  const placed = { token, actor };
+  if (!visibleTo(subject, placed, scene)) throw notFound('Token not found.');
+  return placed;
 }
 
 /**

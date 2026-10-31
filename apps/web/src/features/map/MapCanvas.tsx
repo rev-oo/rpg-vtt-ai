@@ -21,16 +21,20 @@ import {
   type ReactElement,
 } from 'react';
 
-import type { SceneView, TokenView } from '@vtt/shared/api';
+import type { FogInput, SceneView, TokenView } from '@vtt/shared/api';
 import { Button } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 import { carriesActor, droppedActor } from '../entities/entity-drag.js';
 
+import { FogLayer } from './fog-layer.js';
 import {
   cellAt,
   cellCentre,
   cellUnder,
+  fogArea,
+  fogPixels,
+  fogShapes,
   gridSegments,
   sceneSize,
   stepCell,
@@ -65,11 +69,20 @@ export interface MapCanvasProps extends Omit<TokenHandlers, 'menu'> {
   onDropActor?: ((actorId: string, cell: Cell) => void) | undefined;
   /** What the member may do with a token, for its menu; none, and it has no menu. */
   actionsFor: (token: TokenView) => MenuAction[];
+  /**
+   * For GMs and assistants: changes the fog of war (ADR-070). They see the fog as a tint;
+   * without it, the fog is opaque and has no tools.
+   */
+  onFog?: ((input: FogInput) => void) | undefined;
 }
 
-/** What a press on the map does: select and move tokens, or measure (ADR-069). */
-type Tool = 'select' | 'ruler' | 'circle' | 'cone';
+/**
+ * What a press on the map does: select and move tokens, measure (ADR-069), or reveal and
+ * hide areas of fog (ADR-070).
+ */
+type Tool = 'select' | 'ruler' | 'circle' | 'cone' | 'reveal' | 'hide';
 const TOOLS: readonly Tool[] = ['select', 'ruler', 'circle', 'cone'];
+const FOG_TOOLS: readonly Tool[] = ['reveal', 'hide'];
 
 /** The ruler's path, for keys and double clicks; each answers whether it changed anything. */
 interface RulerControl {
@@ -102,6 +115,7 @@ interface Stage {
   viewport: Viewport;
   background: Sprite;
   grid: Graphics;
+  fog: FogLayer;
   tokens: TokenLayer;
   ruler: RulerLayer;
 }
@@ -117,6 +131,7 @@ export default function MapCanvas({
   deselect,
   onDropActor,
   actionsFor,
+  onFog,
   ...handlers
 }: MapCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
@@ -124,7 +139,10 @@ export default function MapCanvas({
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const keysId = useId();
-  const [tool, setTool] = useState<Tool>('select');
+  const [chosen, setTool] = useState<Tool>('select');
+  const tools = scene.fog && onFog ? [...TOOLS, ...FOG_TOOLS] : TOOLS;
+  // Fog tools go when the fog does.
+  const tool = tools.includes(chosen) ? chosen : 'select';
   const [measured, setMeasured] = useState<(Measure & { points: number }) | null>(null);
   const [menu, setMenu] = useState<{ token: TokenView; at: Point } | null>(null);
   /** What the view frames, for the resize observer, which outlives each scene. */
@@ -140,6 +158,7 @@ export default function MapCanvas({
     let disposed = false;
     let observer: ResizeObserver | null = null;
     let tokenLayer: TokenLayer | null = null;
+    let fogLayer: FogLayer | null = null;
     let rulerLayer: RulerLayer | null = null;
     app
       .init({
@@ -174,6 +193,7 @@ export default function MapCanvas({
           if (!calm) viewport.decelerate();
           const backgroundLayer = viewport.addChild(new Sprite());
           const grid = viewport.addChild(new Graphics());
+          fogLayer = new FogLayer(viewport);
           tokenLayer = new TokenLayer(viewport);
           rulerLayer = new RulerLayer(viewport);
           app.stage.addChild(viewport);
@@ -208,6 +228,7 @@ export default function MapCanvas({
             viewport,
             background: backgroundLayer,
             grid,
+            fog: fogLayer,
             tokens: tokenLayer,
             ruler: rulerLayer,
           });
@@ -221,6 +242,7 @@ export default function MapCanvas({
       disposed = true;
       observer?.disconnect();
       tokenLayer?.destroy();
+      fogLayer?.destroy();
       rulerLayer?.destroy();
       // The viewport leaves the ticker as the app destroys it, so the ticker goes last.
       if (ready) app.destroy(true, { children: true });
@@ -305,6 +327,15 @@ export default function MapCanvas({
     };
   }, [stage, url]);
 
+  // The fog of war over what is not revealed (ADR-070): opaque for players, a tint for GMs.
+  const { fog, revealed } = scene;
+  const tint = onFog !== undefined;
+  useEffect(() => {
+    if (!stage) return;
+    const grid = { columns, rows, gridType, gridSize };
+    stage.fog.draw(fog ? fogShapes(grid, revealed, content) : null, tint);
+  }, [stage, fog, revealed, tint, columns, rows, gridType, gridSize, content]);
+
   // The tokens, redrawn whenever they or the selection change; handlers are always the latest.
   const select = useEffectEvent(handlers.select);
   const open = useEffectEvent(handlers.open);
@@ -333,7 +364,7 @@ export default function MapCanvas({
   const rulerRef = useRef<RulerControl | null>(null);
   useEffect(() => {
     if (!stage) return;
-    const { viewport, ruler, tokens: layer } = stage;
+    const { viewport, ruler, fog, tokens: layer } = stage;
     const measuring = tool !== 'select';
     layer.setInteractive(!measuring);
     if (!measuring) {
@@ -347,7 +378,11 @@ export default function MapCanvas({
     const label = (result: Measure) =>
       t('ruler.label', { distance: result.distance, unit: distanceUnit });
     const handlers =
-      tool === 'ruler' ? pathHandlers() : shapeHandlers(tool === 'circle' ? 'circle' : 'cone');
+      tool === 'ruler'
+        ? pathHandlers()
+        : tool === 'reveal' || tool === 'hide'
+          ? fogHandlers(tool)
+          : shapeHandlers(tool === 'circle' ? 'circle' : 'cone');
     rulerRef.current = handlers.control;
     viewport.on('pointerdown', handlers.press);
     viewport.on('globalpointermove', handlers.follow);
@@ -361,6 +396,7 @@ export default function MapCanvas({
       viewport.off('pointerupoutside', handlers.release);
       viewport.plugins.resume('drag');
       ruler.clear();
+      fog.outline(null, false);
       setMeasured(null);
     };
 
@@ -405,6 +441,46 @@ export default function MapCanvas({
             dragging = false;
             ruler.clear();
             setMeasured(null);
+            return true;
+          },
+        },
+      };
+    }
+
+    /**
+     * Reveals or hides the area a drag covers, or the cell a click is on (ADR-070). The area
+     * shows, snapped to the cells it takes, while dragging; Escape lets go of it.
+     */
+    function fogHandlers(action: 'reveal' | 'hide'): ToolHandlers {
+      let from: Point | null = null;
+      const outline = (to: Point) => {
+        const area = from && fogArea(scale, from, to);
+        fog.outline(area && fogPixels(scale, area), action === 'hide');
+      };
+      const letGo = () => {
+        from = null;
+        fog.outline(null, false);
+      };
+      return {
+        press: (event) => {
+          if (event.button !== 0) return;
+          from = viewport.toWorld(event.global);
+          outline(from);
+        },
+        follow: (event) => {
+          if (from) outline(viewport.toWorld(event.global));
+        },
+        release: (event) => {
+          const area = from && fogArea(scale, from, viewport.toWorld(event.global));
+          letGo();
+          if (area) changeFog({ action, area });
+        },
+        control: {
+          end: () => false,
+          undo: () => false,
+          clear: () => {
+            if (!from) return false;
+            letGo();
             return true;
           },
         },
@@ -488,6 +564,9 @@ export default function MapCanvas({
       };
     }
   }, [stage, tool, columns, rows, gridType, gridSize, cellDistance, diagonals, distanceUnit]);
+  const changeFog = useEffectEvent((input: FogInput) => {
+    onFog?.(input);
+  });
 
   // A click (not a drag) on the map off every token lets go of the selected one.
   const release = useEffectEvent(deselect);
@@ -592,7 +671,7 @@ export default function MapCanvas({
         aria-label={t('map.tools')}
         className="absolute top-3 left-3 flex gap-1 rounded-lg bg-surface p-1 shadow"
       >
-        {TOOLS.map((each) => (
+        {tools.map((each) => (
           <Button
             key={each}
             variant={tool === each ? 'primary' : 'ghost'}
@@ -606,7 +685,28 @@ export default function MapCanvas({
           </Button>
         ))}
       </div>
-      {tool !== 'select' && (
+      {(tool === 'reveal' || tool === 'hide') && (
+        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-2 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+          <p className="text-muted">{t(`fog.hint.${tool}`)}</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={() => {
+                onFog?.({ action: 'revealAll' });
+              }}
+            >
+              {t('fog.revealAll')}
+            </Button>
+            <Button
+              onClick={() => {
+                onFog?.({ action: 'hideAll' });
+              }}
+            >
+              {t('fog.hideAll')}
+            </Button>
+          </div>
+        </div>
+      )}
+      {(tool === 'ruler' || tool === 'circle' || tool === 'cone') && (
         <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p role="status">
             {measured &&

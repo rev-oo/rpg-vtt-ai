@@ -3,8 +3,13 @@ import type { z } from 'zod';
 
 import { canManageScenes, type TableRole } from '@vtt/shared';
 import {
+  hideArea,
+  MAX_FOG_RECTS,
   MAX_SCENES,
+  revealArea,
   snapsToCells,
+  WHOLE_SCENE,
+  type fogBody,
   type sceneCreateBody,
   type sceneUpdateBody,
   type SceneView,
@@ -35,6 +40,8 @@ export function toSceneView(scene: Scene): SceneView {
     cellDistance: scene.cellDistance,
     distanceUnit: scene.distanceUnit,
     diagonals: scene.diagonals,
+    fog: scene.fog,
+    revealed: scene.revealed,
     active: scene.active,
     createdAt: scene.createdAt.toISOString(),
     updatedAt: scene.updatedAt.toISOString(),
@@ -129,6 +136,33 @@ export function updateScene(
       .returning()
       .get();
   });
+}
+
+/** Reveals or hides an area of the scene, or all of it (FR-MAP-04, ADR-070). */
+export function changeFog(
+  db: DbOrTx,
+  scene: Scene,
+  input: z.output<typeof fogBody>,
+  now: Date,
+): Scene {
+  const revealed =
+    'area' in input
+      ? (input.action === 'reveal' ? revealArea : hideArea)(scene.revealed, input.area)
+      : input.action === 'revealAll'
+        ? [WHOLE_SCENE]
+        : [];
+  if (revealed.length > MAX_FOG_RECTS) {
+    throw conflict(
+      'fog_too_complex',
+      `A scene keeps at most ${String(MAX_FOG_RECTS)} separate revealed areas.`,
+    );
+  }
+  return db
+    .update(scenes)
+    .set({ revealed, updatedAt: now })
+    .where(eq(scenes.id, scene.id))
+    .returning()
+    .get();
 }
 
 export function deleteScene(db: DbOrTx, scene: Scene): void {

@@ -443,6 +443,16 @@ export const ptBR: Messages = {
   'ruler.hint.circle': 'Arraste do centro até o raio. Esc limpa.',
   'ruler.hint.cone':
     'Arraste da origem na direção do cone; ele é tão largo no fim quanto é longo. Esc limpa.',
+  'map.tool.reveal': 'Revelar',
+  'map.tool.hide': 'Ocultar',
+  'fog.hint.reveal':
+    'Arraste sobre as células para revelar, ou clique em uma. Os jogadores veem o que foi revelado e os tokens nele.',
+  'fog.hint.hide': 'Arraste sobre as células para ocultar de novo, ou clique em uma.',
+  'fog.revealAll': 'Revelar tudo',
+  'fog.hideAll': 'Ocultar tudo',
+  'scenes.fog': 'Névoa de guerra',
+  'scenes.fogHint':
+    'Os jogadores veem só as áreas que você revelar e os tokens nelas; os próprios tokens sempre aparecem para eles.',
   'map.keys':
     'As setas movem o token selecionado, ou a vista sem um; mais e menos aproximam e afastam, 0 mostra a cena inteira.',
   'map.scene': 'Cena',

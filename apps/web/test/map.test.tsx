@@ -9,6 +9,9 @@ import { setCsrfToken } from '../src/api/client.js';
 import {
   cellAt,
   cellCentre,
+  fogArea,
+  fogPixels,
+  fogShapes,
   gridSegments,
   sceneSize,
   stepCell,
@@ -112,6 +115,69 @@ describe('scene geometry', () => {
     expect(cellAt(none, { x: 3000, y: 10 }, area)).toEqual({ column: 42.36, row: 0 });
     expect(cellAt(none, { x: 3499, y: 10 }, area)).toEqual({ column: 49, row: 0 });
     expect(cellAt(square, { x: 3000, y: 10 }, area)).toBeNull();
+  });
+});
+
+describe('fog of war (ADR-070)', () => {
+  const square = { columns: 10, rows: 8, gridType: 'square', gridSize: 50 } as const;
+  const hex = { ...square, gridType: 'hex' } as const;
+  const gridless = { ...square, gridType: 'none' } as const;
+
+  it('takes every cell from the one a drag starts on to the one it ends on', () => {
+    // From the centre of (1, 1) to inside (3, 2), and back: the same cells.
+    const cells = { x: 1, y: 1, width: 3, height: 2 };
+    expect(fogArea(square, { x: 75, y: 75 }, { x: 180, y: 130 })).toEqual(cells);
+    expect(fogArea(square, { x: 180, y: 130 }, { x: 75, y: 75 })).toEqual(cells);
+    // A click takes the cell it is on; past the grid, nothing.
+    expect(fogArea(square, { x: 60, y: 60 }, { x: 62, y: 61 })).toEqual({
+      x: 1,
+      y: 1,
+      width: 1,
+      height: 1,
+    });
+    expect(fogArea(square, { x: 900, y: 900 }, { x: 901, y: 901 })).toBeNull();
+    // A drag reaching past the grid stops at its edge.
+    expect(fogArea(square, { x: 475, y: 10 }, { x: 900, y: 10 })).toEqual({
+      x: 9,
+      y: 0,
+      width: 1,
+      height: 1,
+    });
+    // A gridless scene takes the drag as it is, in cells.
+    expect(fogArea(gridless, { x: 25, y: 10 }, { x: 100, y: 85 })).toEqual({
+      x: 0.5,
+      y: 0.2,
+      width: 1.5,
+      height: 1.5,
+    });
+    expect(fogArea(gridless, { x: 25, y: 10 }, { x: 25, y: 10 })).toBeNull();
+  });
+
+  it('spans the hexes between the two a drag joins', () => {
+    const from = cellCentre(hex, { column: 0, row: 0 });
+    const to = cellCentre(hex, { column: 1, row: 1 });
+    const area = fogArea(hex, from, to);
+    expect(area).toEqual({ x: 0, y: 0, width: 2, height: 2 });
+    if (!area) return;
+    // Centres 25 and 75 on the first row, 50 and 100 on the second, half a hex to the right:
+    // the outline reaches the second row's right edge.
+    const outline = fogPixels(hex, area);
+    expect(outline.x).toBe(0);
+    expect(outline.width).toBe(125);
+  });
+
+  it('covers all but the revealed areas', () => {
+    const area = { width: 500, height: 400 };
+    expect(fogShapes(square, [], area).rects).toEqual([{ x: 0, y: 0, width: 500, height: 400 }]);
+    const shapes = fogShapes(square, [{ x: 0, y: 0, width: 10, height: 4 }], area);
+    expect(shapes.rects).toEqual([{ x: 0, y: 200, width: 500, height: 200 }]);
+    // A background past the grid stays fogged on a hex grid; each hidden hex is drawn.
+    const hexes = fogShapes(hex, [{ x: 0, y: 0, width: 10, height: 7 }], {
+      width: 900,
+      height: 900,
+    });
+    expect(hexes.hexes).toHaveLength(10);
+    expect(hexes.rects.length).toBeGreaterThan(0);
   });
 });
 
@@ -257,6 +323,8 @@ const scene = (id: string, name: string, active = false): SceneView => ({
   cellDistance: 5,
   distanceUnit: 'ft',
   diagonals: 'one',
+  fog: false,
+  revealed: [],
   active,
   createdAt: '2026-10-30T00:00:00.000Z',
   updatedAt: '2026-10-30T00:00:00.000Z',
@@ -355,6 +423,7 @@ describe('map and scenes panels (FR-MAP-01, 02)', () => {
     await user.clear(within(dialog).getByLabelText(/^Unit/));
     await user.type(within(dialog).getByLabelText(/^Unit/), 'm');
     await user.selectOptions(within(dialog).getByLabelText('Diagonals'), 'Straight line');
+    await user.click(within(dialog).getByLabelText(/^Fog of war/));
     await user.click(within(dialog).getByRole('button', { name: 'Create' }));
     await waitFor(() => {
       expect(calls.find((c) => c.method === 'POST')?.body).toEqual({
@@ -367,6 +436,7 @@ describe('map and scenes panels (FR-MAP-01, 02)', () => {
         cellDistance: 1.5,
         distanceUnit: 'm',
         diagonals: 'straight',
+        fog: true,
       });
     });
     const list = await sceneList();
