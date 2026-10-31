@@ -34,6 +34,28 @@ export const MAX_SCENE_CELLS = 200;
 export const MIN_GRID_SIZE = 16;
 export const MAX_GRID_SIZE = 400;
 
+/**
+ * An area of fog of war (FR-MAP-04, ADR-070), in cells from the top-left corner of the grid
+ * (on a hex grid, in its columns and rows). A token is in it when its centre, half a cell
+ * right of and below its `column` and `row`, is.
+ */
+export const fogRectSchema = z.object({
+  x: z.number().min(0).max(MAX_SCENE_CELLS),
+  y: z.number().min(0).max(MAX_SCENE_CELLS),
+  width: z.number().positive().max(MAX_SCENE_CELLS),
+  height: z.number().positive().max(MAX_SCENE_CELLS),
+});
+export type FogRect = z.infer<typeof fogRectSchema>;
+/** The most separate revealed areas a scene keeps; more is refused. */
+export const MAX_FOG_RECTS = 1000;
+/** All of any scene, gridless ones' backgrounds included. */
+export const WHOLE_SCENE: FogRect = {
+  x: 0,
+  y: 0,
+  width: MAX_SCENE_CELLS,
+  height: MAX_SCENE_CELLS,
+};
+
 export const sceneSchema = z.object({
   id: z.string(),
   tableId: z.string(),
@@ -50,6 +72,10 @@ export const sceneSchema = z.object({
   cellDistance: z.number(),
   distanceUnit: z.string(),
   diagonals: z.enum(DIAGONAL_RULES),
+  /** Fog of war is on: players see only `revealed` and the tokens in it (ADR-070). */
+  fog: z.boolean(),
+  /** The revealed areas, apart from each other. */
+  revealed: z.array(fogRectSchema),
   /** The scene players see; a table has at most one. */
   active: z.boolean(),
   createdAt: z.string(),
@@ -68,6 +94,7 @@ const sceneFields = {
   cellDistance: z.number().positive().max(MAX_CELL_DISTANCE),
   distanceUnit: z.string().trim().min(1).max(MAX_DISTANCE_UNIT),
   diagonals: z.enum(DIAGONAL_RULES),
+  fog: z.boolean(),
 };
 
 /** `POST /tables/:id/scenes`; a new scene goes last and is not active. */
@@ -81,12 +108,23 @@ export const sceneCreateBody = z.object({
   cellDistance: sceneFields.cellDistance.default(5),
   distanceUnit: sceneFields.distanceUnit.default('ft'),
   diagonals: sceneFields.diagonals.default('one'),
+  fog: sceneFields.fog.default(false),
 });
 export type SceneCreateInput = z.input<typeof sceneCreateBody>;
 
 /** `PATCH /scenes/:id`. */
 export const sceneUpdateBody = z.object(sceneFields).partial();
 export type SceneUpdateInput = z.input<typeof sceneUpdateBody>;
+
+/**
+ * `POST /scenes/:id/fog`: reveals or hides an area, or the whole scene. Later changes win
+ * where they overlap earlier ones.
+ */
+export const fogBody = z.union([
+  z.object({ action: z.enum(['reveal', 'hide']), area: fogRectSchema }),
+  z.object({ action: z.enum(['revealAll', 'hideAll']) }),
+]);
+export type FogInput = z.input<typeof fogBody>;
 
 /** `POST /tables/:id/scenes/order`: every scene of the table, in the new order. */
 export const sceneOrderBody = z.object({

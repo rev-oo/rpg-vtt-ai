@@ -436,6 +436,16 @@ export const en = {
   'ruler.hint.circle': 'Drag from the centre out to the radius. Escape clears it.',
   'ruler.hint.cone':
     'Drag from the origin the way it points; it is as wide at its end as it is long. Escape clears it.',
+  'map.tool.reveal': 'Reveal',
+  'map.tool.hide': 'Hide',
+  'fog.hint.reveal':
+    'Drag over the cells to reveal, or click one. Players see what is revealed and the tokens in it.',
+  'fog.hint.hide': 'Drag over the cells to hide again, or click one.',
+  'fog.revealAll': 'Reveal all',
+  'fog.hideAll': 'Hide all',
+  'scenes.fog': 'Fog of war',
+  'scenes.fogHint':
+    'Players see only the areas you reveal, and the tokens in them; their own tokens always show to them.',
   'map.keys':
     'Arrow keys move the selected token, or pan when none is; plus and minus zoom, 0 shows the whole scene.',
   'map.scene': 'Scene',

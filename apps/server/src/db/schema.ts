@@ -25,6 +25,7 @@ import {
   GRID_TYPES,
   MESSAGE_KINDS,
   PLUGIN_STATUSES,
+  type FogRect,
   type PluginIssueView,
   type RecipeCard,
   type Roll,
@@ -427,6 +428,9 @@ export const scenes = sqliteTable(
     cellDistance: real('cell_distance').notNull().default(5),
     distanceUnit: text('distance_unit').notNull().default('ft'),
     diagonals: text('diagonals', { enum: DIAGONAL_RULES }).notNull().default('one'),
+    /** Fog of war is on; players see only the `revealed` areas, apart from each other (ADR-070). */
+    fog: integer('fog', { mode: 'boolean' }).notNull().default(false),
+    revealed: text('revealed', { mode: 'json' }).$type<FogRect[]>().notNull().default([]),
     active: integer('active', { mode: 'boolean' }).notNull().default(false),
     /** Place in the GM's list. */
     sort: integer('sort').notNull(),

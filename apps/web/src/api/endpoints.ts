@@ -70,6 +70,7 @@ import {
   type TokenView,
   type SceneCreateInput,
   type SceneUpdateInput,
+  type FogInput,
   type SceneView,
   compendiumCopyResponseSchema,
   compendiumPageSchema,
@@ -392,6 +393,9 @@ export const api = {
   updateScene: async (sceneId: string, input: SceneUpdateInput): Promise<SceneView> =>
     (await request('PATCH', `/scenes/${sceneId}`, sceneResponseSchema, input)).scene,
   deleteScene: (sceneId: string): Promise<void> => requestNoContent('DELETE', `/scenes/${sceneId}`),
+  /** Reveals or hides an area of a scene's fog of war, or all of it (FR-MAP-04, ADR-070). */
+  changeFog: async (sceneId: string, input: FogInput): Promise<SceneView> =>
+    (await request('POST', `/scenes/${sceneId}/fog`, sceneResponseSchema, input)).scene,
   /** Puts every scene of the table in the given order; answers with the list. */
   orderScenes: async (tableId: string, sceneIds: readonly string[]): Promise<SceneView[]> =>
     (

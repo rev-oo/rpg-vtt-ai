@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { canManageScenes } from '@vtt/shared';
 import {
   activeSceneBody,
+  fogBody,
   sceneCreateBody,
   sceneOrderBody,
   sceneUpdateBody,
@@ -12,6 +13,7 @@ import {
 
 import { requireUnarchived } from '../../domain/entities.js';
 import {
+  changeFog,
   createScene,
   deleteScene,
   findScene,
@@ -37,6 +39,13 @@ const idParams = z.object({ id: z.uuid() });
 export function sceneRoutes({ app, db, events, now }: AppContext): void {
   const changed = (tableId: string) => {
     events.publish(tableId, { type: 'scene.updated', tableId, payload: {} }, () => true);
+  };
+  /**
+   * Fog decides which tokens players see, so a change to it has everyone refetch the scene's
+   * tokens; the server filters what they get (ADR-070).
+   */
+  const tokensShift = (tableId: string, sceneId: string) => {
+    events.publish(tableId, { type: 'token.updated', tableId, payload: { sceneId } }, () => true);
   };
 
   /** A GM's change to a table: checks the role and that the table is not archived. */
@@ -98,6 +107,17 @@ export function sceneRoutes({ app, db, events, now }: AppContext): void {
     const body = parseInput(sceneUpdateBody, request.body);
     const updated = updateScene(db, scene, body, now());
     changed(scene.tableId);
+    tokensShift(scene.tableId, scene.id);
+    return { scene: toSceneView(updated) };
+  });
+
+  app.post('/api/v1/scenes/:id/fog', (request): SceneResponse => {
+    const { scene } = sceneFor(request);
+    managing(request, scene.tableId);
+    const body = parseInput(fogBody, request.body);
+    const updated = changeFog(db, scene, body, now());
+    changed(scene.tableId);
+    tokensShift(scene.tableId, scene.id);
     return { scene: toSceneView(updated) };
   });
 

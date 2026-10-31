@@ -1,6 +1,7 @@
 # ADR-068: Tokens are rows on a scene's cells, filtered per member and refetched on events
 
 - **Status:** Accepted
+- **Amended by:** ADR-070 (tokens in the fog)
 - **Date:** 2026-10-30
 - **Tasks:** T-1403
 - **Covers:** FR-MAP-03, NFR-08 (hidden tokens)

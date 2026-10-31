@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { canManageScenes, canSeeToken } from '@vtt/shared';
+import { canManageScenes } from '@vtt/shared';
 import {
   tokenCreateBody,
   tokenUpdateBody,
@@ -18,7 +18,8 @@ import {
   placedToken,
   toTokenView,
   updateToken,
-  type Token,
+  visibleTo,
+  type Placed,
 } from '../../domain/tokens.js';
 import { notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
@@ -29,18 +30,16 @@ const idParams = z.object({ id: z.uuid() });
 
 /**
  * Tokens on a scene (FR-MAP-03, ADR-068). Each change sends `token.updated` with the scene,
- * only to the members who could see the token before or after it, so a hidden token's moves
- * never reach players (NFR-08); they refetch what they may see.
+ * only to the members who could see the token before or after it, so the moves of a hidden
+ * token, or of one in the fog (ADR-070), never reach players (NFR-08); they refetch what they
+ * may see.
  */
 export function tokenRoutes({ app, db, events, now }: AppContext): void {
-  const changed = (scene: Scene, ...states: Token[]) => {
+  const changed = (scene: Scene, ...states: Placed[]) => {
     events.publish(
       scene.tableId,
       { type: 'token.updated', tableId: scene.tableId, payload: { sceneId: scene.id } },
-      (subject) =>
-        states.some((token) =>
-          canSeeToken(subject.role, { hidden: token.hidden, sceneActive: scene.active }),
-        ),
+      (subject) => states.some((placed) => visibleTo(subject, placed, scene)),
     );
   };
 
@@ -75,7 +74,7 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
     requireUnarchived(table);
     const body = parseInput(tokenCreateBody, request.body);
     const placed = createToken(db, scene, body, now());
-    changed(scene, placed.token);
+    changed(scene, placed);
     const token: TokenView = toTokenView(placed, scene, membership);
     return reply.code(201).send({ token });
   });
@@ -85,7 +84,7 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
     requireUnarchived(table);
     const body = parseInput(tokenUpdateBody, request.body);
     const updated = updateToken(db, placed, scene, membership, body, now());
-    changed(scene, placed.token, updated.token);
+    changed(scene, placed, updated);
     return { token: toTokenView(updated, scene, membership) };
   });
 
@@ -94,7 +93,7 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
     requireMember(db, request, table.id, canManageScenes);
     requireUnarchived(table);
     deleteToken(db, placed.token);
-    changed(scene, placed.token);
+    changed(scene, placed);
     return reply.code(204).send();
   });
 }

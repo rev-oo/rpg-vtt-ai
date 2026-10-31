@@ -5,6 +5,7 @@ export * from './combat.js';
 export * from './collab.js';
 export * from './constants.js';
 export * from './events.js';
+export * from './fog.js';
 export * from './history.js';
 export * from './issues.js';
 export * from './compendium.js';

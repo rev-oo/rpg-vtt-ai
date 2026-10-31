@@ -228,25 +228,39 @@ describe('table-level permissions', () => {
   });
 });
 
-describe('tokens (FR-MAP-03, ADR-068)', () => {
+describe('tokens (FR-MAP-03, FR-MAP-04)', () => {
   const owned = { default: 'none', users: { [ME]: 'owner' } } as const;
   const watched = { default: 'observer', users: {} } as const;
-  const shown = { hidden: false, sceneActive: true };
+  const shown = { hidden: false, sceneActive: true, fogged: false, actorOwnership: null };
 
   it.each(TABLE_ROLES)('%s sees and moves what the role allows', (role) => {
     const gmLike = role === 'gm' || role === 'assistant';
-    expect(canSeeToken(role, shown)).toBe(true);
-    expect(canSeeToken(role, { hidden: true, sceneActive: true })).toBe(gmLike);
-    expect(canSeeToken(role, { hidden: false, sceneActive: false })).toBe(gmLike);
     const subject = { userId: ME, role };
+    expect(canSeeToken(subject, shown)).toBe(true);
+    expect(canSeeToken(subject, { ...shown, hidden: true })).toBe(gmLike);
+    expect(canSeeToken(subject, { ...shown, sceneActive: false })).toBe(gmLike);
     // Owners move their actors' tokens; spectators own nothing.
     expect(canMoveToken(subject, { ...shown, actorOwnership: owned })).toBe(
       gmLike || role === 'player',
     );
     expect(canMoveToken(subject, { ...shown, actorOwnership: watched })).toBe(gmLike);
-    expect(canMoveToken(subject, { ...shown, actorOwnership: null })).toBe(gmLike);
-    expect(canMoveToken(subject, { hidden: true, sceneActive: true, actorOwnership: owned })).toBe(
-      gmLike,
+    expect(canMoveToken(subject, shown)).toBe(gmLike);
+    expect(canMoveToken(subject, { ...shown, hidden: true, actorOwnership: owned })).toBe(gmLike);
+  });
+
+  it.each(TABLE_ROLES)('%s sees tokens in the fog only as their owner (ADR-070)', (role) => {
+    const gmLike = role === 'gm' || role === 'assistant';
+    const subject = { userId: ME, role };
+    const fogged = { ...shown, fogged: true };
+    expect(canSeeToken(subject, fogged)).toBe(gmLike);
+    expect(canSeeToken(subject, { ...fogged, actorOwnership: watched })).toBe(gmLike);
+    expect(canSeeToken(subject, { ...fogged, actorOwnership: owned })).toBe(
+      gmLike || role === 'player',
     );
+    expect(canMoveToken(subject, { ...fogged, actorOwnership: owned })).toBe(
+      gmLike || role === 'player',
+    );
+    // Hidden stays hidden, fog or not.
+    expect(canSeeToken(subject, { ...fogged, hidden: true, actorOwnership: owned })).toBe(gmLike);
   });
 });

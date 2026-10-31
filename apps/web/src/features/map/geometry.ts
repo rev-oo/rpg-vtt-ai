@@ -1,4 +1,11 @@
-import { MAX_SCENE_CELLS, snapsToCells, type GridType } from '@vtt/shared/api';
+import {
+  hideArea,
+  isRevealed,
+  MAX_SCENE_CELLS,
+  snapsToCells,
+  type FogRect,
+  type GridType,
+} from '@vtt/shared/api';
 
 import type { Size } from './view.js';
 
@@ -187,4 +194,102 @@ export function stepCell(
   const inside =
     next.column >= 0 && next.row >= 0 && next.column <= last.column && next.row <= last.row;
   return inside ? next : null;
+}
+
+const hundredths = (value: number) => Math.round(value * 100) / 100;
+
+/**
+ * The area a drag from `from` to `to` reveals or hides (ADR-070), in cells. On a grid it is
+ * every cell from the one the drag starts on to the one it ends on, so a click takes one
+ * cell; on a hex grid, the columns and rows between them. A gridless scene takes the drag as
+ * it is. `null` when the drag covers no cell.
+ */
+export function fogArea(grid: SceneGrid, from: Point, to: Point): FogRect | null {
+  if (grid.gridType === 'none') {
+    const limit = (value: number) =>
+      Math.min(Math.max(0, hundredths(value / grid.gridSize)), MAX_SCENE_CELLS);
+    const x = limit(Math.min(from.x, to.x));
+    const y = limit(Math.min(from.y, to.y));
+    const width = hundredths(limit(Math.max(from.x, to.x)) - x);
+    const height = hundredths(limit(Math.max(from.y, to.y)) - y);
+    return width > 0 && height > 0 ? { x, y, width, height } : null;
+  }
+  const start = cellUnder(grid, from);
+  const end = cellUnder(grid, to);
+  const span = (a: number, b: number, cells: number) => {
+    const low = Math.max(0, Math.min(a, b));
+    const high = Math.min(cells - 1, Math.max(a, b));
+    return low <= high ? { low, size: high - low + 1 } : null;
+  };
+  const columns = span(start.column, end.column, grid.columns);
+  const rows = span(start.row, end.row, grid.rows);
+  if (!columns || !rows) return null;
+  return { x: columns.low, y: rows.low, width: columns.size, height: rows.size };
+}
+
+/** What the fog covers, in scene pixels: rectangles, and on a hex grid hidden hexes. */
+export interface FogShapes {
+  rects: FogRect[];
+  hexes: Point[][];
+}
+
+/**
+ * The fog over `area` (the grid and the background) apart from the revealed areas. On a hex
+ * grid a hex is revealed when its centre, in columns and rows, is; past the grid all is fog.
+ */
+export function fogShapes(grid: SceneGrid, revealed: readonly FogRect[], area: Size): FogShapes {
+  const whole = { x: 0, y: 0, width: area.width, height: area.height };
+  if (grid.gridType !== 'hex') {
+    const size = grid.gridSize;
+    const inCells = { x: 0, y: 0, width: area.width / size, height: area.height / size };
+    const hidden = revealed.reduce((rest, shown) => hideArea(rest, shown), [inCells]);
+    return {
+      rects: hidden.map(({ x, y, width, height }) => ({
+        x: x * size,
+        y: y * size,
+        width: width * size,
+        height: height * size,
+      })),
+      hexes: [],
+    };
+  }
+  const hexes: Point[][] = [];
+  for (let row = 0; row < grid.rows; row++) {
+    for (let column = 0; column < grid.columns; column++) {
+      if (!isRevealed(revealed, column + 0.5, row + 0.5)) {
+        hexes.push(hexCorners(grid, { column, row }));
+      }
+    }
+  }
+  const { width, height } = sceneSize(grid);
+  return { rects: hideArea([whole], { x: 0, y: 0, width, height }), hexes };
+}
+
+/** A fog area in scene pixels, around its cells' centres on a hex grid, to outline it. */
+export function fogPixels(grid: SceneGrid, area: FogRect): FogRect {
+  const size = grid.gridSize;
+  if (grid.gridType !== 'hex') {
+    return {
+      x: area.x * size,
+      y: area.y * size,
+      width: area.width * size,
+      height: area.height * size,
+    };
+  }
+  // Odd rows sit half a hex right, so the corners take in a row of each kind.
+  const lastRow = area.y + area.height - 1;
+  const centres = [area.y, Math.min(area.y + 1, lastRow), Math.max(area.y, lastRow - 1), lastRow]
+    .flatMap((row) => [area.x, area.x + area.width - 1].map((column) => ({ column, row })))
+    .map((cell) => cellCentre(grid, cell));
+  const xs = centres.map((centre) => centre.x);
+  const ys = centres.map((centre) => centre.y);
+  const radius = radiusOf(size);
+  const left = Math.min(...xs) - size / 2;
+  const top = Math.min(...ys) - radius;
+  return {
+    x: left,
+    y: top,
+    width: Math.max(...xs) + size / 2 - left,
+    height: Math.max(...ys) + radius - top,
+  };
 }

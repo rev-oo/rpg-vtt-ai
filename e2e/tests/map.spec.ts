@@ -380,3 +380,85 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await expect(list(tessPage).getByRole('button', { name: /^Wren \(3, 5\)/ })).toBeVisible();
   });
 });
+
+// T-1404 (FR-MAP-04, ADR-070): the GM reveals an area of fog and the player sees the token in
+// it appear; hiding everything takes it away again. Players keep their own token in the fog.
+test('the fog of war shows players only what the GM reveals', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  const finn = await createPlayer(browser, gm, 'fogfinn', 'Fog Finn');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Fog Table',
+    systemId: 'e2e-system',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(finn, `/invites/${token}/accept`);
+  const { actor } = await post<{ actor: { id: string } }>(finn, `/tables/${table.id}/actors`, {
+    type: 'character',
+    name: 'Moss',
+  });
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Crypt',
+    columns: 8,
+    rows: 6,
+    fog: true,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: actor.id, column: 0, row: 0 });
+  await post(gm, `/scenes/${scene.id}/tokens`, { name: 'Ghoul', column: 5, row: 3 });
+  await post(gm, `/scenes/${scene.id}/tokens`, { name: 'Bat', column: 4, row: 2 });
+
+  const open = async (who: typeof gm): Promise<Page> => {
+    const page = await who.context.newPage();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/tables/${table.id}`);
+    await drawn(page, 'Crypt');
+    return page;
+  };
+  const gmPage = await open(gm);
+  const finnPage = await open(finn);
+  const list = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+  const ghoul = list(finnPage).getByRole('button', { name: /^Ghoul/ });
+
+  await test.step('the player sees only their own token in the fog, and has no fog tools', async () => {
+    await expect(list(finnPage).getByRole('button', { name: /^Moss \(1, 1\)/ })).toBeVisible();
+    await expect(ghoul).toHaveCount(0);
+    await expect(list(gmPage).getByRole('button', { name: /^Ghoul \(6, 4\)/ })).toBeVisible();
+    const tools = finnPage.getByRole('toolbar', { name: 'Map tools' });
+    await expect(tools.getByRole('button', { name: 'Ruler' })).toBeVisible();
+    await expect(tools.getByRole('button', { name: 'Reveal' })).toHaveCount(0);
+  });
+
+  await test.step('the GM drags over the cells around the ghoul to reveal them', async () => {
+    const map = gmPage.getByRole('application', { name: 'Crypt' });
+    const box = await map.boundingBox();
+    if (!box) throw new Error('the map is not shown');
+    const { zoom, x, y } = await view(map);
+    const at = (column: number, row: number) => ({
+      x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
+      y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
+    });
+    await gmPage
+      .getByRole('toolbar', { name: 'Map tools' })
+      .getByRole('button', { name: 'Reveal' })
+      .click();
+    const from = at(4, 2);
+    const to = at(6, 4);
+    await gmPage.mouse.move(from.x, from.y);
+    await gmPage.mouse.down();
+    await gmPage.mouse.move(to.x, to.y, { steps: 6 });
+    await gmPage.mouse.up();
+    await expect(list(finnPage).getByRole('button', { name: /^Ghoul \(6, 4\)/ })).toBeVisible();
+    // The cell the drag started on is revealed too.
+    await expect(list(finnPage).getByRole('button', { name: /^Bat \(5, 3\)/ })).toBeVisible();
+    // Revealing did not pan the map.
+    expect(await view(map)).toEqual({ zoom, x, y });
+  });
+
+  await test.step('hiding everything takes the ghoul from the player again', async () => {
+    await gmPage.getByRole('button', { name: 'Hide all' }).click();
+    await expect(ghoul).toHaveCount(0);
+    await expect(list(finnPage).getByRole('button', { name: /^Moss/ })).toBeVisible();
+  });
+});
