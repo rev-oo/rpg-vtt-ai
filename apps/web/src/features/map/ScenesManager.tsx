@@ -1,11 +1,12 @@
 import { useState, type ReactElement } from 'react';
 
 import type { SceneCreateInput, SceneView } from '@vtt/shared/api';
-import { Alert, Button, Dialog } from '@vtt/ui';
+import { Alert, Button, Dialog, IconButton } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 
 import { SceneDialog } from './SceneDialog.js';
 import { useScenes } from './use-scenes.js';
@@ -46,6 +47,7 @@ export function ScenesManager({ tableId }: { tableId: string }): ReactElement {
     <div className="flex flex-col gap-3">
       <div className="flex justify-end">
         <Button
+          icon={<ICON.add />}
           variant="primary"
           onClick={() => {
             setEditing(null);
@@ -85,6 +87,7 @@ export function ScenesManager({ tableId }: { tableId: string }): ReactElement {
               <div className="flex flex-wrap gap-1">
                 <Button
                   variant={scene.active ? 'secondary' : 'primary'}
+                  icon={scene.active ? <ICON.hide /> : <ICON.show />}
                   aria-label={t(scene.active ? 'scenes.hideOf' : 'scenes.showOf', {
                     name: scene.name,
                   })}
@@ -94,44 +97,42 @@ export function ScenesManager({ tableId }: { tableId: string }): ReactElement {
                 >
                   {t(scene.active ? 'scenes.hide' : 'scenes.show')}
                 </Button>
-                <Button
-                  variant="ghost"
-                  aria-label={t('scenes.editOf', { name: scene.name })}
-                  onClick={() => {
-                    setEditing(scene);
-                  }}
-                >
-                  {t('scenes.edit')}
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled={index === 0}
-                  aria-label={t('scenes.moveUp', { name: scene.name })}
-                  onClick={() => {
-                    move(scenes, index, -1);
-                  }}
-                >
-                  ↑
-                </Button>
-                <Button
-                  variant="ghost"
-                  disabled={index === scenes.length - 1}
-                  aria-label={t('scenes.moveDown', { name: scene.name })}
-                  onClick={() => {
-                    move(scenes, index, 1);
-                  }}
-                >
-                  ↓
-                </Button>
-                <Button
-                  variant="ghost"
-                  aria-label={t('scenes.deleteOf', { name: scene.name })}
-                  onClick={() => {
-                    setDeleting(scene);
-                  }}
-                >
-                  {t('scenes.delete')}
-                </Button>
+                <div className="flex">
+                  <IconButton
+                    variant="ghost"
+                    icon={<ICON.edit />}
+                    label={t('scenes.editOf', { name: scene.name })}
+                    onClick={() => {
+                      setEditing(scene);
+                    }}
+                  />
+                  <IconButton
+                    variant="ghost"
+                    icon={<ICON.up />}
+                    disabled={index === 0}
+                    label={t('scenes.moveUp', { name: scene.name })}
+                    onClick={() => {
+                      move(scenes, index, -1);
+                    }}
+                  />
+                  <IconButton
+                    variant="ghost"
+                    icon={<ICON.down />}
+                    disabled={index === scenes.length - 1}
+                    label={t('scenes.moveDown', { name: scene.name })}
+                    onClick={() => {
+                      move(scenes, index, 1);
+                    }}
+                  />
+                  <IconButton
+                    variant="ghost"
+                    icon={<ICON.delete />}
+                    label={t('scenes.deleteOf', { name: scene.name })}
+                    onClick={() => {
+                      setDeleting(scene);
+                    }}
+                  />
+                </div>
               </div>
             </li>
           ))}

@@ -14,6 +14,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Fog of war: turn it on in a scene's form and players see only the areas you reveal, and the tokens in them; their own characters' tokens always show to them. GMs and assistants get Reveal and Hide on the map toolbar: drag from one cell to another (or click a cell) to reveal or hide them, or Reveal all and Hide all. GMs see the fog as a tint. Tokens in the fog, and their moves, never reach players; the background image itself is not cut, so a player who opens its address sees all of it (FR-MAP-04, ADR-070).
 - A toolbar over the map switches to a Ruler: drag on the map, or click point after point for a path, to measure in the scene's unit (Enter or a double click ends a path, Backspace removes its last point, Escape clears it), or to a Circle or a Cone: drag from the centre or origin to read its radius or length (cones are as wide at their end as they are long). GMs set what a cell measures (5 ft by default), the unit and how diagonals count (one cell each, alternating 1 and 2, or a straight line) in the scene form. Only you see your measures (FR-MAP-05, ADR-069).
 
+### Changed
+
+- The app has icons. Dock tabs and the Panels menu show each panel's icon; the map's tools and zoom buttons, and the row actions in the Actors, Items, Journal and Scenes lists, are icon buttons with a tooltip and the same names for screen readers; New, Add token, Send, Roll, Upload and other common actions show an icon beside their text (ADR-071).
+
 ### Fixed
 
 - The Panels menu is no longer covered by the workspace's resize bars.

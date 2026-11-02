@@ -22,9 +22,10 @@ import {
 } from 'react';
 
 import type { FogInput, SceneView, TokenView } from '@vtt/shared/api';
-import { Button } from '@vtt/ui';
+import { Button, IconButton } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import { carriesActor, droppedActor } from '../entities/entity-drag.js';
 
 import { FogLayer } from './fog-layer.js';
@@ -83,6 +84,14 @@ export interface MapCanvasProps extends Omit<TokenHandlers, 'menu'> {
 type Tool = 'select' | 'ruler' | 'circle' | 'cone' | 'reveal' | 'hide';
 const TOOLS: readonly Tool[] = ['select', 'ruler', 'circle', 'cone'];
 const FOG_TOOLS: readonly Tool[] = ['reveal', 'hide'];
+const TOOL_ICONS: Record<Tool, ReactElement> = {
+  select: <ICON.select />,
+  ruler: <ICON.ruler />,
+  circle: <ICON.circle />,
+  cone: <ICON.cone />,
+  reveal: <ICON.reveal />,
+  hide: <ICON.hide />,
+};
 
 /** The ruler's path, for keys and double clicks; each answers whether it changed anything. */
 interface RulerControl {
@@ -672,17 +681,17 @@ export default function MapCanvas({
         className="absolute top-3 left-3 flex gap-1 rounded-lg bg-surface p-1 shadow"
       >
         {tools.map((each) => (
-          <Button
+          <IconButton
             key={each}
+            icon={TOOL_ICONS[each]}
+            label={t(`map.tool.${each}`)}
             variant={tool === each ? 'primary' : 'ghost'}
             aria-pressed={tool === each}
             disabled={!stage}
             onClick={() => {
               setTool(each);
             }}
-          >
-            {t(`map.tool.${each}`)}
-          </Button>
+          />
         ))}
       </div>
       {(tool === 'reveal' || tool === 'hide') && (
@@ -742,32 +751,30 @@ export default function MapCanvas({
         </p>
       )}
       <div className="absolute right-3 bottom-3 flex gap-1">
-        <Button
+        <IconButton
+          icon={<ICON.zoomIn />}
+          label={t('map.zoomIn')}
           disabled={!stage}
-          aria-label={t('map.zoomIn')}
           onClick={() => {
             step((view) => zoomBy(view, ZOOM_STEP));
           }}
-        >
-          +
-        </Button>
-        <Button
+        />
+        <IconButton
+          icon={<ICON.zoomOut />}
+          label={t('map.zoomOut')}
           disabled={!stage}
-          aria-label={t('map.zoomOut')}
           onClick={() => {
             step((view) => zoomBy(view, 1 / ZOOM_STEP));
           }}
-        >
-          −
-        </Button>
-        <Button
+        />
+        <IconButton
+          icon={<ICON.fit />}
+          label={t('map.fit')}
           disabled={!stage}
           onClick={() => {
             step(() => fitView(content, screenOf(stage?.viewport)));
           }}
-        >
-          {t('map.fit')}
-        </Button>
+        />
       </div>
     </div>
   );

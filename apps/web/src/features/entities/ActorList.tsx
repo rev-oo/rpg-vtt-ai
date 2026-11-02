@@ -3,11 +3,12 @@ import { useRevalidator } from 'react-router';
 
 import { canCreateActor, canSetOwnership } from '@vtt/shared';
 import type { ActorView, ItemView } from '@vtt/shared/api';
-import { Alert, Button } from '@vtt/ui';
+import { Alert, Button, IconButton } from '@vtt/ui';
 
 import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import type { TableData } from '../table/table-data.js';
 import { OpenButton } from '../workspace/OpenButton.js';
 import { itemPanelId, sheetPanelId } from '../workspace/panel-ids.js';
@@ -89,6 +90,7 @@ export function ActorList({
         </div>
         {creatable.length > 0 && (
           <Button
+            icon={<ICON.add />}
             variant="primary"
             onClick={() => {
               setCreating(true);
@@ -120,16 +122,16 @@ export function ActorList({
             drag={trash ? undefined : { kind: 'actor', actorId: actor.id }}
             actions={
               trash ? (
-                <Button
+                <IconButton
+                  icon={<ICON.restore />}
+                  label={t('entities.restore')}
                   onClick={() =>
                     void run(async () => {
                       await api.restoreActor(actor.id);
                       return t('entities.restored', { name: actor.name });
                     })
                   }
-                >
-                  {t('entities.restore')}
-                </Button>
+                />
               ) : (
                 <>
                   <OpenButton
@@ -140,37 +142,37 @@ export function ActorList({
                     {t('sheet.open')}
                   </OpenButton>
                   {canDuplicate(actor) && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.copy />}
+                      label={t('actors.duplicate')}
                       onClick={() =>
                         void run(async () => {
                           const copy = await api.duplicateActor(actor.id);
                           return t('actors.duplicated', { name: copy.name });
                         })
                       }
-                    >
-                      {t('actors.duplicate')}
-                    </Button>
+                    />
                   )}
                   {canSetOwnership(table.role) && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.ownership />}
+                      label={t('ownership.open')}
                       onClick={() => {
                         setEditingOwnership(actor);
                       }}
-                    >
-                      {t('ownership.open')}
-                    </Button>
+                    />
                   )}
                   {actor.access === 'owner' && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.delete />}
+                      label={t('entities.delete')}
                       onClick={() =>
                         void run(async () => {
                           await api.deleteActor(actor.id);
                           return t('entities.deleted', { name: actor.name });
                         })
                       }
-                    >
-                      {t('entities.delete')}
-                    </Button>
+                    />
                   )}
                 </>
               )

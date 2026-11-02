@@ -12,6 +12,7 @@ import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import { useTableData } from '../table/table-data.js';
 
 import { useCanManageAssets } from './use-can-manage-assets.js';
@@ -128,6 +129,7 @@ export function AssetGallery({ onPick }: AssetGalleryProps): ReactElement {
             }}
           />
           <Button
+            icon={<ICON.upload />}
             disabled={busy}
             onClick={() => {
               input.current?.click();

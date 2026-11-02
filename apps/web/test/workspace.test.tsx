@@ -67,6 +67,11 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Chat',
       'Dice',
     ]);
+    // Each tab shows its panel's icon, hidden from screen readers (ADR-071).
+    await waitFor(() => {
+      const icons = document.querySelectorAll('.dv-tab .vtt-tab-icon [aria-hidden="true"] svg');
+      expect(icons).toHaveLength(tabs().length);
+    });
   });
 
   it('has no other table URLs: they lead home', async () => {

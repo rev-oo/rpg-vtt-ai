@@ -46,6 +46,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-10-30 | Scenes may have a hidden grid (cells not drawn, tokens still snap) or none (tokens stand anywhere), and the map can be panned past the scene's edges (ADR-066, ADR-067, ADR-068).                                                                                                            |
 | 2026-10-31 | T-1404 done: fog of war per scene. GMs and assistants reveal and hide rectangles of cells (or any area on a gridless scene) with Reveal and Hide tools; players get only the revealed areas and the tokens in them, save their own actors' tokens (ADR-070).                                 |
 | 2026-10-31 | M14 done: scenes, the map canvas, tokens, the token menu, the map toolbar with ruler, circle and cone, and fog of war. M15 is active.                                                                                                                                                        |
+| 2026-11-02 | Icons added at the user's request, outside the milestones: dock tabs and the Panels menu, the map toolbar and zoom buttons, list row actions and common actions, with Lucide SVGs; icon-only buttons always carry a label and tooltip (ADR-071).                                             |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).              |
 
 ---
@@ -976,6 +977,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-068 | [Tokens are rows on a scene's cells, filtered per member and refetched on events](docs/adr/ADR-068-tokens.md)                                   | Accepted                                   |
 | ADR-069 | [A token menu on right click, and a ruler each member uses alone](docs/adr/ADR-069-map-tools.md)                                                | Accepted                                   |
 | ADR-070 | [Fog of war is a list of revealed rectangles, filtered on the server](docs/adr/ADR-070-fog-of-war.md)                                           | Accepted                                   |
+| ADR-071 | [Icons are Lucide SVGs, beside text on actions, alone only with a label](docs/adr/ADR-071-icons.md)                                             | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

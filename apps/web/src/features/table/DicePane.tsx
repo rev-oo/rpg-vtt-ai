@@ -7,6 +7,7 @@ import { Alert, Button, TextField } from '@vtt/ui';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 
 const DICE = ['d4', 'd6', 'd8', 'd10', 'd12', 'd20', 'd100'] as const;
 
@@ -73,7 +74,12 @@ export function DicePane({
             setFormula(event.target.value);
           }}
         />
-        <Button type="submit" variant="primary" disabled={!mayRoll || !formula.trim()}>
+        <Button
+          icon={<ICON.roll />}
+          type="submit"
+          variant="primary"
+          disabled={!mayRoll || !formula.trim()}
+        >
           {t('dice.roll')}
         </Button>
       </form>

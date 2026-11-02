@@ -62,7 +62,7 @@ export const en = {
 
   'table.notFound': 'This table does not exist, or you are not a member.',
   'table.back': 'Back to your tables',
-  'workspace.tables': '← Tables',
+  'workspace.tables': 'Tables',
   'workspace.panels': 'Panels',
   'workspace.resetLayout': 'Reset layout',
   'workspace.isOpen': 'open',
@@ -456,7 +456,7 @@ export const en = {
   'map.openScenes': 'Open Scenes',
   'map.zoomIn': 'Zoom in',
   'map.zoomOut': 'Zoom out',
-  'map.fit': 'Fit',
+  'map.fit': 'Fit the scene',
   'map.unsupported': 'This browser cannot draw maps: it has no WebGL.',
   'map.backgroundBlocked':
     'The background image could not be drawn. Its site may not allow it; upload the image to the table instead.',

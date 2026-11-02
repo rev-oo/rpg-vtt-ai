@@ -29,6 +29,7 @@ import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import { CardMessage } from '../../plugin-host/CardMessage.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 
@@ -601,7 +602,7 @@ function Composer({
             />
             <form.Subscribe selector={(state) => state.isSubmitting}>
               {(submitting) => (
-                <Button type="submit" variant="primary" disabled={submitting}>
+                <Button icon={<ICON.send />} type="submit" variant="primary" disabled={submitting}>
                   {t('chat.send')}
                 </Button>
               )}

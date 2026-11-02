@@ -8,6 +8,7 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { CreateTableDialog } from '../features/tables/CreateTableDialog.js';
 import { t } from '../i18n/index.js';
+import { ICON } from '../icons.js';
 
 import type { Route } from './+types/tables';
 
@@ -33,6 +34,7 @@ export default function TablesRoute({ loaderData }: Route.ComponentProps): React
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">{t('tables.title')}</h1>
         <Button
+          icon={<ICON.add />}
           variant="primary"
           onClick={() => {
             setCreating(true);

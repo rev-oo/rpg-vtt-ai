@@ -3,11 +3,12 @@ import { useRevalidator } from 'react-router';
 
 import { canManageItemLibrary } from '@vtt/shared';
 import type { ItemView } from '@vtt/shared/api';
-import { Alert, Button } from '@vtt/ui';
+import { Alert, Button, IconButton } from '@vtt/ui';
 
 import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import type { TableData } from '../table/table-data.js';
 import { OpenButton } from '../workspace/OpenButton.js';
 import { itemPanelId } from '../workspace/panel-ids.js';
@@ -82,6 +83,7 @@ export function ItemList({
         </div>
         {manage && types.itemTypes.length > 0 && (
           <Button
+            icon={<ICON.add />}
             variant="primary"
             onClick={() => {
               setCreating(true);
@@ -116,16 +118,16 @@ export function ItemList({
             drag={trash ? undefined : { kind: 'library', itemId: item.id }}
             actions={
               trash ? (
-                <Button
+                <IconButton
+                  icon={<ICON.restore />}
+                  label={t('entities.restore')}
                   onClick={() =>
                     void run(async () => {
                       await api.restoreItem(item.id);
                       return t('entities.restored', { name: item.name });
                     })
                   }
-                >
-                  {t('entities.restore')}
-                </Button>
+                />
               ) : (
                 <>
                   <OpenButton
@@ -153,16 +155,16 @@ export function ItemList({
                     />
                   )}
                   {manage && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.delete />}
+                      label={t('entities.delete')}
                       onClick={() =>
                         void run(async () => {
                           await api.deleteItem(item.id);
                           return t('entities.deleted', { name: item.name });
                         })
                       }
-                    >
-                      {t('entities.delete')}
-                    </Button>
+                    />
                   )}
                 </>
               )

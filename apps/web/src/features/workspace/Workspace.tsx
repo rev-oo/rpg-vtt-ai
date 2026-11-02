@@ -9,12 +9,14 @@ import {
   type ReactElement,
   type ReactNode,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 
 import { canManageScenes, canManageTable } from '@vtt/shared';
-import { Button, cn } from '@vtt/ui';
+import { Button, cn, IconSlot } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
+import { ICON, PanelIcon } from '../../icons.js';
 import type { TableData } from '../table/table-data.js';
 
 import { DockContext } from './dock-context.js';
@@ -83,6 +85,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const key = layoutKey(userId, table.id, phone);
   const scenes = canManageScenes(table.role);
   const [dock, setDock] = useState<DockviewApi | null>(null);
+  const [dockRoot, setDockRoot] = useState<HTMLDivElement | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
 
@@ -135,7 +138,10 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     >
       <div className="flex h-dvh flex-col">
         <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">
-          <Link to="/" className="text-sm">
+          <Link to="/" className="inline-flex items-center gap-1 text-sm">
+            <IconSlot>
+              <ICON.back />
+            </IconSlot>
             {t('workspace.tables')}
           </Link>
           <h1 className="min-w-0 truncate text-lg font-bold">{table.name}</h1>
@@ -157,6 +163,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
             />
             <Button
               variant="ghost"
+              icon={<ICON.reset />}
               disabled={!dock}
               onClick={() => {
                 if (!dock) return;
@@ -171,7 +178,8 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         {notices}
         {/* Its own stacking context: dockview's sashes and groups carry z-indexes of 99 and up,
             which would otherwise cover the header's Panels menu. */}
-        <div className="vtt-dock isolate min-h-0 flex-1">
+        <div ref={setDockRoot} className="vtt-dock isolate min-h-0 flex-1">
+          {dock && dockRoot && <TabIcons dock={dock} root={dockRoot} />}
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}
@@ -195,6 +203,46 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
       </div>
     </DockContext>
   );
+}
+
+/**
+ * Each dock tab's icon (ADR-071), put into dockview's own tabs, which keep their dragging,
+ * close buttons and labels. Dockview makes tab elements as panels open and move, so the icons
+ * follow every layout change.
+ */
+function TabIcons({ dock, root }: { dock: DockviewApi; root: HTMLElement }): ReactElement {
+  const [slots, setSlots] = useState<readonly { id: string; slot: HTMLElement }[]>([]);
+  useEffect(() => {
+    const scan = () => {
+      const found: { id: string; slot: HTMLElement }[] = [];
+      for (const tab of root.querySelectorAll<HTMLElement>('.dv-tab[data-tab-panel-id]')) {
+        const id = tab.dataset.tabPanelId;
+        const host = tab.querySelector('.dv-default-tab');
+        if (!id || !host) continue;
+        let slot = host.querySelector<HTMLElement>(':scope > .vtt-tab-icon');
+        if (!slot) {
+          slot = document.createElement('span');
+          slot.className = 'vtt-tab-icon';
+          host.prepend(slot);
+        }
+        found.push({ id, slot });
+      }
+      setSlots((shown) =>
+        shown.length === found.length &&
+        shown.every(
+          (each, index) => each.slot === found[index]?.slot && each.id === found[index].id,
+        )
+          ? shown
+          : found,
+      );
+    };
+    scan();
+    const listener = dock.onDidLayoutChange(scan);
+    return () => {
+      listener.dispose();
+    };
+  }, [dock, root]);
+  return <>{slots.map(({ id, slot }) => createPortal(<PanelIcon panelId={id} />, slot, id))}</>;
 }
 
 function Empty(): ReactElement {
@@ -242,6 +290,7 @@ function PanelsMenu({
     <div ref={root} className="relative">
       <Button
         variant="ghost"
+        icon={<ICON.panels />}
         disabled={disabled}
         aria-expanded={open}
         aria-controls="workspace-panels"
@@ -271,7 +320,10 @@ function PanelsMenu({
                     onPick(id);
                   }}
                 >
-                  {titleOf(id)}
+                  <span className="flex items-center gap-2">
+                    <PanelIcon panelId={id} />
+                    {titleOf(id)}
+                  </span>
                   {shown && <span className="text-sm text-muted">{t('workspace.isOpen')}</span>}
                 </button>
               </li>
