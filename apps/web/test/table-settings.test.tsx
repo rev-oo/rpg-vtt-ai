@@ -121,7 +121,7 @@ describe('system version (T-0813)', () => {
       {
         'POST /tables/t1/upgrade-system': () => {
           table = { ...table, systemVersion: '1.0.0' };
-          return { body: { table } };
+          return { body: { table, migration: { migrated: 3, failedCount: 0, failed: [] } } };
         },
       },
       () => table,
@@ -139,6 +139,64 @@ describe('system version (T-0813)', () => {
     expect(calls.filter((c) => c.method === 'POST').map((c) => c.path)).toEqual([
       '/tables/t1/upgrade-system',
     ]);
+  });
+
+  it('reports what it could not migrate, and migrates it again (T-1501)', async () => {
+    let table: TableView = { ...TABLE, systemVersion: '0.9.0', installedVersion: '1.0.0' };
+    let attempt = 0;
+    const failed = [
+      {
+        kind: 'actor',
+        id: 'a1',
+        name: 'Broken',
+        reason: 'step',
+        version: '1.0.0',
+        step: 1,
+      },
+      {
+        kind: 'item',
+        id: 'i1',
+        name: 'Odd sword',
+        reason: 'invalid',
+        issues: [{ path: ['damage', 'dice'], reason: 'type' }],
+      },
+    ];
+    const { calls } = await openSettings(
+      {
+        'POST /tables/t1/upgrade-system': () => {
+          attempt += 1;
+          const left = attempt === 1 ? failed : [];
+          table = { ...table, systemVersion: '1.0.0', outdatedEntities: left.length };
+          const migration = {
+            migrated: attempt === 1 ? 4 : 2,
+            failedCount: left.length,
+            failed: left,
+          };
+          return { body: { table, migration } };
+        },
+      },
+      () => table,
+    );
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('button', { name: 'Upgrade to 1.0.0' }));
+    expect(await screen.findByText('Actors and items migrated: 4.')).toBeInTheDocument();
+    expect(
+      screen.getByText('Could not migrate: 2. They keep their data as it was.'),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/step 2 of the 1\.0\.0 migration could not run/)).toBeInTheDocument();
+    expect(screen.getByText(/the result does not fit: damage\.dice/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/^Actors and items still on data from an older version: 2\./),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Migrate again' }));
+    expect(await screen.findByText('Actors and items migrated: 2.')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: 'Migrate again' })).not.toBeInTheDocument();
+    });
+    expect(screen.queryByText(/^Could not migrate/)).not.toBeInTheDocument();
+    expect(calls.filter((c) => c.method === 'POST')).toHaveLength(2);
   });
 
   it('offers nothing when the table plays the installed version', async () => {

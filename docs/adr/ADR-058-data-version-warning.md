@@ -1,6 +1,6 @@
 # ADR-058: GMs upgrade a table to its system's installed version, and sheets warn about older data
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [ADR-072](ADR-072-data-migrations.md)
 - **Date:** 2026-10-28
 - **Tasks:** T-0813
 - **Covers:** §9.7, FR-PLUGIN-01, FR-TABLE-07

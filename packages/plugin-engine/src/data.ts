@@ -54,7 +54,7 @@ export function sortKeys(count: number): string[] {
 }
 
 /** Defaults come from JSON files, so a JSON copy is a full copy. */
-const cloneJson = (value: unknown): unknown =>
+export const cloneJson = (value: unknown): unknown =>
   Array.isArray(value)
     ? value.map(cloneJson)
     : isRecord(value)

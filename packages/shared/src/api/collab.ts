@@ -33,8 +33,8 @@ export const collabClientMessage = z.discriminatedUnion('type', [
 ]);
 export type CollabClientMessage = z.infer<typeof collabClientMessage>;
 
-const dataIssue = z.object({ path: fieldPath, reason: z.enum(DATA_ISSUE_REASONS) });
-export type DataIssue = z.infer<typeof dataIssue>;
+export const dataIssueSchema = z.object({ path: fieldPath, reason: z.enum(DATA_ISSUE_REASONS) });
+export type DataIssue = z.infer<typeof dataIssueSchema>;
 
 export const collabServerMessage = z.discriminatedUnion('type', [
   /** The field's value after the delta; `clamped` when its bounds cut the delta short. */
@@ -53,6 +53,6 @@ export const collabServerMessage = z.discriminatedUnion('type', [
   /** The connection's access changed between read and write while it was open (§9.3). */
   z.object({ type: z.literal('access'), readOnly: z.boolean() }),
   /** Values the server replaced with their default before storing (FR-SHEET-09). */
-  z.object({ type: z.literal('validation'), issues: z.array(dataIssue) }),
+  z.object({ type: z.literal('validation'), issues: z.array(dataIssueSchema) }),
 ]);
 export type CollabServerMessage = z.infer<typeof collabServerMessage>;

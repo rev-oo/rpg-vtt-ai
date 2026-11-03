@@ -14,6 +14,7 @@ Every file a plugin may contain, with each key it accepts. This page is generate
 - [Table settings (settings.json)](#settings)
 - [Combat (combat.json)](#combat)
 - [Compendium pack (packs/<name>.json)](#pack)
+- [Data migration (migrations/<version>.json)](#migration)
 - [Translations (lang/<locale>.json)](#lang)
 
 ## Value types
@@ -620,6 +621,72 @@ A compendium entry.
 | `type` | [name](#name) | yes | An actor or item type of this plugin. |
 | `name` | text (1–100 characters) | yes | The name it gets in the table. |
 | `data` | map from text to any JSON value |  | Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults. |
+
+<a id="migration"></a>
+
+## Data migration (migrations/<version>.json)
+
+A data migration: steps that bring actors and items made with an older version up to the version the file is named after.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
+| `steps` | list of one of [Rename step](#migration-rename-step), [Move step](#migration-move-step), [Set default step](#migration-set-default-step), [Drop step](#migration-drop-step) (at most 200 items) | yes | Run in order, on each actor and item of the types they name. |
+
+<a id="migration-rename-step"></a>
+
+### Rename step
+
+Renames a field in place.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `op` | `"rename"` | yes |  |
+| `kind` | one of `"actor"`, `"item"` | yes | Whether the step changes actors or items. |
+| `type` | [name](#name) | yes | The actor or item type whose data the step changes. |
+| `path` | text (matching `^[A-Za-z_][A-Za-z0-9_]*(?:(?:\.\*)*\.[A-Za-z_][A-Za-z0-9_]*)*$`) | yes | Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`. |
+| `to` | text (matching `^[A-Za-z_][A-Za-z0-9_]*$`) | yes | The field’s new name; it stays where it is: `stats.hp` to `health` gives `stats.health`. |
+
+<a id="migration-move-step"></a>
+
+### Move step
+
+Moves a field’s value to another path.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `op` | `"move"` | yes |  |
+| `kind` | one of `"actor"`, `"item"` | yes | Whether the step changes actors or items. |
+| `type` | [name](#name) | yes | The actor or item type whose data the step changes. |
+| `path` | text (matching `^[A-Za-z_][A-Za-z0-9_]*(?:(?:\.\*)*\.[A-Za-z_][A-Za-z0-9_]*)*$`) | yes | Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`. |
+| `to` | text (matching `^[A-Za-z_][A-Za-z0-9_]*(?:(?:\.\*)*\.[A-Za-z_][A-Za-z0-9_]*)*$`) | yes | Where the value goes. Objects on the way are created. A `*` row stays the same row: `inventory.*.wt` can move to `inventory.*.weight`, not out of the row. |
+
+<a id="migration-set-default-step"></a>
+
+### Set default step
+
+Gives a field a value where the entity has none, such as an existing entity’s value for a new field whose default is meant for new ones.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `op` | `"setDefault"` | yes |  |
+| `kind` | one of `"actor"`, `"item"` | yes | Whether the step changes actors or items. |
+| `type` | [name](#name) | yes | The actor or item type whose data the step changes. |
+| `path` | text (matching `^[A-Za-z_][A-Za-z0-9_]*(?:(?:\.\*)*\.[A-Za-z_][A-Za-z0-9_]*)*$`) | yes | Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`. |
+| `value` | any JSON value | yes | The value it gets; it must fit the field. |
+
+<a id="migration-drop-step"></a>
+
+### Drop step
+
+Removes a field and its value.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `op` | `"drop"` | yes |  |
+| `kind` | one of `"actor"`, `"item"` | yes | Whether the step changes actors or items. |
+| `type` | [name](#name) | yes | The actor or item type whose data the step changes. |
+| `path` | text (matching `^[A-Za-z_][A-Za-z0-9_]*(?:(?:\.\*)*\.[A-Za-z_][A-Za-z0-9_]*)*$`) | yes | Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`. |
 
 <a id="lang"></a>
 

@@ -505,6 +505,54 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'migrations whose steps fit the plugin (T-1501)',
+    change: (f: PluginFixture): void => {
+      f['migrations/0.9.0.json'] = {
+        steps: [
+          { op: 'rename', kind: 'actor', type: 'hero', path: 'strength', to: 'str' },
+          { op: 'move', kind: 'actor', type: 'hero', path: 'health', to: 'hp.value' },
+          { op: 'move', kind: 'actor', type: 'hero', path: 'skills.*.level', to: 'skills.*.rank' },
+          { op: 'setDefault', kind: 'actor', type: 'hero', path: 'skills.*.rank', value: 1 },
+          { op: 'drop', kind: 'actor', type: 'hero', path: 'mana' },
+        ],
+      };
+      f['migrations/1.0.0.json'] = {
+        steps: [{ op: 'setDefault', kind: 'actor', type: 'hero', path: 'str', value: 12 }],
+      };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'migrations with bad names, versions and steps (T-1501)',
+    change: (f: PluginFixture): void => {
+      f['migrations/next.json'] = { steps: [] };
+      f['migrations/1.1.0.json'] = { steps: [] };
+      f['migrations/0.5.0.json'] = {
+        steps: [
+          { op: 'move', kind: 'actor', type: 'hero', path: 'skills.*.rank', to: 'rank' },
+          { op: 'setDefault', kind: 'actor', type: 'hero', path: 'str', value: 99 },
+          { op: 'drop', kind: 'item', type: 'hero', path: 'str' },
+        ],
+      };
+      f['migrations/0.4.0.json'] = {
+        steps: [
+          { op: 'rename', kind: 'actor', type: 'hero', path: 'a.*', to: 'b' },
+          { op: 'copy', kind: 'actor', type: 'hero', path: 'str' },
+        ],
+      };
+    },
+    issues: [
+      'error invalid_name migrations/next.json $',
+      'error migration_after_version migrations/1.1.0.json $',
+      'error migration_row_move migrations/0.5.0.json $.steps[0].to',
+      'error invalid_value migrations/0.5.0.json $.steps[1].value',
+      'warning missing_target migrations/0.5.0.json $.steps[2].type',
+      'error invalid_value migrations/0.4.0.json $.steps[0].path',
+      'error invalid_value migrations/0.4.0.json $.steps[1].op',
+    ],
+  },
+  {
     name: 'a pack with bad entries, reported by JSON path (T-0803)',
     change: (f: PluginFixture): void => {
       f['packs/bad.json'] = {

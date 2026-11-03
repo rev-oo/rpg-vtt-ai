@@ -148,7 +148,12 @@ port.on(
       return;
     }
     Promise.resolve()
-      .then(() => handler({ ...input, ctx: contextFor(call) }))
+      // The migration hook works on data alone, so it gets no `ctx` (ADR-072).
+      .then(() =>
+        handler(
+          kind === 'hook' && name === 'migrate' ? input : { ...input, ctx: contextFor(call) },
+        ),
+      )
       .then(
         (value: unknown) => {
           try {

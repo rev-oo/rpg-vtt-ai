@@ -4,6 +4,7 @@ import { CONTROLLED_BY } from '../permissions/entities.js';
 import { OWNERSHIP_LEVELS } from '../permissions/ownership.js';
 import { INVITE_ROLES, TABLE_ROLES } from '../roles.js';
 
+import { migrationReportSchema } from './migrations.js';
 import { instanceSettingsSchema, REGISTRATION_POLICIES } from './requests.js';
 
 // Response bodies of the HTTP API. The server builds them with these types; the web validates
@@ -40,6 +41,12 @@ export const tableSchema = z.object({
    * a GM may upgrade the table to it (ADR-058).
    */
   installedVersion: z.string().nullable(),
+  /**
+   * Actors and items whose data is from a version before the table's, which upgrading the
+   * table migrates again (ADR-072). Counted by `GET /tables/:id` and the upgrade, for those
+   * who may upgrade the table; 0 everywhere else.
+   */
+  outdatedEntities: z.number().int().min(0),
   settings: z.record(z.string(), z.unknown()),
   playersMayCreateAnyActorType: z.boolean(),
   /** Whether the system plugin is enabled and ready; without it the table is read-only. */
@@ -53,6 +60,12 @@ export type TableView = z.infer<typeof tableSchema>;
 
 export const tablesResponseSchema = z.object({ tables: z.array(tableSchema) });
 export const tableResponseSchema = z.object({ table: tableSchema });
+/** `POST /tables/:id/upgrade-system`: the table, and what migrating its data did (ADR-072). */
+export const upgradeSystemResponseSchema = z.object({
+  table: tableSchema,
+  migration: migrationReportSchema,
+});
+export type UpgradeSystemResponse = z.infer<typeof upgradeSystemResponseSchema>;
 
 /** A member of a table, as every member sees the list (FR-TABLE-04, 05). */
 export const memberSchema = z.object({

@@ -8,6 +8,7 @@ export * from './events.js';
 export * from './fog.js';
 export * from './history.js';
 export * from './issues.js';
+export * from './migrations.js';
 export * from './compendium.js';
 export * from './plugins.js';
 export * from './requests.js';

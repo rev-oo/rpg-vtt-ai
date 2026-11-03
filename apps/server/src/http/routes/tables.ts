@@ -4,14 +4,22 @@ import { z } from 'zod';
 
 import { settingsIssues, type SettingIssue } from '@vtt/plugin-engine';
 import { canArchiveTable, canManageTable, canUpgradeTableSystem } from '@vtt/shared';
-import { createTableBody, updateTableBody, type TableTypes } from '@vtt/shared/api';
+import {
+  createTableBody,
+  updateTableBody,
+  type TableTypes,
+  type UpgradeSystemResponse,
+} from '@vtt/shared/api';
 
+import { findActor } from '../../db/repositories/index.js';
 import { gameTables, members, plugins } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
 import { requireUnarchived, requireWritableTable, systemTypes } from '../../domain/entities.js';
+import { countOutdated, migrateTable } from '../../domain/migrations.js';
 import { isAvailable } from '../../domain/plugins.js';
 import { toTableView } from '../../domain/tables.js';
 import { badRequest, conflict, unprocessable } from '../../errors.js';
+import { publishActorChanged, publishItemChanged } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireSession } from '../auth.js';
 import { requireMember } from '../membership.js';
@@ -41,7 +49,8 @@ function settingMessage({ reason }: SettingIssue): string {
  * Table creation, listing and settings (FR-TABLE-01, 02, 07). Settings are the house rules of
  * the table's system (`settings.json`, FR-ADMIN-04) and must fit them.
  */
-export function tableRoutes({ app, db, events, now, plugins: registry }: AppContext): void {
+export function tableRoutes(context: AppContext): void {
+  const { app, db, events, now, plugins: registry, collab } = context;
   /** Refuses settings the system does not define or whose values do not fit (specs §8.12). */
   const checkSettings = (systemId: string, settings: Record<string, unknown>) => {
     const issues = settingsIssues(registry.definition(systemId)?.settings ?? {}, settings);
@@ -121,7 +130,10 @@ export function tableRoutes({ app, db, events, now, plugins: registry }: AppCont
   app.get('/api/v1/tables/:id', (request) => {
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id);
-    return { table: toTableView(db, table, membership.role) };
+    const outdated = canUpgradeTableSystem(membership.role)
+      ? countOutdated(db, table, (systemId) => registry.definition(systemId))
+      : 0;
+    return { table: toTableView(db, table, membership.role, outdated) };
   });
 
   app.patch('/api/v1/tables/:id', (request) => {
@@ -164,7 +176,7 @@ export function tableRoutes({ app, db, events, now, plugins: registry }: AppCont
    * Moves the table to its system's installed version (§9.7, ADR-058). Existing entities keep
    * the version they were made with, and their sheets say so; new ones get the new version.
    */
-  app.post('/api/v1/tables/:id/upgrade-system', (request) => {
+  app.post('/api/v1/tables/:id/upgrade-system', async (request) => {
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id, canUpgradeTableSystem);
     requireWritableTable(db, table);
@@ -180,7 +192,31 @@ export function tableRoutes({ app, db, events, now, plugins: registry }: AppCont
       .where(eq(gameTables.id, id))
       .returning()
       .get();
+    // The data follows: each actor and item behind the new version is migrated (ADR-072).
+    const definition = (systemId: string) => registry.definition(systemId);
+    const migration = await migrateTable(db, updated, plugin.version, {
+      definition,
+      code: (systemId) => registry.code(systemId),
+      live: (name) => collab.hocuspocus.documents.get(name),
+      changed: (entity) => {
+        // Nobody sees entities in the trash change.
+        if (entity.row.softDeletedAt) return;
+        if (entity.kind === 'actor') {
+          publishActorChanged(events, 'updated', entity.row);
+          return;
+        }
+        const owner = entity.row.actorId ? findActor(db, entity.row.actorId) : undefined;
+        publishItemChanged(events, 'updated', entity.row, owner);
+      },
+      now,
+      logger: request.log,
+    });
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
-    return { table: toTableView(db, updated, membership.role) };
+    const outdated = countOutdated(db, updated, definition);
+    const response: UpgradeSystemResponse = {
+      table: toTableView(db, updated, membership.role, outdated),
+      migration,
+    };
+    return response;
   });
 }

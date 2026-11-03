@@ -1,4 +1,4 @@
-import { satisfies, validRange } from 'semver';
+import { gt, satisfies, validRange } from 'semver';
 
 import { CORE_API_VERSION } from '@vtt/shared';
 
@@ -10,6 +10,7 @@ import type { Die } from '../dice.js';
 import { PLUGIN_FILES, type PluginFileKind, pluginFileKind } from '../json-schema.js';
 import type { Lang } from '../lang.js';
 import type { Manifest } from '../manifest.js';
+import { isMigrationVersion, type Migration } from '../migrations.js';
 import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
 import type { Setting } from '../settings.js';
@@ -41,6 +42,8 @@ export interface PluginDefinition {
   combat?: Combat | undefined;
   /** Compendium packs by name (ADR-051). The server keeps them; browsers do not get them. */
   packs?: Record<string, Pack> | undefined;
+  /** Data migrations by the version they bring data up to (ADR-072). Kept on the server too. */
+  migrations?: Record<string, Migration> | undefined;
   /** Translations by locale. */
   lang: Record<string, Lang>;
   /** Paths of `styles/*.css`, in order. */
@@ -74,6 +77,24 @@ function fieldAt(schema: FieldSchema, dotPath: string, isRow: boolean): FieldSch
     if (isRow && field === schema && name === 'id') return { type: 'string' };
     const properties: Record<string, FieldSchema> | undefined = field?.properties;
     field = properties && Object.hasOwn(properties, name) ? properties[name] : undefined;
+  }
+  return field;
+}
+
+/** The part of a migration path up to its last `*`: the collection row it stays in. */
+const rowPrefix = (path: string): string => path.slice(0, path.lastIndexOf('*') + 1);
+
+/** The field a migration path names in `schema`, if it still declares it (`*` is a row). */
+function migrationField(schema: FieldSchema, path: string): FieldSchema | undefined {
+  let field: FieldSchema | undefined = schema;
+  for (const segment of path.split('.')) {
+    if (segment === '*') {
+      field = field.type === 'array' ? field.items : undefined;
+    } else {
+      const properties: Record<string, FieldSchema> | undefined = field.properties;
+      field = properties && Object.hasOwn(properties, segment) ? properties[segment] : undefined;
+    }
+    if (!field) return undefined;
   }
   return field;
 }
@@ -225,6 +246,7 @@ export function validatePlugin(
   const itemTypes = many<ItemType>('types/items/');
   const combat = one('combat.json') as Combat | undefined;
   const packs = many<Pack>('packs/');
+  const migrations = many<Migration>('migrations/');
 
   for (const [file, keys, pattern, of] of [
     ['rolls.json', Object.keys(rolls), NAME, 'roll'],
@@ -647,6 +669,42 @@ export function validatePlugin(
     });
   }
 
+  // Migrations: named after versions up to the plugin's, with steps on its types (ADR-072).
+  for (const [version, migration] of Object.entries(migrations)) {
+    const file = `migrations/${version}.json`;
+    if (!isMigrationVersion(version)) {
+      error('invalid_name', file, [], { name: version, of: 'version' });
+      continue;
+    }
+    if (manifest && isMigrationVersion(manifest.version) && gt(version, manifest.version)) {
+      error('migration_after_version', file, [], { version, plugin: manifest.version });
+    }
+    migration.steps.forEach((step, index) => {
+      const at = ['steps', index];
+      const declared = step.kind === 'actor' ? actorTypes : itemTypes;
+      const type = Object.hasOwn(declared, step.type) ? declared[step.type] : undefined;
+      // A type removed since the step was written is not an error: older data may still have it.
+      if (!type) {
+        add('warning', 'missing_target', file, [...at, 'type'], {
+          target: `${step.kind} type`,
+          name: step.type,
+        });
+        return;
+      }
+      if (step.op === 'move' && rowPrefix(step.path) !== rowPrefix(step.to)) {
+        error('migration_row_move', file, [...at, 'to'], { from: step.path, to: step.to });
+      }
+      if (step.op === 'setDefault') {
+        const field = migrationField(type.schema, step.path);
+        if (field) {
+          checkData(field, step.value, [...at, 'value'], (code, where, params) => {
+            error(code, file, where, params);
+          });
+        }
+      }
+    });
+  }
+
   // 6. Styles: the same scoping the server applies (§8.6).
   const styles = paths.filter((path) => /^styles\/[^/]+\.css$/.test(path));
   for (const path of styles) {
@@ -705,6 +763,7 @@ export function validatePlugin(
           settings,
           combat,
           ...(Object.keys(packs).length > 0 && { packs: withoutSchemaUrl(packs) }),
+          ...(Object.keys(migrations).length > 0 && { migrations }),
           lang,
           styles,
         }

@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
-| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Not started | 0%       |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | In progress | 33%      |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M15 (M14 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1501`
+- **Next task:** `T-1503` (`T-1502` waits on Q17)
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -36,19 +36,20 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), and up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                                                                                                                                                                       |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                                                         |
-| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet.                                  |
-| 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).                                      |
-| 2026-10-30 | T-1402 done: Q18 decided (PixiJS v8 with pixi-viewport, WebGL only). A Map panel in the workspace centre draws the scene's background and grid, with pan and zoom by mouse, touch, keyboard and buttons; GMs and assistants manage scenes in a Scenes panel and preview any scene (ADR-067). |
-| 2026-10-30 | T-1405 and T-1406 added to M14 at the user's request and done before T-1404: a token menu on right click (or Shift+F10), and a map toolbar with a path ruler, circle and cone in the scene's unit, counting diagonals by the scene's rule; scenes gain a ruler scale (ADR-069).              |
-| 2026-10-30 | Scenes may have a hidden grid (cells not drawn, tokens still snap) or none (tokens stand anywhere), and the map can be panned past the scene's edges (ADR-066, ADR-067, ADR-068).                                                                                                            |
-| 2026-10-31 | T-1404 done: fog of war per scene. GMs and assistants reveal and hide rectangles of cells (or any area on a gridless scene) with Reveal and Hide tools; players get only the revealed areas and the tokens in them, save their own actors' tokens (ADR-070).                                 |
-| 2026-10-31 | M14 done: scenes, the map canvas, tokens, the token menu, the map toolbar with ruler, circle and cone, and fog of war. M15 is active.                                                                                                                                                        |
-| 2026-11-02 | Icons added at the user's request, outside the milestones: dock tabs and the Panels menu, the map toolbar and zoom buttons, list row actions and common actions, with Lucide SVGs; icon-only buttons always carry a label and tooltip (ADR-071).                                             |
-| 2026-11-03 | Map polish at the user's request, outside the milestones: the map tools run down the map's left edge, and a middle-button drag pans the map in every tool (ADR-069 amended).                                                                                                                 |
-| 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).              |
+| Date       | Change                                                                                                                                                                                                                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-10-29 | Release 0.4.0 (M13). The plugin core API stays at `0.1.0`: M13 added no plugin keys. M13's task list and change log moved to `docs/history/0.4.0.md`; M14 is active.                                                                                                                                   |
+| 2026-10-29 | Milestones carry no versions: M14–M17 ship together as 1.0.0. The done milestones share one history table in §12; the overview keeps a row per release. T-1702 (upgrade guarantee and `docs/upgrading.md`) is dropped, since no instance runs 0.x data yet.                                            |
+| 2026-10-29 | T-1401 done: a `scenes` table (background, columns × rows of square or hex cells, cell size, one active scene), GM and assistant endpoints, `scene.updated` events; players see only the active scene; scene backgrounds count as asset uses (ADR-066).                                                |
+| 2026-10-30 | T-1402 done: Q18 decided (PixiJS v8 with pixi-viewport, WebGL only). A Map panel in the workspace centre draws the scene's background and grid, with pan and zoom by mouse, touch, keyboard and buttons; GMs and assistants manage scenes in a Scenes panel and preview any scene (ADR-067).           |
+| 2026-10-30 | T-1405 and T-1406 added to M14 at the user's request and done before T-1404: a token menu on right click (or Shift+F10), and a map toolbar with a path ruler, circle and cone in the scene's unit, counting diagonals by the scene's rule; scenes gain a ruler scale (ADR-069).                        |
+| 2026-10-30 | Scenes may have a hidden grid (cells not drawn, tokens still snap) or none (tokens stand anywhere), and the map can be panned past the scene's edges (ADR-066, ADR-067, ADR-068).                                                                                                                      |
+| 2026-10-31 | T-1404 done: fog of war per scene. GMs and assistants reveal and hide rectangles of cells (or any area on a gridless scene) with Reveal and Hide tools; players get only the revealed areas and the tokens in them, save their own actors' tokens (ADR-070).                                           |
+| 2026-10-31 | M14 done: scenes, the map canvas, tokens, the token menu, the map toolbar with ruler, circle and cone, and fog of war. M15 is active.                                                                                                                                                                  |
+| 2026-11-02 | Icons added at the user's request, outside the milestones: dock tabs and the Panels menu, the map toolbar and zoom buttons, list row actions and common actions, with Lucide SVGs; icon-only buttons always carry a label and tooltip (ADR-071).                                                       |
+| 2026-11-03 | Map polish at the user's request, outside the milestones: the map tools run down the map's left edge, and a middle-button drag pans the map in every tool (ADR-069 amended).                                                                                                                           |
+| 2026-11-03 | T-1501 done: plugins ship `migrations/<version>.json` steps (rename, move, set default, drop) and a `migrate` hook; upgrading a table migrates each actor and item behind the new version in its own transaction, fails those whose result does not fit, and lets the GM migrate them again (ADR-072). |
+| 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).                        |
 
 ---
 
@@ -401,7 +402,7 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 | FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                       | v1       | 0.3.0 (browser, ADR-060)     |
 | FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                              | v1       | 0.2.0                        |
 | FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                         | 1.0      | 0.3.0 (ADR-061)              |
-| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | planned (M15)                |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | 1.0.0 (T-1501, ADR-072)      |
 | FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | planned (M15)                |
 | FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                |
 | FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | 0.3.0                        |
@@ -470,6 +471,7 @@ my-system/
 ├─ lang/<locale>.json       translations, English required if any lang file exists
 ├─ styles/<name>.css        scoped CSS (optional)
 ├─ packs/<name>.json        compendium packs (optional; §8.14)
+├─ migrations/<version>.json data migration steps (optional; FR-PLUGIN-12, ADR-072)
 └─ code/                    optional custom behaviour
    ├─ shared.ts             pure functions usable in formulas, client and server (from M8)
    ├─ client.tsx            custom layout nodes and card renderers
@@ -519,7 +521,7 @@ Syntax, references, operators, functions and dice: [guide, Formulas](docs/plugin
 
 Three entries, each optional: `code/shared` (`defineShared`: formula functions), `code/client` (`defineClient`: sheet nodes and chat cards) and `code/server` (`defineServer`: handler recipes, slash commands and combat hooks). Working examples: [guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
-**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
+**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050), and table upgrades call `migrate`, which gets no `ctx` (ADR-072). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 Rules:
 
@@ -619,7 +621,7 @@ Notes:
 
 - Values written by clients are validated against the schema on input (client) and on persist (server).
 - Invalid values on persist are replaced with the schema default and logged. The editor receives a `validation` message (ADR-031). Journal bodies are not repaired.
-- Schema changes on a plugin version bump are **not** auto-migrated. Actors and items store the system version they were created with (`dataVersion`); missing fields read as their defaults. A table keeps its system version until a GM upgrades it to the installed one; an actor sheet whose `dataVersion` differs from its table's shows a notice (ADR-058). Migrations are LATER (see §7.11).
+- Actors and items store the system version their data is from (`dataVersion`); missing fields read as their defaults. A table keeps its system version until a GM upgrades it to the installed one (ADR-058). Upgrading runs the plugin's migrations on each entity behind the new version: `migrations/` steps, then the `migrate` hook; a result that does not fit the schema fails that entity, which keeps its data and can be migrated again (ADR-072). An actor sheet whose `dataVersion` differs from its table's shows a notice.
 
 ---
 
@@ -770,7 +772,7 @@ Scenes with a grid, tokens and fog of war, in the workspace centre.
 
 Plugin data that follows system upgrades, and plugin code that runs contained.
 
-- [ ] **T-1501 · Plugin data migrations**
+- [x] **T-1501 · Plugin data migrations**
   - **Deps:** none
   - **Do:** A plugin ships `migrations/` (FR-PLUGIN-12): declarative steps per version (rename, move, set default, drop a field) and, for what they cannot express, a `migrate` hook in `code/server`. When a GM upgrades a table (ADR-058), the steps between each entity's `dataVersion` and the new version run on its documents, in a transaction per entity, and `dataVersion` is updated, so the sheet notice clears. A failed migration leaves the entity as it was and reports it.
   - **Done when:** validator tests cover the migration files; tests upgrade reference plugin fixtures across two versions, including a failing step; the authoring guide has a migrations section.
@@ -896,7 +898,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | Mobile sheet UX is cramped                          | Low                          | Medium | Every workspace panel is a full-screen tab under 768 px (ADR-059, replacing T-0511's bar); phone e2e in CI                                                                                                                                                                              |
 | Keyboard users cannot rearrange the workspace       | Medium                       | Medium | dockview's keyboard docking and resizing are paid modules (ADR-059); the default layout, tab strips and the Panels menu work by keyboard; revisit if the free packages gain them                                                                                                        |
 | Yjs document growth over long campaigns             | Low                          | Medium | Periodic compaction on store; sheet history limited                                                                                                                                                                                                                                     |
-| Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); plugin data migrations are LATER; `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)                              |
+| Upgrades between 0.x versions break stored data     | Medium                       | High   | Database migrations run on start; tables move to a new system version only when a GM upgrades them, and older sheets say so (ADR-058); GM upgrades run plugin data migrations (ADR-072); `CHANGELOG.md` calls out breaking changes; operators pin image versions (ADR-046)              |
 | CI runners hang or flake, blocking releases         | Medium                       | Low    | Step time limits (browser install: 5 min); re-run before investigating; release job runs only after every check passes. Known intermittent e2e failures: `journal entries are hidden until the GM reveals them` and the concurrent rich-text step of `two browsers edit one live sheet` |
 | Maps are slow or cramped on phones                  | Medium                       | Medium | One renderer with a measured budget (T-1402); full-screen map view on phones; performance check recorded per release                                                                                                                                                                    |
 | Uploads are abused (size, malware, script in SVG)   | Medium                       | High   | Content sniffing, SVG refused, size limits and a quota (T-1301, ADR-064); only table GMs and assistants upload; assets served under the CSP                                                                                                                                             |
@@ -965,7 +967,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-055 | [The server takes scheduled backups when `BACKUP_DIR` is set](docs/adr/ADR-055-scheduled-backups.md)                                            | Accepted                                   |
 | ADR-056 | [The image is built natively for amd64 and arm64 and merged into one tag](docs/adr/ADR-056-multi-arch-image.md)                                 | Accepted                                   |
 | ADR-057 | [Actor, item and journal lists page by name with opaque cursors](docs/adr/ADR-057-list-pagination.md)                                           | Accepted                                   |
-| ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted                                   |
+| ADR-058 | [GMs upgrade a table to its system's installed version, and sheets warn about older data](docs/adr/ADR-058-data-version-warning.md)             | Accepted; amended by ADR-072               |
 | ADR-059 | [The table is a dockview workspace with a single URL](docs/adr/ADR-059-table-workspace.md)                                                      | Accepted                                   |
 | ADR-060 | [Members browse the compendium and copy chosen entries](docs/adr/ADR-060-compendium-browser.md)                                                 | Accepted                                   |
 | ADR-061 | [Item types declare a group, and item lists show items under it](docs/adr/ADR-061-item-groups.md)                                               | Accepted                                   |
@@ -979,6 +981,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-069 | [A token menu on right click, and a ruler each member uses alone](docs/adr/ADR-069-map-tools.md)                                                | Accepted                                   |
 | ADR-070 | [Fog of war is a list of revealed rectangles, filtered on the server](docs/adr/ADR-070-fog-of-war.md)                                           | Accepted                                   |
 | ADR-071 | [Icons are Lucide SVGs, beside text on actions, alone only with a label](docs/adr/ADR-071-icons.md)                                             | Accepted                                   |
+| ADR-072 | [Table upgrades migrate data one entity at a time, with declarative steps and a hook](docs/adr/ADR-072-data-migrations.md)                      | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 
