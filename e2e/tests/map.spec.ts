@@ -333,6 +333,8 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await expect.poll(async () => (await view(map)).x).toBeLessThan(x);
     await expect(wren).toHaveAccessibleName(/^Wren \(5, 4\)/);
     await gmPage.keyboard.press('0');
+    // The next step reads the view to find a token: wait until the fit undoes the pan.
+    await expect.poll(async () => (await view(map)).x).toBe(x);
   });
 
   await test.step("the token's menu, by right click, reveals it to the player", async () => {
