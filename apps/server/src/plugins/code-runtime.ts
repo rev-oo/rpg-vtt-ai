@@ -8,7 +8,8 @@ import type { FastifyBaseLogger } from 'fastify';
 import type { FormulaFunction } from '@vtt/formula';
 import { BUILT_IN_COMMANDS, COMMAND_NAME } from '@vtt/shared/api';
 
-// Runs plugin `code/shared` and `code/server` in a worker thread per plugin (ADR-047, Q13).
+// Runs plugin `code/shared` and `code/server` in a worker thread per plugin (ADR-047, Q13),
+// each in its own QuickJS engine inside the worker (ADR-073).
 //
 // Messages, main → worker: `handle` (run a handler, command or hook), `ctx-reply` (answer to a ctx call).
 // Worker → main: `ready` / `failed` (after loading), `ctx` (a ctx call), `handled`, `log`.
@@ -21,6 +22,9 @@ export const FUNCTION_TIME_LIMIT_MS = 100;
 export const HANDLER_TIME_LIMIT_MS = 5000;
 const STARTUP_TIME_LIMIT_MS = 5000;
 const HEAP_LIMIT_MB = 64;
+/** What the plugin's engine may allocate, and its stack (ADR-073). */
+const ENGINE_MEMORY_MB = 32;
+const ENGINE_STACK_KB = 512;
 
 export type CodeErrorCode = 'handler_failed' | 'handler_timeout' | 'plugin_code_failed';
 
@@ -286,6 +290,12 @@ export class PluginCodeRuntime {
         server: has.server ? url('server.js') : null,
         syncState: flag.buffer,
         syncPort: channel.port2,
+        limits: {
+          functionMs: FUNCTION_TIME_LIMIT_MS * 2,
+          handlerMs: HANDLER_TIME_LIMIT_MS * 2,
+          memoryBytes: ENGINE_MEMORY_MB * 1024 * 1024,
+          stackBytes: ENGINE_STACK_KB * 1024,
+        },
       },
       transferList: [channel.port2],
       // The server's own Node flags, such as --inspect, are not the plugin's.
