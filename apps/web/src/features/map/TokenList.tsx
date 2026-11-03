@@ -4,6 +4,7 @@ import type { SceneView, TokenView } from '@vtt/shared/api';
 import { Button, cn } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 
 import { stepCell, type Cell } from './geometry.js';
 
@@ -88,6 +89,7 @@ export function TokenList({
           {selected.movable && <p className="mr-2 text-sm text-muted">{t('tokens.moveHint')}</p>}
           {canOpen(selected) && (
             <Button
+              icon={<ICON.open />}
               variant="ghost"
               onClick={() => {
                 onOpen(selected);
@@ -99,6 +101,7 @@ export function TokenList({
           {manages && (
             <>
               <Button
+                icon={selected.hidden ? <ICON.show /> : <ICON.hide />}
                 variant="ghost"
                 onClick={() => {
                   onHide(selected, !selected.hidden);
@@ -107,6 +110,7 @@ export function TokenList({
                 {t(selected.hidden ? 'tokens.reveal' : 'tokens.hide', { name: selected.name })}
               </Button>
               <Button
+                icon={<ICON.delete />}
                 variant="ghost"
                 onClick={() => {
                   onRemove(selected);

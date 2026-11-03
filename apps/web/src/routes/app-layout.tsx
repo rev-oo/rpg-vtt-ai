@@ -5,6 +5,7 @@ import { Button } from '@vtt/ui';
 
 import { api } from '../api/endpoints.js';
 import { t } from '../i18n/index.js';
+import { ICON } from '../icons.js';
 import { clearSession } from '../shell/session.js';
 import { useSession } from '../shell/use-session.js';
 import { useSiteName } from '../shell/use-site-name.js';
@@ -58,7 +59,12 @@ export default function AppLayout(): ReactElement {
           <span className="hidden text-sm text-muted sm:inline">
             {user && t('nav.signedInAs', { name: user.displayName })}
           </span>
-          <Button variant="ghost" onClick={() => void logout()} disabled={busy}>
+          <Button
+            icon={<ICON.signOut />}
+            variant="ghost"
+            onClick={() => void logout()}
+            disabled={busy}
+          >
             {t('nav.logout')}
           </Button>
         </div>

@@ -1,26 +1,36 @@
 import 'dockview-react/dist/styles/dockview.css';
 
-import { DockviewReact, themeLight, type DockviewApi, type DockviewMessages } from 'dockview-react';
 import {
+  DockviewReact,
+  themeLight,
+  type DockviewApi,
+  type DockviewMessages,
+  type IDockviewPanelHeaderProps,
+} from 'dockview-react';
+import {
+  useCallback,
   useEffect,
   useEffectEvent,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactElement,
   type ReactNode,
 } from 'react';
 import { Link } from 'react-router';
 
 import { canManageScenes, canManageTable } from '@vtt/shared';
-import { Button, cn } from '@vtt/ui';
+import { Button, cn, IconSlot } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
+import { ICON, PanelIcon } from '../../icons.js';
 import type { TableData } from '../table/table-data.js';
 
 import { DockContext } from './dock-context.js';
 import {
   defaultLayout,
   layoutKey,
+  PANEL_TAB,
   restoreLayout,
   saveLayout,
   showPanel,
@@ -135,7 +145,10 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     >
       <div className="flex h-dvh flex-col">
         <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">
-          <Link to="/" className="text-sm">
+          <Link to="/" className="inline-flex items-center gap-1 text-sm">
+            <IconSlot>
+              <ICON.back />
+            </IconSlot>
             {t('workspace.tables')}
           </Link>
           <h1 className="min-w-0 truncate text-lg font-bold">{table.name}</h1>
@@ -157,6 +170,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
             />
             <Button
               variant="ghost"
+              icon={<ICON.reset />}
               disabled={!dock}
               onClick={() => {
                 if (!dock) return;
@@ -175,6 +189,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}
+            tabComponents={TAB_COMPONENTS}
             watermarkComponent={Empty}
             messages={DOCK_MESSAGES}
             disableDnd={phone}
@@ -196,6 +211,50 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     </DockContext>
   );
 }
+
+/**
+ * A dock tab: its panel's icon, title and close button, in dockview's own classes (ADR-071).
+ * Dockview's React tab names every close button "Close tab", so the tab is drawn here, its
+ * close button named after the panel as the built-in tab names it.
+ */
+function IconTab({ api }: IDockviewPanelHeaderProps): ReactElement {
+  const title = useSyncExternalStore(
+    useCallback(
+      (changed: () => void) => {
+        const listener = api.onDidTitleChange(changed);
+        return () => {
+          listener.dispose();
+        };
+      },
+      [api],
+    ),
+    () => api.title ?? '',
+  );
+  return (
+    <div className="dv-default-tab">
+      <span className="dv-default-tab-content flex items-center gap-1.5">
+        <PanelIcon panelId={api.id} />
+        {title}
+      </span>
+      <button
+        type="button"
+        className="dv-default-tab-action"
+        aria-label={title ? t('workspace.closeTab', { title }) : t('workspace.closeTabPlain')}
+        onPointerDown={(event) => {
+          // Keeps the press from starting a tab drag.
+          event.preventDefault();
+        }}
+        onClick={() => {
+          api.close();
+        }}
+      >
+        <ICON.close aria-hidden="true" className="size-3" />
+      </button>
+    </div>
+  );
+}
+
+const TAB_COMPONENTS = { [PANEL_TAB]: IconTab };
 
 function Empty(): ReactElement {
   return (
@@ -242,6 +301,7 @@ function PanelsMenu({
     <div ref={root} className="relative">
       <Button
         variant="ghost"
+        icon={<ICON.panels />}
         disabled={disabled}
         aria-expanded={open}
         aria-controls="workspace-panels"
@@ -271,7 +331,10 @@ function PanelsMenu({
                     onPick(id);
                   }}
                 >
-                  {titleOf(id)}
+                  <span className="flex items-center gap-2">
+                    <PanelIcon panelId={id} />
+                    {titleOf(id)}
+                  </span>
                   {shown && <span className="text-sm text-muted">{t('workspace.isOpen')}</span>}
                 </button>
               </li>

@@ -3,11 +3,12 @@ import { useRevalidator } from 'react-router';
 
 import { canCreateJournal, canSetOwnership } from '@vtt/shared';
 import type { JournalEntryView } from '@vtt/shared/api';
-import { Alert, Button } from '@vtt/ui';
+import { Alert, Button, IconButton } from '@vtt/ui';
 
 import { api, type ListPage } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import type { EntityFilters } from '../entities/filters.js';
 import { ListFilters } from '../entities/ListFilters.js';
 import { LoadMore } from '../entities/LoadMore.js';
@@ -75,6 +76,7 @@ export function JournalList({
         </div>
         {canCreateJournal(table.role) && (
           <Button
+            icon={<ICON.add />}
             variant="primary"
             onClick={() => {
               setCreating(true);
@@ -111,16 +113,16 @@ export function JournalList({
             </div>
             <div className="flex flex-wrap gap-2">
               {trash ? (
-                <Button
+                <IconButton
+                  icon={<ICON.restore />}
+                  label={t('entities.restore')}
                   onClick={() =>
                     void run(async () => {
                       await api.restoreJournalEntry(entry.id);
                       return t('entities.restored', { name: entry.title });
                     })
                   }
-                >
-                  {t('entities.restore')}
-                </Button>
+                />
               ) : (
                 <>
                   <OpenButton
@@ -131,7 +133,9 @@ export function JournalList({
                     {t('journal.open')}
                   </OpenButton>
                   {manages && (
-                    <Button
+                    <IconButton
+                      icon={entry.hidden ? <ICON.show /> : <ICON.hide />}
+                      label={t(entry.hidden ? 'journal.reveal' : 'journal.hide')}
                       onClick={() =>
                         void run(async () => {
                           await api.updateJournalEntry(entry.id, { hidden: !entry.hidden });
@@ -140,30 +144,28 @@ export function JournalList({
                           });
                         })
                       }
-                    >
-                      {t(entry.hidden ? 'journal.reveal' : 'journal.hide')}
-                    </Button>
+                    />
                   )}
                   {manages && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.ownership />}
+                      label={t('ownership.open')}
                       onClick={() => {
                         setEditingOwnership(entry);
                       }}
-                    >
-                      {t('ownership.open')}
-                    </Button>
+                    />
                   )}
                   {entry.access === 'owner' && (
-                    <Button
+                    <IconButton
+                      icon={<ICON.delete />}
+                      label={t('entities.delete')}
                       onClick={() =>
                         void run(async () => {
                           await api.deleteJournalEntry(entry.id);
                           return t('entities.deleted', { name: entry.title });
                         })
                       }
-                    >
-                      {t('entities.delete')}
-                    </Button>
+                    />
                   )}
                 </>
               )}

@@ -7,6 +7,7 @@ import { Alert, Button, Select } from '@vtt/ui';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 
 import { AddTokenDialog } from './AddTokenDialog.js';
 import type { Cell } from './geometry.js';
@@ -184,6 +185,7 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
         <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-surface px-3 py-1">
           <p className="text-sm text-muted">{t('tokens.dropHint')}</p>
           <Button
+            icon={<ICON.add />}
             variant="ghost"
             onClick={() => {
               setAdding(true);

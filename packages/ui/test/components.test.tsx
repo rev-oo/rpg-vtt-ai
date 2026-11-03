@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
-import { Alert, Button, cn, Dialog, Select, TextField } from '../src/index.js';
+import { Alert, Button, cn, Dialog, IconButton, Select, TextField } from '../src/index.js';
 
 describe('Button', () => {
   it('defaults to a non-submitting secondary button', () => {
@@ -22,6 +22,32 @@ describe('Button', () => {
     expect(button).toHaveAttribute('data-variant', 'primary');
     expect(button).toHaveAttribute('type', 'submit');
     expect(button).toHaveClass('extra');
+    fireEvent.click(button);
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+});
+
+describe('icons (ADR-071)', () => {
+  it('keeps the text as the name of a button with an icon', () => {
+    render(<Button icon={<svg data-testid="icon" />}>Delete</Button>);
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.getByTestId('icon').parentElement).toHaveAttribute('aria-hidden', 'true');
+  });
+
+  it('names an icon button by its label, shown as its tooltip', () => {
+    const onClick = vi.fn();
+    render(
+      <IconButton
+        icon={<svg data-testid="icon" />}
+        label="Move up"
+        variant="ghost"
+        onClick={onClick}
+      />,
+    );
+    const button = screen.getByRole('button', { name: 'Move up' });
+    expect(button).toHaveAttribute('title', 'Move up');
+    expect(button).toHaveAttribute('data-variant', 'ghost');
+    expect(screen.getByTestId('icon').parentElement).toHaveAttribute('aria-hidden', 'true');
     fireEvent.click(button);
     expect(onClick).toHaveBeenCalledOnce();
   });

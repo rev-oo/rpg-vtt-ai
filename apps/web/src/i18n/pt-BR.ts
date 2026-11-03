@@ -65,7 +65,7 @@ export const ptBR: Messages = {
 
   'table.notFound': 'Esta mesa não existe, ou você não é membro dela.',
   'table.back': 'Voltar para suas mesas',
-  'workspace.tables': '← Mesas',
+  'workspace.tables': 'Mesas',
   'workspace.panels': 'Painéis',
   'workspace.resetLayout': 'Restaurar layout',
   'workspace.isOpen': 'aberto',
@@ -463,7 +463,7 @@ export const ptBR: Messages = {
   'map.openScenes': 'Abrir Cenas',
   'map.zoomIn': 'Aproximar',
   'map.zoomOut': 'Afastar',
-  'map.fit': 'Ajustar',
+  'map.fit': 'Ajustar à cena',
   'map.unsupported': 'Este navegador não consegue desenhar mapas: ele não tem WebGL.',
   'map.backgroundBlocked':
     'Não foi possível desenhar a imagem de fundo. O site dela pode não permitir; envie a imagem para a mesa.',

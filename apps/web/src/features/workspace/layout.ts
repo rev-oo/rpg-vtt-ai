@@ -38,6 +38,9 @@ export const titleOf = (id: ToolPanel | PagePanel): string => t(TITLES[id]);
 const find = (api: DockviewApi, ids: readonly string[]) =>
   ids.map((id) => api.getPanel(id)).find((panel) => panel !== undefined);
 
+/** Every panel's tab: its icon, title and close button (ADR-071). */
+export const PANEL_TAB = 'icon';
+
 /** Where a document opens: beside the open documents, else right of the lists. */
 function documentPlace(api: DockviewApi): AddPanelPositionOptions | undefined {
   const active = api.activePanel;
@@ -88,7 +91,13 @@ export function showPanel(api: DockviewApi, id: ToolPanel | PagePanel, phone: bo
     return;
   }
   const position = placeOf(api, id, phone);
-  api.addPanel({ id, component: id, title: titleOf(id), ...(position && { position }) });
+  api.addPanel({
+    id,
+    component: id,
+    tabComponent: PANEL_TAB,
+    title: titleOf(id),
+    ...(position && { position }),
+  });
 }
 
 /** Opens a document or page, or brings it to the front. */
@@ -110,6 +119,7 @@ export function showTarget(
   const position = placeOf(api, target.id, phone);
   api.addPanel({
     id: target.id,
+    tabComponent: PANEL_TAB,
     ...(target.kind === 'sheet'
       ? { component: 'sheet', params: { actorId: target.actorId } }
       : target.kind === 'item'
@@ -126,7 +136,13 @@ export function showTarget(
  */
 export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean): void {
   const add = (id: ToolPanel | PagePanel, position?: AddPanelPositionOptions) =>
-    api.addPanel({ id, component: id, title: titleOf(id), ...(position && { position }) });
+    api.addPanel({
+      id,
+      component: id,
+      tabComponent: PANEL_TAB,
+      title: titleOf(id),
+      ...(position && { position }),
+    });
   if (phone) {
     add('map');
     for (const id of [

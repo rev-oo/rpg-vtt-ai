@@ -22,6 +22,7 @@
     "@vtt/ui": "workspace:*",
     "dockview-react": "8.4.1",
     "isbot": "^5",
+    "lucide-react": "1.59.0",
     "pixi-viewport": "^6.0.3",
     "pixi.js": "^8.22.0",
     "react": "^19.3.1",
