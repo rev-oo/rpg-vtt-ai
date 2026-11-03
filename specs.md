@@ -20,7 +20,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
-| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | In progress | 33%      |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | In progress | 67%      |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -28,7 +28,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M15 (M14 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1503` (`T-1502` waits on Q17)
+- **Next task:** `T-1502` (waits on Q17)
 - **Open blockers:** none
 - **Decisions pending:** Q17–Q19 (§14)
 
@@ -49,6 +49,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-02 | Icons added at the user's request, outside the milestones: dock tabs and the Panels menu, the map toolbar and zoom buttons, list row actions and common actions, with Lucide SVGs; icon-only buttons always carry a label and tooltip (ADR-071).                                                       |
 | 2026-11-03 | Map polish at the user's request, outside the milestones: the map tools run down the map's left edge, and a middle-button drag pans the map in every tool (ADR-069 amended).                                                                                                                           |
 | 2026-11-03 | T-1501 done: plugins ship `migrations/<version>.json` steps (rename, move, set default, drop) and a `migrate` hook; upgrading a table migrates each actor and item behind the new version in its own transaction, fails those whose result does not fit, and lets the GM migrate them again (ADR-072). |
+| 2026-11-03 | T-1503 done: plugin shared and server code run in QuickJS (WebAssembly) inside their worker, with no Node API reachable, values passed as JSON, a 32 MB engine memory limit, and the time limits of ADR-047 (ADR-073).                                                                                 |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).                        |
 
 ---
@@ -389,23 +390,23 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                                                                                   | Priority | Status                       |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                                                    | MVP      | 0.1.0                        |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                                                    | MVP      | 0.1.0                        |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                                                     | MVP      | 0.1.0                        |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                                                | MVP      | 0.1.0                        |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                                       | MVP      | 0.1.0                        |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                                       | MVP      | 0.1.0                        |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                                                | MVP      | 0.1.0                        |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                                          | MVP      | 0.1.0 (`code/client`); 0.2.0 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                       | v1       | 0.3.0 (browser, ADR-060)     |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                              | v1       | 0.2.0                        |
-| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                         | 1.0      | 0.3.0 (ADR-061)              |
-| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | 1.0.0 (T-1501, ADR-072)      |
-| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | planned (M15)                |
-| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                |
-| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | 0.3.0                        |
+| ID           | Requirement                                                                                                                                                                                   | Priority | Status                                         |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------------------------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                                                    | MVP      | 0.1.0                                          |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                                                    | MVP      | 0.1.0                                          |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                                                     | MVP      | 0.1.0                                          |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                                                | MVP      | 0.1.0                                          |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                                       | MVP      | 0.1.0                                          |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                                       | MVP      | 0.1.0                                          |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                                                | MVP      | 0.1.0                                          |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                                          | MVP      | 0.1.0 (`code/client`); 0.2.0                   |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                       | v1       | 0.3.0 (browser, ADR-060)                       |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                              | v1       | 0.2.0                                          |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                         | 1.0      | 0.3.0 (ADR-061)                                |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | 1.0.0 (T-1501, ADR-072)                        |
+| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | server 1.0.0 (T-1503); client planned (T-1502) |
+| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                                  |
+| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | 0.3.0                                          |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -521,7 +522,7 @@ Syntax, references, operators, functions and dice: [guide, Formulas](docs/plugin
 
 Three entries, each optional: `code/shared` (`defineShared`: formula functions), `code/client` (`defineClient`: sheet nodes and chat cards) and `code/server` (`defineServer`: handler recipes, slash commands and combat hooks). Working examples: [guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
-**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a worker thread per plugin, with time limits (ADR-047); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050), and table upgrades call `migrate`, which gets no `ctx` (ADR-072). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
+**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025). `code/shared` and `code/server` run on the server in a QuickJS engine inside a worker thread per plugin, with time and memory limits (ADR-047, ADR-073); the browser loads `code/shared` too, for sheets. Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050), and table upgrades call `migrate`, which gets no `ctx` (ADR-072). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 Rules:
 
@@ -529,7 +530,7 @@ Rules:
 - Client code receives only `@vtt/sdk/client` hooks (`useField`, `useDerived`, `useActor`, `useTranslate`). It cannot open sockets or call arbitrary APIs. It imports `react`, `react/jsx-runtime` and `@vtt/sdk/client` by name; the app's import map resolves them to its own copies (ADR-025).
 - Shared code is pure and must pass the same lint boundaries as `packages/formula`.
 - Custom nodes must be pure rendering: they read via hooks and write via `useField` setters.
-- **Trust model:** `code/` is trusted (Q1); server code is contained in a worker per plugin (ADR-047), not sandboxed. Installing a plugin with code requires explicit admin enablement. The admin UI lists the code entry points.
+- **Trust model:** `code/` is trusted (Q1). Shared and server code run in a QuickJS engine inside a worker per plugin, with no Node API reachable: only the language, `console` and `ctx` (ADR-047, ADR-073). Client code is not sandboxed yet (T-1502). Installing a plugin with code requires explicit admin enablement. The admin UI lists the code entry points.
 
 ### 8.11 Chat cards
 
@@ -782,7 +783,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
   - **Do:** `code/client` runs in a sandboxed iframe per plugin with the approach chosen in Q17, and reaches sheets only through the `@vtt/sdk/client` hooks over a message bridge (FR-PLUGIN-13). Custom nodes and cards keep working for the reference plugins.
   - **Done when:** tests show client code cannot read the app's DOM, cookies or fetch the API; the reference plugins' custom nodes and cards work as before.
 
-- [ ] **T-1503 · Server code isolation**
+- [x] **T-1503 · Server code isolation**
   - **Deps:** none
   - **Do:** Plugin server code runs in an isolated runtime with no Node API reachable (no `require`, `process`, filesystem or network), keeping the worker per plugin and the time limits of ADR-047 (FR-PLUGIN-13).
   - **Done when:** tests show those APIs are unreachable from shared and server code; the reference plugins' handlers, commands and hooks pass unchanged.
@@ -891,7 +892,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | --------------------------------------------------- | ---------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Layout JSON becomes too limited for a real system   | Low                          | High   | Two reference systems and a reader test built systems with it in 0.1.0; `custom:` nodes as escape hatch                                                                                                                                                                                 |
 | CRDT + permissions bugs leak secret data            | Medium                       | High   | Wire-level tests (NFR-08), server-side checks on every update, secret docs separate from main                                                                                                                                                                                           |
-| Trusted plugin code is a security hole              | High (if untrusted installs) | High   | Code plugins start disabled and are flagged; documented trust model; server code runs in a worker per plugin with time limits and a restricted `ctx` (ADR-047); sandboxing is LATER                                                                                                     |
+| Trusted plugin code is a security hole              | High (if untrusted installs) | High   | Code plugins start disabled and are flagged; documented trust model; server code runs in a QuickJS engine in a worker per plugin, with time and memory limits, no Node APIs and a restricted `ctx` (ADR-047, ADR-073); client code sandboxing is T-1502                                 |
 | SQLite write contention under many active tables    | Low                          | Medium | WAL mode, batched projection writes, single writer; revisit at scale                                                                                                                                                                                                                    |
 | Formula language scope creep                        | High                         | Medium | Fixed function whitelist, change requires an ADR                                                                                                                                                                                                                                        |
 | Type drift between Zod, JSON Schema, and TypeScript | Medium                       | Medium | Single Zod source, emitted schemas snapshot-tested                                                                                                                                                                                                                                      |
@@ -956,7 +957,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-044 | [The Docker image, and the server serving the web app](docs/adr/ADR-044-docker-image.md)                                                        | Accepted                                   |
 | ADR-045 | [Plugin authoring guide and generated file reference](docs/adr/ADR-045-plugin-authoring-docs.md)                                                | Accepted                                   |
 | ADR-046 | [Releases: version tags publish the image and the release notes](docs/adr/ADR-046-releases.md)                                                  | Accepted                                   |
-| ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted                                   |
+| ADR-047 | [Plugin code runtime: a worker thread per plugin](docs/adr/ADR-047-plugin-code-runtime.md)                                                      | Accepted; amended by ADR-073               |
 | ADR-048 | [Plugin slash commands run like handler recipes](docs/adr/ADR-048-plugin-slash-commands.md)                                                     | Accepted                                   |
 | ADR-049 | [Combat encounters are rows, refetched on `combat.updated`](docs/adr/ADR-049-combat-encounters-as-rows.md)                                      | Accepted                                   |
 | ADR-050 | [Initiative, turn ordering and combat hooks](docs/adr/ADR-050-initiative-ordering-and-combat-hooks.md)                                          | Accepted                                   |
@@ -982,6 +983,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-070 | [Fog of war is a list of revealed rectangles, filtered on the server](docs/adr/ADR-070-fog-of-war.md)                                           | Accepted                                   |
 | ADR-071 | [Icons are Lucide SVGs, beside text on actions, alone only with a label](docs/adr/ADR-071-icons.md)                                             | Accepted                                   |
 | ADR-072 | [Table upgrades migrate data one entity at a time, with declarative steps and a hook](docs/adr/ADR-072-data-migrations.md)                      | Accepted                                   |
+| ADR-073 | [Plugin shared and server code run in QuickJS inside their worker](docs/adr/ADR-073-server-code-isolation.md)                                   | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

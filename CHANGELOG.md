@@ -25,6 +25,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 - The Panels menu is no longer covered by the workspace's resize bars.
 
+### Security
+
+- Plugin shared and server code now runs in a separate JavaScript engine (QuickJS, in WebAssembly) inside its worker, so it can no longer reach Node: no files, environment, network, processes or imports, only the language, `console` and `ctx`. It may use 32 MB of memory. Packed plugins run unchanged, but code is interpreted, so heavy computation is slower (FR-PLUGIN-13, ADR-073).
+
 ## [0.4.0] - 2026-10-29
 
 Tables get their own images: upload them, browse them in an Images panel, and use them for actor and item pictures, in journal text and in a sheet's image fields. Plugins written for 0.1.0 to 0.3.0 work unchanged: the plugin core API stays at `0.1.0`.

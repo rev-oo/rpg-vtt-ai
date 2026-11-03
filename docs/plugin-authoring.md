@@ -1391,7 +1391,7 @@ export default defineShared({
 });
 ```
 
-A function gets the formula's values (numbers, text, booleans or lists) and returns a number, text or boolean. It runs in two places: in each viewer's browser for sheets, and on the server for rolls. Keep it pure, so both get the same answer, and quick: on the server, one that takes longer than 100 ms fails the formula. A function that throws fails the formula with an error naming it. Shared code cannot import `react` or the client SDK, and the browser loads it as it is, so it must not use Node modules either.
+A function gets the formula's values (numbers, text, booleans or lists) and returns a number, text or boolean. It runs in two places: in each viewer's browser for sheets, and on the server for rolls. Keep it pure, so both get the same answer, and quick: on the server, one that takes longer than 100 ms fails the formula. A function that throws fails the formula with an error naming it. Shared code cannot import `react` or the client SDK, and the browser loads it as it is. On the server it runs like [server code](#server-code), with no Node APIs.
 
 #### Server code
 
@@ -1426,7 +1426,8 @@ Rules:
 - **Post something.** A handler must post at least one message; the first answers the roll. One that posts nothing fails.
 - **Time.** A handler may take 5 seconds in all. One that takes longer is stopped, and the roll fails.
 - **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log. Use `ctx.fail` for a message players should read.
-- **Isolation.** Each plugin's shared and server code runs in a worker thread of its own, with no database or file access beyond `ctx`. A crash or a loop stops that worker, never the server; the next roll starts a new one.
+- **Isolation.** Each plugin's shared and server code runs in a JavaScript engine of its own (QuickJS) inside a worker thread. It has the language and its built-ins (`Math`, `JSON`, `Date`, promises…) and `console`, which writes to the server log. It has no Node APIs: no `require` or `import`, `process`, files, network or timers. What it imports must be bundled, as `vtt-plugin pack` does. Values pass in and out as JSON. A crash or a loop stops that worker, never the server; the next roll starts a new one.
+- **Memory.** The engine may use 32 MB. Code that needs more fails, and the plugin keeps working.
 
 #### Slash commands
 

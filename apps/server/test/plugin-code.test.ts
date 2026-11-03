@@ -239,6 +239,93 @@ const CODED = {
 `,
 };
 
+// T-1503 (FR-PLUGIN-13, ADR-073): the plugin code runs in QuickJS, with no Node API in reach.
+const NODE_NAMES = [
+  'process',
+  'require',
+  'module',
+  'Buffer',
+  'fetch',
+  'setTimeout',
+  'setImmediate',
+  'WebAssembly',
+  'WebSocket',
+  'XMLHttpRequest',
+];
+const REACH = `(names) => {
+  const found = names.filter((name) => typeof globalThis[name] !== 'undefined');
+  // The Function constructor builds functions in the engine, not in Node.
+  const global = (function () {}).constructor('return this')();
+  if (typeof global.process !== 'undefined') found.push('Function.process');
+  return found;
+}`;
+
+describe('plugin code isolation (T-1503, ADR-073)', () => {
+  it('gives shared and server code no Node API', async () => {
+    const entries = await plugin('probe', {
+      'code/shared.js': `const reach = ${REACH};
+export default { functions: { reach: () => reach(${JSON.stringify(NODE_NAMES)}).join(',') } };`,
+      'code/server.js': `const reach = ${REACH};
+export default {
+  hooks: {
+    probe: async () => {
+      const found = reach(${JSON.stringify(NODE_NAMES)});
+      try { await import('node:fs'); found.push('import'); } catch {}
+      return found;
+    },
+  },
+};`,
+    });
+    const code = await runtime.load('probe', entries);
+    expect(code?.functions.reach?.()).toBe('');
+    const host: HandlerHost = () => Promise.resolve(undefined);
+    expect(await code?.handle('hook', 'probe', {}, host)).toEqual([]);
+  });
+
+  it('refuses code that imports a module', async () => {
+    const entries = await plugin('importer', {
+      'code/server.js': `import { readFileSync } from 'node:fs';
+export default { handlers: { read: () => readFileSync('/etc/passwd', 'utf8') } };`,
+    });
+    await expect(runtime.load('importer', entries)).rejects.toMatchObject({
+      code: 'plugin_code_failed',
+    });
+  });
+
+  it('fails code that runs out of memory, and keeps the plugin working', async () => {
+    const entries = await plugin('hog', {
+      'code/server.js': `export default {
+  hooks: {
+    // 800 MB of numbers, far past the engine's limit.
+    hog: () => new Array(1e8).fill(0).length,
+    fine: () => 'still here',
+  },
+};`,
+    });
+    const code = await runtime.load('hog', entries);
+    const host: HandlerHost = () => Promise.resolve(undefined);
+    await expect(code?.handle('hook', 'hog', {}, host)).rejects.toMatchObject({
+      code: 'handler_failed',
+    });
+    expect(await code?.handle('hook', 'fine', {}, host)).toBe('still here');
+  });
+
+  it('sends console output to the server log', async () => {
+    const entries = await plugin('talker', {
+      'code/server.js': `export default {
+  hooks: { speak: () => { console.log('hello', { a: 1 }); console.error('oops'); } },
+};`,
+    });
+    const code = await runtime.load('talker', entries);
+    await code?.handle('hook', 'speak', {}, () => Promise.resolve(undefined));
+    await expect
+      .poll(() =>
+        logs.lines.filter((line) => line.msg === 'plugin code output').map((l) => l.output),
+      )
+      .toEqual(expect.arrayContaining(['hello {"a":1}', 'oops']));
+  });
+});
+
 describe('plugin code through the API (T-0809, ADR-047)', () => {
   let app: TestApp;
   let gm: Client;
