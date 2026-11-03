@@ -137,24 +137,36 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
       'aria-pressed',
       'true',
     );
-    // A drag measures a first leg, a click adds another, Enter ends the path.
-    const from = at(2, 2);
-    const to = at(8, 5);
+    // A drag measures a first leg, a click adds another, Enter ends the path. The path keeps
+    // clear of the tools down the map's left edge.
+    const from = at(6, 2);
+    const to = at(12, 5);
     await gmPage.mouse.move(from.x, from.y);
     await gmPage.mouse.down();
     await gmPage.mouse.move(to.x, to.y, { steps: 8 });
     await gmPage.mouse.up();
     const status = mapPanel.getByText(/^Measured/);
     await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');
-    const corner = at(8, 8);
+    const corner = at(12, 8);
     await gmPage.mouse.click(corner.x, corner.y);
     await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
     await gmPage.keyboard.press('Enter');
     // Ended, the path no longer follows the pointer.
-    const away = at(12, 8);
+    const away = at(16, 8);
     await gmPage.mouse.move(away.x, away.y, { steps: 4 });
     await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
     expect(await view(map)).toEqual({ zoom, x, y });
+
+    // The middle button pans whatever the tool, and the path stays as it was.
+    await gmPage.mouse.down({ button: 'middle' });
+    await gmPage.mouse.move(away.x - 120, away.y - 60, { steps: 6 });
+    await gmPage.mouse.up({ button: 'middle' });
+    await expect.poll(async () => (await view(map)).x).toBeGreaterThan(x);
+    await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
+    // 0 brings the view back for the steps below.
+    await map.focus();
+    await gmPage.keyboard.press('0');
+    await expect.poll(async () => view(map)).toEqual({ zoom, x, y });
 
     await gmPage.keyboard.press('Backspace');
     await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');

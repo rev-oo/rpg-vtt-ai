@@ -198,8 +198,10 @@ export default function MapCanvas({
             ticker,
           });
           const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-          viewport.drag().pinch().wheel();
+          // The middle button pans in every tool (below), so the drag leaves it alone.
+          viewport.drag({ mouseButtons: 'left-right' }).pinch().wheel();
           if (!calm) viewport.decelerate();
+          panWithMiddleButton(app.canvas, viewport);
           const backgroundLayer = viewport.addChild(new Sprite());
           const grid = viewport.addChild(new Graphics());
           fogLayer = new FogLayer(viewport);
@@ -678,7 +680,8 @@ export default function MapCanvas({
       <div
         role="toolbar"
         aria-label={t('map.tools')}
-        className="absolute top-3 left-3 flex gap-1 rounded-lg bg-surface p-1 shadow"
+        aria-orientation="vertical"
+        className="absolute top-3 left-3 flex flex-col gap-1 rounded-lg bg-surface p-1 shadow"
       >
         {tools.map((each) => (
           <IconButton
@@ -695,7 +698,7 @@ export default function MapCanvas({
         ))}
       </div>
       {(tool === 'reveal' || tool === 'hide') && (
-        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-2 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+        <div className="absolute bottom-3 left-16 flex max-w-[60%] flex-col gap-2 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p className="text-muted">{t(`fog.hint.${tool}`)}</p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -716,7 +719,7 @@ export default function MapCanvas({
         </div>
       )}
       {(tool === 'ruler' || tool === 'circle' || tool === 'cone') && (
-        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+        <div className="absolute bottom-3 left-16 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p role="status">
             {measured &&
               t(`ruler.measured.${tool}`, {
@@ -796,6 +799,38 @@ function drawGrid({ grid, viewport }: Stage, scene: SceneGrid): void {
   for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
   grid.stroke({ width: 1, color: GRID_COLOR, alpha: 0.45, pixelLine: true });
   viewport.dirty = true;
+}
+
+/**
+ * A drag with the middle button pans the map whatever the tool: it adds no ruler point, marks
+ * no fog and moves no token. The browser's own middle click (autoscroll) is kept off the map.
+ */
+function panWithMiddleButton(canvas: HTMLCanvasElement, viewport: Viewport): void {
+  canvas.addEventListener('mousedown', (event) => {
+    if (event.button === 1) event.preventDefault();
+  });
+  let last: Point | null = null;
+  viewport.on('pointerdown', (event) => {
+    if (event.pointerType !== 'mouse' || event.button !== 1) return;
+    last = { x: event.global.x, y: event.global.y };
+  });
+  viewport.on('globalpointermove', (event) => {
+    if (!last) return;
+    // The button let go of outside the page.
+    if ((event.buttons & 4) === 0) {
+      last = null;
+      return;
+    }
+    viewport.x += event.global.x - last.x;
+    viewport.y += event.global.y - last.y;
+    last = { x: event.global.x, y: event.global.y };
+    viewport.emit('moved', { viewport, type: 'drag' });
+  });
+  const stop = (event: FederatedPointerEvent) => {
+    if (event.button === 1) last = null;
+  };
+  viewport.on('pointerup', stop);
+  viewport.on('pointerupoutside', stop);
 }
 
 /**
