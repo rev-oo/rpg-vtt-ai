@@ -46,8 +46,9 @@ export function systemRoutes({ app, db, plugins: registry }: AppContext): void {
         id,
         name: plugin.name,
         version: plugin.version,
-        // Packs stay on the server: GMs list and import them (ADR-051).
-        definition: { ...definition, packs: undefined },
+        // Packs stay on the server: GMs list and import them (ADR-051). So do migrations,
+        // which only the server runs (ADR-072).
+        definition: { ...definition, packs: undefined, migrations: undefined },
         styles: definition.styles.map((file) => base + file),
         client: plugin.codeEntries.includes('code/client.js') ? `${base}code/client.js` : null,
         shared: plugin.codeEntries.includes('code/shared.js') ? `${base}code/shared.js` : null,

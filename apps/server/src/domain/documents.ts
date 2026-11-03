@@ -204,6 +204,20 @@ function joinLayers(
 }
 
 /**
+ * An actor's or item's data from both layers: each from its live document when loaded, else
+ * from its stored state, else from the projection. What a data migration starts from (ADR-072).
+ */
+export function entityData(
+  db: DbOrTx,
+  kind: EntityKind,
+  entity: SheetEntity,
+  definition: DefinitionOf,
+  live: (name: string) => Y.Doc | undefined,
+): LayerData {
+  return joinLayers(db, kind, entity, definition, live);
+}
+
+/**
  * An actor's current data for rolls (specs §9.6): from its live documents while one is
  * loaded, so a roll sees edits the store debounce has not saved yet. `undefined` when
  * neither document is loaded; the projection is then current.

@@ -23,7 +23,13 @@ export function findTable(db: DbOrTx, tableId: string): GameTable | undefined {
   return db.select().from(gameTables).where(eq(gameTables.id, tableId)).get();
 }
 
-export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): TableView {
+export function toTableView(
+  db: DbOrTx,
+  table: GameTable,
+  role: TableRole,
+  /** Entities an upgrade would migrate (ADR-072), when the caller counted them. */
+  outdatedEntities = 0,
+): TableView {
   const plugin = db
     .select({
       name: plugins.name,
@@ -42,6 +48,7 @@ export function toTableView(db: DbOrTx, table: GameTable, role: TableRole): Tabl
     systemName: plugin?.name ?? table.systemId,
     systemVersion: table.systemVersion,
     installedVersion: plugin?.version ?? null,
+    outdatedEntities,
     settings: table.settings,
     playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
     systemAvailable: plugin ? isAvailable(plugin) : false,

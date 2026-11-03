@@ -33,6 +33,9 @@ export const PLUGIN_ISSUE_CODES = [
   'reserved_name',
   // Packs
   'duplicate_id',
+  // Migrations (ADR-072)
+  'migration_after_version',
+  'migration_row_move',
   // Formulas
   'invalid_formula',
   'unknown_reference',
@@ -135,6 +138,10 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   invalid_default: (x) => `The default does not fit the field: ${p(x, 'reason')}`,
   invalid_annotation: (x) => `${p(x, 'key')} cannot be used on a field of type ${p(x, 'type')}`,
   duplicate_id: (x) => `Another entry already has the id "${p(x, 'id')}"`,
+  migration_after_version: (x) =>
+    `The migration to ${p(x, 'version')} is for a version after the plugin's (${p(x, 'plugin')})`,
+  migration_row_move: (x) =>
+    `"${p(x, 'from')}" cannot move to "${p(x, 'to')}": a value stays in its collection row`,
   reserved_name: (x) => `"${p(x, 'name')}" is reserved for formulas and cannot name a field`,
   invalid_formula: (x) =>
     `Invalid formula: ${p(x, 'detail')} (line ${p(x, 'line')}, column ${p(x, 'column')})`,

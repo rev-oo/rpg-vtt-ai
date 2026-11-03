@@ -116,10 +116,34 @@ export type OrderCombatantsHook = (input: {
   combatants: readonly HookCombatant[];
 }) => Promise<readonly string[]> | readonly string[];
 
-/** Combat hooks (ADR-050). */
+/**
+ * What a `migrate` hook gets (ADR-072): one actor's or item's data, both layers, as the
+ * `migrations/` steps left it, in the stored form (a collection is a map of rows by id).
+ */
+export interface MigrateInput {
+  kind: 'actor' | 'item';
+  type: string;
+  /** The version the data was made with or last brought up to. */
+  from: string;
+  /** The version it is brought up to: the table's new version. */
+  to: string;
+  data: Readonly<Record<string, unknown>>;
+}
+
+/**
+ * Brings data up to the table's new version where the steps cannot, when a GM upgrades it.
+ * Returns the new data, which must fit the type's schema; throwing, or data that does not
+ * fit, leaves the entity as it was and reports it. It runs on data only: it has no `ctx`.
+ */
+export type MigrateHook = (
+  input: MigrateInput,
+) => Promise<Record<string, unknown>> | Record<string, unknown>;
+
+/** Combat hooks (ADR-050) and the data migration hook (ADR-072). */
 export interface Hooks {
   onTurnStart?: TurnStartHook;
   orderCombatants?: OrderCombatantsHook;
+  migrate?: MigrateHook;
 }
 
 /** The default export of `code/server`. */

@@ -5,6 +5,7 @@ import { combatSchema } from './combat.js';
 import { diceSchema } from './dice.js';
 import { langSchema } from './lang.js';
 import { manifestSchema } from './manifest.js';
+import { migrationSchema } from './migrations.js';
 import { packSchema } from './packs.js';
 import { rollsSchema } from './rolls.js';
 import { settingsSchema } from './settings.js';
@@ -23,6 +24,7 @@ export const PLUGIN_FILES = {
   settings: { schema: settingsSchema, title: 'Table settings (settings.json)' },
   combat: { schema: combatSchema, title: 'Combat (combat.json)' },
   pack: { schema: packSchema, title: 'Compendium pack (packs/<name>.json)' },
+  migration: { schema: migrationSchema, title: 'Data migration (migrations/<version>.json)' },
   lang: { schema: langSchema, title: 'Translations (lang/<locale>.json)' },
 } as const;
 export type PluginFileKind = keyof typeof PLUGIN_FILES;
@@ -38,6 +40,7 @@ const FILE_PATTERNS: readonly (readonly [RegExp, PluginFileKind])[] = [
   [/^settings\.json$/, 'settings'],
   [/^combat\.json$/, 'combat'],
   [/^packs\/[^/]+\.json$/, 'pack'],
+  [/^migrations\/[^/]+\.json$/, 'migration'],
   [/^lang\/[^/]+\.json$/, 'lang'],
 ];
 

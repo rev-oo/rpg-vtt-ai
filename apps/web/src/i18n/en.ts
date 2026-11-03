@@ -202,8 +202,18 @@ export const en = {
   'systemVersion.title': 'System version',
   'systemVersion.current': 'This table plays {name} {version}.',
   'systemVersion.help':
-    'Version {version} is installed. After upgrading, new actors and items use it; existing sheets keep their data and say which version they were made with.',
+    'Version {version} is installed. Upgrading migrates existing actors and items to it; any that cannot be migrated keep their data, and you can migrate them again here.',
   'systemVersion.upgrade': 'Upgrade to {version}',
+  'systemVersion.outdated':
+    'Actors and items still on data from an older version: {count}. Fix them, or update the system, then migrate again.',
+  'systemVersion.migrateAgain': 'Migrate again',
+  'systemVersion.migrated': 'Actors and items migrated: {count}.',
+  'systemVersion.failed': 'Could not migrate: {count}. They keep their data as it was.',
+  'systemVersion.failedMore': 'And {count} more.',
+  'migrationFailure.step': 'step {step} of the {version} migration could not run',
+  'migrationFailure.hook': 'the system’s migrate hook failed',
+  'migrationFailure.code': 'the system’s code could not load',
+  'migrationFailure.invalid': 'the result does not fit: {fields}',
   'archive.title': 'Archive',
   'archive.help':
     'An archived table is read-only for everyone: nothing can be changed, posted or rolled, and nobody can join. You can unarchive it at any time.',
@@ -334,6 +344,10 @@ export const en = {
   'pluginIssue.secret_contribution':
     '{reference} reads a secret field; contributions can only read main-layer fields.',
   'pluginIssue.duplicate_id': 'Another entry already has the id “{id}”.',
+  'pluginIssue.migration_after_version':
+    'The migration to {version} is for a version after the plugin’s ({plugin}).',
+  'pluginIssue.migration_row_move':
+    '“{from}” cannot move to “{to}”: a value stays in its collection row.',
   'pluginIssue.missing_target': 'There is no {target} named “{name}”.',
   'pluginIssue.unknown_field': '“{field}” is not a field of {scope}.',
   'pluginIssue.field_mismatch': '“{field}” must be {expected} here.',

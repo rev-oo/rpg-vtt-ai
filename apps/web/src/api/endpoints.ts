@@ -34,6 +34,8 @@ import {
   itemResponseSchema,
   itemsResponseSchema,
   tableTypesSchema,
+  upgradeSystemResponseSchema,
+  type UpgradeSystemResponse,
   chatHistoryResponseSchema,
   chatMessageResponseSchema,
   membersResponseSchema,
@@ -168,8 +170,9 @@ export const api = {
     ).table,
 
   /** Moves the table to its system's installed version (ADR-058). */
-  upgradeTableSystem: async (tableId: string): Promise<TableView> =>
-    (await request('POST', `/tables/${tableId}/upgrade-system`, tableResponseSchema)).table,
+  /** Upgrades the table, or migrates again what an upgrade left behind (ADR-072). */
+  upgradeTableSystem: (tableId: string): Promise<UpgradeSystemResponse> =>
+    request('POST', `/tables/${tableId}/upgrade-system`, upgradeSystemResponseSchema),
 
   listMembers: async (tableId: string): Promise<MemberView[]> =>
     (await request('GET', `/tables/${tableId}/members`, membersResponseSchema)).members,

@@ -60,6 +60,7 @@ describe('pluginFileKind', () => {
     ['settings.json', 'settings'],
     ['combat.json', 'combat'],
     ['packs/monsters.json', 'pack'],
+    ['migrations/1.2.0.json', 'migration'],
     ['lang/pt-BR.json', 'lang'],
   ])('reads %s as %s', (path, kind) => {
     expect(pluginFileKind(path)).toBe(kind);

@@ -105,7 +105,8 @@ describe('data versions (T-0813)', () => {
       200,
     );
     expect(after).toMatchObject({ systemVersion: '0.2.0', installedVersion: '0.2.0' });
-    expect((await get<{ actor: ActorView }>(`/actors/${old.id}`)).actor.dataVersion).toBe('0.1.0');
+    // Upgrading brings existing data along, here with nothing to change (T-1501, ADR-072).
+    expect((await get<{ actor: ActorView }>(`/actors/${old.id}`)).actor.dataVersion).toBe('0.2.0');
     const { actor } = await post<{ actor: ActorView }>(`/tables/${table.id}/actors`, {
       type: 'character',
       name: 'New hero',

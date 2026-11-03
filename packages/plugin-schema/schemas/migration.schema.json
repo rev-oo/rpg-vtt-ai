@@ -1,0 +1,194 @@
+{
+  "title": "Data migration (migrations/<version>.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "steps": {
+      "maxItems": 200,
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "rename"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "item"
+                ],
+                "description": "Whether the step changes actors or items."
+              },
+              "type": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "title": "Name",
+                "description": "The actor or item type whose data the step changes."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:(?:\\.\\*)*\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Field path",
+                "description": "Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`."
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                "description": "The field’s new name; it stays where it is: `stats.hp` to `health` gives `stats.health`."
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "type",
+              "path",
+              "to"
+            ],
+            "additionalProperties": false,
+            "description": "Renames a field in place.",
+            "title": "Rename step"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "move"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "item"
+                ],
+                "description": "Whether the step changes actors or items."
+              },
+              "type": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "title": "Name",
+                "description": "The actor or item type whose data the step changes."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:(?:\\.\\*)*\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Field path",
+                "description": "Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`."
+              },
+              "to": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:(?:\\.\\*)*\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Field path",
+                "description": "Where the value goes. Objects on the way are created. A `*` row stays the same row: `inventory.*.wt` can move to `inventory.*.weight`, not out of the row."
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "type",
+              "path",
+              "to"
+            ],
+            "additionalProperties": false,
+            "description": "Moves a field’s value to another path.",
+            "title": "Move step"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "setDefault"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "item"
+                ],
+                "description": "Whether the step changes actors or items."
+              },
+              "type": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "title": "Name",
+                "description": "The actor or item type whose data the step changes."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:(?:\\.\\*)*\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Field path",
+                "description": "Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`."
+              },
+              "value": {
+                "description": "The value it gets; it must fit the field."
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "type",
+              "path",
+              "value"
+            ],
+            "additionalProperties": false,
+            "description": "Gives a field a value where the entity has none, such as an existing entity’s value for a new field whose default is meant for new ones.",
+            "title": "Set default step"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "op": {
+                "type": "string",
+                "const": "drop"
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "actor",
+                  "item"
+                ],
+                "description": "Whether the step changes actors or items."
+              },
+              "type": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "title": "Name",
+                "description": "The actor or item type whose data the step changes."
+              },
+              "path": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:(?:\\.\\*)*\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Field path",
+                "description": "Field names joined by dots, such as `stats.hp`. `*` stands for every row of a collection: `inventory.*.weight`."
+              }
+            },
+            "required": [
+              "op",
+              "kind",
+              "type",
+              "path"
+            ],
+            "additionalProperties": false,
+            "description": "Removes a field and its value.",
+            "title": "Drop step"
+          }
+        ],
+        "description": "One change to the data. A step whose field an entity does not have does nothing to it."
+      },
+      "description": "Run in order, on each actor and item of the types they name."
+    }
+  },
+  "required": [
+    "steps"
+  ],
+  "additionalProperties": false,
+  "description": "A data migration: steps that bring actors and items made with an older version up to the version the file is named after."
+}

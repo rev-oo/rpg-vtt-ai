@@ -77,6 +77,7 @@ export const TABLE: TableView = {
   systemName: 'Tiny d20',
   systemVersion: '1.0.0',
   installedVersion: '1.0.0',
+  outdatedEntities: 0,
   settings: {},
   playersMayCreateAnyActorType: false,
   systemAvailable: true,

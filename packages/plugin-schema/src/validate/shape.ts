@@ -54,6 +54,15 @@ export function shapeIssues(
       case 'invalid_union': {
         const branches = issue.errors;
         const matching = branches.filter((branch) => !missesDiscriminator(branch));
+        // Only sheets have node types; elsewhere a discriminator is one of a list of values.
+        const options = 'options' in issue && Array.isArray(issue.options) ? issue.options : [];
+        if (kind !== 'sheet' && branches.length === 0 && options.length > 0) {
+          add('invalid_value', path, {
+            reason: 'enum',
+            values: options.map((value) => JSON.stringify(value)).join(', '),
+          });
+          return;
+        }
         if (branches.length === 0 || matching.length === 0) {
           const node = branches.length === 0 && last === 'type' ? path.slice(0, -1) : path;
           add('unknown_node', node, { type: String(valueAt(data, [...node, 'type'])) });

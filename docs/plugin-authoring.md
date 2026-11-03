@@ -26,6 +26,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Chat cards](#chat-cards)
   - [Combat](#combat)
   - [Compendium packs](#compendium-packs)
+  - [Data migrations](#data-migrations)
   - [Table settings](#table-settings)
   - [Translations](#translations)
   - [Styles](#styles)
@@ -896,6 +897,7 @@ my-system/
 ├─ settings.json            options each table can change
 ├─ combat.json              initiative for the combat tracker
 ├─ packs/<name>.json        compendium packs members browse and copy
+├─ migrations/<version>.json  steps that bring older data up to a version
 ├─ lang/<locale>.json       translations; English is required once any exist
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
@@ -1266,6 +1268,29 @@ A pack holds ready-made actors and items of the plugin's own types. Every member
 
 Copied actors belong to whoever copies them, so players see a GM's copies only once the GM shares them. Items copied into the table go to its library. Players see every entry in the panel, but not its secret fields: keep surprises in GM-only fields. A pack may hold 1,000 entries.
 
+### Data migrations
+
+When a version changes how a type stores its data, ship a migration so actors and items made with older versions follow. A file in `migrations/` is named after the version it brings data up to, and lists steps run in order:
+
+```json
+{
+  "steps": [
+    { "op": "rename", "kind": "actor", "type": "character", "path": "skills.*.lvl", "to": "rank" },
+    { "op": "move", "kind": "actor", "type": "character", "path": "wounds", "to": "hp.value" },
+    { "op": "setDefault", "kind": "actor", "type": "character", "path": "edition", "value": "1e" },
+    { "op": "drop", "kind": "actor", "type": "character", "path": "legacy" }
+  ]
+}
+```
+
+- **`rename`** gives a field a new name where it is; **`move`** carries its value to another path, creating objects on the way; **`setDefault`** gives a field a value where an entity has none, such as the value existing entities should get for a new field whose default is meant for new ones; **`drop`** removes a field.
+- **`path`** is field names joined by dots. `*` stands for every row of a collection, and a `move` keeps a value in its row. A step does nothing to an entity without the field, and replaces a value already at its target.
+- **`kind`** and **`type`** name the entities a step changes; each step changes one type.
+
+When a GM upgrades a table to a new version, each actor and item, trash included, runs every migration after the version it was made with, up to the table's new one, oldest first; then the [`migrate` hook](#migrate-hook) if the system has one. The result must fit the type's schema. One that does not, or a step that meets a value it cannot reach inside, leaves the entity as it was: the GM sees which failed and why, and can **Migrate again** from the table settings once the data or the plugin is fixed. Every other entity moves on, and its sheet stops showing the older-version notice. An actor's sheet history keeps what it was before, so a GM can go back.
+
+Migrations only run forwards: data from a newer version than the table's, after a downgrade, is left as it is. A migration file may not be named after a version later than the manifest's. Browsers never receive migrations.
+
 ### Table settings
 
 `settings.json` declares house rules that each table's GM sets on the table settings page. Formulas read them as `@settings.<name>`:
@@ -1447,6 +1472,23 @@ export default defineServer({
 
 Each combatant has `id`, `name`, `initiative` (or `null`), `hidden`, `side` (`player` or `gm`), `sort` (adding order) and `actor` (`id`, `name`, `type`, `data`, or `null` for a free-form one). Hooks follow the rules of handlers, except that they need not post. A hook that fails is logged, and combat goes on without it.
 
+#### Migrate hook
+
+For changes the [migration steps](#data-migrations) cannot express, `migrate` returns an entity's new data:
+
+```ts
+export default defineServer({
+  hooks: {
+    migrate: ({ kind, type, from, to, data }) =>
+      kind === 'actor' && type === 'character' && typeof data.hp === 'number'
+        ? { ...data, hp: { value: data.hp, max: data.hp } }
+        : data,
+  },
+});
+```
+
+It runs once per entity an upgrade migrates, after the steps, with the version the entity was made with (`from`), the table's new one (`to`) and the data the steps left, both layers together. Collections are maps of rows keyed by id, each with a `sort`. It has no `ctx`: it only computes. Return the data unchanged for entities it has nothing to do with. An error, or an answer that is not an object, fails that entity like a failing step.
+
 ## Checking, previewing and installing
 
 ### Validation
@@ -1464,6 +1506,7 @@ It checks:
 - defaults against their fields, and annotations against their types;
 - every formula's syntax, references, functions and dice, and cycles among derived values;
 - links between files: sheets, recipes, cards, derived values, field paths and the inputs they use;
+- migration files: their versions, and each step's type, path and value;
 - `coreApi`, `hasCode`, CSS, and lang keys.
 
 ### Preview
@@ -1483,4 +1526,4 @@ Admins install a plugin in either of two ways:
 
 New plugins start disabled until an admin enables them. Disabling a plugin makes the tables that use it read-only until it is enabled again.
 
-To update a plugin, raise `version` and install it again. Tables, actors and their data stay: entities keep their stored values, and new fields start at their defaults.
+To update a plugin, raise `version` and install it again. Tables, actors and their data stay: each table keeps playing its version until a GM upgrades it in the table settings, which runs the plugin's [data migrations](#data-migrations). Fields an entity lacks start at their defaults.

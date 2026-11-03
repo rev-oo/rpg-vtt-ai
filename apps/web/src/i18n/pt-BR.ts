@@ -206,8 +206,18 @@ export const ptBR: Messages = {
   'systemVersion.title': 'Versão do sistema',
   'systemVersion.current': 'Esta mesa usa {name} {version}.',
   'systemVersion.help':
-    'A versão {version} está instalada. Depois de atualizar, novos atores e itens a usam; as fichas existentes mantêm seus dados e dizem com qual versão foram criadas.',
+    'A versão {version} está instalada. Atualizar migra os atores e itens existentes para ela; os que não puderem ser migrados mantêm seus dados, e você pode migrá-los de novo aqui.',
   'systemVersion.upgrade': 'Atualizar para {version}',
+  'systemVersion.outdated':
+    'Atores e itens ainda com dados de uma versão anterior: {count}. Corrija-os, ou atualize o sistema, e migre de novo.',
+  'systemVersion.migrateAgain': 'Migrar de novo',
+  'systemVersion.migrated': 'Atores e itens migrados: {count}.',
+  'systemVersion.failed': 'Não foi possível migrar: {count}. Eles mantêm seus dados como estavam.',
+  'systemVersion.failedMore': 'E mais {count}.',
+  'migrationFailure.step': 'o passo {step} da migração {version} não pôde ser executado',
+  'migrationFailure.hook': 'o hook migrate do sistema falhou',
+  'migrationFailure.code': 'o código do sistema não pôde ser carregado',
+  'migrationFailure.invalid': 'o resultado não se encaixa: {fields}',
   'archive.title': 'Arquivar',
   'archive.help':
     'Uma mesa arquivada fica somente leitura para todos: nada pode ser alterado, enviado ou rolado, e ninguém pode entrar. Você pode desarquivá-la a qualquer momento.',
@@ -340,6 +350,10 @@ export const ptBR: Messages = {
   'pluginIssue.secret_contribution':
     '{reference} lê um campo secreto; contribuições só podem ler campos da camada principal.',
   'pluginIssue.duplicate_id': 'Outra entrada já tem o id “{id}”.',
+  'pluginIssue.migration_after_version':
+    'A migração para {version} é de uma versão posterior à do plugin ({plugin}).',
+  'pluginIssue.migration_row_move':
+    '“{from}” não pode ir para “{to}”: um valor fica na sua linha da coleção.',
   'pluginIssue.missing_target': 'Não há {target} chamado “{name}”.',
   'pluginIssue.unknown_field': '“{field}” não é um campo de {scope}.',
   'pluginIssue.field_mismatch': '“{field}” precisa ser {expected} aqui.',
