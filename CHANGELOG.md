@@ -17,6 +17,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Changed
 
 - The app has icons. Dock tabs and the Panels menu show each panel's icon; the map's tools and zoom buttons, and the row actions in the Actors, Items, Journal and Scenes lists, are icon buttons with a tooltip and the same names for screen readers; New, Add token, Send, Roll, Upload and other common actions show an icon beside their text (ADR-071).
+- The map's tools run down its left edge instead of across the top.
 
 ### Fixed
 

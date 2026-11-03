@@ -678,7 +678,8 @@ export default function MapCanvas({
       <div
         role="toolbar"
         aria-label={t('map.tools')}
-        className="absolute top-3 left-3 flex gap-1 rounded-lg bg-surface p-1 shadow"
+        aria-orientation="vertical"
+        className="absolute top-3 left-3 flex flex-col gap-1 rounded-lg bg-surface p-1 shadow"
       >
         {tools.map((each) => (
           <IconButton
@@ -695,7 +696,7 @@ export default function MapCanvas({
         ))}
       </div>
       {(tool === 'reveal' || tool === 'hide') && (
-        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-2 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+        <div className="absolute bottom-3 left-16 flex max-w-[60%] flex-col gap-2 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p className="text-muted">{t(`fog.hint.${tool}`)}</p>
           <div className="flex flex-wrap gap-2">
             <Button
@@ -716,7 +717,7 @@ export default function MapCanvas({
         </div>
       )}
       {(tool === 'ruler' || tool === 'circle' || tool === 'cone') && (
-        <div className="absolute bottom-3 left-3 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
+        <div className="absolute bottom-3 left-16 flex max-w-[60%] flex-col gap-1 rounded-md bg-surface px-3 py-1.5 text-sm shadow">
           <p role="status">
             {measured &&
               t(`ruler.measured.${tool}`, {
