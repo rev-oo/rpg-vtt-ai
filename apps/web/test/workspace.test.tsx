@@ -151,7 +151,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Dice',
       'Scenes',
     ]);
-    await userEvent.setup().click(screen.getByText('Chat', { selector: '.dv-tab *' }));
+    await userEvent.setup().click(await screen.findByText('Chat', { selector: '.dv-tab *' }));
     expect(await panel('Chat')).toBeInTheDocument();
     await waitFor(() => {
       expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, true))).not.toBeNull();

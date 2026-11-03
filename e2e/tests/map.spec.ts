@@ -157,6 +157,17 @@ test('a scene is made, shown and explored on desktop and phone', async ({ browse
     await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
     expect(await view(map)).toEqual({ zoom, x, y });
 
+    // The middle button pans whatever the tool, and the path stays as it was.
+    await gmPage.mouse.down({ button: 'middle' });
+    await gmPage.mouse.move(away.x - 120, away.y - 60, { steps: 6 });
+    await gmPage.mouse.up({ button: 'middle' });
+    await expect.poll(async () => (await view(map)).x).toBeGreaterThan(x);
+    await expect(status).toHaveText('Measured 45 ft (cells: 9, points: 3).');
+    // 0 brings the view back for the steps below.
+    await map.focus();
+    await gmPage.keyboard.press('0');
+    await expect.poll(async () => view(map)).toEqual({ zoom, x, y });
+
     await gmPage.keyboard.press('Backspace');
     await expect(status).toHaveText('Measured 30 ft (cells: 6, points: 2).');
     await gmPage.keyboard.press('Escape');
