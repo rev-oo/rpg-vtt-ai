@@ -1,15 +1,22 @@
 import 'dockview-react/dist/styles/dockview.css';
 
-import { DockviewReact, themeLight, type DockviewApi, type DockviewMessages } from 'dockview-react';
 import {
+  DockviewReact,
+  themeLight,
+  type DockviewApi,
+  type DockviewMessages,
+  type IDockviewPanelHeaderProps,
+} from 'dockview-react';
+import {
+  useCallback,
   useEffect,
   useEffectEvent,
   useRef,
   useState,
+  useSyncExternalStore,
   type ReactElement,
   type ReactNode,
 } from 'react';
-import { createPortal } from 'react-dom';
 import { Link } from 'react-router';
 
 import { canManageScenes, canManageTable } from '@vtt/shared';
@@ -23,6 +30,7 @@ import { DockContext } from './dock-context.js';
 import {
   defaultLayout,
   layoutKey,
+  PANEL_TAB,
   restoreLayout,
   saveLayout,
   showPanel,
@@ -85,7 +93,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const key = layoutKey(userId, table.id, phone);
   const scenes = canManageScenes(table.role);
   const [dock, setDock] = useState<DockviewApi | null>(null);
-  const [dockRoot, setDockRoot] = useState<HTMLDivElement | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
 
@@ -178,11 +185,11 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         {notices}
         {/* Its own stacking context: dockview's sashes and groups carry z-indexes of 99 and up,
             which would otherwise cover the header's Panels menu. */}
-        <div ref={setDockRoot} className="vtt-dock isolate min-h-0 flex-1">
-          {dock && dockRoot && <TabIcons dock={dock} root={dockRoot} />}
+        <div className="vtt-dock isolate min-h-0 flex-1">
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}
+            tabComponents={TAB_COMPONENTS}
             watermarkComponent={Empty}
             messages={DOCK_MESSAGES}
             disableDnd={phone}
@@ -206,44 +213,48 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
 }
 
 /**
- * Each dock tab's icon (ADR-071), put into dockview's own tabs, which keep their dragging,
- * close buttons and labels. Dockview makes tab elements as panels open and move, so the icons
- * follow every layout change.
+ * A dock tab: its panel's icon, title and close button, in dockview's own classes (ADR-071).
+ * Dockview's React tab names every close button "Close tab", so the tab is drawn here, its
+ * close button named after the panel as the built-in tab names it.
  */
-function TabIcons({ dock, root }: { dock: DockviewApi; root: HTMLElement }): ReactElement {
-  const [slots, setSlots] = useState<readonly { id: string; slot: HTMLElement }[]>([]);
-  useEffect(() => {
-    const scan = () => {
-      const found: { id: string; slot: HTMLElement }[] = [];
-      for (const tab of root.querySelectorAll<HTMLElement>('.dv-tab[data-tab-panel-id]')) {
-        const id = tab.dataset.tabPanelId;
-        const host = tab.querySelector('.dv-default-tab');
-        if (!id || !host) continue;
-        let slot = host.querySelector<HTMLElement>(':scope > .vtt-tab-icon');
-        if (!slot) {
-          slot = document.createElement('span');
-          slot.className = 'vtt-tab-icon';
-          host.prepend(slot);
-        }
-        found.push({ id, slot });
-      }
-      setSlots((shown) =>
-        shown.length === found.length &&
-        shown.every(
-          (each, index) => each.slot === found[index]?.slot && each.id === found[index].id,
-        )
-          ? shown
-          : found,
-      );
-    };
-    scan();
-    const listener = dock.onDidLayoutChange(scan);
-    return () => {
-      listener.dispose();
-    };
-  }, [dock, root]);
-  return <>{slots.map(({ id, slot }) => createPortal(<PanelIcon panelId={id} />, slot, id))}</>;
+function IconTab({ api }: IDockviewPanelHeaderProps): ReactElement {
+  const title = useSyncExternalStore(
+    useCallback(
+      (changed: () => void) => {
+        const listener = api.onDidTitleChange(changed);
+        return () => {
+          listener.dispose();
+        };
+      },
+      [api],
+    ),
+    () => api.title ?? '',
+  );
+  return (
+    <div className="dv-default-tab">
+      <span className="dv-default-tab-content flex items-center gap-1.5">
+        <PanelIcon panelId={api.id} />
+        {title}
+      </span>
+      <button
+        type="button"
+        className="dv-default-tab-action"
+        aria-label={title ? t('workspace.closeTab', { title }) : t('workspace.closeTabPlain')}
+        onPointerDown={(event) => {
+          // Keeps the press from starting a tab drag.
+          event.preventDefault();
+        }}
+        onClick={() => {
+          api.close();
+        }}
+      >
+        <ICON.close aria-hidden="true" className="size-3" />
+      </button>
+    </div>
+  );
 }
+
+const TAB_COMPONENTS = { [PANEL_TAB]: IconTab };
 
 function Empty(): ReactElement {
   return (

@@ -113,7 +113,13 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
   });
 
   await test.step('a reload finds the layout, the open sheets and the filters', async () => {
-    await tab(page, 'Combat').dragTo(tab(page, 'Actors'));
+    // A tab takes a drop on its left or right half, its exact centre on neither; the dock's
+    // own edge takes a drop right by the window's edge.
+    const actorsTab = await tab(page, 'Actors').boundingBox();
+    if (!actorsTab) throw new Error('The Actors tab is not on screen');
+    await tab(page, 'Combat').dragTo(tab(page, 'Actors'), {
+      targetPosition: { x: actorsTab.width * 0.25, y: actorsTab.height / 2 },
+    });
     await expect(strip(page, 'Actors')).toContainText('Combat');
     // WebKit can drop the first click after an emulated drag; click until the tab opens.
     await expect(async () => {

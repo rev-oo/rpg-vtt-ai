@@ -64,10 +64,3 @@
   --dv-tabs-and-actions-container-font-size: 0.875rem;
   color: var(--color-fg);
 }
-
-/* A dock tab's icon, before its title (ADR-071). */
-.vtt-tab-icon {
-  display: inline-flex;
-  align-items: center;
-  margin-inline-end: 0.375rem;
-}

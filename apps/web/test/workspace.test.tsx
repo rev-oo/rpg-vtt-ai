@@ -40,7 +40,9 @@ function openTable(path: string) {
 
 const panel = (name: string) => screen.findByRole('tabpanel', { name });
 const location = () => screen.getByTestId('location').textContent;
-const tabs = () => [...document.querySelectorAll('.dv-tab')].map((tab) => tab.textContent);
+/** Dockview names each tab after its panel at once; the tab's own content renders later. */
+const tabs = () =>
+  [...document.querySelectorAll('.dv-tab')].map((tab) => tab.getAttribute('aria-label'));
 const panelsMenu = async (user: ReturnType<typeof userEvent.setup>) => {
   await user.click(screen.getByRole('button', { name: 'Panels' }));
   return within(screen.getByRole('list', { name: 'Panels' }));
@@ -69,7 +71,9 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     ]);
     // Each tab shows its panel's icon, hidden from screen readers (ADR-071).
     await waitFor(() => {
-      const icons = document.querySelectorAll('.dv-tab .vtt-tab-icon [aria-hidden="true"] svg');
+      const icons = document.querySelectorAll(
+        '.dv-tab .dv-default-tab-content [aria-hidden="true"] svg',
+      );
       expect(icons).toHaveLength(tabs().length);
     });
   });
@@ -88,7 +92,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(tabs()).toContain('Goblin King');
     await user.click((await panelsMenu(user)).getByRole('button', { name: 'Members' }));
     expect(await panel('Members')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Close Members' }));
+    await user.click(await screen.findByRole('button', { name: 'Close Members' }));
     expect(screen.queryByRole('tabpanel', { name: 'Members' })).toBeNull();
     expect(location()).toBe('/tables/t1');
   });
@@ -97,7 +101,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     openTable('/tables/t1');
     const user = userEvent.setup();
     await panel('Chat');
-    await user.click(screen.getByRole('button', { name: 'Close Chat' }));
+    await user.click(await screen.findByRole('button', { name: 'Close Chat' }));
     expect(screen.queryByRole('tabpanel', { name: 'Chat' })).toBeNull();
     const menu = await panelsMenu(user);
     expect(menu.getByRole('button', { name: /^Chat/ })).not.toHaveTextContent('open');
@@ -112,7 +116,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     await user.click((await panelsMenu(user)).getByRole('button', { name: /^Chat/ }));
     expect(await panel('Chat')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', { name: 'Close Combat' }));
+    await user.click(await screen.findByRole('button', { name: 'Close Combat' }));
     await user.click(screen.getByRole('button', { name: 'Reset layout' }));
     expect(await panel('Combat')).toBeInTheDocument();
   });
