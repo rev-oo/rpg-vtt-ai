@@ -127,7 +127,7 @@ export function defineVttConfig() {
       '**/.react-router/',
       'packages/plugin-schema/schemas/',
       // Plugin client code is not a workspace module: the browser resolves its imports
-      // through the app's import map (ADR-025).
+      // through the import map of the app's plugin frame (ADR-025, ADR-074).
       'e2e/fixtures/plugins/*/code/',
       'plugins/*/code/',
       // Server data directories (git-ignored), with their installed plugins.

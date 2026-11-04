@@ -57,7 +57,7 @@ function pluginSource(dir: string, page: string): Plugin {
     enforce: 'pre',
     async resolveId(source, importer, options) {
       if (source === VIRTUAL) return RESOLVED;
-      // Plugin code shares the page's React and SDK, as in the app's import map.
+      // Plugin code shares the page's React and SDK, as in the app's plugin frames (ADR-074).
       if (importer?.startsWith(dir) && SHARED.test(source)) {
         return this.resolve(source, path.join(page, 'main.tsx'), { ...options, skipSelf: true });
       }

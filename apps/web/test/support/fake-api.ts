@@ -5,6 +5,8 @@ import type { TableView } from '@vtt/shared/api';
 export interface FakeResponse {
   status?: number;
   body?: unknown;
+  /** A plain-text answer, such as a plugin file, in place of the JSON `body`. */
+  text?: string;
   headers?: Record<string, string>;
 }
 
@@ -43,6 +45,14 @@ export function fakeApi(given: Record<string, Handler>): { calls: RecordedCall[]
           ? handler(body, headers)
           : (handler ?? { status: 599, body: { error: { code: 'unhandled', message: path } } });
       const status = res.status ?? 200;
+      if (res.text !== undefined) {
+        return Promise.resolve(
+          new Response(res.text, {
+            status,
+            headers: { 'content-type': 'text/javascript', ...res.headers },
+          }),
+        );
+      }
       return Promise.resolve(
         new Response(status === 204 ? null : JSON.stringify(res.body ?? {}), {
           status,

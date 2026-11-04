@@ -5,7 +5,7 @@ import { cn } from '@vtt/ui';
 
 import { RollView } from '../features/chat/RollView.js';
 
-import { PluginBoundary } from './PluginBoundary.js';
+import { PluginFrame } from './PluginFrame.js';
 import { useSystem } from './system-context.js';
 
 type ResolvedCard = NonNullable<RecipeCard['card']>;
@@ -60,20 +60,23 @@ export function CardMessage({ message }: { message: ChatMessage }): ReactElement
     return fallback;
 
   const { system, translate } = host;
-  const Custom = system.client?.cards?.[card.name];
+  const custom = system.client?.cards.includes(card.name) ? system.client : null;
   const known = Object.hasOwn(system.definition.cards, card.name);
-  if (!Custom && !known) return fallback;
+  if (!custom && !known) return fallback;
   return (
     <div data-plugin={system.id} className="flex flex-col gap-1">
-      {Custom ? (
-        <PluginBoundary name={card.name}>
-          <Custom
-            card={recipe}
-            rolls={message.rolls}
-            speaker={message.speaker}
-            translate={translate}
-          />
-        </PluginBoundary>
+      {custom ? (
+        <PluginFrame
+          code={custom.frame}
+          title={card.name}
+          view={{
+            kind: 'card',
+            name: card.name,
+            card: recipe,
+            rolls: message.rolls,
+            speaker: message.speaker,
+          }}
+        />
       ) : (
         <CoreCard card={card} outcome={recipe.outcome} translate={translate} />
       )}

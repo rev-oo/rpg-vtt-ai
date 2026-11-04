@@ -16,7 +16,7 @@ import { checkPlugin, printIssues } from './validate.js';
 const ENTRY = /^code\/(client|server|shared)\.(?:[cm]?[jt]sx?)$/;
 /** Source files under `code/` that are bundled into the entries instead of shipped. */
 const SOURCE = /^code\/.+\.(?:[cm]?[jt]sx?|json)$/;
-/** What client code gets from the app's import map instead of bundling it (ADR-025). */
+/** What client code gets from the app's plugin frame instead of bundling it (ADR-025, ADR-074). */
 const SHARED = /^(?:react|react-dom|@vtt\/sdk)(?:\/.*)?$/;
 /**
  * Shared and server code run where there is no `node_modules`, so this CLI's own copy of the

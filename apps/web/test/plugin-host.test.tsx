@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -8,11 +11,12 @@ import { createMemoryStore } from '@vtt/sheet-renderer';
 
 import { setCsrfToken } from '../src/api/client.js';
 import type { LiveSheet } from '../src/collab/use-live-sheet.js';
-import { clearLoadedSystems, sharedFunctions, systemTranslator } from '../src/plugin-host/load.js';
+import { clearLoadedSystems, systemTranslator } from '../src/plugin-host/load.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
 import { fakeWebSocket } from './support/fake-socket.js';
+import { loadEngineFromDisk } from './support/quickjs.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 import { openSheet } from './support/workspace.js';
@@ -62,6 +66,11 @@ afterEach(() => {
 });
 
 /** The definition of `TABLE`'s system, as `GET /systems/:id` sends it. */
+loadEngineFromDisk();
+
+/** A plugin's packed code/shared.js (T-0809). */
+const SHARED_SOURCE = readFileSync(path.join(import.meta.dirname, 'fixtures/shared.js'), 'utf8');
+
 const DEFINITION: PluginDefinition = {
   manifest: {
     id: 'tiny-d20',
@@ -185,6 +194,8 @@ function openTable(
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages, nextCursor: null } },
     'GET /systems/tiny-d20': { body: system },
+    // Fetched as text and run in QuickJS (ADR-074).
+    'GET /plugins/tiny-d20/code/shared.js?v=1.0.0': { text: SHARED_SOURCE },
     'POST /tables/t1/rolls': { status: 201, body: { message: CARD_MESSAGE } },
     'GET /actors/a1/history': {
       body: {
@@ -333,21 +344,12 @@ describe('plugin host (T-0409)', () => {
     };
     openTable('/tables/t1', {
       system: {
-        // Served from the project root, as the server serves plugin files.
-        system: { ...SYSTEM.system, definition, shared: '/test/fixtures/shared.js' },
+        system: { ...SYSTEM.system, definition, shared: '/plugins/tiny-d20/code/shared.js' },
       },
     });
     await openSheet('Goblin King');
     // The live sheet holds str 13 (see liveData).
     expect(await screen.findByText('26')).toBeInTheDocument();
-  });
-
-  it('checks the default export of code/shared.js', () => {
-    const twice = (x: unknown) => Number(x) * 2;
-    expect(sharedFunctions({ default: { functions: { twice } } })).toEqual({ twice });
-    expect(sharedFunctions({ default: {} })).toEqual({});
-    expect(() => sharedFunctions({ default: { functions: { twice: 2 } } })).toThrow('defineShared');
-    expect(() => sharedFunctions({})).toThrow('defineShared');
   });
 
   it('shows the text plugin code posts with its rolls (ADR-047)', async () => {

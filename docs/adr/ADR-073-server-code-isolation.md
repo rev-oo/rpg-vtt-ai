@@ -1,6 +1,6 @@
 # ADR-073: Plugin shared and server code run in QuickJS inside their worker
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [ADR-074](ADR-074-client-code-sandbox.md)
 - **Date:** 2026-11-03
 - **Tasks:** T-1503
 - **Covers:** FR-PLUGIN-13, §8.10
@@ -30,4 +30,4 @@ Three runtimes were considered, and the user chose QuickJS:
 - Shared and server code reach the server only through `ctx`. An admin enabling plugin code still trusts it with what `ctx` allows for each roller, but no longer with the server's files, environment and network.
 - Plugin code runs in an interpreter. The reference plugins' functions, handlers, commands and hooks run unchanged, but heavy computation is slower than it was on V8.
 - Each worker compiles the engine once, when the plugin's code is first used.
-- The browser still loads `code/shared` as a module for sheets. Sandboxing the browser side is T-1502 (Q17).
+- The browser still loads `code/shared` as a module for sheets. Sandboxing the browser side is T-1502 (Q17). _Amended by ADR-074: the browser runs `code/shared` in QuickJS too._

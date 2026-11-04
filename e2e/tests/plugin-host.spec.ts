@@ -7,6 +7,8 @@ import { ADMIN, post, signIn } from './support/api.js';
 // Disabling the system leaves the table read-only and the card as plain text (FR-PLUGIN-03).
 // T-0809: its derived `mod` calls a shared function, worked out alike in the browser and on the
 // server, and a handler recipe runs its server code (ADR-047).
+// T-1502: custom nodes and cards run in sandboxed frames, which reach neither the page, its
+// cookies and storage, nor the network (ADR-074).
 test('a system plugin with client code renders sheets and cards', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await post(gm, '/plugins/e2e-code/enable', { acknowledgeCode: true });
@@ -29,17 +31,40 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
     await page.getByRole('button', { name: 'Open sheet: Ayla' }).click();
     await expect(sheet.getByRole('heading', { name: 'Ayla' })).toBeVisible();
     await expect(page.getByLabel('Might')).toHaveValue('4');
-    // `mod` is `half(@might)`, from code/shared.js.
-    const banner = page.getByText('Vitals: Ayla has 7 HP, mod 2');
+    // `mod` is `half(@might)`, from code/shared.js, run in QuickJS.
+    const banner = sheet
+      .frameLocator('iframe[title="banner"]')
+      .getByText('Vitals: Ayla has 7 HP, mod 2');
     await expect(banner).toBeVisible();
     // The plugin's stylesheet applies inside its scope only (ADR-021).
     await expect(banner).toHaveCSS('font-weight', '700');
   });
 
+  await test.step('the plugin code reaches nothing outside its frame', async () => {
+    await expect(sheet.frameLocator('iframe[title="probe"]').locator('.probe')).toHaveText(
+      'page: blocked; cookie: blocked; storage: blocked; network: blocked',
+    );
+  });
+
+  await test.step('the custom node follows the live sheet', async () => {
+    await page.getByLabel('Might').fill('6');
+    await page.getByLabel('Might').blur();
+    await expect(
+      sheet.frameLocator('iframe[title="banner"]').getByText('Vitals: Ayla has 7 HP, mod 3'),
+    ).toBeVisible();
+    await page.getByLabel('Might').fill('4');
+    await page.getByLabel('Might').blur();
+    await expect(
+      sheet.frameLocator('iframe[title="banner"]').getByText('Vitals: Ayla has 7 HP, mod 2'),
+    ).toBeVisible();
+  });
+
   await test.step('a roll button posts a card the plugin draws', async () => {
     await page.getByRole('button', { name: 'Check' }).click();
     await expect(sheet.getByRole('status')).toHaveText('Rolled. The result is in the chat.');
-    await expect(log.getByText('Might check rolled 3: Success')).toBeVisible();
+    await expect(
+      log.frameLocator('iframe[title="check"]').getByText('Might check rolled 3: Success'),
+    ).toBeVisible();
     await expect(log.getByLabel('Total 3', { exact: true })).toBeVisible();
   });
 
@@ -57,6 +82,7 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
       page.getByText(/“E2E Code” is not available, so this table is read-only/),
     ).toBeVisible();
     await expect(log.getByText('Might check rolled 3')).toHaveCount(0);
+    await expect(log.locator('iframe')).toHaveCount(0);
     await expect(log).toContainText('= 3 (Success)');
   });
 
