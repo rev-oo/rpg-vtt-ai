@@ -20,15 +20,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M12    | Table workspace, compendium and inventories ([history](docs/history/0.3.0.md))                                                   | 0.3.0   | Done        | 100%     |
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
-| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | In progress | 100%     |
+| M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
 | M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M15 (M14 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1601`, once M15 is marked done
+- **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
+- **Next task:** `T-1601`
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -51,6 +51,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-03 | T-1501 done: plugins ship `migrations/<version>.json` steps (rename, move, set default, drop) and a `migrate` hook; upgrading a table migrates each actor and item behind the new version in its own transaction, fails those whose result does not fit, and lets the GM migrate them again (ADR-072). |
 | 2026-11-03 | T-1503 done: plugin shared and server code run in QuickJS (WebAssembly) inside their worker, with no Node API reachable, values passed as JSON, a 32 MB engine memory limit, and the time limits of ADR-047 (ADR-073).                                                                                 |
 | 2026-11-04 | T-1502 done: plugin custom nodes and cards render in sandboxed frames, one each, with an opaque origin and no network, and reach sheets only through the SDK hooks over `postMessage`; the browser runs `code/shared` in QuickJS, like the server (ADR-074). Q17 is decided.                           |
+| 2026-11-05 | M15 done: plugin data migrations, plugin client code in sandboxed frames, and plugin shared and server code in QuickJS. SES was tried as an alternative to the frames and dropped (ADR-074). M16 is active.                                                                                            |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).                        |
 
 ---
