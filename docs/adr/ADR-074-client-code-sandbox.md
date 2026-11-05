@@ -18,6 +18,18 @@ and, for shared code, which formulas call synchronously:
 
 - **QuickJS in the browser**, the engine the server uses (ADR-073), compiled to WebAssembly. A frame or a worker cannot answer a synchronous call.
 
+### Options considered for client code
+
+- **A sandboxed frame per node or card** (chosen). Each component renders with its own React in a frame with an opaque origin and no network. Isolation is strong, the plugin API does not change, and components may use any DOM and CSS. Each frame carries its own React, a frame takes its height only after it renders, and focus, portals and popovers cannot cross the frame's edge.
+- **One frame per plugin.** One frame renders all of a plugin's nodes as overlays placed over their slots in the sheet. There is one React per plugin, but keeping the overlays aligned through layout changes, scrolling and dock resizes is fragile, and overlapping nodes are hard.
+- **A frame on a separate origin** (such as `plugins.<host>`). Frames get a real origin of their own, so caching works normally and plugins can load their own images and fonts. Every self-hosted instance would need a second host name with its own TLS and DNS.
+- **Remote rendering from a worker or QuickJS** (the pattern of Shopify's remote-ui). Plugin code returns a tree of allowed components and props, which the app draws with its own React and `@vtt/ui`. There is no React per node, the look and theme are the app's, and layout and focus behave like the rest of the sheet. Plugins lose arbitrary DOM, CSS and React: the SDK would have to offer a fixed set of components, and events would reach plugin code asynchronously. Running the plugin in the page's QuickJS instead of a worker makes calls synchronous, but interpreted and too slow for React itself.
+- **Same-realm isolation**, with SES (`lockdown()` and Compartments) or the TC39 ShadowRealm. Plugin code runs in the app's page with frozen built-ins and only the objects it is handed, so its React could render straight into the app's tree. Every DOM object it touches would need a wrapper that is easy to get wrong, SES conflicts with some libraries, and ShadowRealm has not shipped in browsers.
+- **Declarative sheets only.** Removing client code and growing the JSON node vocabulary (as tiny-pool works) leaves nothing to isolate, but every new widget needs a change to the core.
+- **Shadow DOM and Web Components** isolate styles only, and give no security.
+
+Plugin code is TypeScript or JavaScript, which `vtt-plugin pack` compiles before install. Writing code in the app would need a compiler in the browser (esbuild-wasm, sucrase or TypeScript's `transpileModule`), and the result would still run in the sandbox above.
+
 ## Decision
 
 1. **The frame page.** The web build emits `/plugin-frame.html`, built by `apps/web/scripts/frame-page.ts` (served by Vite in dev). It is self-contained: React, ReactDOM, `@vtt/sdk/client` and the frame's half of the bridge (`src/plugin-frame/frame.tsx`) inline as one classic script, and an import map that points `react`, `react/jsx-runtime` and `@vtt/sdk/client` at `data:` modules re-exporting those from the frame's global. Its policy, in a `<meta>`, lets those two inline scripts run by hash and `data:` modules load, and nothing else: `default-src 'none'`, so no `connect-src`, no images or fonts from a server, no frames. The server sends it with `sandbox allow-scripts` and the same restrictions as a header, and without `X-Frame-Options`: the page holds no data and reaches nothing, so any page may frame it.
