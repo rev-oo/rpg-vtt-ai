@@ -1,11 +1,21 @@
-import type { ComponentType } from 'react';
-import { z } from 'zod';
-
 import type { FormulaFunction } from '@vtt/formula';
 import { pluginDefinitionSchema, type PluginDefinition } from '@vtt/plugin-schema';
-import type { CardProps, ClientDefinition, NodeProps } from '@vtt/sdk/client';
 
 import { api } from '../api/endpoints.js';
+import { LOCALE } from '../i18n/index.js';
+
+import { probeClient, type FrameCode } from './frame-channel.js';
+import { sharedEngineFunctions } from './shared-engine.js';
+
+/**
+ * A system's client code, run only inside sandboxed frames (ADR-074): what each frame gets,
+ * and the nodes and cards it exports.
+ */
+export interface LoadedClient {
+  frame: FrameCode;
+  nodes: readonly string[];
+  cards: readonly string[];
+}
 
 /** A system plugin ready for the page: its definition, and its client code if any. */
 export interface LoadedSystem {
@@ -13,45 +23,13 @@ export interface LoadedSystem {
   name: string;
   version: string;
   definition: PluginDefinition;
-  client: ClientDefinition | null;
+  client: LoadedClient | null;
   /** Why the client code did not load; the sheet then shows notices for custom nodes. */
   clientError: string | null;
-  /** The functions of `code/shared.js`, which formulas call (ADR-047). */
+  /** The functions of `code/shared.js`, which formulas call (ADR-047, ADR-074). */
   functions: Readonly<Record<string, FormulaFunction>>;
   /** Why the shared code did not load; formulas calling it then fail. */
   sharedError: string | null;
-}
-
-const component = z.custom<ComponentType>(
-  (value) => typeof value === 'function' || (typeof value === 'object' && value !== null),
-);
-/** The default export of `code/client.js`, checked like any external input (specs §6.1). */
-const clientModule = z.object({
-  default: z.object({
-    nodes: z.record(z.string(), component).optional(),
-    cards: z.record(z.string(), component).optional(),
-  }),
-});
-
-/** The default export of `code/shared.js`: `defineShared({ functions })`. */
-const sharedModule = z.object({
-  default: z.object({
-    functions: z
-      .record(
-        z.string(),
-        z.custom<FormulaFunction>((value) => typeof value === 'function'),
-      )
-      .optional(),
-  }),
-});
-
-/** The functions of a loaded `code/shared.js` module, checked like any external input. */
-export function sharedFunctions(loaded: unknown): Readonly<Record<string, FormulaFunction>> {
-  const parsed = sharedModule.safeParse(loaded);
-  if (!parsed.success) {
-    throw new Error('code/shared.js must export defineShared({ functions }) by default');
-  }
-  return parsed.data.default.functions ?? {};
 }
 
 /** Adds a plugin's scoped stylesheets to the page, once each (ADR-021). */
@@ -71,27 +49,50 @@ function addStyles(urls: readonly string[]): void {
   }
 }
 
-/** Loads `code/client.js`; plugin code is trusted once an admin enabled it (FR-PLUGIN-06). */
-async function loadClient(url: string): Promise<ClientDefinition> {
-  const loaded: unknown = await import(/* @vite-ignore */ url);
-  const parsed = clientModule.safeParse(loaded);
-  if (!parsed.success) throw new Error('code/client.js must export defineClient({ … }) by default');
-  return parsed.data.default as {
-    nodes?: Record<string, ComponentType<NodeProps>>;
-    cards?: Record<string, ComponentType<CardProps>>;
+/** A plugin file as text, fetched with the session: plugin files are for signed-in users. */
+async function fetchText(url: string): Promise<string> {
+  const response = await fetch(url, { credentials: 'same-origin' });
+  if (!response.ok) throw new Error(`${url} did not load (${String(response.status)})`);
+  return response.text();
+}
+
+/** The plugin's texts in `locale`, then in its default language (specs §8.3). */
+export function systemLang(
+  definition: PluginDefinition,
+  locale: string,
+): Readonly<Record<string, string>>[] {
+  const fallback = definition.manifest.defaultLocale ?? definition.manifest.locales?.[0] ?? 'en';
+  return [definition.lang[locale], definition.lang[fallback]].filter(
+    (lang): lang is Record<string, string> => lang !== undefined,
+  );
+}
+
+/** Fetches `code/client.js` and lists what it exports, in a sandboxed frame. */
+async function loadClient(
+  id: string,
+  url: string,
+  definition: PluginDefinition,
+): Promise<LoadedClient> {
+  const frame: FrameCode = {
+    pluginId: id,
+    code: await fetchText(url),
+    lang: systemLang(definition, LOCALE),
   };
+  const { nodes, cards } = await probeClient(frame);
+  return { frame, nodes, cards };
 }
 
 async function load(id: string): Promise<LoadedSystem> {
   const system = await api.getSystem(id);
   const definition = pluginDefinitionSchema.parse(system.definition);
   addStyles(system.styles);
-  let client: ClientDefinition | null = null;
+  let client: LoadedClient | null = null;
   let clientError: string | null = null;
   if (system.client) {
     try {
       // The version keeps the browser from reusing the module of an older install.
-      client = await loadClient(`${system.client}?v=${encodeURIComponent(system.version)}`);
+      const url = `${system.client}?v=${encodeURIComponent(system.version)}`;
+      client = await loadClient(id, url, definition);
     } catch (error) {
       clientError = error instanceof Error ? error.message : String(error);
     }
@@ -101,7 +102,7 @@ async function load(id: string): Promise<LoadedSystem> {
   if (system.shared) {
     try {
       const url = `${system.shared}?v=${encodeURIComponent(system.version)}`;
-      functions = sharedFunctions(await import(/* @vite-ignore */ url));
+      functions = await sharedEngineFunctions(await fetchText(url));
     } catch (error) {
       sharedError = error instanceof Error ? error.message : String(error);
     }
@@ -145,10 +146,7 @@ export function systemTranslator(
   definition: PluginDefinition,
   locale: string,
 ): (text: string) => string {
-  const fallback = definition.manifest.defaultLocale ?? definition.manifest.locales?.[0] ?? 'en';
-  const langs = [definition.lang[locale], definition.lang[fallback]].filter(
-    (lang): lang is Record<string, string> => lang !== undefined,
-  );
+  const langs = systemLang(definition, locale);
   return (text) => {
     for (const lang of langs) if (Object.hasOwn(lang, text)) return lang[text] ?? text;
     return text;

@@ -1373,8 +1373,11 @@ Card components get `{ card, rolls, speaker, translate }`.
 Rules:
 
 - **Imports.** Client code may import `react`, `react/jsx-runtime` and `@vtt/sdk/client`; the app provides them, so they are not bundled. Anything else you import, `@vtt/sdk` included, is bundled into the `.js` files by `vtt-plugin pack`. The server only loads the packed `.js`, so a plugin with code must be packed before an instance can run it.
-- **No side channels.** Custom nodes read and write through the hooks. They should not open sockets or call the API.
-- **Trust.** Code runs in every player's browser with their rights. That is why admins must acknowledge code when they enable a plugin, and why a replaced plugin with code starts disabled again.
+- **A frame per component.** Each custom node and each card renders in a sandboxed frame of its own, with its own React. It reaches the sheet only through the hooks: it cannot read the page around it, the viewer's cookies or storage, or call the API or any other server. A field you `set` goes to the app, which checks it like the viewer's own edit.
+- **Size.** The frame takes the height of what you render, up to 4000 px, and the full width of the node's place in the layout.
+- **Styles.** The app's styles and your plugin's stylesheets apply inside the frame, under your plugin's scope, as on the sheet. Images and fonts can only come from `data:` URLs: the frame loads nothing from a server, your plugin's files included.
+- **Errors.** A component that throws shows a notice in its place; the rest of the sheet keeps working.
+- **Trust.** Code still runs in every player's browser and can show them anything, and it can change the fields they may change. That is why admins must acknowledge code when they enable a plugin, and why a replaced plugin with code starts disabled again.
 - **Types.** The SDK is not published. To get type checking for plugin code, keep the plugin in this repository's `plugins/` folder, as `tiny-d20` does.
 
 #### Shared code
@@ -1391,7 +1394,7 @@ export default defineShared({
 });
 ```
 
-A function gets the formula's values (numbers, text, booleans or lists) and returns a number, text or boolean. It runs in two places: in each viewer's browser for sheets, and on the server for rolls. Keep it pure, so both get the same answer, and quick: on the server, one that takes longer than 100 ms fails the formula. A function that throws fails the formula with an error naming it. Shared code cannot import `react` or the client SDK, and the browser loads it as it is. On the server it runs like [server code](#server-code), with no Node APIs.
+A function gets the formula's values (numbers, text, booleans or lists) and returns a number, text or boolean. It runs in two places: in each viewer's browser for sheets, and on the server for rolls. Keep it pure, so both get the same answer, and quick: one that takes longer than 100 ms fails the formula. A function that throws fails the formula with an error naming it. Shared code cannot import `react` or the client SDK. In the browser and on the server it runs in the same engine as [server code](#server-code) (QuickJS), with the same isolation and memory limit, and a call that takes longer than 100 ms fails there too.
 
 #### Server code
 

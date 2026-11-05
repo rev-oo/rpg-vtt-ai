@@ -1,6 +1,6 @@
 # ADR-025: Plugin host in the web app
 
-- **Status:** Accepted
+- **Status:** Accepted; amended by [ADR-074](ADR-074-client-code-sandbox.md)
 - **Date:** 2026-10-22
 - **Tasks:** T-0409
 - **Amends:** §8.10, §10.1, FR-CHAT-06 and ADR-024 (details below)
@@ -20,7 +20,7 @@ T-0409 runs a table's system plugin in the browser: its sheets, its texts, its s
    - `POST /tables/:id/rolls` (and `roll.request`) takes either `formula` or `recipe: { name, args }`. Arguments are numbers, strings up to 200 characters, or booleans. A recipe needs an actor (`actor_required`) and an available system (`system_unavailable`); engine errors keep their codes (`unknown_recipe`, `handler_recipe`).
    - A recipe posts a `card` message. Its `card` field stores what the server resolved: system, recipe, label, outcome and the resolved card rows. Its `text` is the plain-text fallback from `chatCardView` in the plugin's default language, e.g. `Roll: 1d20 + 2 + 3 = 15 (Success)`. Labels stay lang keys, so each viewer translates them.
 3. **Cards in the chat (FR-CHAT-06).** A card message shows the plugin's custom card component when its client code has one for the card, else the core card rendering, inside `data-plugin="<id>"` so the plugin's CSS applies. It falls back to `text` while the system is unavailable, when the message came from another system, or when the plugin no longer has the card.
-4. **Shared modules.**
+4. **Shared modules.** _Amended by ADR-074: client code runs in sandboxed frames, which provide these modules through their own import map; the app page no longer has one._
    - Plugin code imports `react`, `react/jsx-runtime` and `@vtt/sdk/client` by name. The root layout declares an import map before any module script that points each name at a shim under `/plugin-runtime/`.
    - A shim re-exports the app's own module from `globalThis.__VTT_PLUGIN_RUNTIME__`, which the app fills on start. A Vite plugin in `apps/web/vite.config.ts` builds the shims from the list in `src/plugin-host/shared-modules.ts`: served in dev, emitted into the client build.
    - `code/client.js` is loaded with a dynamic `import()` carrying the plugin version in the query, so a new install is not served from the module cache. Its default export is checked with Zod. If it fails to load, the sheet says so and custom nodes show the renderer's missing-node notice.

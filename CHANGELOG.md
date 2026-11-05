@@ -28,6 +28,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Security
 
 - Plugin shared and server code now runs in a separate JavaScript engine (QuickJS, in WebAssembly) inside its worker, so it can no longer reach Node: no files, environment, network, processes or imports, only the language, `console` and `ctx`. It may use 32 MB of memory. Packed plugins run unchanged, but code is interpreted, so heavy computation is slower (FR-PLUGIN-13, ADR-073).
+- Plugin client code now runs sandboxed: each custom sheet node and chat card renders in a frame of its own, with no access to the page around it, the viewer's cookies or storage, or the network, and reaches the sheet only through the SDK hooks. In the browser, shared code runs in QuickJS too, as on the server. Packed plugins run unchanged; a component's images and fonts can only come from `data:` URLs (FR-PLUGIN-13, ADR-074).
 
 ## [0.4.0] - 2026-10-29
 

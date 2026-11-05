@@ -7,11 +7,8 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration, useRevalidator } from 
 import { Alert, Button } from '@vtt/ui';
 
 import { LOCALE, t } from './i18n/index.js';
-import { installPluginRuntime } from './plugin-host/runtime.js';
-import { IMPORT_MAP } from './plugin-host/shared-modules.js';
 import { invalidateSession, loadSession, type SessionState } from './shell/session.js';
 
-installPluginRuntime();
 // Hydration keeps the prerendered `lang` (English); set the browser's language directly.
 if (typeof document !== 'undefined') document.documentElement.lang = LOCALE;
 
@@ -20,8 +17,6 @@ export function Layout({ children }: { children: ReactNode }): ReactElement {
     <html lang={LOCALE} suppressHydrationWarning>
       <head>
         <meta charSet="UTF-8" />
-        {/* Before any module script, so plugin code can import the shared modules. */}
-        <script type="importmap" dangerouslySetInnerHTML={{ __html: IMPORT_MAP }} />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{t('app.name')}</title>
         <Meta />

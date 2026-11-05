@@ -256,7 +256,10 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
 
   await test.step('hit points: counter, custom bar with scoped CSS, and visibleIf', async () => {
     await expect(sheet.getByRole('textbox', { name: 'Hit points', exact: true })).toHaveValue('2');
-    const bar = sheet.getByRole('meter', { name: 'Hit points' });
+    // Plugin nodes render in sandboxed frames (ADR-074).
+    const bar = sheet
+      .frameLocator('iframe[title="hpBar"]')
+      .getByRole('meter', { name: 'Hit points' });
     await expect(bar).toHaveAttribute('aria-valuenow', '2');
     await expect(bar).toHaveAttribute('aria-valuemax', '12');
     await expect(bar).toContainText('2 / 12');
@@ -327,10 +330,9 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await hp.fill('0');
     await hp.blur();
     await expect(sheet.getByText('Unconscious')).toBeVisible();
-    await expect(sheet.getByRole('meter', { name: 'Hit points' })).toHaveAttribute(
-      'data-low',
-      'true',
-    );
+    await expect(
+      sheet.frameLocator('iframe[title="hpBar"]').getByRole('meter', { name: 'Hit points' }),
+    ).toHaveAttribute('data-low', 'true');
   });
 
   await test.step('the NPC of the GM has its own sheet and attack roll', async () => {

@@ -1,6 +1,6 @@
 # ADR-047: Plugin shared and server code run in a worker thread per plugin
 
-- **Status:** Accepted; amended by [ADR-073](ADR-073-server-code-isolation.md)
+- **Status:** Accepted; amended by [ADR-073](ADR-073-server-code-isolation.md) and [ADR-074](ADR-074-client-code-sandbox.md)
 - **Date:** 2026-10-27
 - **Tasks:** T-0809
 - **Decides:** specs §14 Q13

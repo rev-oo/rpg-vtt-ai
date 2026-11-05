@@ -13,14 +13,13 @@ import { captureLogs } from './support/log-capture.js';
 
 const PAGE = '<!DOCTYPE html><html><head><meta charSet="UTF-8"/></head><body></body></html>';
 
-/** A server over a fake build: index.html, a hashed asset and a runtime shim. */
+/** A server over a fake build: index.html, a hashed asset and the plugin frame page. */
 async function withWebApp() {
   const dir = mkdtempSync(path.join(tmpdir(), 'vtt-web-'));
   writeFileSync(path.join(dir, 'index.html'), PAGE);
   mkdirSync(path.join(dir, 'assets'));
   writeFileSync(path.join(dir, 'assets', 'app-abc123.js'), 'export {};');
-  mkdirSync(path.join(dir, 'plugin-runtime'));
-  writeFileSync(path.join(dir, 'plugin-runtime', 'react.js'), 'export {};');
+  writeFileSync(path.join(dir, 'plugin-frame.html'), PAGE);
   return buildApp({
     logger: createLogger('silent', captureLogs()),
     db: createTestDb(),
@@ -55,8 +54,27 @@ describe('the built web app (T-0703)', () => {
     const asset = await app.inject({ method: 'GET', url: '/assets/app-abc123.js' });
     expect(asset.statusCode).toBe(200);
     expect(asset.headers['cache-control']).toBe('public, max-age=31536000, immutable');
-    const shim = await app.inject({ method: 'GET', url: '/plugin-runtime/react.js' });
-    expect(shim.headers['cache-control']).toBe('no-cache');
+    const frame = await app.inject({ method: 'GET', url: '/plugin-frame.html' });
+    expect(frame.headers['cache-control']).toBe('no-cache');
+  });
+
+  it('serves the plugin frame page sandboxed, with no network, and frameable (T-1502)', async () => {
+    const app = await withWebApp();
+    for (const url of ['/plugin-frame.html', '/plugin-frame.html?x=1']) {
+      const frame = await app.inject({ method: 'GET', url });
+      expect(frame.statusCode, url).toBe(200);
+      const policy = String(frame.headers['content-security-policy']).split('; ');
+      expect(policy, url).toContain('sandbox allow-scripts');
+      expect(policy, url).toContain("default-src 'none'");
+      expect(
+        policy.some((part) => part.startsWith('frame-ancestors')),
+        url,
+      ).toBe(false);
+      expect(frame.headers['x-frame-options'], url).toBeUndefined();
+    }
+    // Every other page still refuses framing.
+    const page = await app.inject({ method: 'GET', url: '/' });
+    expect(page.headers['x-frame-options']).toBe('DENY');
   });
 
   it('answers app routes with the page, and misses elsewhere with a 404', async () => {

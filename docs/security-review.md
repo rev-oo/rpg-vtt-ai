@@ -37,7 +37,7 @@ Checked, no finding:
 **1 · Fixed.** There was no policy at all. The fix has two parts (ADR-042):
 
 - **The page** gets a policy as a `<meta>` tag, added to `build/client/index.html` after `react-router build` (`apps/web/scripts/finish-page.ts`):
-  - scripts only from the instance itself, plus the page's own inline scripts by SHA-256 hash: the import map and React Router's start-up code;
+  - scripts only from the instance itself, plus the page's own inline scripts by SHA-256 hash: React Router's start-up code (and, until T-1502, the import map); since T-1502, `'wasm-unsafe-eval'` lets the QuickJS engine compile, which allows no JavaScript eval (ADR-074);
   - no plugins (`object-src 'none'`), no `<base>`, and forms post only to the instance;
   - connections only to the instance (`connect-src 'self'` covers both sockets);
   - images from the instance or any HTTP(S) site, as actor portraits are URLs.
@@ -48,6 +48,7 @@ Checked, no finding:
   - API answers get `default-src 'none'; frame-ancestors 'none'`;
   - HTML gets only `frame-ancestors 'none'`, which a `<meta>` policy cannot express;
   - plugin SVGs keep their own stricter policy.
+  - the plugin frame page (`/plugin-frame.html`, T-1502) gets `sandbox allow-scripts` and no network, and no `X-Frame-Options`, since the app frames it (ADR-074).
 
 Tests:
 

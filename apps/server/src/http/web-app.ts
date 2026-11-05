@@ -14,7 +14,7 @@ export function isWebApp(dir: string): boolean {
 
 /**
  * Serves the built SPA from `dir` (specs §4.2, T-0703). Hashed files under `assets/` are
- * cached for good; everything else, `index.html` and the plugin runtime shims included, is
+ * cached for good; everything else, `index.html` and the plugin frame page included, is
  * revalidated, since a new build reuses those names. The files are listed once at startup.
  */
 export async function registerWebApp(app: FastifyInstance, dir: string): Promise<void> {
