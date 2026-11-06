@@ -129,7 +129,12 @@ export const themeSchema = z
     background: background
       .optional()
       .describe(
-        'An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.',
+        'An image of the module tiled behind the table page, such as `images/wood.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.',
+      ),
+    panelBackground: background
+      .optional()
+      .describe(
+        'An image of the module tiled inside panels, over the `panel` colour, such as `images/paper.webp`, or one per scheme.',
       ),
   })
   .describe('A module’s theme: the app’s design tokens on the table page while the module is on.');
@@ -166,8 +171,8 @@ const GAPS: readonly (readonly [string, number])[] = [
 ];
 
 /**
- * The CSS of a checked theme: its tokens on `moduleScope`, the colours and background of each
- * colour scheme in that scheme, and its fonts. Served as `/plugins/<id>/theme.css` (ADR-076).
+ * The CSS of a checked theme: its tokens on `moduleScope`, the colours and images of each
+ * colour scheme in that scheme, and its fonts. Panels show `--vtt-panel-image`. Served as `/plugins/<id>/theme.css` (ADR-076).
  */
 export function themeCss(theme: Theme, pluginId: string): string {
   const scope = moduleScope(pluginId);
@@ -202,27 +207,35 @@ export function themeCss(theme: Theme, pluginId: string): string {
           ),
         ]),
   ];
+  /** The theme's image for both schemes, and for each scheme. */
+  const images = (value: Theme['background']) =>
+    typeof value === 'object'
+      ? { both: undefined, light: value.light, dark: value.dark }
+      : { both: value, light: undefined, dark: undefined };
+  const page = images(theme.background);
+  const panel = images(theme.panelBackground);
+  const url = (path: string) => `url("${fileUrl(pluginId, path)}")`;
+  /** The rules that put a scheme's images (or both schemes') on the page and in panels. */
+  const imageRules = (pagePath: string | undefined, panelPath: string | undefined) => [
+    ...(panelPath ? [rule(scope, [`--vtt-panel-image: ${url(panelPath)}`])] : []),
+    ...(pagePath
+      ? [rule(`${scope} [data-vtt-part="table"]`, [`background-image: ${url(pagePath)}`])]
+      : []),
+  ];
   if (always.length > 0) out.push(rule(scope, always));
-  const image = (path: string | undefined) =>
-    path
-      ? [
-          rule(`${scope} [data-vtt-part="table"]`, [
-            `background-image: url("${fileUrl(pluginId, path)}")`,
-          ]),
-        ]
-      : [];
-  const backgrounds =
-    typeof theme.background === 'object' ? theme.background : { light: undefined, dark: undefined };
-  out.push(...image(typeof theme.background === 'string' ? theme.background : undefined));
+  out.push(...imageRules(page.both, panel.both));
   const schemes = [
-    ['not (prefers-color-scheme: dark)', theme.light, backgrounds.light],
-    ['(prefers-color-scheme: dark)', theme.dark, backgrounds.dark],
+    ['not (prefers-color-scheme: dark)', theme.light, page.light, panel.light],
+    ['(prefers-color-scheme: dark)', theme.dark, page.dark, panel.dark],
   ] as const;
-  for (const [query, set, path] of schemes) {
+  for (const [query, set, pagePath, panelPath] of schemes) {
     const colors = THEME_COLORS.flatMap((key) =>
       set?.[key] ? [`${cssVar(key)}: ${set[key]}`] : [],
     );
-    const rules = [...(colors.length > 0 ? [rule(scope, colors)] : []), ...image(path)];
+    const rules = [
+      ...(colors.length > 0 ? [rule(scope, colors)] : []),
+      ...imageRules(pagePath, panelPath),
+    ];
     if (rules.length > 0) out.push(`@media ${query} {\n${rules.join('\n')}\n}`);
   }
   return `${out.join('\n')}\n`;

@@ -717,7 +717,8 @@ A module’s theme: the app’s design tokens on the table page while the module
 | `border` | text (matching `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$`) |  | The width of the borders of cards, panels and inputs, such as `2px`; `0` for none. |
 | `density` | number, 0.75–1.5 |  | How far apart things are: paddings and gaps, as a multiple of the app’s (0.75–1.5). Below 1 is more compact, above 1 roomier. |
 | `fonts` | list of [Font face](#theme-font-face) (at most 16 items) |  | Fonts loaded from the module’s files. |
-| `background` | [Background](#theme-background) |  | An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`. |
+| `background` | [Background](#theme-background) |  | An image of the module tiled behind the table page, such as `images/wood.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`. |
+| `panelBackground` | [Background](#theme-background) |  | An image of the module tiled inside panels, over the `panel` colour, such as `images/paper.webp`, or one per scheme. |
 
 <a id="theme-light"></a>
 
@@ -776,6 +777,15 @@ Colours in the dark scheme.
 
 ### Background
 
-An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.
+An image of the module tiled behind the table page, such as `images/wood.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.
+
+One of:
+
+
+<a id="theme-background"></a>
+
+### Background
+
+An image of the module tiled inside panels, over the `panel` colour, such as `images/paper.webp`, or one per scheme.
 
 One of:

@@ -200,7 +200,36 @@
       }
     },
     "background": {
-      "description": "An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ \"light\": …, \"dark\": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.",
+      "description": "An image of the module tiled behind the table page, such as `images/wood.webp`, or one per scheme (`{ \"light\": …, \"dark\": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.",
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+          "title": "Module file"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "light": {
+              "description": "The image in the light scheme.",
+              "type": "string",
+              "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+              "title": "Module file"
+            },
+            "dark": {
+              "description": "The image in the dark scheme.",
+              "type": "string",
+              "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+              "title": "Module file"
+            }
+          },
+          "additionalProperties": false
+        }
+      ],
+      "title": "Background"
+    },
+    "panelBackground": {
+      "description": "An image of the module tiled inside panels, over the `panel` colour, such as `images/paper.webp`, or one per scheme.",
       "anyOf": [
         {
           "type": "string",

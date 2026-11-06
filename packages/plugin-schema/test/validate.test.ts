@@ -63,14 +63,18 @@ describe('validatePlugin', () => {
     expect(Object.keys(plugin?.settings ?? {})).toEqual(['glow', 'colour', 'quality']);
   });
 
-  it('checks the background of each colour scheme (ADR-076)', () => {
+  it('checks the page and panel images of each colour scheme (ADR-076)', () => {
     const fixture = miniModule();
     fixture['theme.json'] = {
       background: { light: 'images/paper.png', dark: 'images/leather.png' },
+      panelBackground: 'images/gone.png',
     };
     fixture['images/paper.png'] = '';
     const { issues } = validatePlugin(toFiles(fixture));
-    expect(issues.map(summary)).toEqual(['error missing_file theme.json $.background.dark']);
+    expect(issues.map(summary)).toEqual([
+      'error missing_file theme.json $.background.dark',
+      'error missing_file theme.json $.panelBackground',
+    ]);
   });
 
   it('checks a module theme and the files it loads (ADR-076)', () => {

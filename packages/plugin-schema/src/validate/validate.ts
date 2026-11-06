@@ -287,12 +287,14 @@ export function validatePlugin(
   theme?.fonts?.forEach((face, index) => {
     themeFile(face.src, 'font', ['fonts', index, 'src']);
   });
-  const background = theme?.background;
-  if (typeof background === 'string') themeFile(background, 'image', ['background']);
-  else if (background) {
-    for (const scheme of ['light', 'dark'] as const) {
-      const path = background[scheme];
-      if (path) themeFile(path, 'image', ['background', scheme]);
+  for (const key of ['background', 'panelBackground'] as const) {
+    const image = theme?.[key];
+    if (typeof image === 'string') themeFile(image, 'image', [key]);
+    else if (image) {
+      for (const scheme of ['light', 'dark'] as const) {
+        const path = image[scheme];
+        if (path) themeFile(path, 'image', [key, scheme]);
+      }
     }
   }
 

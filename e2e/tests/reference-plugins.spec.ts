@@ -497,14 +497,12 @@ test('the parchment skin themes the table that uses it', async ({ browser }) => 
   await expect(page.locator('html')).toHaveAttribute('data-vtt-modules', 'parchment-skin');
   await expect(header).toHaveCSS('border-bottom-style', 'double');
   await expect(body).toHaveCSS('background-color', PARCHMENT);
-  await expect(page.locator('[data-vtt-part="table"]')).toHaveCSS(
+  // The theme's paper is inside the panels, and its borders are thicker.
+  const groups = page.locator('[data-vtt-part="workspace"] .dv-groupview').first();
+  await expect(groups).toHaveCSS(
     'background-image',
     /\/plugins\/parchment-skin\/images\/parchment\.png/,
   );
-  // The theme's panel colour lets the paper show behind docked panels, and its borders are
-  // thicker.
-  const groups = page.locator('[data-vtt-part="workspace"] .dv-groupview').first();
-  await expect(groups).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   const message = page.locator('[data-vtt-part="chat-composer"] textarea');
   await showPanel(page, 'Chat');
   await expect(message).toHaveCSS('border-top-width', '2px');
@@ -512,6 +510,7 @@ test('the parchment skin themes the table that uses it', async ({ browser }) => 
   await page.goto(`/tables/${plain}`);
   await expect(header).toBeVisible();
   await expect(page.locator('html')).not.toHaveAttribute('data-vtt-modules');
+  await expect(groups).toHaveCSS('background-image', 'none');
   await expect(header).not.toHaveCSS('border-bottom-style', 'double');
   await showPanel(page, 'Chat');
   await expect(message).toHaveCSS('border-top-width', '1px');

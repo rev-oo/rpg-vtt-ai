@@ -22,6 +22,7 @@ describe('themeSchema (T-1602, ADR-076)', () => {
       border: '2px',
       density: 0.9,
       background: { light: 'images/paper.webp', dark: 'images/leather.webp' },
+      panelBackground: 'images/paper.webp',
     };
     expect(themeSchema.parse(theme)).toEqual(theme);
   });
@@ -36,6 +37,7 @@ describe('themeSchema (T-1602, ADR-076)', () => {
     ['an absolute file', { background: '/etc/a.png' }],
     ['a scheme background outside the module', { background: { dark: '../a.png' } }],
     ['an unknown scheme', { background: { dusk: 'a.png' } }],
+    ['a panel background outside the module', { panelBackground: '../a.png' }],
     ['a density too small', { density: 0.5 }],
     ['a density too large', { density: 2 }],
     ['a border in other units', { border: 'thick' }],
@@ -95,6 +97,16 @@ describe('themeCss', () => {
     );
     expect(css).toContain(
       `@media (prefers-color-scheme: dark) {\n${root} [data-vtt-part="table"] {\n  background-image: url("/plugins/skin/images/leather.webp");\n}\n}`,
+    );
+  });
+
+  it('puts a panel image in panels, for both schemes or for each', () => {
+    const root = ':root[data-vtt-modules~="skin"]';
+    expect(themeCss({ panelBackground: 'images/paper.webp' }, 'skin')).toBe(
+      `${root} {\n  --vtt-panel-image: url("/plugins/skin/images/paper.webp");\n}\n`,
+    );
+    expect(themeCss({ panelBackground: { dark: 'images/leather.webp' } }, 'skin')).toBe(
+      `@media (prefers-color-scheme: dark) {\n${root} {\n  --vtt-panel-image: url("/plugins/skin/images/leather.webp");\n}\n}\n`,
     );
   });
 

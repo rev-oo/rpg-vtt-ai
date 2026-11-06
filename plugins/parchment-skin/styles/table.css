@@ -1,6 +1,6 @@
 /*
  * The parchment skin's touches on the table page's named parts (ADR-076). The theme sets the
- * colours, font, borders and the paper behind the panels; these rules add the details.
+ * colours, font, borders and the paper inside the panels; these rules add the details.
  */
 
 [data-vtt-part='table-header'] {

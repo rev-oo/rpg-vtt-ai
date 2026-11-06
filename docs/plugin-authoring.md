@@ -1340,14 +1340,15 @@ A module's `theme.json` changes the app's look on the table page while the modul
 
 ```json
 {
-  "light": { "canvas": "#efe4c8", "fg": "#2b1d0e", "primary": "#7a3b12", "panel": "transparent" },
+  "light": { "canvas": "#efe4c8", "fg": "#2b1d0e", "primary": "#7a3b12" },
   "dark": { "canvas": "#1c1711", "fg": "#efe4c8", "primary": "#d9a066" },
   "font": "Georgia, \"Palatino Linotype\", serif",
   "radius": "0.125rem",
   "border": "2px",
   "density": 0.9,
   "fonts": [{ "family": "Fell", "src": "fonts/fell.woff2" }],
-  "background": { "light": "images/parchment.png" }
+  "panelBackground": { "light": "images/parchment.png" },
+  "background": "images/wood.webp"
 }
 ```
 
@@ -1356,7 +1357,8 @@ A module's `theme.json` changes the app's look on the table page while the modul
 - **`radius`** is the corner of cards, panels and inputs (`0` for square ones); smaller and larger corners scale with it.
 - **`border`** is the width of thin borders, around cards, inputs and panels, such as `2px` (`0` for none). Their colour is `line`.
 - **`density`** scales paddings and gaps everywhere, from `0.75` (compact) to `1.5` (roomy); `1` is the app's.
-- **`background`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled behind the table page: one for both schemes, or one per scheme (`{ "light": …, "dark": … }`). Docked panels are drawn over it in their `panel` colour; make it `transparent`, or a colour with some transparency such as `rgb(248 241 223 / 0.5)`, to let the image through. Floating panels stay opaque.
+- **`panelBackground`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled inside panels over their `panel` colour: one for both schemes, or one per scheme (`{ "light": …, "dark": … }`). Keep `panel` close to the image's colour, since it shows while the image loads. This suits textures such as paper or leather.
+- **`background`** is an image tiled behind the table page, one or one per scheme as well. Docked panels cover it with their `panel` colour; make that `transparent`, or a colour with some transparency such as `rgb(248 241 223 / 0.5)`, to show one picture across the whole page. Floating panels stay opaque.
 
 Values are checked strictly: colours are hex codes, colour names or colour functions such as `rgb(120 60 20)`; anything else, such as `url()`, is refused.
 
