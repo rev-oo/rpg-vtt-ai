@@ -6,7 +6,7 @@ import { LOCALE, t } from '../../i18n/index.js';
 
 export type SettingValues = Record<string, unknown>;
 
-/** Why a house-rule value does not fit, in the UI language (FR-ADMIN-04). */
+/** Why a setting's value does not fit, in the UI language (FR-ADMIN-04). */
 export function settingMessage(setting: Setting, reason: DataIssueReason | 'unknown'): string {
   if (setting.type === 'integer' || setting.type === 'number') {
     if (reason === 'minimum' && setting.minimum !== undefined) {
@@ -26,7 +26,7 @@ export function settingMessage(setting: Setting, reason: DataIssueReason | 'unkn
 }
 
 /** The first problem of each value, by setting name. */
-export function houseRuleErrors(
+export function settingErrors(
   settings: Readonly<Record<string, Setting>>,
   values: SettingValues,
 ): Record<string, string> {

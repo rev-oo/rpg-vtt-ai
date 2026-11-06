@@ -9,8 +9,8 @@ import { Alert, Button } from '@vtt/ui';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 
-import { houseRuleErrors, settingsTranslator, type SettingValues } from './house-rules.js';
-import { HouseRules } from './HouseRules.js';
+import { settingErrors, settingsTranslator, type SettingValues } from './setting-fields.js';
+import { SettingFields } from './SettingFields.js';
 
 const definitionsSchema = z.record(z.string(), settingSchema);
 
@@ -76,7 +76,7 @@ export function PluginSettingsForm({
       <p className="text-muted">{t('app.loading')}</p>
     );
   }
-  const errors = houseRuleErrors(loaded.definitions, values);
+  const errors = settingErrors(loaded.definitions, values);
 
   return (
     <form
@@ -108,7 +108,7 @@ export function PluginSettingsForm({
     >
       {failure && <Alert tone="error">{failure}</Alert>}
       {saved && <Alert>{t('settings.saved')}</Alert>}
-      <HouseRules
+      <SettingFields
         settings={loaded.definitions}
         values={values}
         errors={submitted ? errors : {}}

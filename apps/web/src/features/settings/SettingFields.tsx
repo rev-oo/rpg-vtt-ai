@@ -5,7 +5,7 @@ import { Select, TextField } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 
-import type { SettingValues } from './house-rules.js';
+import type { SettingValues } from './setting-fields.js';
 
 /** Number inputs hold text while typing; an empty or unparsable one stays text. */
 function parseNumber(text: string): number | string {
@@ -13,7 +13,7 @@ function parseNumber(text: string): number | string {
   return text.trim() === '' || !Number.isFinite(value) ? text : value;
 }
 
-export interface HouseRulesProps {
+export interface SettingFieldsProps {
   settings: Readonly<Record<string, Setting>>;
   values: SettingValues;
   errors: Readonly<Record<string, string>>;
@@ -21,12 +21,12 @@ export interface HouseRulesProps {
   translate: (text: string) => string;
   onChange: (name: string, value: unknown) => void;
   disabled?: boolean;
-  /** Shown when there are no options; the system's house rules by default. */
+  /** Shown when there are no settings; says the system has no house rules by default. */
   emptyText?: string;
 }
 
 /** One input per option of a plugin's `settings.json` (specs §8.12). */
-export function HouseRules({
+export function SettingFields({
   settings,
   values,
   errors,
@@ -34,7 +34,7 @@ export function HouseRules({
   onChange,
   disabled,
   emptyText,
-}: HouseRulesProps): ReactElement {
+}: SettingFieldsProps): ReactElement {
   const entries = Object.entries(settings);
   if (entries.length === 0) {
     return <p className="text-muted">{emptyText ?? t('settings.noHouseRules')}</p>;

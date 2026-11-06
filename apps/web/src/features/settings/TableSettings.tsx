@@ -16,9 +16,9 @@ import { useTableModules } from '../../plugin-host/table-modules.js';
 import { useTableData } from '../table/table-data.js';
 
 import { ArchiveTable } from './ArchiveTable.js';
-import { houseRuleErrors, type SettingValues } from './house-rules.js';
-import { HouseRules } from './HouseRules.js';
 import { MySettings } from './MySettings.js';
+import { settingErrors, type SettingValues } from './setting-fields.js';
+import { SettingFields } from './SettingFields.js';
 import { TableModules } from './TableModules.js';
 import { UpgradeSystem } from './UpgradeSystem.js';
 
@@ -65,7 +65,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
   const values = rules ?? (definitions ? settingValues(definitions, table.settings) : {});
   const nameError = submitted ? nameSchema.safeParse(name).error?.issues[0]?.message : undefined;
   const descriptionError = descriptionSchema.safeParse(description).error?.issues[0]?.message;
-  const ruleErrors = definitions ? houseRuleErrors(definitions, values) : {};
+  const ruleErrors = definitions ? settingErrors(definitions, values) : {};
   const errors = { ...ruleErrors, ...serverErrors };
 
   const save = async () => {
@@ -161,7 +161,7 @@ function TableSettingsForm({ table }: { table: TableView }): ReactElement {
           <Alert tone="error">{t('table.systemFailed', { detail: system.error })}</Alert>
         )}
         {system.status === 'ready' && definitions && (
-          <HouseRules
+          <SettingFields
             settings={definitions}
             values={values}
             errors={submitted ? errors : serverErrors}

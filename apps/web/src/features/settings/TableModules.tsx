@@ -11,8 +11,8 @@ import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import type { TableModulesState } from '../../plugin-host/table-modules.js';
 
-import { houseRuleErrors, type SettingValues } from './house-rules.js';
-import { HouseRules } from './HouseRules.js';
+import { settingErrors, type SettingValues } from './setting-fields.js';
+import { SettingFields } from './SettingFields.js';
 
 export interface TableModulesProps {
   table: TableView;
@@ -52,7 +52,7 @@ export function TableModules({ table, modules }: TableModulesProps): ReactElemen
       const definitions = settingsOfScope(module.definition.settings, 'table');
       const values =
         edits[module.id] ?? settingValues(definitions, table.moduleSettings[module.id] ?? {});
-      return { module, definitions, values, errors: houseRuleErrors(definitions, values) };
+      return { module, definitions, values, errors: settingErrors(definitions, values) };
     })
     .filter((form) => Object.keys(form.definitions).length > 0);
 
@@ -157,7 +157,7 @@ export function TableModules({ table, modules }: TableModulesProps): ReactElemen
           <h3 className="font-semibold">
             {t('settings.moduleSettings', { name: form.module.name })}
           </h3>
-          <HouseRules
+          <SettingFields
             settings={form.definitions}
             values={form.values}
             errors={submitted ? form.errors : {}}
