@@ -50,6 +50,8 @@ export function toTableView(
     installedVersion: plugin?.version ?? null,
     outdatedEntities,
     settings: table.settings,
+    modules: table.modules,
+    moduleSettings: table.moduleSettings,
     playersMayCreateAnyActorType: table.playersMayCreateAnyActorType,
     systemAvailable: plugin ? isAvailable(plugin) : false,
     createdAt: table.createdAt.toISOString(),

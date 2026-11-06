@@ -185,6 +185,7 @@ export class PluginRegistry {
         const values = {
           name: manifest?.name ?? row?.name ?? plugin.id,
           version: manifest?.version ?? row?.version ?? '0.0.0',
+          kind: manifest?.kind ?? row?.kind ?? 'system',
           description: manifest ? (manifest.description ?? null) : (row?.description ?? null),
           coreApi: manifest?.coreApi ?? row?.coreApi ?? '',
           hasCode,
@@ -204,6 +205,8 @@ export class PluginRegistry {
             itemTypes: Object.keys(definition.itemTypes),
           }),
           ...(row && hasCode && !row.hasCode && { enabled: false }),
+          // A system that turns into a module, or back, waits for an admin too (ADR-075).
+          ...(row && manifest && manifest.kind !== row.kind && { enabled: false }),
         };
         if (row) tx.update(plugins).set(values).where(eq(plugins.id, plugin.id)).run();
         else

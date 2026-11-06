@@ -89,6 +89,8 @@ export const TABLE: TableView = {
   installedVersion: '1.0.0',
   outdatedEntities: 0,
   settings: {},
+  modules: [],
+  moduleSettings: {},
   playersMayCreateAnyActorType: false,
   systemAvailable: true,
   archivedAt: null,

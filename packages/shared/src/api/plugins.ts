@@ -10,6 +10,10 @@ import { z } from 'zod';
 export const PLUGIN_STATUSES = ['ready', 'invalid', 'incompatible', 'missing'] as const;
 export type PluginStatus = (typeof PLUGIN_STATUSES)[number];
 
+/** A game system, or a module that extends any table (FR-PLUGIN-16, ADR-075). */
+export const PLUGIN_KINDS = ['system', 'module'] as const;
+export type PluginKind = (typeof PLUGIN_KINDS)[number];
+
 export const pluginIssueSchema = z.object({
   severity: z.enum(['error', 'warning']),
   code: z.string(),
@@ -23,7 +27,10 @@ export const adminPluginSchema = z.object({
   id: z.string(),
   name: z.string(),
   version: z.string(),
+  kind: z.enum(PLUGIN_KINDS),
   description: z.string().nullable(),
+  /** Whether it declares settings admins set for the whole instance (ADR-075). */
+  instanceSettings: z.boolean(),
   /** The `coreApi` range the plugin declares. */
   coreApi: z.string(),
   hasCode: z.boolean(),
@@ -54,3 +61,53 @@ export type InstallPluginQuery = z.input<typeof installPluginQuery>;
 
 /** The `details` of an `invalid_plugin` error: the validator's issues. */
 export const invalidPluginDetailsSchema = z.object({ issues: z.array(pluginIssueSchema) });
+
+/** Values of a plugin's settings by name; its `settings.json` says what fits (ADR-075). */
+export const settingValuesSchema = z.record(z.string().max(64), z.unknown());
+export type SettingValuesView = z.infer<typeof settingValuesSchema>;
+
+/**
+ * `GET/PATCH /plugins/:id/settings` (admins, instance scope) and `/me/plugins/:id/settings`
+ * (each user, user scope): one scope of a plugin's settings, with what the form needs.
+ */
+export const pluginSettingsResponseSchema = z.object({
+  /** The settings of this scope as `settings.json` declares them; `settingSchema` in plugin-schema. */
+  definitions: z.record(z.string(), z.unknown()),
+  /** The plugin's texts by locale, for the labels, and the locale to fall back to. */
+  lang: z.record(z.string(), z.record(z.string(), z.string())),
+  defaultLocale: z.string(),
+  values: settingValuesSchema,
+});
+export type PluginSettingsResponse = z.infer<typeof pluginSettingsResponseSchema>;
+
+/** Replaces the stored values of one scope; names and values must fit the declarations. */
+export const updatePluginSettingsBody = z.object({ values: settingValuesSchema });
+export type UpdatePluginSettingsInput = z.infer<typeof updatePluginSettingsBody>;
+
+/** `GET /modules`: the modules GMs may add to a table (enabled and ready). */
+export const moduleSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  version: z.string(),
+  description: z.string().nullable(),
+});
+export type ModuleSummary = z.infer<typeof moduleSummarySchema>;
+export const modulesResponseSchema = z.object({ modules: z.array(moduleSummarySchema) });
+
+/**
+ * `GET /tables/:id/modules`: the table's modules that are available, as its members load them
+ * (ADR-075). `definition` is the validator's output (`pluginDefinitionSchema`).
+ */
+export const tableModuleSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  version: z.string(),
+  definition: z.record(z.string(), z.unknown()),
+  /** URLs of its scoped stylesheets and of `code/client.js`, served by `/plugins/<id>/*`. */
+  styles: z.array(z.string()),
+  client: z.string().nullable(),
+  /** Every setting's value for this viewer: instance, table or user, by its scope. */
+  settings: settingValuesSchema,
+});
+export type TableModule = z.infer<typeof tableModuleSchema>;
+export const tableModulesResponseSchema = z.object({ modules: z.array(tableModuleSchema) });

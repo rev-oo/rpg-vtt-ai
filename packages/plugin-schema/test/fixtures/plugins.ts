@@ -89,6 +89,35 @@ const LANG = {
   'card.total': 'Total',
 };
 
+/** A small valid module (ADR-075): settings of every scope, texts, styles and client code. */
+export function miniModule(): PluginFixture {
+  return {
+    'plugin.json': {
+      id: 'mini',
+      name: 'Mini module',
+      version: '1.0.0',
+      kind: 'module',
+      coreApi: '^0.1.0',
+      hasCode: true,
+      locales: ['en'],
+    },
+    'settings.json': {
+      glow: { type: 'boolean', default: true, label: 'setting.glow' },
+      colour: { type: 'string', default: 'red', label: 'Colour', scope: 'user' },
+      quality: {
+        type: 'string',
+        default: 'high',
+        enum: ['low', 'high'],
+        label: 'Quality',
+        scope: 'instance',
+      },
+    },
+    'lang/en.json': { 'setting.glow': 'Glow' },
+    'styles/table.css': '',
+    'code/client.js': '',
+  };
+}
+
 /** Reads a nested value of a fixture file, for the cases to change in place. */
 function at(
   fixture: PluginFixture,
@@ -154,7 +183,7 @@ export const CASES: FixtureCase[] = [
   {
     name: 'values of the wrong type, size or choice',
     change: (f: PluginFixture): void => {
-      Object.assign(at(f, 'plugin.json'), { name: '', kind: 'module', hasCode: 'no' });
+      Object.assign(at(f, 'plugin.json'), { name: '', kind: 'addon', hasCode: 'no' });
       sheetChildren(f).push({ type: 'grid', columns: 20, children: [] });
       hero(f).controlledBy = 'anyone';
     },
@@ -179,6 +208,22 @@ export const CASES: FixtureCase[] = [
       skill(f).formula = '1d20 + @settings.bonus';
     },
     issues: ['error unknown_reference combat.json $.initiative'],
+  },
+  {
+    name: 'formulas reading instance or user settings',
+    change: (f: PluginFixture): void => {
+      f['settings.json'] = {
+        bonus: { type: 'integer', default: 1, label: 'Bonus', scope: 'table' },
+        dice: { type: 'string', default: 'red', label: 'Dice', scope: 'user' },
+        cap: { type: 'integer', default: 20, label: 'Cap', scope: 'instance' },
+      };
+      skill(f).formula = '1d20 + @settings.bonus + @settings.cap';
+      hero(f).derived = { mod: 'floor((@str - 10) / 2)', colour: '@settings.dice' };
+    },
+    issues: [
+      'error unknown_reference rolls.json $.skill.formula',
+      'error unknown_reference types/actors/hero.json $.derived.colour',
+    ],
   },
   {
     name: 'a pack whose entries fit their types',

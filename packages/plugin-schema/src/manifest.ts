@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { PLUGIN_KINDS } from '@vtt/shared/api';
+
 import { LOCALE, PLUGIN_ID, SEMVER, schemaUrl } from './common.js';
 
 const locale = z.string().regex(LOCALE).meta({ title: 'Locale' });
@@ -21,8 +23,12 @@ export const manifestSchema = z
       .regex(SEMVER)
       .meta({ title: 'Version' })
       .describe('The plugin version, such as `1.0.0`.'),
-    /** Only game systems exist in the MVP. */
-    kind: z.literal('system').describe('Only game systems exist for now.'),
+    /** A game system, or a module that extends any table (FR-PLUGIN-16, ADR-075). */
+    kind: z
+      .enum(PLUGIN_KINDS)
+      .describe(
+        '`system` for a game system, which a table is created with; `module` for an add-on that GMs add to any table, whatever its system (themes, overlays, panels).',
+      ),
     /** The core versions this plugin works with, as a semver range (FR-PLUGIN-03). */
     coreApi: z
       .string()

@@ -85,6 +85,8 @@ export const updateUserBody = z
 const tableName = z.string().trim().min(1).max(MAX_TABLE_NAME);
 const tableDescription = z.string().trim().max(MAX_TABLE_DESCRIPTION);
 const tableSettings = z.record(z.string(), z.unknown());
+/** The most modules one table may use. */
+export const MAX_TABLE_MODULES = 50;
 
 export const createTableBody = z.object({
   name: tableName,
@@ -100,6 +102,10 @@ export const updateTableBody = z
     name: tableName,
     description: tableDescription,
     settings: tableSettings,
+    /** The modules the table uses, by id; each must be an available module (ADR-075). */
+    modules: z.array(z.string().min(1).max(MAX_SYSTEM_ID)).max(MAX_TABLE_MODULES),
+    /** Table settings of the table's modules, by module id; replaces the stored ones. */
+    moduleSettings: z.record(z.string().max(MAX_SYSTEM_ID), tableSettings),
     /** Lets players create actor types meant for the GM (FR-ENT-01). */
     playersMayCreateAnyActorType: z.boolean(),
   })

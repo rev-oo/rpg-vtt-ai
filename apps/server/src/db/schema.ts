@@ -24,6 +24,7 @@ import {
   DIAGONAL_RULES,
   GRID_TYPES,
   MESSAGE_KINDS,
+  PLUGIN_KINDS,
   PLUGIN_STATUSES,
   type FogRect,
   type PluginIssueView,
@@ -98,6 +99,8 @@ export const plugins = sqliteTable('plugins', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   version: text('version').notNull(),
+  /** A system or a module (ADR-075). */
+  kind: text('kind', { enum: PLUGIN_KINDS }).notNull().default('system'),
   enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
   description: text('description'),
   coreApi: text('core_api').notNull().default(''),
@@ -115,6 +118,11 @@ export const plugins = sqliteTable('plugins', {
     .default({}),
   /** Item type ids the plugin declares. */
   itemTypes: text('item_types', { mode: 'json' }).$type<string[]>().notNull().default([]),
+  /** Values of its instance settings, set by admins (ADR-075); scans keep them. */
+  settings: text('settings', { mode: 'json' })
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
   updatedAt: timestamp('updated_at')
     .notNull()
     .$defaultFn(() => new Date()),
@@ -133,6 +141,13 @@ export const gameTables = sqliteTable(
     systemVersion: text('system_version').notNull(),
     settings: text('settings', { mode: 'json' })
       .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    /** Module plugins the GM added, by id (ADR-075). */
+    modules: text('modules', { mode: 'json' }).$type<string[]>().notNull().default([]),
+    /** Table settings of those modules, by module id. */
+    moduleSettings: text('module_settings', { mode: 'json' })
+      .$type<Record<string, Record<string, unknown>>>()
       .notNull()
       .default({}),
     /** Lets players create actor types meant for the GM (FR-ENT-01). */
@@ -167,6 +182,21 @@ export const members = sqliteTable(
     primaryKey({ columns: [t.tableId, t.userId] }),
     index('members_user_id_idx').on(t.userId),
   ],
+);
+
+/** Each user's own values of a plugin's user settings (ADR-075), for every table. */
+export const userPluginSettings = sqliteTable(
+  'user_plugin_settings',
+  {
+    userId: text('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    pluginId: text('plugin_id')
+      .notNull()
+      .references(() => plugins.id, { onDelete: 'cascade' }),
+    values: text('values', { mode: 'json' }).$type<Record<string, unknown>>().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.pluginId] })],
 );
 
 export const invites = sqliteTable(

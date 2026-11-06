@@ -15,7 +15,8 @@ import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
 import { openPanel } from './support/workspace.js';
 
-// The table settings panel: archiving (T-0807) and the system version (T-0813).
+// The table settings panel: archiving (T-0807), the system version (T-0813), and modules and
+// settings by scope (T-1601).
 
 afterEach(() => {
   clearLoadedSystems();
@@ -60,6 +61,8 @@ async function openSettings(
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
     'GET /tables/t1/encounter': { body: { encounter: null } },
+    'GET /tables/t1/modules': { body: { modules: [] } },
+    'GET /modules': { body: { modules: [] } },
     'GET /systems/tiny-d20': {
       body: {
         system: {
@@ -203,5 +206,107 @@ describe('system version (T-0813)', () => {
     await openSettings({});
     expect(await screen.findByText('This table plays Tiny d20 1.0.0.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Upgrade to/ })).not.toBeInTheDocument();
+  });
+});
+
+const MODULE_DEFINITION: PluginDefinition = {
+  ...DEFINITION,
+  manifest: { ...DEFINITION.manifest, id: 'glow', name: 'Glow', kind: 'module', hasCode: true },
+  settings: {
+    bright: { type: 'boolean', default: true, label: 'setting.bright' },
+    colour: { type: 'string', default: 'red', label: 'Colour', scope: 'user' },
+    quality: { type: 'string', default: 'high', label: 'Quality', scope: 'instance' },
+  },
+  lang: { en: { 'setting.bright': 'Bright glow' } },
+};
+
+const GLOW = {
+  id: 'glow',
+  name: 'Glow',
+  version: '1.0.0',
+  definition: MODULE_DEFINITION,
+  styles: [],
+  client: '/plugins/glow/code/client.js',
+  settings: { bright: true, colour: 'red', quality: 'high' },
+};
+
+describe('modules and settings by scope (T-1601)', () => {
+  it('lets the GM choose modules and set their table settings', async () => {
+    let table: TableView = TABLE;
+    const { calls } = await openSettings(
+      {
+        'GET /modules': {
+          body: {
+            modules: [{ id: 'glow', name: 'Glow', version: '1.0.0', description: 'Shiny.' }],
+          },
+        },
+        'GET /tables/t1/modules': () => ({
+          body: { modules: table.modules.includes('glow') ? [GLOW] : [] },
+        }),
+        'PATCH /tables/t1': (body) => {
+          table = { ...table, ...(body as Partial<TableView>) };
+          return { body: { table } };
+        },
+      },
+      () => table,
+    );
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole('checkbox', { name: /Glow/ }));
+    await user.click(screen.getByRole('button', { name: 'Save modules' }));
+    // Its table settings only: the user and instance ones are set elsewhere.
+    const bright = await screen.findByRole('checkbox', { name: 'Bright glow' });
+    expect(screen.queryByLabelText('Quality')).not.toBeInTheDocument();
+    await user.click(bright);
+    await user.click(screen.getByRole('button', { name: 'Save modules' }));
+
+    await waitFor(() => {
+      expect(calls.filter((c) => c.method === 'PATCH').map((c) => c.body)).toEqual([
+        { modules: ['glow'], moduleSettings: {} },
+        { modules: ['glow'], moduleSettings: { glow: { bright: false } } },
+      ]);
+    });
+    // The GM's own settings of the module are there too.
+    expect(await screen.findByRole('region', { name: 'My settings of Glow' })).toBeInTheDocument();
+  });
+
+  it('shows players only their own settings, and saves them for themselves', async () => {
+    const { calls } = await openSettings(
+      {
+        'GET /tables/t1/modules': { body: { modules: [GLOW] } },
+        'GET /me/plugins/glow/settings': {
+          body: {
+            definitions: { colour: MODULE_DEFINITION.settings.colour },
+            lang: MODULE_DEFINITION.lang,
+            defaultLocale: 'en',
+            values: {},
+          },
+        },
+        'PATCH /me/plugins/glow/settings': (body) => ({
+          body: {
+            definitions: { colour: MODULE_DEFINITION.settings.colour },
+            lang: MODULE_DEFINITION.lang,
+            defaultLocale: 'en',
+            values: (body as { values: Record<string, unknown> }).values,
+          },
+        }),
+      },
+      () => ({ ...TABLE, role: 'player', modules: ['glow'] }),
+    );
+    const user = userEvent.setup();
+
+    const colour = await screen.findByLabelText('Colour');
+    expect(colour).toHaveValue('red');
+    expect(screen.queryByRole('button', { name: 'Save modules' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Archive table' })).not.toBeInTheDocument();
+    await user.clear(colour);
+    await user.type(colour, 'blue');
+    await user.click(screen.getByRole('button', { name: 'Save settings' }));
+
+    expect(await screen.findByText('The settings were saved.')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'PATCH')).toMatchObject({
+      path: '/me/plugins/glow/settings',
+      body: { values: { colour: 'blue' } },
+    });
   });
 });

@@ -120,6 +120,13 @@
       "when": 1793382661518,
       "tag": "0016_scene_fog",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1793985908744,
+      "tag": "0017_module_plugins",
+      "breakpoints": true
     }
   ]
 }

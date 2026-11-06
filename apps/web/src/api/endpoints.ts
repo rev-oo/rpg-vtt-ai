@@ -41,6 +41,12 @@ import {
   membersResponseSchema,
   pluginResponseSchema,
   pluginsResponseSchema,
+  modulesResponseSchema,
+  pluginSettingsResponseSchema,
+  tableModulesResponseSchema,
+  type ModuleSummary,
+  type PluginSettingsResponse,
+  type TableModule,
   sessionSchema,
   setupStatusSchema,
   systemDefinitionResponseSchema,
@@ -439,6 +445,39 @@ export const api = {
 
   rescanPlugins: async (): Promise<AdminPlugin[]> =>
     (await request('POST', '/plugins/rescan', pluginsResponseSchema)).plugins,
+
+  /** A plugin's instance settings, for admins (ADR-075). */
+  getPluginSettings: async (id: string): Promise<PluginSettingsResponse> =>
+    request('GET', `/plugins/${encodeURIComponent(id)}/settings`, pluginSettingsResponseSchema),
+  updatePluginSettings: async (
+    id: string,
+    values: Record<string, unknown>,
+  ): Promise<PluginSettingsResponse> =>
+    request('PATCH', `/plugins/${encodeURIComponent(id)}/settings`, pluginSettingsResponseSchema, {
+      values,
+    }),
+
+  /** The signed-in user's own settings of an available plugin (ADR-075). */
+  getMyPluginSettings: async (id: string): Promise<PluginSettingsResponse> =>
+    request('GET', `/me/plugins/${encodeURIComponent(id)}/settings`, pluginSettingsResponseSchema),
+  updateMyPluginSettings: async (
+    id: string,
+    values: Record<string, unknown>,
+  ): Promise<PluginSettingsResponse> =>
+    request(
+      'PATCH',
+      `/me/plugins/${encodeURIComponent(id)}/settings`,
+      pluginSettingsResponseSchema,
+      { values },
+    ),
+
+  /** The modules GMs may add to a table (ADR-075). */
+  listModules: async (): Promise<ModuleSummary[]> =>
+    (await request('GET', '/modules', modulesResponseSchema)).modules,
+
+  /** The table's available modules, with their settings for this viewer (ADR-075). */
+  getTableModules: async (tableId: string): Promise<TableModule[]> =>
+    (await request('GET', `/tables/${tableId}/modules`, tableModulesResponseSchema)).modules,
 
   /** A plugin with code needs `acknowledgeCode` (FR-PLUGIN-06). */
   enablePlugin: async (id: string, acknowledgeCode = false): Promise<AdminPlugin> =>

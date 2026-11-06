@@ -175,6 +175,8 @@ describe('responses', () => {
       installedVersion: '1.0.0',
       outdatedEntities: 0,
       settings: {},
+      modules: ['glow'],
+      moduleSettings: { glow: { bright: false } },
       playersMayCreateAnyActorType: false,
       systemAvailable: true,
       archivedAt: null,
@@ -190,7 +192,9 @@ describe('responses', () => {
       id: 'tiny-d20',
       name: 'Tiny D20',
       version: '0.1.0',
+      kind: 'system',
       description: null,
+      instanceSettings: false,
       coreApi: '^0.1.0',
       hasCode: false,
       codeEntries: [],
@@ -210,6 +214,7 @@ describe('responses', () => {
     };
     expect(pluginsResponseSchema.parse({ plugins: [plugin] })).toEqual({ plugins: [plugin] });
     expect(adminPluginSchema.safeParse({ ...plugin, status: 'broken' }).success).toBe(false);
+    expect(adminPluginSchema.safeParse({ ...plugin, kind: 'theme' }).success).toBe(false);
     expect(enablePluginBody.parse({})).toEqual({});
     expect(enablePluginBody.safeParse({ acknowledgeCode: 'yes' }).success).toBe(false);
   });

@@ -21,9 +21,11 @@ export interface HouseRulesProps {
   translate: (text: string) => string;
   onChange: (name: string, value: unknown) => void;
   disabled?: boolean;
+  /** Shown when there are no options; the system's house rules by default. */
+  emptyText?: string;
 }
 
-/** One input per option of the system's `settings.json` (specs §8.12). */
+/** One input per option of a plugin's `settings.json` (specs §8.12). */
 export function HouseRules({
   settings,
   values,
@@ -31,9 +33,12 @@ export function HouseRules({
   translate,
   onChange,
   disabled,
+  emptyText,
 }: HouseRulesProps): ReactElement {
   const entries = Object.entries(settings);
-  if (entries.length === 0) return <p className="text-muted">{t('settings.noHouseRules')}</p>;
+  if (entries.length === 0) {
+    return <p className="text-muted">{emptyText ?? t('settings.noHouseRules')}</p>;
+  }
 
   return (
     <div className="flex flex-col gap-4">

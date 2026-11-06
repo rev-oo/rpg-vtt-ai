@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | Not started | 0%       |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 17%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1601` (module plugins)
+- **Next task:** `T-1602` (themes and named parts)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -55,6 +55,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-04 | T-1502 done: plugin custom nodes and cards render in sandboxed frames, one each, with an opaque origin and no network, and reach sheets only through the SDK hooks over `postMessage`; the browser runs `code/shared` in QuickJS, like the server (ADR-074). Q17 is decided.                                                                                                                                                                                                  |
 | 2026-11-05 | M15 done: plugin data migrations, plugin client code in sandboxed frames, and plugin shared and server code in QuickJS. SES was tried as an alternative to the frames and dropped (ADR-074). M16 is active.                                                                                                                                                                                                                                                                   |
 | 2026-11-06 | M16 replanned at the user's request: module plugins, a generic way to extend any table (themes and named-part styles; sandboxed overlays and panels that receive table events and act as the viewer), with a parchment skin and 3D dice as examples, chosen per table by the GM; plugin settings scoped to the instance, the table or the user; a D&D 5e SRD 5.2 plugin as a study of the plugin format; and an interface review. The system builder moves to M18, after 1.0. |
+| 2026-11-06 | T-1601 done: plugins of `kind: module` extend any table; admins enable them and GMs add them to a table in its Settings panel; modules may not ship types, sheets, rolls, packs or server code. Plugin settings get a scope: table (GM), instance (admins) or user (each member's own, in the Settings panel, which now opens for every member). Formulas read table settings only (ADR-075).                                                                                 |
 
 ---
 
@@ -643,27 +644,27 @@ Notes:
 
 Key resource groups:
 
-| Group           | Endpoints (illustrative)                                                                                                                                                                                          |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                                                                     |
-| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                                                                          |
-| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                                                              |
-| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`, `POST /tables/:id/archive`, `POST /tables/:id/unarchive` (ADR-054), `POST /tables/:id/upgrade-system` (ADR-058)   |
-| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                                                                        |
-| Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040)                                             |
-| Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                                                            |
-| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`, `GET /actors/:id/history`, `POST /actors/:id/history/:snapshotId/restore` (ADR-053) |
-| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                         |
-| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                       |
-| Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                        |
-| Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064), `DELETE /assets/:id` (unused images only; ADR-065)                                      |
-| Scenes          | `GET/POST /tables/:id/scenes`, `POST /tables/:id/scenes/order`, `POST /tables/:id/scenes/active`, `GET/PATCH/DELETE /scenes/:id` (players see only the active scene; ADR-066)                                     |
-| Tokens          | `GET/POST /scenes/:id/tokens`, `PATCH/DELETE /tokens/:id` (players see the active scene's tokens that are not hidden and move their actors' tokens; ADR-068)                                                      |
-| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                        |
-| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025)                                                                                                           |
-| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                 |
-| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026)                                                                      |
-| Health          | `GET /api/health`                                                                                                                                                                                                 |
+| Group           | Endpoints (illustrative)                                                                                                                                                                                                                             |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth            | `POST /auth/login`, `POST /auth/logout`, `GET/PATCH /me`, `POST /me/password`                                                                                                                                                                        |
+| Setup           | `GET /setup/status`, `POST /setup/admin`                                                                                                                                                                                                             |
+| Users (admin)   | `GET /users`, `POST /users`, `PATCH /users/:id`, `DELETE /users/:id`                                                                                                                                                                                 |
+| Tables          | `GET /tables`, `POST /tables`, `GET /tables/:id`, `PATCH /tables/:id`, `GET /tables/:id/types`, `GET /tables/:id/modules` (ADR-075), `POST /tables/:id/archive`, `POST /tables/:id/unarchive` (ADR-054), `POST /tables/:id/upgrade-system` (ADR-058) |
+| Members         | `GET /tables/:id/members`, `PATCH /tables/:id/members/:userId`, `DELETE …`                                                                                                                                                                           |
+| Invites         | `GET/POST /tables/:id/invites`, `DELETE /tables/:id/invites/:inviteId`, `GET /invites/:token`, `POST /invites/:token/accept`, `POST /invites/:token/signup` (ADR-040)                                                                                |
+| Instance        | `GET /instance` (public), `GET/PATCH /admin/settings` (admin; ADR-040)                                                                                                                                                                               |
+| Actors          | `GET /tables/:id/actors`, `POST …`, `GET/PATCH/DELETE /actors/:id`, `POST /actors/:id/duplicate`, `POST /actors/:id/restore`, `GET /actors/:id/history`, `POST /actors/:id/history/:snapshotId/restore` (ADR-053)                                    |
+| Items           | `GET /tables/:id/items`, `POST …`, `GET/PATCH/DELETE /items/:id`, `GET/POST /actors/:id/items`, `POST /items/:id/restore`                                                                                                                            |
+| Journal         | `GET /tables/:id/journal`, `POST …`, `GET/PATCH/DELETE /journal/:id`, `POST /journal/:id/restore` (ADR-038)                                                                                                                                          |
+| Compendium      | `GET /tables/:id/compendium`, `POST /tables/:id/compendium/copy` (ADR-060)                                                                                                                                                                           |
+| Assets          | `GET/POST /tables/:id/assets` (the image is the raw body), `GET /assets/:id` (the file, to the table's members; ADR-064), `DELETE /assets/:id` (unused images only; ADR-065)                                                                         |
+| Scenes          | `GET/POST /tables/:id/scenes`, `POST /tables/:id/scenes/order`, `POST /tables/:id/scenes/active`, `GET/PATCH/DELETE /scenes/:id` (players see only the active scene; ADR-066)                                                                        |
+| Tokens          | `GET/POST /scenes/:id/tokens`, `PATCH/DELETE /tokens/:id` (players see the active scene's tokens that are not hidden and move their actors' tokens; ADR-068)                                                                                         |
+| Chat            | `GET /tables/:id/messages?before=…`, `POST /tables/:id/messages`, `PATCH`/`DELETE /messages/:id` (ADR-052)                                                                                                                                           |
+| Systems         | `GET /systems`, `GET /systems/:id` (definition, styles and client code of an available system, ADR-025); `GET /modules` and `GET`/`PATCH /me/plugins/:id/settings` (modules and user settings, ADR-075)                                              |
+| Rolls           | `POST /tables/:id/rolls` (a formula or a recipe with arguments; ADR-018, ADR-025)                                                                                                                                                                    |
+| Plugins (admin) | `GET /plugins`, `POST /plugins/:id/enable`, `POST /plugins/:id/disable`, `POST /plugins/rescan` (ADR-020), `POST /plugins/install` (ADR-026), `GET`/`PATCH /plugins/:id/settings` (instance settings, ADR-075)                                       |
+| Health          | `GET /api/health`                                                                                                                                                                                                                                    |
 
 ### 10.2 Events WebSocket (`/ws/events`)
 
@@ -798,7 +799,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
 
 Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, and a review of the interface before the 1.0 freeze.
 
-- [ ] **T-1601 · Module plugins**
+- [x] **T-1601 · Module plugins**
   - **Deps:** none
   - **Do:** Plugins of `kind: module` (FR-PLUGIN-16) extend any table, whatever its system, and change no system data. A module may ship a theme, stylesheets for named parts, client code for frames, settings and lang files; it may not ship types, sheets, rolls or packs. The validator checks modules like systems. Admins install and enable modules as they do systems, acknowledging code. GMs choose which enabled modules a table uses in its settings, and its members load them with the table. `settings.json` gains a `scope` per setting, for systems and modules alike: `instance` (set by admins on the Plugins page), `table` (set by the GM in table settings; the default, so today's system settings keep working) or `user` (set by each member for themselves on the table page). The app draws each form from the declarations and the server checks the values against them. Formulas keep reading table settings as `@settings`. Record the design in an ADR.
   - **Done when:** validator tests cover module files and refuse system-only files in a module; server tests cover enabling a module and choosing it for a table; a test module loads for that table's members only; tests cover each settings scope: who may set it, where it is stored, and that values outside the declaration are refused.
@@ -1025,6 +1026,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-072 | [Table upgrades migrate data one entity at a time, with declarative steps and a hook](docs/adr/ADR-072-data-migrations.md)                      | Accepted                                   |
 | ADR-073 | [Plugin shared and server code run in QuickJS inside their worker](docs/adr/ADR-073-server-code-isolation.md)                                   | Accepted; amended by ADR-074               |
 | ADR-074 | [Plugin client code runs in sandboxed frames; shared code in QuickJS in the browser](docs/adr/ADR-074-client-code-sandbox.md)                   | Accepted                                   |
+| ADR-075 | [Module plugins, and plugin settings by scope](docs/adr/ADR-075-module-plugins.md)                                                              | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

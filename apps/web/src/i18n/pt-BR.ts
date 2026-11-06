@@ -280,6 +280,9 @@ export const ptBR: Messages = {
   'plugins.enabled': 'Ativado',
   'plugins.disabled': 'Desativado',
   'plugins.hasCode': 'Inclui código',
+  'plugins.kind.system': 'Sistema',
+  'plugins.kind.module': 'Módulo',
+  'plugins.settings': 'Configurações para todas as mesas',
   'plugins.enable': 'Ativar',
   'plugins.disable': 'Desativar',
   'plugins.issues': '{errors} erros, {warnings} avisos',
@@ -362,6 +365,7 @@ export const ptBR: Messages = {
     'O plugin tem a pasta code/, então hasCode precisa ser true.',
   'pluginIssue.code_required':
     '{feature} precisa de código no plugin; defina hasCode e adicione code/.',
+  'pluginIssue.module_file': '{file} é para sistemas; um módulo não pode tê-lo.',
   'pluginIssue.missing_lang_file': 'Não há o arquivo de tradução lang/{locale}.json.',
   'pluginIssue.missing_lang_key': '“{key}” não tem tradução para {locale}.',
   'pluginIssue.unlisted_locale': '{locale} não está na lista de locales do manifesto.',
@@ -622,7 +626,17 @@ export const ptBR: Messages = {
   'invite.expired': 'Este link de convite expirou.',
 
   'settings.title': 'Configurações',
-  'settings.gmOnly': 'Só mestres e assistentes podem mudar as configurações da mesa.',
+  'settings.modules': 'Módulos',
+  'settings.modulesHint':
+    'Módulos acrescentam à mesa, seja qual for o sistema, coisas como temas e sobreposições. Administradores os ativam na página de Plugins.',
+  'settings.noModules': 'Nenhum módulo está ativo neste servidor.',
+  'settings.moduleMissing': 'Não está mais ativo, então não carrega.',
+  'settings.moduleSettings': 'Configurações de {name}',
+  'settings.saveModules': 'Salvar módulos',
+  'settings.mine': 'Minhas configurações',
+  'settings.mineOf': 'Minhas configurações de {name}',
+  'settings.mineNone': 'O sistema e os módulos desta mesa não têm configurações suas.',
+  'settings.noOptions': 'Não há configurações aqui.',
   'settings.anyActorType':
     'Jogadores podem criar todos os tipos de ator, inclusive os destinados ao mestre',
   'settings.houseRules': 'Regras da casa de {name}',

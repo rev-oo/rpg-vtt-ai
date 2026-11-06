@@ -1,8 +1,8 @@
 import { settingIssue } from '@vtt/plugin-engine';
 import type { Setting } from '@vtt/plugin-schema';
-import type { DataIssueReason } from '@vtt/shared/api';
+import type { DataIssueReason, PluginSettingsResponse } from '@vtt/shared/api';
 
-import { t } from '../../i18n/index.js';
+import { LOCALE, t } from '../../i18n/index.js';
 
 export type SettingValues = Record<string, unknown>;
 
@@ -36,4 +36,18 @@ export function houseRuleErrors(
     if (reason) errors[name] = settingMessage(setting, reason);
   }
   return errors;
+}
+
+/** The plugin's texts in the UI language, then its default one, then the text as written. */
+export function settingsTranslator(
+  lang: PluginSettingsResponse['lang'],
+  defaultLocale: string,
+): (text: string) => string {
+  const langs = [lang[LOCALE], lang[defaultLocale]].filter(
+    (texts): texts is Record<string, string> => texts !== undefined,
+  );
+  return (text) => {
+    for (const texts of langs) if (Object.hasOwn(texts, text)) return texts[text] ?? text;
+    return text;
+  };
 }

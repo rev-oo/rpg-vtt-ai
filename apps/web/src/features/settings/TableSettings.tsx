@@ -2,6 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
 import { settingValues } from '@vtt/plugin-engine';
+import { settingsOfScope } from '@vtt/plugin-schema';
 import { canManageTable } from '@vtt/shared';
 import { createTableBody, validationDetailsSchema, type TableView } from '@vtt/shared/api';
 import { Alert, Button, TextField } from '@vtt/ui';
@@ -11,22 +12,32 @@ import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { useTableSystem } from '../../plugin-host/system-context.js';
+import { useTableModules } from '../../plugin-host/table-modules.js';
 import { useTableData } from '../table/table-data.js';
 
 import { ArchiveTable } from './ArchiveTable.js';
 import { houseRuleErrors, type SettingValues } from './house-rules.js';
 import { HouseRules } from './HouseRules.js';
+import { MySettings } from './MySettings.js';
+import { TableModules } from './TableModules.js';
 import { UpgradeSystem } from './UpgradeSystem.js';
 
 const { name: nameSchema, description: descriptionSchema } = createTableBody.shape;
 
-/** The table settings panel, GM only (FR-ADMIN-04, FR-TABLE-07). */
+/**
+ * The table settings panel (FR-ADMIN-04, FR-TABLE-07): the table, its house rules and modules
+ * for GMs, and each member's own settings of the system and modules (ADR-075).
+ */
 export function TableSettings(): ReactElement {
   const { table } = useTableData();
-  if (!canManageTable(table.role)) return <Alert tone="error">{t('settings.gmOnly')}</Alert>;
+  const modules = useTableModules(table);
+  const mine = <MySettings table={table} modules={modules.state} onSaved={modules.reload} />;
+  if (!canManageTable(table.role)) return mine;
   return (
     <div className="flex flex-col gap-8">
       <TableSettingsForm key={table.id} table={table} />
+      <TableModules key={`modules:${table.id}`} table={table} modules={modules.state} />
+      {mine}
       <UpgradeSystem table={table} />
       <ArchiveTable table={table} />
     </div>
@@ -36,7 +47,9 @@ export function TableSettings(): ReactElement {
 function TableSettingsForm({ table }: { table: TableView }): ReactElement {
   const system = useTableSystem(table);
   const revalidator = useRevalidator();
-  const definitions = system.status === 'ready' ? system.system.definition.settings : null;
+  // Only the table's own settings are house rules; instance and user ones are set elsewhere.
+  const definitions =
+    system.status === 'ready' ? settingsOfScope(system.system.definition.settings, 'table') : null;
 
   const [name, setName] = useState(table.name);
   const [description, setDescription] = useState(table.description);

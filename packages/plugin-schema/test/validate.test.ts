@@ -8,7 +8,7 @@ import {
   validatePlugin,
 } from '../src/index.js';
 
-import { CASES, mini, type PluginFixture } from './fixtures/plugins.js';
+import { CASES, mini, miniModule, type PluginFixture } from './fixtures/plugins.js';
 import { pluginFiles, REFERENCE_PLUGINS } from './support/plugins.js';
 
 /** A fixture as the validator receives it: JSON files serialised, other files as text. */
@@ -53,6 +53,37 @@ describe('validatePlugin', () => {
       'error incompatible_core_api plugin.json $.coreApi',
     ]);
     expect(manifest?.id).toBe('mini');
+    expect(plugin).toBeUndefined();
+  });
+
+  it('accepts a module with settings, texts, styles and client code', () => {
+    const { issues, plugin } = validatePlugin(toFiles(miniModule()));
+    expect(issues).toEqual([]);
+    expect(plugin?.manifest.kind).toBe('module');
+    expect(Object.keys(plugin?.settings ?? {})).toEqual(['glow', 'colour', 'quality']);
+  });
+
+  it('refuses the files only systems may have in a module', () => {
+    const fixture: PluginFixture = { ...mini(), ...miniModule() };
+    fixture['code/server.js'] = '';
+    fixture['code/shared.js'] = '';
+    const { issues, plugin } = validatePlugin(toFiles(fixture));
+    expect(
+      issues
+        .filter((issue) => issue.code === 'module_file')
+        .map(summary)
+        .sort(),
+    ).toEqual(
+      [
+        'error module_file code/server.js $',
+        'error module_file cards/roll.json $',
+        'error module_file code/shared.js $',
+        'error module_file dice.json $',
+        'error module_file rolls.json $',
+        'error module_file sheets/hero.json $',
+        'error module_file types/actors/hero.json $',
+      ].sort(),
+    );
     expect(plugin).toBeUndefined();
   });
 

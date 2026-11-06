@@ -45,7 +45,7 @@ The plugin manifest. Every plugin has one, at the root of its folder.
 | `id` | [plugin id](#plugin-id) | yes | Unique on the instance, and the name of the plugin folder. Do not change it once tables use the plugin. |
 | `name` | text (1–100 characters) | yes | The name admins and GMs see. |
 | `version` | [version](#version) | yes | The plugin version, such as `1.0.0`. |
-| `kind` | `"system"` | yes | Only game systems exist for now. |
+| `kind` | one of `"system"`, `"module"` | yes | `system` for a game system, which a table is created with; `module` for an add-on that GMs add to any table, whatever its system (themes, overlays, panels). |
 | `coreApi` | text (1–100 characters) | yes | The core API versions the plugin works with, as a semver range such as `^0.1.0`. A server outside the range lists the plugin as unusable. |
 | `description` | text (at most 2000 characters) |  | Shown on the plugin admin page. |
 | `author` | text (at most 200 characters) |  |  |
@@ -507,7 +507,7 @@ How a recipe roll shows in chat.
 
 ## Table settings (settings.json)
 
-Options each table sets on its settings page, each under an identifier such as `startingHp`. Formulas read them as `@settings.<name>`.
+Options under identifiers such as `startingHp`, set per table (the default), per instance or per user. Formulas read table options as `@settings.<name>`.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
@@ -536,6 +536,7 @@ A checkbox.
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `description` | [text](#text) |  | Help shown under the option. |
+| `scope` | one of `"instance"`, `"table"`, `"user"` |  | Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options. |
 | `type` | `"boolean"` | yes |  |
 | `default` | true or false | yes |  |
 
@@ -549,6 +550,7 @@ A whole number.
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `description` | [text](#text) |  | Help shown under the option. |
+| `scope` | one of `"instance"`, `"table"`, `"user"` |  | Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options. |
 | `type` | `"integer"` | yes |  |
 | `default` | integer | yes |  |
 | `minimum` | integer |  |  |
@@ -564,6 +566,7 @@ A number.
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `description` | [text](#text) |  | Help shown under the option. |
+| `scope` | one of `"instance"`, `"table"`, `"user"` |  | Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options. |
 | `type` | `"number"` | yes |  |
 | `default` | number | yes |  |
 | `minimum` | number |  |  |
@@ -579,6 +582,7 @@ Text, or a choice with `enum`.
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `description` | [text](#text) |  | Help shown under the option. |
+| `scope` | one of `"instance"`, `"table"`, `"user"` |  | Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options. |
 | `type` | `"string"` | yes |  |
 | `default` | text | yes |  |
 | `enum` | list of text (at least 1 item) |  | Offers these values to pick from. |

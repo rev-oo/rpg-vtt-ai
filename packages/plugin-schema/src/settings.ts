@@ -2,12 +2,22 @@ import { z } from 'zod';
 
 import { schemaUrl, text } from './common.js';
 
+/** Who sets a setting, and where its value is kept (ADR-075). */
+export const SETTING_SCOPES = ['instance', 'table', 'user'] as const;
+export type SettingScope = (typeof SETTING_SCOPES)[number];
+
 const common = {
   label: text.describe('A lang key or literal text.'),
   description: text.optional().describe('Help shown under the option.'),
+  scope: z
+    .enum(SETTING_SCOPES)
+    .optional()
+    .describe(
+      'Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options.',
+    ),
 };
 
-/** One per-table option (specs §8.12, FR-ADMIN-04). */
+/** One option of a plugin, set per table, per instance or per user (specs §8.12, ADR-075). */
 export const settingSchema = z
   .discriminatedUnion('type', [
     z
@@ -44,11 +54,25 @@ export const settingSchema = z
   .meta({ title: 'Setting' });
 export type Setting = z.infer<typeof settingSchema>;
 
+/** A setting's scope; `table` when it declares none. */
+export const settingScope = (setting: Pick<Setting, 'scope'>): SettingScope =>
+  setting.scope ?? 'table';
+
+/** The settings of one scope, by name. */
+export function settingsOfScope(
+  settings: Readonly<Record<string, Setting>>,
+  scope: SettingScope,
+): Record<string, Setting> {
+  return Object.fromEntries(
+    Object.entries(settings).filter(([, setting]) => settingScope(setting) === scope),
+  );
+}
+
 /** `settings.json`: options by name (checked by the validator). */
 export const settingsSchema = z
   .object(schemaUrl)
   .catchall(settingSchema)
   .describe(
-    'Options each table sets on its settings page, each under an identifier such as `startingHp`. Formulas read them as `@settings.<name>`.',
+    'Options under identifiers such as `startingHp`, set per table (the default), per instance or per user. Formulas read table options as `@settings.<name>`.',
   );
 export type Settings = z.infer<typeof settingsSchema>;
