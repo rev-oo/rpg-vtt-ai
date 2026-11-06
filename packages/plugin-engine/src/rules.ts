@@ -1,5 +1,10 @@
 import { roll, type FormulaFunction, type Rng, type RollResult, type Value } from '@vtt/formula';
-import type { ActorType, ItemType, PluginDefinition } from '@vtt/plugin-schema';
+import {
+  settingsOfScope,
+  type ActorType,
+  type ItemType,
+  type PluginDefinition,
+} from '@vtt/plugin-schema';
 
 import { itemTotals, type HeldItem } from './contributions.js';
 import { withDefaults } from './data.js';
@@ -80,7 +85,8 @@ export function createRules(
   plugin: PluginDefinition,
   { settings: stored, functions = {} }: RulesOptions = {},
 ): Rules {
-  const settings = settingValues(plugin.settings, stored);
+  // Formulas read the table's own settings only (ADR-075).
+  const settings = settingValues(settingsOfScope(plugin.settings, 'table'), stored);
   const customDice = toCustomDice(plugin.dice);
 
   const typeOf = (kind: EntityKind, name: string): ActorType | ItemType => {

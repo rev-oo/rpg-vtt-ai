@@ -13,7 +13,7 @@ import type { Manifest } from '../manifest.js';
 import { isMigrationVersion, type Migration } from '../migrations.js';
 import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
-import type { Setting } from '../settings.js';
+import { settingsOfScope, type Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
@@ -67,6 +67,23 @@ const LIST_PATH: Record<string, { kind: PluginFileKind; of: string }> = {
   'cards/': { kind: 'card', of: 'card' },
   'packs/': { kind: 'pack', of: 'pack' },
 };
+
+/**
+ * Files only systems may have: a module cannot add types, sheets, rolls, packs or formula
+ * functions, or run on the server (ADR-075). Folders end with `/`.
+ */
+const MODULE_FORBIDDEN = [
+  'types/',
+  'sheets/',
+  'cards/',
+  'packs/',
+  'migrations/',
+  'rolls.json',
+  'dice.json',
+  'combat.json',
+  'code/server.js',
+  'code/shared.js',
+] as const;
 
 const baseName = (path: string): string => path.slice(path.lastIndexOf('/') + 1, -'.json'.length);
 const withoutSchemaUrl = <T>(record: Record<string, T>): Record<string, T> =>
@@ -216,6 +233,13 @@ export function validatePlugin(
     error('has_code_mismatch', 'plugin.json', ['hasCode'], { hasCode: String(manifest.hasCode) });
   }
   const hasCode = manifest?.hasCode ?? codeFolder;
+  // A module extends any table, so it brings nothing a system defines (ADR-075).
+  if (manifest?.kind === 'module') {
+    for (const path of paths) {
+      if (MODULE_FORBIDDEN.some((forbidden) => path === forbidden || path.startsWith(forbidden)))
+        error('module_file', path, [], { file: path });
+    }
+  }
   if (manifest && folder !== undefined && manifest.id !== folder) {
     error('folder_mismatch', 'plugin.json', ['id'], { folder });
   }
@@ -262,7 +286,8 @@ export function validatePlugin(
     customDice: new Set(Object.keys(dice)),
     anyFunction: hasCode,
   });
-  const settingNames = new Set(Object.keys(settings));
+  // Formulas read only the table's own settings: instance and user ones vary by who looks.
+  const settingNames = new Set(Object.keys(settingsOfScope(settings, 'table')));
   const formula = (
     source: string,
     scope: FormulaScope,

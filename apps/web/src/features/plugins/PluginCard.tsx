@@ -1,9 +1,11 @@
-import type { ReactElement } from 'react';
+import { useCallback, useState, type ReactElement } from 'react';
 
 import type { AdminPlugin } from '@vtt/shared/api';
 import { Button, Card, cn } from '@vtt/ui';
 
+import { api } from '../../api/endpoints.js';
 import { t, type MessageKey } from '../../i18n/index.js';
+import { PluginSettingsForm } from '../settings/PluginSettingsForm.js';
 
 import { IssueList } from './IssueList.js';
 
@@ -23,6 +25,34 @@ const STATUS_HINT: Partial<Record<AdminPlugin['status'], MessageKey>> = {
 function Badge({ className, children }: { className: string; children: string }): ReactElement {
   return (
     <span className={cn('rounded-full px-2 text-sm font-semibold', className)}>{children}</span>
+  );
+}
+
+/** The plugin's instance settings, loaded when the admin opens them (ADR-075). */
+function InstanceSettings({ plugin }: { plugin: AdminPlugin }): ReactElement {
+  const [open, setOpen] = useState(false);
+  const load = useCallback(() => api.getPluginSettings(plugin.id), [plugin.id]);
+  const save = useCallback(
+    (values: Record<string, unknown>) => api.updatePluginSettings(plugin.id, values),
+    [plugin.id],
+  );
+  return (
+    <details
+      onToggle={(e) => {
+        setOpen(e.currentTarget.open);
+      }}
+    >
+      <summary className="cursor-pointer text-sm font-semibold">{t('plugins.settings')}</summary>
+      {open && (
+        <div className="mt-3">
+          <PluginSettingsForm
+            label={`${t('plugins.settings')}: ${plugin.name}`}
+            load={load}
+            save={save}
+          />
+        </div>
+      )}
+    </details>
   );
 }
 
@@ -64,6 +94,7 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
       </div>
 
       <p className="flex flex-wrap gap-2">
+        <Badge className="bg-canvas text-fg">{t(`plugins.kind.${plugin.kind}`)}</Badge>
         <Badge className={STATUS_CLASS[plugin.status]}>
           {t(`plugins.status.${plugin.status}`)}
         </Badge>
@@ -91,6 +122,8 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
           </ul>
         </details>
       )}
+
+      {plugin.instanceSettings && <InstanceSettings plugin={plugin} />}
 
       {plugin.issues.length > 0 && (
         <details open={errors > 0}>

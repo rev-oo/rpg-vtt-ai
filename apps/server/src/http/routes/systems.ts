@@ -22,7 +22,9 @@ export function systemRoutes({ app, db, plugins: registry }: AppContext): void {
     const systems = db
       .select({ id: plugins.id, name: plugins.name, version: plugins.version })
       .from(plugins)
-      .where(and(eq(plugins.enabled, true), eq(plugins.status, 'ready')))
+      .where(
+        and(eq(plugins.kind, 'system'), eq(plugins.enabled, true), eq(plugins.status, 'ready')),
+      )
       .orderBy(asc(plugins.name), asc(plugins.id))
       .all();
     return { systems };
@@ -38,7 +40,8 @@ export function systemRoutes({ app, db, plugins: registry }: AppContext): void {
     requireSession(request);
     const { id } = parseInput(idParams, request.params);
     const plugin = findPlugin(db, id);
-    const definition = plugin && isAvailable(plugin) ? registry.definition(id) : undefined;
+    const definition =
+      plugin?.kind === 'system' && isAvailable(plugin) ? registry.definition(id) : undefined;
     if (!plugin || !definition) throw notFound('System not found.');
     const base = `/plugins/${encodeURIComponent(id)}/`;
     return {

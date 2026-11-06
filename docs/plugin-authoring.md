@@ -894,7 +894,7 @@ my-system/
 ├─ rolls.json               roll recipes
 ├─ dice.json                custom dice
 ├─ cards/<name>.json        how recipe rolls show in chat
-├─ settings.json            options each table can change
+├─ settings.json            options for each table, the instance or each user
 ├─ combat.json              initiative for the combat tracker
 ├─ packs/<name>.json        compendium packs members browse and copy
 ├─ migrations/<version>.json  steps that bring older data up to a version
@@ -913,6 +913,7 @@ Names of types, sheets, cards and recipes are [names](plugin-reference.md#name):
 
 - **`id`** is lowercase letters, digits and inner hyphens. An installed plugin's folder is named after it, and a plugin found in a folder with another name is refused. `vtt-plugin validate` does not check the folder name, since uploads name the folder for you. Tables store the id, so do not change it once tables use the plugin.
 - **`coreApi`** is a semver range. A plugin whose range does not include the server's core API version (`0.1.0`) is listed but cannot be enabled.
+- **`kind`** is `system` for a game system, which tables are created with, or `module` for an add-on GMs add to any table (see [Modules](#modules)).
 - **`hasCode`** must be `true` exactly when there is a `code/` folder. Admins must acknowledge code before enabling a plugin that has it.
 - **`locales`** lists the languages in `lang/`; each needs its file, and `en` is always required once there is any. **`defaultLocale`** is the language shown when the viewer's lacks a text.
 
@@ -1293,7 +1294,7 @@ Migrations only run forwards: data from a newer version than the table's, after 
 
 ### Table settings
 
-`settings.json` declares house rules that each table's GM sets on the table settings page. Formulas read them as `@settings.<name>`:
+`settings.json` declares options. By default each is a house rule that the table's GM sets on the table settings page, and formulas read it as `@settings.<name>`:
 
 ```json
 {
@@ -1303,6 +1304,34 @@ Migrations only run forwards: data from a newer version than the table's, after 
 ```
 
 A setting is a `boolean`, `integer`, `number` or `string` (with optional `enum`), with a `default`, a `label` and an optional `description`.
+
+A setting's `scope` says who sets it (ADR-075):
+
+- **`table`**, the default: the GM, for one table.
+- **`instance`**: admins, on the Plugins page, for every table on the server.
+- **`user`**: each member, for themselves, under **My settings** in the table's Settings panel. It applies at every table that uses the plugin.
+
+```json
+{
+  "showSecretRolls": { "type": "boolean", "default": false, "label": "setting.secret" },
+  "maxQuality": {
+    "type": "string",
+    "default": "high",
+    "enum": ["low", "high"],
+    "label": "setting.quality",
+    "scope": "instance"
+  },
+  "colour": { "type": "string", "default": "#c33", "label": "setting.colour", "scope": "user" }
+}
+```
+
+Formulas read only `table` settings: the validator reports `@settings.colour` above as an unknown reference, since its value differs from one viewer to the next.
+
+### Modules
+
+A plugin with `"kind": "module"` extends any table, whatever its system (FR-PLUGIN-16, ADR-075). Admins enable it on the Plugins page as they enable systems, and each table's GM adds it in the table's Settings panel, under **Modules**. Members load a table's modules with the table.
+
+A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Themes, overlays and panels arrive later in M16.
 
 ### Translations
 

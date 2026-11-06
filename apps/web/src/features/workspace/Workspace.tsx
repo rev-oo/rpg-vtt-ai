@@ -19,7 +19,7 @@ import {
 } from 'react';
 import { Link } from 'react-router';
 
-import { canManageScenes, canManageTable } from '@vtt/shared';
+import { canManageScenes } from '@vtt/shared';
 import { Button, cn, IconSlot } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
@@ -158,10 +158,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           </span>
           <div className="ml-auto flex items-center gap-1">
             <PanelsMenu
-              items={MENU.filter(
-                (id) =>
-                  (id !== 'settings' || canManageTable(table.role)) && (id !== 'scenes' || scenes),
-              )}
+              items={MENU.filter((id) => id !== 'scenes' || scenes)}
               openIds={openIds}
               disabled={!dock}
               onPick={(id) => {

@@ -1,0 +1,11 @@
+{
+  "glow": { "type": "boolean", "default": true, "label": "setting.glow" },
+  "colour": { "type": "string", "default": "red", "label": "setting.colour", "scope": "user" },
+  "quality": {
+    "type": "string",
+    "default": "high",
+    "enum": ["low", "high"],
+    "label": "setting.quality",
+    "scope": "instance"
+  }
+}

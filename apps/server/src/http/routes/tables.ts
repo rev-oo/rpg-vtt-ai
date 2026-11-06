@@ -1,22 +1,24 @@
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import type { FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
-import { settingsIssues, type SettingIssue } from '@vtt/plugin-engine';
+import { scopedSettingValues } from '@vtt/plugin-engine';
 import { canArchiveTable, canManageTable, canUpgradeTableSystem } from '@vtt/shared';
 import {
   createTableBody,
   updateTableBody,
+  type TableModule,
   type TableTypes,
   type UpgradeSystemResponse,
 } from '@vtt/shared/api';
 
 import { findActor } from '../../db/repositories/index.js';
-import { gameTables, members, plugins } from '../../db/schema.js';
+import { gameTables, members, plugins, userPluginSettings } from '../../db/schema.js';
 import { generateId } from '../../domain/auth/tokens.js';
 import { requireUnarchived, requireWritableTable, systemTypes } from '../../domain/entities.js';
 import { countOutdated, migrateTable } from '../../domain/migrations.js';
-import { isAvailable } from '../../domain/plugins.js';
+import { checkSettingValues } from '../../domain/plugin-settings.js';
+import { findPlugin, isAvailable } from '../../domain/plugins.js';
 import { toTableView } from '../../domain/tables.js';
 import { badRequest, conflict, unprocessable } from '../../errors.js';
 import { publishActorChanged, publishItemChanged } from '../../realtime/notify.js';
@@ -27,44 +29,27 @@ import { parseInput } from '../validation.js';
 
 export const tableIdParams = z.object({ id: z.uuid() });
 
-function settingMessage({ reason }: SettingIssue): string {
-  switch (reason) {
-    case 'unknown':
-      return 'The system has no such setting.';
-    case 'type':
-      return 'This value does not fit the setting.';
-    case 'enum':
-      return 'Must be one of the listed options.';
-    case 'minimum':
-      return 'Too small.';
-    case 'maximum':
-      return 'Too large.';
-    case 'minLength':
-    case 'maxLength':
-      return 'Wrong length.';
-  }
-}
-
 /**
  * Table creation, listing and settings (FR-TABLE-01, 02, 07). Settings are the house rules of
  * the table's system (`settings.json`, FR-ADMIN-04) and must fit them.
  */
 export function tableRoutes(context: AppContext): void {
   const { app, db, events, now, plugins: registry, collab } = context;
-  /** Refuses settings the system does not define or whose values do not fit (specs §8.12). */
+  /** Refuses house rules the system does not define or whose values do not fit (§8.12). */
   const checkSettings = (systemId: string, settings: Record<string, unknown>) => {
-    const issues = settingsIssues(registry.definition(systemId)?.settings ?? {}, settings);
-    if (issues.length > 0) {
-      throw badRequest(
-        'validation_failed',
-        'The request is invalid.',
-        issues.map((issue) => ({
-          path: `settings.${issue.name}`,
-          reason: issue.reason,
-          message: settingMessage(issue),
-        })),
-      );
+    checkSettingValues(registry.definition(systemId), 'table', settings, 'settings');
+  };
+
+  /** The modules a table may use: enabled and ready ones, each once (ADR-075). */
+  const checkModules = (ids: readonly string[]): string[] => {
+    const unique = [...new Set(ids)];
+    for (const id of unique) {
+      const plugin = findPlugin(db, id);
+      if (plugin?.kind !== 'module' || !isAvailable(plugin)) {
+        throw unprocessable('module_unavailable', `The module "${id}" is not enabled.`);
+      }
     }
+    return unique;
   };
 
   app.get('/api/v1/tables', (request) => {
@@ -86,7 +71,7 @@ export function tableRoutes(context: AppContext): void {
 
     const table = db.transaction((tx) => {
       const plugin = tx.select().from(plugins).where(eq(plugins.id, body.systemId)).get();
-      if (!plugin || !isAvailable(plugin)) {
+      if (plugin?.kind !== 'system' || !isAvailable(plugin)) {
         throw unprocessable(
           'system_unavailable',
           'The selected system plugin is not installed or not enabled.',
@@ -127,6 +112,50 @@ export function tableRoutes(context: AppContext): void {
     return result;
   });
 
+  /**
+   * The table's available modules as its members load them (ADR-075): the validated
+   * definition, file URLs and every setting's value for the viewer.
+   */
+  app.get('/api/v1/tables/:id/modules', (request) => {
+    const { id } = parseInput(tableIdParams, request.params);
+    const { table, membership } = requireMember(db, request, id);
+    const modules = table.modules.flatMap((moduleId): TableModule[] => {
+      const plugin = findPlugin(db, moduleId);
+      const definition =
+        plugin?.kind === 'module' && isAvailable(plugin)
+          ? registry.definition(moduleId)
+          : undefined;
+      if (!plugin || !definition) return [];
+      const user = db
+        .select({ values: userPluginSettings.values })
+        .from(userPluginSettings)
+        .where(
+          and(
+            eq(userPluginSettings.userId, membership.userId),
+            eq(userPluginSettings.pluginId, moduleId),
+          ),
+        )
+        .get();
+      const base = `/plugins/${encodeURIComponent(moduleId)}/`;
+      return [
+        {
+          id: moduleId,
+          name: plugin.name,
+          version: plugin.version,
+          definition: { ...definition, packs: undefined, migrations: undefined },
+          styles: definition.styles.map((file) => base + file),
+          client: plugin.codeEntries.includes('code/client.js') ? `${base}code/client.js` : null,
+          settings: scopedSettingValues(definition.settings, {
+            instance: plugin.settings,
+            table: table.moduleSettings[moduleId],
+            user: user?.values,
+          }),
+        },
+      ];
+    });
+    return { modules };
+  });
+
   app.get('/api/v1/tables/:id', (request) => {
     const { id } = parseInput(tableIdParams, request.params);
     const { table, membership } = requireMember(db, request, id);
@@ -146,7 +175,31 @@ export function tableRoutes(context: AppContext): void {
       requireWritableTable(db, table);
       checkSettings(table.systemId, body.settings);
     }
-    const updated = db.update(gameTables).set(body).where(eq(gameTables.id, id)).returning().get();
+    const modules = body.modules ? checkModules(body.modules) : table.modules;
+    // Settings of modules the table no longer uses are dropped.
+    const moduleSettings = Object.fromEntries(
+      Object.entries(body.moduleSettings ?? table.moduleSettings).filter(([module]) =>
+        modules.includes(module),
+      ),
+    );
+    for (const [module, values] of Object.entries(body.moduleSettings ?? {})) {
+      if (!modules.includes(module)) {
+        throw badRequest('validation_failed', 'The request is invalid.', [
+          {
+            path: `moduleSettings.${module}`,
+            reason: 'unknown',
+            message: 'The table does not use this module.',
+          },
+        ]);
+      }
+      checkSettingValues(registry.definition(module), 'table', values, `moduleSettings.${module}`);
+    }
+    const updated = db
+      .update(gameTables)
+      .set({ ...body, modules, moduleSettings })
+      .where(eq(gameTables.id, id))
+      .returning()
+      .get();
     // Open sheets compute derived values from the settings (§8.12).
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
     return { table: toTableView(db, updated, membership.role) };

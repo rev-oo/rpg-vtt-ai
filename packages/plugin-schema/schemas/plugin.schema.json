@@ -26,8 +26,11 @@
     },
     "kind": {
       "type": "string",
-      "const": "system",
-      "description": "Only game systems exist for now."
+      "enum": [
+        "system",
+        "module"
+      ],
+      "description": "`system` for a game system, which a table is created with; `module` for an add-on that GMs add to any table, whatever its system (themes, overlays, panels)."
     },
     "coreApi": {
       "type": "string",

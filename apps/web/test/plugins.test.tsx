@@ -19,7 +19,9 @@ const plugin = (overrides: Record<string, unknown> = {}) => {
     id: 'tiny-d20',
     name: 'Tiny d20',
     version: '1.0.0',
+    kind: 'system',
     description: 'A tiny d20 system.',
+    instanceSettings: false,
     coreApi: '^0.1.0',
     hasCode: false,
     codeEntries: [],
@@ -199,6 +201,50 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     adminApi({ 'GET /plugins': { body: { plugins: [] } } });
     renderApp('/admin/plugins');
     expect(await screen.findByText(/No plugins found/)).toBeInTheDocument();
+  });
+});
+
+describe('module plugins and instance settings (T-1601)', () => {
+  const SETTINGS = {
+    definitions: {
+      quality: {
+        type: 'string',
+        default: 'high',
+        enum: ['low', 'high'],
+        label: 'setting.quality',
+        scope: 'instance',
+      },
+    },
+    lang: { en: { 'setting.quality': 'Dice quality' } },
+    defaultLocale: 'en',
+  };
+
+  it('marks modules and lets admins set settings for every table', async () => {
+    const glow = plugin({ id: 'glow', name: 'Glow', kind: 'module', instanceSettings: true });
+    const { calls } = adminApi({
+      'GET /plugins': { body: { plugins: [plugin(), glow] } },
+      'GET /plugins/glow/settings': { body: { ...SETTINGS, values: {} } },
+      'PATCH /plugins/glow/settings': (body) => ({
+        body: { ...SETTINGS, values: (body as { values: object }).values },
+      }),
+    });
+    renderApp('/admin/plugins');
+    await screen.findByRole('heading', { name: 'Glow' });
+    expect(card('Glow').getByText('Module')).toBeInTheDocument();
+    expect(card('Tiny d20').getByText('System')).toBeInTheDocument();
+    expect(card('Tiny d20').queryByText('Settings for every table')).not.toBeInTheDocument();
+
+    const user = userEvent.setup();
+    await user.click(card('Glow').getByText('Settings for every table'));
+    const quality = await card('Glow').findByLabelText('Dice quality');
+    await user.selectOptions(quality, 'low');
+    await user.click(card('Glow').getByRole('button', { name: 'Save settings' }));
+
+    expect(await card('Glow').findByText('The settings were saved.')).toBeInTheDocument();
+    expect(calls.find((c) => c.method === 'PATCH')).toMatchObject({
+      path: '/plugins/glow/settings',
+      body: { values: { quality: 'low' } },
+    });
   });
 });
 

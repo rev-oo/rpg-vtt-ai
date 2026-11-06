@@ -47,7 +47,12 @@ export const tableSchema = z.object({
    * who may upgrade the table; 0 everywhere else.
    */
   outdatedEntities: z.number().int().min(0),
+  /** The system's table settings (house rules). */
   settings: z.record(z.string(), z.unknown()),
+  /** The modules the GM added to the table, by id (ADR-075); unavailable ones load nowhere. */
+  modules: z.array(z.string()),
+  /** The table settings of each module, by module id. */
+  moduleSettings: z.record(z.string(), z.record(z.string(), z.unknown())),
   playersMayCreateAnyActorType: z.boolean(),
   /** Whether the system plugin is enabled and ready; without it the table is read-only. */
   systemAvailable: z.boolean(),

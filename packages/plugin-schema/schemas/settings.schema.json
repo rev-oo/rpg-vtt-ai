@@ -26,6 +26,15 @@
             "maxLength": 500,
             "title": "Text"
           },
+          "scope": {
+            "description": "Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options.",
+            "type": "string",
+            "enum": [
+              "instance",
+              "table",
+              "user"
+            ]
+          },
           "type": {
             "type": "string",
             "const": "boolean"
@@ -58,6 +67,15 @@
             "minLength": 1,
             "maxLength": 500,
             "title": "Text"
+          },
+          "scope": {
+            "description": "Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options.",
+            "type": "string",
+            "enum": [
+              "instance",
+              "table",
+              "user"
+            ]
           },
           "type": {
             "type": "string",
@@ -104,6 +122,15 @@
             "maxLength": 500,
             "title": "Text"
           },
+          "scope": {
+            "description": "Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options.",
+            "type": "string",
+            "enum": [
+              "instance",
+              "table",
+              "user"
+            ]
+          },
           "type": {
             "type": "string",
             "const": "number"
@@ -143,6 +170,15 @@
             "maxLength": 500,
             "title": "Text"
           },
+          "scope": {
+            "description": "Who sets the option: `table` (the default), the GM in table settings; `instance`, admins on the Plugins page, for every table; `user`, each member for themselves. Formulas read only `table` options.",
+            "type": "string",
+            "enum": [
+              "instance",
+              "table",
+              "user"
+            ]
+          },
           "type": {
             "type": "string",
             "const": "string"
@@ -175,5 +211,5 @@
     ],
     "title": "Setting"
   },
-  "description": "Options each table sets on its settings page, each under an identifier such as `startingHp`. Formulas read them as `@settings.<name>`."
+  "description": "Options under identifiers such as `startingHp`, set per table (the default), per instance or per user. Formulas read table options as `@settings.<name>`."
 }

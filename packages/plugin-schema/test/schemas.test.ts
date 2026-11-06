@@ -38,7 +38,7 @@ describe('manifestSchema', () => {
     ['an id with capitals', { id: 'Tiny' }],
     ['an id ending in a hyphen', { id: 'tiny-' }],
     ['a version that is not semver', { version: '1.0' }],
-    ['another kind', { kind: 'module' }],
+    ['an unknown kind', { kind: 'theme' }],
     ['a bad locale', { locales: ['english'] }],
     ['an unknown key', { homepage: 'x' }],
   ])('rejects %s', (_, change) => {

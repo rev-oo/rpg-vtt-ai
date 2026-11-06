@@ -1,5 +1,5 @@
 import type { Value } from '@vtt/formula';
-import type { Setting } from '@vtt/plugin-schema';
+import { settingScope, type Setting, type SettingScope } from '@vtt/plugin-schema';
 import type { DataIssueReason } from '@vtt/shared/api';
 
 const isNumber = (value: unknown): value is number =>
@@ -56,6 +56,28 @@ export function settingValues(
   return Object.fromEntries(
     Object.entries(definitions).map(([name, setting]) => {
       const value = Object.hasOwn(stored, name) ? stored[name] : undefined;
+      return [name, settingIssue(setting, value) ? setting.default : (value as Value)];
+    }),
+  );
+}
+
+/** Stored values of each scope (ADR-075): the plugin's row, the table, and the viewer's own. */
+export type ScopedValues = Readonly<
+  Partial<Record<SettingScope, Readonly<Record<string, unknown>> | undefined>>
+>;
+
+/**
+ * Every setting's value for one viewer (ADR-075): each from the store of its own scope where
+ * it fits the setting, the default otherwise.
+ */
+export function scopedSettingValues(
+  definitions: Readonly<Record<string, Setting>>,
+  stored: ScopedValues,
+): Record<string, Value> {
+  return Object.fromEntries(
+    Object.entries(definitions).map(([name, setting]) => {
+      const values = stored[settingScope(setting)] ?? {};
+      const value = Object.hasOwn(values, name) ? values[name] : undefined;
       return [name, settingIssue(setting, value) ? setting.default : (value as Value)];
     }),
   );

@@ -287,3 +287,57 @@ test('the app speaks the browser’s language', async ({ browser }) => {
   expect(errors).toEqual([]);
   await context.close();
 });
+
+// T-1601 (ADR-075): an admin enables a module and sets it for the instance, the GM adds it to
+// a table, and each member sets their own settings of it.
+test('modules are enabled by admins, chosen by GMs and set by each member', async ({ browser }) => {
+  const admin = await signIn(browser, ADMIN);
+  const sage = await createPlayer(browser, admin, 'sage', 'Sage');
+  const { table } = await post<{ table: { id: string } }>(admin, '/tables', {
+    name: 'Glowing Halls',
+    systemId: 'e2e-system',
+  });
+  const { token } = await post<{ token: string }>(admin, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(sage, `/invites/${token}/accept`);
+
+  const plugins = await admin.context.newPage();
+  await plugins.goto('/admin/plugins');
+  const card = plugins
+    .getByRole('listitem')
+    .filter({ has: plugins.getByRole('heading', { name: 'E2E Module', exact: true }) });
+  await expect(card.getByText('Module', { exact: true })).toBeVisible();
+  // Enabling works as for systems (plugins.spec.ts); a retry finds it enabled already.
+  await post(admin, '/plugins/e2e-module/enable');
+  await plugins.reload();
+  await expect(card.getByText('Enabled', { exact: true })).toBeVisible();
+  await card.getByText('Settings for every table').click();
+  await card.getByLabel('Effect quality').selectOption('low');
+  await card.getByRole('button', { name: 'Save settings' }).click();
+  await expect(card.getByText('The settings were saved.')).toBeVisible();
+
+  const settings = await openTab(admin, table.id, 'Settings');
+  await settings.getByRole('checkbox', { name: /E2E Module/ }).check();
+  await settings.getByRole('button', { name: 'Save modules' }).click();
+  const glow = settings.getByRole('checkbox', { name: 'Table glow' });
+  await expect(glow).toBeChecked();
+  await glow.uncheck();
+  await settings.getByRole('button', { name: 'Save modules' }).click();
+  await expect(settings.getByText('The settings were saved.')).toBeVisible();
+
+  const page = await openTab(sage, table.id, 'Settings');
+  const colour = page.getByLabel('My colour');
+  await expect(colour).toHaveValue('red');
+  await expect(page.getByRole('button', { name: 'Save modules' })).toHaveCount(0);
+  await colour.fill('green');
+  await page.getByRole('button', { name: 'Save settings' }).click();
+  await expect(page.getByText('The settings were saved.')).toBeVisible();
+
+  const loaded = await sage.context.request.get(`/api/v1/tables/${table.id}/modules`);
+  const { modules } = (await loaded.json()) as { modules: { settings: object }[] };
+  expect(modules.map((module) => module.settings)).toEqual([
+    { glow: false, colour: 'green', quality: 'low' },
+  ]);
+  for (const who of [admin, sage]) await who.context.close();
+});

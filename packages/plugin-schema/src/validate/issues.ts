@@ -54,6 +54,8 @@ export const PLUGIN_ISSUE_CODES = [
   // Code
   'has_code_mismatch',
   'code_required',
+  // Modules (ADR-075)
+  'module_file',
   // Translations
   'missing_lang_file',
   'missing_lang_key',
@@ -166,6 +168,7 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
       ? 'hasCode is true but the plugin has no code/ folder'
       : 'The plugin has a code/ folder, so hasCode must be true',
   code_required: (x) => `${p(x, 'feature')} needs plugin code; set hasCode and add code/`,
+  module_file: (x) => `${p(x, 'file')} is for systems; a module cannot have it`,
   missing_lang_file: (x) => `There is no translation file lang/${p(x, 'locale')}.json`,
   missing_lang_key: (x) => `"${p(x, 'key')}" has no ${p(x, 'locale')} translation`,
   unlisted_locale: (x) => `${p(x, 'locale')} is not listed in the manifest's locales`,
