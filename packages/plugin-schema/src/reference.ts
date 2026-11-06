@@ -49,6 +49,13 @@ const VALUE_TYPES: Readonly<Record<string, string>> = {
   Locale: 'A language code, such as `en` or `pt-BR`.',
   Path: 'Identifiers joined by dots, such as `hp.value`.',
   'CSS classes': 'Class names separated by spaces.',
+  Colour:
+    'A CSS colour: a hex code such as `#7a3b12`, a name such as `transparent`, or a colour function of numbers such as `rgb(120 60 20 / 0.5)`.',
+  Length: 'A CSS length in `px`, `rem` or `em`, such as `2px` or `0.25rem`, or `0`.',
+  'Font list': 'CSS font names separated by commas, quoted when they have spaces.',
+  'Font name': 'A font family name: letters, digits, spaces, `_` and `-`.',
+  'Module file':
+    'A file of the module, relative to its folder, such as `images/paper.webp`; it may not leave the folder.',
 };
 
 /** How each value type was found in the schemas: its pattern and length limits. */
@@ -58,12 +65,15 @@ interface Section {
   anchor: string;
   title: string;
   schema: Json;
+  /** The schema's description, unless the type is used in places that describe it apart. */
+  description: string | undefined;
 }
 
 /** Renders one file kind; sections for nested objects are added as they are linked. */
 class KindWriter {
   private readonly sections: Section[] = [];
   private readonly bySchema = new Map<Json, Section>();
+  private readonly byAnchor = new Map<string, Section>();
   private readonly defs: Json;
 
   constructor(
@@ -74,14 +84,22 @@ class KindWriter {
     this.defs = isJson(root.$defs) ? root.$defs : {};
   }
 
-  /** A link to the section describing `schema`, adding it the first time. */
+  /**
+   * A link to the section describing `schema`, adding it the first time. A type used in several
+   * places, such as the colours of both schemes, gets one section, under its title.
+   */
   private link(schema: Json, title: string): string {
-    let section = this.bySchema.get(schema);
+    const anchor = `${this.kind}-${slug(title)}`;
+    let section = this.bySchema.get(schema) ?? this.byAnchor.get(anchor);
+    const description = asText(schema.description);
     if (!section) {
-      section = { anchor: `${this.kind}-${slug(title)}`, title, schema };
-      this.bySchema.set(schema, section);
+      section = { anchor, title, schema, description };
+      this.byAnchor.set(anchor, section);
       this.sections.push(section);
+    } else if (section.description !== description) {
+      section.description = undefined;
     }
+    this.bySchema.set(schema, section);
     return `[${section.title}](#${section.anchor})`;
   }
 
@@ -186,12 +204,16 @@ class KindWriter {
   }
 
   /** A section's body: a table of keys and what other keys hold, or a union's variants. */
-  body(schema: Json, title: string): string[] {
+  body(schema: Json, title: string, description: string | undefined): string[] {
     const lines: string[] = [];
-    const description = asText(schema.description);
     if (description !== undefined) lines.push(description, '');
     if (this.isUnion(schema)) {
-      const variants = this.variants(schema, title) ?? [];
+      const variants = this.variants(schema, title);
+      if (!variants) {
+        const types = this.options(schema).map((option) => this.type(option, title));
+        lines.push(`One of: ${either(types)}.`, '');
+        return lines;
+      }
       lines.push('One of:', '');
       for (const variant of variants) {
         const about = asText(variant.schema.description);
@@ -235,11 +257,11 @@ class KindWriter {
       '',
       `## ${title}`,
       '',
-      ...this.body(this.root, title),
+      ...this.body(this.root, title, asText(this.root.description)),
     ];
     // Sections are added while earlier ones render; the loop reaches them too.
     for (const section of this.sections) {
-      const body = this.body(section.schema, section.title);
+      const body = this.body(section.schema, section.title, section.description);
       lines.push(`<a id="${section.anchor}"></a>`, '', `### ${section.title}`, '', ...body);
     }
     return lines;

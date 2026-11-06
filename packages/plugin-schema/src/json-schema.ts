@@ -22,7 +22,7 @@ export const PLUGIN_FILES = {
   rolls: { schema: rollsSchema, title: 'Roll recipes (rolls.json)' },
   dice: { schema: diceSchema, title: 'Custom dice (dice.json)' },
   card: { schema: cardSchema, title: 'Chat card (cards/<name>.json)' },
-  settings: { schema: settingsSchema, title: 'Table settings (settings.json)' },
+  settings: { schema: settingsSchema, title: 'Plugin settings (settings.json)' },
   combat: { schema: combatSchema, title: 'Combat (combat.json)' },
   pack: { schema: packSchema, title: 'Compendium pack (packs/<name>.json)' },
   migration: { schema: migrationSchema, title: 'Data migration (migrations/<version>.json)' },

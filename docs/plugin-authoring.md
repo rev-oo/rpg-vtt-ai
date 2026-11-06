@@ -27,7 +27,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Combat](#combat)
   - [Compendium packs](#compendium-packs)
   - [Data migrations](#data-migrations)
-  - [Table settings](#table-settings)
+  - [Plugin settings](#plugin-settings)
   - [Translations](#translations)
   - [Styles](#styles)
   - [Plugin code](#plugin-code)
@@ -1092,7 +1092,7 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | ------------------------ | --------------------------------------------------------------------- | ------------------------------------ |
 | `@str`, `@hp.value`      | The entity's fields                                                   | Everywhere tied to a type            |
 | `@derived.strMod`        | A derived value                                                       | Everywhere tied to a type            |
-| `@settings.startingHp`   | A [table setting](#table-settings)                                    | Everywhere                           |
+| `@settings.startingHp`   | A [table setting](#plugin-settings)                                   | Everywhere                           |
 | `@items.acBonus`         | A total of the actor's [items](#item-contributions)                   | Everywhere tied to an actor type     |
 | `@skills['id'].rank`     | One row of a collection, by id                                        | Everywhere tied to a type            |
 | `@skills[@args.id].rank` | The row a roll button named                                           | Recipes                              |
@@ -1293,7 +1293,7 @@ When a GM upgrades a table to a new version, each actor and item, trash included
 
 Migrations only run forwards: data from a newer version than the table's, after a downgrade, is left as it is. A migration file may not be named after a version later than the manifest's. Browsers never receive migrations.
 
-### Table settings
+### Plugin settings
 
 `settings.json` declares options. By default each is a house rule that the table's GM sets on the table settings page, and formulas read it as `@settings.<name>`:
 

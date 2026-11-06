@@ -40,6 +40,7 @@ export const FONT_FILE = /\.(?:woff2?|ttf|otf)$/i;
 
 const color = z.string().regex(COLOR).meta({ title: 'Colour' });
 const file = z.string().regex(FILE).meta({ title: 'Module file' });
+const length = z.string().regex(LENGTH).meta({ title: 'Length' });
 
 /**
  * The app's colour tokens (`--color-*` in `@vtt/ui`), by their names there in camel case, and
@@ -61,8 +62,29 @@ export const THEME_COLORS = [
 ] as const;
 export type ThemeColor = (typeof THEME_COLORS)[number];
 
+/** What each colour token paints. */
+const COLOR_USES: Readonly<Record<ThemeColor, string>> = {
+  canvas: 'The page.',
+  surface: 'Cards, inputs, menus and tab bars.',
+  fg: 'Text.',
+  muted: 'Secondary text, such as hints and times.',
+  line: 'Borders and dividers.',
+  primary: 'Buttons, links, focus rings and accents.',
+  primaryHover: 'Buttons under the pointer.',
+  onPrimary: 'Text on `primary`.',
+  danger: 'Errors and destructive buttons.',
+  dangerSoft: 'The background of error notices.',
+  infoSoft: 'The background of notices and selected items.',
+  panel: 'Docked panels; `canvas` by default. `transparent` shows the page’s `background`.',
+};
+
 const colors = z
-  .strictObject(Object.fromEntries(THEME_COLORS.map((key) => [key, color.optional()])))
+  .strictObject(
+    Object.fromEntries(
+      THEME_COLORS.map((key) => [key, color.optional().describe(COLOR_USES[key])]),
+    ),
+  )
+  .meta({ title: 'Colours' })
   .describe('Colour tokens; any left out keep the app’s.') as z.ZodType<
   Partial<Record<ThemeColor, string>>
 >;
@@ -71,25 +93,35 @@ const colors = z
 const DENSITY_MIN = 0.75;
 const DENSITY_MAX = 1.5;
 
-const background = z
-  .union([
-    file,
-    z.strictObject({
+const background = z.union([
+  file,
+  z
+    .strictObject({
       light: file.optional().describe('The image in the light scheme.'),
       dark: file.optional().describe('The image in the dark scheme.'),
-    }),
-  ])
-  .meta({ title: 'Background' });
+    })
+    .meta({ title: 'Image per scheme' }),
+]);
 
 const fontFace = z
   .strictObject({
-    family: z.string().regex(FONT_NAME).describe('The name `font` and stylesheets use.'),
+    family: z
+      .string()
+      .regex(FONT_NAME)
+      .meta({ title: 'Font name' })
+      .describe('The name `font` and stylesheets use.'),
     src: file.describe('A `.woff2`, `.woff`, `.ttf` or `.otf` file of the module.'),
     weight: z
       .string()
       .regex(/^(?:normal|bold|[1-9]00(?: [1-9]00)?)$/)
-      .optional(),
-    style: z.enum(['normal', 'italic']).optional(),
+      .optional()
+      .describe(
+        'The weight this file draws, such as `400` or `bold`, or a range such as `100 900` for a variable font. Defaults to `normal`.',
+      ),
+    style: z
+      .enum(['normal', 'italic'])
+      .optional()
+      .describe('Whether this file draws the italic. Defaults to `normal`.'),
   })
   .meta({ title: 'Font face' });
 
@@ -101,18 +133,15 @@ export const themeSchema = z
     font: z
       .string()
       .regex(FONT_LIST)
+      .meta({ title: 'Font list' })
       .optional()
       .describe('The text font, as a CSS font list such as `"IM Fell English", Georgia, serif`.'),
-    radius: z
-      .string()
-      .regex(LENGTH)
+    radius: length
       .optional()
       .describe(
         'The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it.',
       ),
-    border: z
-      .string()
-      .regex(LENGTH)
+    border: length
       .optional()
       .describe(
         'The width of the borders of cards, panels and inputs, such as `2px`; `0` for none.',
