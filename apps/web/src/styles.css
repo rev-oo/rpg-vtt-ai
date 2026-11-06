@@ -11,6 +11,34 @@
 @source '../../../packages/ui/src';
 @source '../../../packages/sheet-renderer/src';
 
+/*
+ * Thin borders read their width from `--vtt-border-width`, which module themes set (ADR-076).
+ * Tailwind writes them as 1px; these come later in the same layer, so they win.
+ */
+@layer utilities {
+  .border {
+    border-width: var(--vtt-border-width, 1px);
+  }
+  .border-x {
+    border-inline-width: var(--vtt-border-width, 1px);
+  }
+  .border-y {
+    border-block-width: var(--vtt-border-width, 1px);
+  }
+  .border-t {
+    border-top-width: var(--vtt-border-width, 1px);
+  }
+  .border-b {
+    border-bottom-width: var(--vtt-border-width, 1px);
+  }
+  .border-l {
+    border-left-width: var(--vtt-border-width, 1px);
+  }
+  .border-r {
+    border-right-width: var(--vtt-border-width, 1px);
+  }
+}
+
 /* Rich text (ADR-037): Tailwind's reset removes the look of headings and lists. */
 .vtt-rich-text {
   & > * + * {
@@ -50,8 +78,8 @@
 }
 
 /*
- * Behind docked panels: modules may set `--vtt-panel-background` (ADR-076), such as to
- * `transparent` to show their theme's background. Floating panels stay opaque.
+ * Behind docked panels: a module theme's `panel` colour (`--vtt-panel-background`, ADR-076),
+ * such as `transparent` to show its background. Floating panels stay opaque.
  */
 .vtt-dock .dv-grid-view,
 .vtt-dock .dv-grid-view .dv-groupview {

@@ -15,6 +15,17 @@ describe('themeSchema (T-1602, ADR-076)', () => {
     expect(themeSchema.parse(theme)).toEqual(theme);
   });
 
+  it('accepts a panel colour, a border, a density and a background per scheme', () => {
+    const theme = {
+      light: { panel: 'rgb(248 241 223 / 0.55)' },
+      dark: { panel: 'transparent' },
+      border: '2px',
+      density: 0.9,
+      background: { light: 'images/paper.webp', dark: 'images/leather.webp' },
+    };
+    expect(themeSchema.parse(theme)).toEqual(theme);
+  });
+
   it.each([
     ['a colour that ends its declaration', { light: { canvas: 'red; color: blue' } }],
     ['a colour with a URL', { light: { canvas: 'url(x.png)' } }],
@@ -23,6 +34,11 @@ describe('themeSchema (T-1602, ADR-076)', () => {
     ['a radius in other units', { radius: '1vw' }],
     ['a file outside the module', { background: '../secret.png' }],
     ['an absolute file', { background: '/etc/a.png' }],
+    ['a scheme background outside the module', { background: { dark: '../a.png' } }],
+    ['an unknown scheme', { background: { dusk: 'a.png' } }],
+    ['a density too small', { density: 0.5 }],
+    ['a density too large', { density: 2 }],
+    ['a border in other units', { border: 'thick' }],
     ['a font file with quotes', { fonts: [{ family: 'A', src: 'a".woff2' }] }],
   ])('refuses %s', (_, theme) => {
     expect(themeSchema.safeParse(theme).success).toBe(false);
@@ -57,6 +73,28 @@ describe('themeCss', () => {
     );
     expect(css).toContain(
       `${root} [data-vtt-part="table"] {\n  background-image: url("/plugins/skin/images/paper.webp");`,
+    );
+  });
+
+  it('sets the panel colour, borders, density and a background per scheme', () => {
+    const css = themeCss(
+      {
+        light: { panel: 'transparent' },
+        border: '2px',
+        density: 0.9,
+        background: { light: 'images/paper.webp', dark: 'images/leather.webp' },
+      },
+      'skin',
+    );
+    const root = ':root[data-vtt-modules~="skin"]';
+    expect(css).toContain(
+      `${root} {\n  --vtt-border-width: 2px;\n  --spacing: calc(0.25rem * 0.9);\n  --vtt-gap-sm: calc(0.5rem * 0.9);`,
+    );
+    expect(css).toContain(
+      `@media not (prefers-color-scheme: dark) {\n${root} {\n  --vtt-panel-background: transparent;\n}\n${root} [data-vtt-part="table"] {\n  background-image: url("/plugins/skin/images/paper.webp");\n}\n}`,
+    );
+    expect(css).toContain(
+      `@media (prefers-color-scheme: dark) {\n${root} [data-vtt-part="table"] {\n  background-image: url("/plugins/skin/images/leather.webp");\n}\n}`,
     );
   });
 

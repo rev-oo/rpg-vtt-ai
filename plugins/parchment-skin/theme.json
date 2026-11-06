@@ -11,7 +11,8 @@
     "onPrimary": "#fff8ea",
     "danger": "#9b1c1c",
     "dangerSoft": "#f6dcd2",
-    "infoSoft": "#eadcb8"
+    "infoSoft": "#eadcb8",
+    "panel": "transparent"
   },
   "dark": {
     "canvas": "#1c1711",
@@ -28,5 +29,6 @@
   },
   "font": "Georgia, \"Palatino Linotype\", \"Book Antiqua\", Palatino, serif",
   "radius": "0.125rem",
-  "background": "images/parchment.png"
+  "border": "2px",
+  "background": { "light": "images/parchment.png" }
 }

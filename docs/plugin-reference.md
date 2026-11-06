@@ -714,8 +714,10 @@ A module’s theme: the app’s design tokens on the table page while the module
 | `dark` | [`dark`](#theme-dark) |  | Colours in the dark scheme. |
 | `font` | text (matching `^[A-Za-z0-9 ,'"_-]{1,200}$`) |  | The text font, as a CSS font list such as `"IM Fell English", Georgia, serif`. |
 | `radius` | text (matching `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$`) |  | The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it. |
+| `border` | text (matching `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$`) |  | The width of the borders of cards, panels and inputs, such as `2px`; `0` for none. |
+| `density` | number, 0.75–1.5 |  | How far apart things are: paddings and gaps, as a multiple of the app’s (0.75–1.5). Below 1 is more compact, above 1 roomier. |
 | `fonts` | list of [Font face](#theme-font-face) (at most 16 items) |  | Fonts loaded from the module’s files. |
-| `background` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) |  | An image of the module tiled behind the table page, such as `images/paper.webp`. Docked panels cover it unless the module’s styles set `--vtt-panel-background`, such as to `transparent`. |
+| `background` | [Background](#theme-background) |  | An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`. |
 
 <a id="theme-light"></a>
 
@@ -736,6 +738,7 @@ Colours in the light scheme.
 | `danger` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 | `dangerSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 | `infoSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `panel` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 
 <a id="theme-dark"></a>
 
@@ -756,6 +759,7 @@ Colours in the dark scheme.
 | `danger` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 | `dangerSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 | `infoSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `panel` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
 
 <a id="theme-font-face"></a>
 
@@ -767,3 +771,11 @@ Colours in the dark scheme.
 | `src` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) | yes | A `.woff2`, `.woff`, `.ttf` or `.otf` file of the module. |
 | `weight` | text (matching `^(?:normal\|bold\|[1-9]00(?: [1-9]00)?)$`) |  |  |
 | `style` | one of `"normal"`, `"italic"` |  |  |
+
+<a id="theme-background"></a>
+
+### Background
+
+An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.
+
+One of:

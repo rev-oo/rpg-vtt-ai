@@ -501,14 +501,20 @@ test('the parchment skin themes the table that uses it', async ({ browser }) => 
     'background-image',
     /\/plugins\/parchment-skin\/images\/parchment\.png/,
   );
-  // The skin clears the docked panels' colour, so the paper shows behind them.
+  // The theme's panel colour lets the paper show behind docked panels, and its borders are
+  // thicker.
   const groups = page.locator('[data-vtt-part="workspace"] .dv-groupview').first();
   await expect(groups).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  const message = page.locator('[data-vtt-part="chat-composer"] textarea');
+  await showPanel(page, 'Chat');
+  await expect(message).toHaveCSS('border-top-width', '2px');
 
   await page.goto(`/tables/${plain}`);
   await expect(header).toBeVisible();
   await expect(page.locator('html')).not.toHaveAttribute('data-vtt-modules');
   await expect(header).not.toHaveCSS('border-bottom-style', 'double');
+  await showPanel(page, 'Chat');
+  await expect(message).toHaveCSS('border-top-width', '1px');
   await expect(body).not.toHaveCSS('background-color', PARCHMENT);
   await gm.context.close();
 });

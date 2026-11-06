@@ -1,14 +1,7 @@
 /*
  * The parchment skin's touches on the table page's named parts (ADR-076). The theme sets the
- * colours and the font; these rules only add borders, small caps and the paper texture.
+ * colours, font, borders and the paper behind the panels; these rules add the details.
  */
-
-/* Let the paper show behind the docked panels, in the light scheme only: it is a light paper. */
-@media not (prefers-color-scheme: dark) {
-  :root {
-    --vtt-panel-background: transparent;
-  }
-}
 
 [data-vtt-part='table-header'] {
   border-bottom: 3px double var(--color-line);

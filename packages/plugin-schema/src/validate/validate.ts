@@ -287,7 +287,14 @@ export function validatePlugin(
   theme?.fonts?.forEach((face, index) => {
     themeFile(face.src, 'font', ['fonts', index, 'src']);
   });
-  if (theme?.background) themeFile(theme.background, 'image', ['background']);
+  const background = theme?.background;
+  if (typeof background === 'string') themeFile(background, 'image', ['background']);
+  else if (background) {
+    for (const scheme of ['light', 'dark'] as const) {
+      const path = background[scheme];
+      if (path) themeFile(path, 'image', ['background', scheme]);
+    }
+  }
 
   for (const [file, keys, pattern, of] of [
     ['rolls.json', Object.keys(rolls), NAME, 'roll'],

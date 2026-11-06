@@ -41,7 +41,10 @@ export const FONT_FILE = /\.(?:woff2?|ttf|otf)$/i;
 const color = z.string().regex(COLOR).meta({ title: 'Colour' });
 const file = z.string().regex(FILE).meta({ title: 'Module file' });
 
-/** The app's colour tokens (`--color-*` in `@vtt/ui`), by their names there in camel case. */
+/**
+ * The app's colour tokens (`--color-*` in `@vtt/ui`), by their names there in camel case, and
+ * `panel`, the colour behind docked panels.
+ */
 export const THEME_COLORS = [
   'canvas',
   'surface',
@@ -54,6 +57,7 @@ export const THEME_COLORS = [
   'danger',
   'dangerSoft',
   'infoSoft',
+  'panel',
 ] as const;
 export type ThemeColor = (typeof THEME_COLORS)[number];
 
@@ -62,6 +66,20 @@ const colors = z
   .describe('Colour tokens; any left out keep the app’s.') as z.ZodType<
   Partial<Record<ThemeColor, string>>
 >;
+
+/** A density: how far apart things are, as a multiple of the app's spacing. */
+const DENSITY_MIN = 0.75;
+const DENSITY_MAX = 1.5;
+
+const background = z
+  .union([
+    file,
+    z.strictObject({
+      light: file.optional().describe('The image in the light scheme.'),
+      dark: file.optional().describe('The image in the dark scheme.'),
+    }),
+  ])
+  .meta({ title: 'Background' });
 
 const fontFace = z
   .strictObject({
@@ -92,18 +110,35 @@ export const themeSchema = z
       .describe(
         'The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it.',
       ),
-    fonts: z.array(fontFace).max(16).optional().describe('Fonts loaded from the module’s files.'),
-    background: file
+    border: z
+      .string()
+      .regex(LENGTH)
       .optional()
       .describe(
-        'An image of the module tiled behind the table page, such as `images/paper.webp`. Docked panels cover it unless the module’s styles set `--vtt-panel-background`, such as to `transparent`.',
+        'The width of the borders of cards, panels and inputs, such as `2px`; `0` for none.',
+      ),
+    density: z
+      .number()
+      .min(DENSITY_MIN)
+      .max(DENSITY_MAX)
+      .optional()
+      .describe(
+        `How far apart things are: paddings and gaps, as a multiple of the app’s (${String(DENSITY_MIN)}–${String(DENSITY_MAX)}). Below 1 is more compact, above 1 roomier.`,
+      ),
+    fonts: z.array(fontFace).max(16).optional().describe('Fonts loaded from the module’s files.'),
+    background: background
+      .optional()
+      .describe(
+        'An image of the module tiled behind the table page, such as `images/paper.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`.',
       ),
   })
   .describe('A module’s theme: the app’s design tokens on the table page while the module is on.');
 export type Theme = z.infer<typeof themeSchema>;
 
 const cssVar = (key: ThemeColor) =>
-  `--color-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
+  key === 'panel'
+    ? '--vtt-panel-background'
+    : `--color-${key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`;
 
 /** The selector of everything a module styles: the page, only while the module is on. */
 export const moduleScope = (pluginId: string): string => `:root[data-vtt-modules~="${pluginId}"]`;
@@ -123,49 +158,72 @@ const RADII: readonly (readonly [string, number])[] = [
   ['3xl', 3],
 ];
 
+/** The app's gaps between sheet nodes (`--vtt-gap-*` in `@vtt/ui`), which density scales too. */
+const GAPS: readonly (readonly [string, number])[] = [
+  ['sm', 0.5],
+  ['md', 1],
+  ['lg', 1.5],
+];
+
 /**
- * The CSS of a checked theme: its tokens on `moduleScope`, the dark ones in the dark scheme,
- * its fonts and background. Served as `/plugins/<id>/theme.css` (ADR-076).
+ * The CSS of a checked theme: its tokens on `moduleScope`, the colours and background of each
+ * colour scheme in that scheme, and its fonts. Served as `/plugins/<id>/theme.css` (ADR-076).
  */
 export function themeCss(theme: Theme, pluginId: string): string {
   const scope = moduleScope(pluginId);
   const block = (declarations: string[]) => declarations.map((line) => `  ${line};`).join('\n');
-  const colorsOf = (set: Partial<Record<ThemeColor, string>> | undefined) =>
-    THEME_COLORS.flatMap((key) => (set?.[key] ? [`${cssVar(key)}: ${set[key]}`] : []));
+  const rule = (selector: string, declarations: string[]) =>
+    `${selector} {\n${block(declarations)}\n}`;
   const out: string[] = [];
   for (const face of theme.fonts ?? []) {
     out.push(
-      `@font-face {\n${block([
+      rule('@font-face', [
         `font-family: "${face.family}"`,
         `src: url("${fileUrl(pluginId, face.src)}")`,
         `font-display: swap`,
         ...(face.weight ? [`font-weight: ${face.weight}`] : []),
         ...(face.style ? [`font-style: ${face.style}`] : []),
-      ])}\n}`,
+      ]),
     );
   }
-  const { font, radius } = theme;
+  const { font, radius, border, density } = theme;
   const always = [
     ...(font ? [`--font-sans: ${font}`] : []),
     ...(radius
       ? RADII.map(([size, scale]) => `--radius-${size}: calc(${radius} * ${String(scale)})`)
       : []),
+    ...(border ? [`--vtt-border-width: ${border}`] : []),
+    ...(density === undefined
+      ? []
+      : [
+          `--spacing: calc(0.25rem * ${String(density)})`,
+          ...GAPS.map(
+            ([size, rem]) => `--vtt-gap-${size}: calc(${String(rem)}rem * ${String(density)})`,
+          ),
+        ]),
   ];
-  if (always.length > 0) out.push(`${scope} {\n${block(always)}\n}`);
-  const light = colorsOf(theme.light);
-  if (light.length > 0) {
-    out.push(`@media not (prefers-color-scheme: dark) {\n${scope} {\n${block(light)}\n}\n}`);
-  }
-  const dark = colorsOf(theme.dark);
-  if (dark.length > 0) {
-    out.push(`@media (prefers-color-scheme: dark) {\n${scope} {\n${block(dark)}\n}\n}`);
-  }
-  if (theme.background) {
-    out.push(
-      `${scope} [data-vtt-part="table"] {\n${block([
-        `background-image: url("${fileUrl(pluginId, theme.background)}")`,
-      ])}\n}`,
+  if (always.length > 0) out.push(rule(scope, always));
+  const image = (path: string | undefined) =>
+    path
+      ? [
+          rule(`${scope} [data-vtt-part="table"]`, [
+            `background-image: url("${fileUrl(pluginId, path)}")`,
+          ]),
+        ]
+      : [];
+  const backgrounds =
+    typeof theme.background === 'object' ? theme.background : { light: undefined, dark: undefined };
+  out.push(...image(typeof theme.background === 'string' ? theme.background : undefined));
+  const schemes = [
+    ['not (prefers-color-scheme: dark)', theme.light, backgrounds.light],
+    ['(prefers-color-scheme: dark)', theme.dark, backgrounds.dark],
+  ] as const;
+  for (const [query, set, path] of schemes) {
+    const colors = THEME_COLORS.flatMap((key) =>
+      set?.[key] ? [`${cssVar(key)}: ${set[key]}`] : [],
     );
+    const rules = [...(colors.length > 0 ? [rule(scope, colors)] : []), ...image(path)];
+    if (rules.length > 0) out.push(`@media ${query} {\n${rules.join('\n')}\n}`);
   }
   return `${out.join('\n')}\n`;
 }
