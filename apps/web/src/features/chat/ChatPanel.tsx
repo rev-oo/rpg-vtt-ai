@@ -151,7 +151,7 @@ export function ChatPanel({
   const now = useNow();
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2">
+    <div data-vtt-part="chat" className="flex h-full min-h-0 flex-col gap-2">
       {status !== 'open' && (
         <span className="text-sm text-muted" role="status">
           {t(STATUS_MESSAGES[status])}
@@ -302,7 +302,7 @@ function MessageItem({
   });
   const recipients = message.recipientIds.map((id) => names.get(id) ?? t('chat.formerMember'));
   return (
-    <li className="rounded-lg bg-canvas px-2 py-1">
+    <li data-vtt-part="chat-message" className="rounded-lg bg-canvas px-2 py-1">
       <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
         <span className="font-semibold">{message.speaker.name}</span>
         <time className="text-muted" dateTime={message.createdAt}>
@@ -509,6 +509,7 @@ function Composer({
 
   return (
     <form
+      data-vtt-part="chat-composer"
       noValidate
       className="flex flex-col gap-2"
       onSubmit={(e) => {

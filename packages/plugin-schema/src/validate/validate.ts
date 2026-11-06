@@ -15,6 +15,7 @@ import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
 import { settingsOfScope, type Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
+import { FONT_FILE, IMAGE_FILE, type Theme } from '../theme.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
 import { checkData, checkDataSchema } from './data.js';
@@ -48,6 +49,8 @@ export interface PluginDefinition {
   lang: Record<string, Lang>;
   /** Paths of `styles/*.css`, in order. */
   styles: string[];
+  /** A module's `theme.json` (ADR-076). */
+  theme?: Theme | undefined;
 }
 
 export interface PluginValidation {
@@ -233,6 +236,9 @@ export function validatePlugin(
     error('has_code_mismatch', 'plugin.json', ['hasCode'], { hasCode: String(manifest.hasCode) });
   }
   const hasCode = manifest?.hasCode ?? codeFolder;
+  // A theme is for modules only (ADR-076).
+  if (manifest?.kind === 'system' && files.has('theme.json'))
+    error('system_file', 'theme.json', [], { file: 'theme.json' });
   // A module extends any table, so it brings nothing a system defines (ADR-075).
   if (manifest?.kind === 'module') {
     for (const path of paths) {
@@ -271,6 +277,17 @@ export function validatePlugin(
   const combat = one('combat.json') as Combat | undefined;
   const packs = many<Pack>('packs/');
   const migrations = many<Migration>('migrations/');
+  const theme = one('theme.json') as Theme | undefined;
+  // The files a theme loads must be the module's own images and fonts (ADR-076).
+  const themeFile = (path: string, expected: 'image' | 'font', at: JsonPath) => {
+    if (!files.has(path)) error('missing_file', 'theme.json', at, { file: path });
+    else if (!(expected === 'font' ? FONT_FILE : IMAGE_FILE).test(path))
+      error('theme_file', 'theme.json', at, { file: path, expected });
+  };
+  theme?.fonts?.forEach((face, index) => {
+    themeFile(face.src, 'font', ['fonts', index, 'src']);
+  });
+  if (theme?.background) themeFile(theme.background, 'image', ['background']);
 
   for (const [file, keys, pattern, of] of [
     ['rolls.json', Object.keys(rolls), NAME, 'roll'],
@@ -736,6 +753,7 @@ export function validatePlugin(
     const scoped = scopeCss(files.get(path) ?? '', {
       pluginId: folder ?? manifest?.id ?? 'plugin',
       file: path,
+      kind: manifest?.kind ?? 'system',
     });
     for (const issue of scoped.issues)
       add(issue.severity, issue.code, issue.file, issue.path, issue.params);
@@ -791,6 +809,7 @@ export function validatePlugin(
           ...(Object.keys(migrations).length > 0 && { migrations }),
           lang,
           styles,
+          ...(theme && { theme: { ...theme, $schema: undefined } }),
         }
       : undefined,
   };

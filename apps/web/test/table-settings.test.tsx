@@ -309,4 +309,38 @@ describe('modules and settings by scope (T-1601)', () => {
       body: { values: { colour: 'blue' } },
     });
   });
+
+  it('puts module themes and styles on the table page, and takes them off when it closes', async () => {
+    await openSettings({
+      'GET /tables': { body: { tables: [TABLE] } },
+      'GET /tables/t1/modules': {
+        body: {
+          modules: [
+            { ...GLOW, styles: ['/plugins/glow/theme.css', '/plugins/glow/styles/table.css'] },
+          ],
+        },
+      },
+    });
+    const root = document.documentElement;
+    await waitFor(() => {
+      expect(root).toHaveAttribute('data-vtt-modules', 'glow');
+    });
+    const links = () =>
+      [...document.head.querySelectorAll<HTMLLinkElement>('link[data-module-style]')].map((link) =>
+        link.getAttribute('href'),
+      );
+    expect(links()).toEqual([
+      '/plugins/glow/theme.css?v=1.0.0',
+      '/plugins/glow/styles/table.css?v=1.0.0',
+    ]);
+    // The parts module styles name.
+    for (const part of ['table', 'table-header', 'workspace', 'tab', 'panel']) {
+      expect(document.querySelector(`[data-vtt-part="${part}"]`)).not.toBeNull();
+    }
+
+    await userEvent.setup().click(screen.getByRole('link', { name: 'Tables' }));
+    await screen.findByRole('heading', { name: 'Your tables' });
+    expect(root).not.toHaveAttribute('data-vtt-modules');
+    expect(links()).toEqual([]);
+  });
 });

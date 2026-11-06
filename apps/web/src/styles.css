@@ -1,6 +1,12 @@
 @import 'tailwindcss';
 @import '@vtt/ui/theme.css';
 
+/*
+ * Plugin layers after Tailwind's, in a fixed order whichever stylesheet loads first: a
+ * system's sheet styles (ADR-021), then modules' named-part styles (ADR-076).
+ */
+@layer theme, base, components, utilities, plugin, module;
+
 /* Tailwind only scans this app by default; the primitives and sheets live in packages. */
 @source '../../../packages/ui/src';
 @source '../../../packages/sheet-renderer/src';

@@ -16,6 +16,7 @@ Every file a plugin may contain, with each key it accepts. This page is generate
 - [Compendium pack (packs/<name>.json)](#pack)
 - [Data migration (migrations/<version>.json)](#migration)
 - [Translations (lang/<locale>.json)](#lang)
+- [Module theme (theme.json)](#theme)
 
 ## Value types
 
@@ -699,3 +700,70 @@ Removes a field and its value.
 Texts by lang key, such as `"field.str": "Strength"`. The file name is the locale.
 
 Every key is text (1–200 characters) and maps to text.
+
+<a id="theme"></a>
+
+## Module theme (theme.json)
+
+A module’s theme: the app’s design tokens on the table page while the module is on.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
+| `light` | [`light`](#theme-light) |  | Colours in the light scheme. |
+| `dark` | [`dark`](#theme-dark) |  | Colours in the dark scheme. |
+| `font` | text (matching `^[A-Za-z0-9 ,'"_-]{1,200}$`) |  | The text font, as a CSS font list such as `"IM Fell English", Georgia, serif`. |
+| `radius` | text (matching `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$`) |  | The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it. |
+| `fonts` | list of [Font face](#theme-font-face) (at most 16 items) |  | Fonts loaded from the module’s files. |
+| `background` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) |  | An image of the module tiled behind the table page, such as `images/paper.webp`. Parts with a colour of their own, such as panels, cover it unless the module’s styles clear it. |
+
+<a id="theme-light"></a>
+
+### `light`
+
+Colours in the light scheme.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `canvas` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `surface` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `fg` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `muted` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `line` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `primary` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `primaryHover` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `onPrimary` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `danger` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `dangerSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `infoSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+
+<a id="theme-dark"></a>
+
+### `dark`
+
+Colours in the dark scheme.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `canvas` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `surface` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `fg` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `muted` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `line` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `primary` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `primaryHover` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `onPrimary` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `danger` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `dangerSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+| `infoSoft` | text (matching `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$`) |  |  |
+
+<a id="theme-font-face"></a>
+
+### Font face
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `family` | text (matching `^[A-Za-z0-9 _-]{1,60}$`) | yes | The name `font` and stylesheets use. |
+| `src` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) | yes | A `.woff2`, `.woff`, `.ttf` or `.otf` file of the module. |
+| `weight` | text (matching `^(?:normal\|bold\|[1-9]00(?: [1-9]00)?)$`) |  |  |
+| `style` | one of `"normal"`, `"italic"` |  |  |

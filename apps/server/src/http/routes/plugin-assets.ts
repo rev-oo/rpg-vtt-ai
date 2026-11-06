@@ -6,7 +6,7 @@ import path from 'node:path';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { z } from 'zod';
 
-import { PLUGIN_ID } from '@vtt/plugin-schema';
+import { PLUGIN_ID, themeCss } from '@vtt/plugin-schema';
 
 import { findPlugin, isAvailable } from '../../domain/plugins.js';
 import { notFound } from '../../errors.js';
@@ -17,6 +17,8 @@ import { requireSession } from '../auth.js';
 
 const params = z.object({ id: z.string(), '*': z.string() });
 const STYLESHEET = /^styles\/[^/]+\.css$/;
+/** Where a module's theme is served (ADR-076); no plugin file can be at this path. */
+export const THEME_CSS = 'theme.css';
 
 /**
  * Plugin files at `/plugins/<id>/*` (§4.2, T-0405), for signed-in users and only while the
@@ -36,6 +38,18 @@ export function pluginAssetRoutes({ app, db, config, plugins }: AppContext): voi
     const plugin = findPlugin(db, id);
     if (!plugin || !isAvailable(plugin)) throw notFound();
 
+    // A module's theme, as CSS built from its checked `theme.json` (ADR-076).
+    if (requestPath === THEME_CSS) {
+      const theme = plugin.kind === 'module' ? plugins.definition(id)?.theme : undefined;
+      if (!theme) throw notFound();
+      const text = themeCss(theme, id);
+      reply.header('cache-control', 'no-cache');
+      reply.header('x-content-type-options', 'nosniff');
+      reply.type('text/css; charset=utf-8');
+      const etag = `"${createHash('sha256').update(text).digest('base64url')}"`;
+      return notModified(request, reply, etag) ?? reply.send(text);
+    }
+
     const asset = await findPluginAsset(path.join(plugins.dir, id), requestPath);
     if (!asset) throw notFound();
     if (asset.relative.endsWith('.css') && !STYLESHEET.test(asset.relative)) throw notFound();
@@ -49,7 +63,8 @@ export function pluginAssetRoutes({ app, db, config, plugins }: AppContext): voi
     reply.type(asset.type);
 
     if (STYLESHEET.test(asset.relative)) {
-      const scoped = await css.get(id, asset.relative, await readFile(asset.file, 'utf8'));
+      const source = await readFile(asset.file, 'utf8');
+      const scoped = await css.get(id, asset.relative, source, plugin.kind);
       const etag = `"${createHash('sha256').update(scoped.css).digest('base64url')}"`;
       return notModified(request, reply, etag) ?? reply.send(scoped.css);
     }

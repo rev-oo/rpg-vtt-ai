@@ -10,7 +10,7 @@ import {
   scopeCss,
   type ScopedCss,
 } from '@vtt/plugin-schema';
-import { pluginIssueSchema } from '@vtt/shared/api';
+import { pluginIssueSchema, type PluginKind } from '@vtt/shared/api';
 
 const cachedSchema = z.object({
   css: z.string(),
@@ -30,9 +30,14 @@ export class ScopedCssCache {
     this.#dir = dir;
   }
 
-  async get(pluginId: string, file: string, source: string): Promise<ScopedCss> {
+  async get(
+    pluginId: string,
+    file: string,
+    source: string,
+    kind: PluginKind = 'system',
+  ): Promise<ScopedCss> {
     const key = createHash('sha256')
-      .update([String(CSS_SCOPE_VERSION), pluginId, file, source].join('\0'))
+      .update([String(CSS_SCOPE_VERSION), kind, pluginId, file, source].join('\0'))
       .digest('hex');
     const entry = path.join(this.#dir, `${key}.json`);
     try {
@@ -41,7 +46,7 @@ export class ScopedCssCache {
     } catch {
       // Missing or unreadable: process the file again below.
     }
-    const scoped = scopeCss(source, { pluginId, file });
+    const scoped = scopeCss(source, { pluginId, file, kind });
     await mkdir(this.#dir, { recursive: true });
     // Written beside the entry and renamed, so a reader never sees half a file.
     const temporary = `${entry}.${randomUUID()}.tmp`;

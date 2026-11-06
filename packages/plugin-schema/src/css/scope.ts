@@ -2,17 +2,22 @@ import postcss, { CssSyntaxError, type AtRule, type Plugin, type Root } from 'po
 import selectorParser from 'postcss-selector-parser';
 import valueParser from 'postcss-value-parser';
 
+import type { PluginKind } from '@vtt/shared/api';
+
+import { VTT_PARTS } from '../theme.js';
 import type { PluginIssue } from '../validate/issues.js';
 
-// Scoped plugin CSS (specs §8.6, T-0404). Plugin styles may only reach the plugin's own
-// sheets: every selector is scoped to `[data-plugin="<id>"]`, everything sits in
-// `@layer plugin`, and anything that could leak out is stripped with a warning.
+// Scoped plugin CSS (specs §8.6, T-0404). A system's styles may only reach its own sheets:
+// every selector is scoped to `[data-plugin="<id>"]`, everything sits in `@layer plugin`, and
+// anything that could leak out is stripped with a warning. A module's styles reach the table
+// page's named parts instead (T-1602, ADR-076): every selector is scoped to the page while the
+// module is on, must name a part (`[data-vtt-part="chat"]`), and sits in `@layer module`.
 
 /** The loader refuses CSS files larger than this (§8.6). */
 export const MAX_CSS_BYTES = 256 * 1024;
 
 /** Bump when the output changes, so caches keyed by content drop old results. */
-export const CSS_SCOPE_VERSION = 1;
+export const CSS_SCOPE_VERSION = 2;
 
 const ALLOWED_AT_RULES = new Set(['media', 'supports', 'container', 'layer', 'font-face']);
 const KEYFRAMES = /^(?:-webkit-)?keyframes$/i;
@@ -22,6 +27,8 @@ export interface ScopeOptions {
   pluginId: string;
   /** The file inside the plugin folder (`styles/sheet.css`); relative URLs resolve from it. */
   file: string;
+  /** A system's styles reach its sheets; a module's, the table page's named parts. */
+  kind?: PluginKind;
 }
 
 export interface ScopedCss {
@@ -66,7 +73,8 @@ export function scopePluginCss(
   options: ScopeOptions,
   report: (issue: PluginIssue) => void,
 ): Plugin {
-  const { pluginId, file } = options;
+  const { pluginId, file, kind = 'system' } = options;
+  const module = kind === 'module';
   const scope = `[data-plugin="${pluginId}"]`;
   const strip = (rule: string, line: number | undefined) => {
     report({
@@ -76,6 +84,24 @@ export function scopePluginCss(
       path: [],
       params: { rule, line: line ?? 0 },
     });
+  };
+  const partIssue = (
+    code: 'css_part_required' | 'css_unknown_part',
+    params: PluginIssue['params'],
+  ) => {
+    report({ severity: 'warning', code, file, path: [], params });
+  };
+  /** A module's root: the page, while the module is on (`:root[data-vtt-modules~="<id>"]`). */
+  const moduleRoot = () => {
+    const node = selectorParser.attribute({
+      attribute: 'data-vtt-modules',
+      operator: '~=',
+      value: pluginId,
+      quoteMark: '"',
+      raws: {},
+    });
+    node.setValue(pluginId, { quoteMark: '"' });
+    return [selectorParser.pseudo({ value: ':root' }), node] as const;
   };
   const attribute = () => {
     const node = selectorParser.attribute({
@@ -123,6 +149,52 @@ export function scopePluginCss(
             if (tags.document) {
               dropped.push(selector.toString().trim());
               selector.remove();
+              return;
+            }
+            if (module) {
+              const parts = { named: false };
+              selector.walkAttributes((node) => {
+                if (node.attribute !== 'data-vtt-part') return;
+                parts.named = true;
+                const value = node.value ?? '';
+                if (node.operator === '=' && !(VTT_PARTS as readonly string[]).includes(value))
+                  partIssue('css_unknown_part', {
+                    part: value,
+                    line: rule.source?.start?.line ?? 0,
+                  });
+              });
+              const root = { found: false };
+              selector.walkPseudos((pseudo) => {
+                if (pseudo.value.toLowerCase() === ':root') root.found = true;
+              });
+              // `:root` alone may set tokens for the page; anything else names a part.
+              const onlyRoot =
+                root.found && selector.nodes.length === 1 && selector.first.type === 'pseudo';
+              if (!parts.named && !onlyRoot) {
+                partIssue('css_part_required', {
+                  rule: selector.toString().trim(),
+                  line: rule.source?.start?.line ?? 0,
+                });
+                selector.remove();
+                return;
+              }
+              if (onlyRoot) {
+                const [pseudo, attribute] = moduleRoot();
+                pseudo.spaces.before = selector.first.spaces.before;
+                selector.first.replaceWith(pseudo, attribute);
+                found.root = true;
+                return;
+              }
+              selector.walkPseudos((pseudo) => {
+                if (pseudo.value.toLowerCase() === ':root') pseudo.remove();
+              });
+              const before = selector.first.spaces.before;
+              selector.first.spaces.before = '';
+              selector.prepend(selectorParser.combinator({ value: ' ' }));
+              const [pseudo, attribute] = moduleRoot();
+              selector.prepend(attribute);
+              selector.prepend(pseudo);
+              pseudo.spaces.before = before;
               return;
             }
             const root = { atTop: false };
@@ -196,11 +268,12 @@ export function scopePluginCss(
         if (!font.hasSource) atRule.remove();
       });
 
-      const layer = postcss.atRule({ name: 'layer', params: 'plugin' });
+      const layer = postcss.atRule({ name: 'layer', params: module ? 'module' : 'plugin' });
       layer.append(root.nodes);
       layer.raws.after = '\n';
       root.removeAll();
       root.append(layer);
+      if (module) return;
       // Outside the layer, so plugin rules cannot undo it (§8.6).
       root.append(
         postcss.rule({

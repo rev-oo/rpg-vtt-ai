@@ -1,0 +1,32 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/theme.schema.json",
+  "light": {
+    "canvas": "#efe4c8",
+    "surface": "#f8f1df",
+    "fg": "#2b1d0e",
+    "muted": "#62492b",
+    "line": "#c4ab7f",
+    "primary": "#7a3b12",
+    "primaryHover": "#5e2c0c",
+    "onPrimary": "#fff8ea",
+    "danger": "#9b1c1c",
+    "dangerSoft": "#f6dcd2",
+    "infoSoft": "#eadcb8"
+  },
+  "dark": {
+    "canvas": "#1c1711",
+    "surface": "#272017",
+    "fg": "#efe4c8",
+    "muted": "#bba985",
+    "line": "#4d3f2b",
+    "primary": "#d9a066",
+    "primaryHover": "#e8b985",
+    "onPrimary": "#1c1711",
+    "danger": "#f2877a",
+    "dangerSoft": "#3d1d16",
+    "infoSoft": "#30271a"
+  },
+  "font": "Georgia, \"Palatino Linotype\", \"Book Antiqua\", Palatino, serif",
+  "radius": "0.125rem",
+  "background": "images/parchment.png"
+}

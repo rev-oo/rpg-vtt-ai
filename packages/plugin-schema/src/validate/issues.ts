@@ -17,6 +17,8 @@ export const PLUGIN_ISSUE_CODES = [
   'css_too_large',
   'css_invalid',
   'css_stripped',
+  'css_part_required',
+  'css_unknown_part',
   // Shapes (from the Zod schemas)
   'missing_key',
   'unknown_key',
@@ -56,6 +58,8 @@ export const PLUGIN_ISSUE_CODES = [
   'code_required',
   // Modules (ADR-075)
   'module_file',
+  'system_file',
+  'theme_file',
   // Translations
   'missing_lang_file',
   'missing_lang_key',
@@ -169,6 +173,13 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
       : 'The plugin has a code/ folder, so hasCode must be true',
   code_required: (x) => `${p(x, 'feature')} needs plugin code; set hasCode and add code/`,
   module_file: (x) => `${p(x, 'file')} is for systems; a module cannot have it`,
+  system_file: (x) => `${p(x, 'file')} is for modules; a system cannot have it`,
+  theme_file: (x) =>
+    `${p(x, 'file')} must be ${p(x, 'expected') === 'font' ? 'a font' : 'an image'} file`,
+  css_part_required: (x) =>
+    `${p(x, 'rule')} (line ${p(x, 'line')}) was removed: module styles must name a part of the table page`,
+  css_unknown_part: (x) =>
+    `"${p(x, 'part')}" (line ${p(x, 'line')}) is not a named part of the table page`,
   missing_lang_file: (x) => `There is no translation file lang/${p(x, 'locale')}.json`,
   missing_lang_key: (x) => `"${p(x, 'key')}" has no ${p(x, 'locale')} translation`,
   unlisted_locale: (x) => `${p(x, 'locale')} is not listed in the manifest's locales`,

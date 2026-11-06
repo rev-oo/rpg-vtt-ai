@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { ADMIN, createPlayer, post, signIn, type SignedIn } from './support/api.js';
+import { ADMIN, createPlayer, patch, post, signIn, type SignedIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
 import { showPanel } from './support/workspace.js';
 
@@ -472,5 +472,40 @@ test('tiny-pool works without code', async ({ browser }) => {
     '1d6 + @wits',
   );
   expect(order.map((row) => row.replace(/^\d+/, '').slice(0, 5))).toEqual(['Brask', 'Shade']);
+  await gm.context.close();
+});
+
+// T-1602 (ADR-076): the parchment-skin module's theme and styles show on a table that uses
+// it, and not on another table.
+test('the parchment skin themes the table that uses it', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  await setUp(gm, 'parchment-skin');
+  const create = async (name: string) =>
+    (await post<{ table: { id: string } }>(gm, '/tables', { name, systemId: 'e2e-system' })).table
+      .id;
+  const skinned = await create('Parchment Hall');
+  const plain = await create('Plain Hall');
+  await patch(gm, `/tables/${skinned}`, { modules: ['parchment-skin'] });
+
+  const page = await gm.context.newPage();
+  const header = page.locator('[data-vtt-part="table-header"]');
+  // The page's background is the canvas token: parchment here, the app's own elsewhere.
+  const body = page.locator('body');
+  const PARCHMENT = 'rgb(239, 228, 200)';
+
+  await page.goto(`/tables/${skinned}`);
+  await expect(page.locator('html')).toHaveAttribute('data-vtt-modules', 'parchment-skin');
+  await expect(header).toHaveCSS('border-bottom-style', 'double');
+  await expect(body).toHaveCSS('background-color', PARCHMENT);
+  await expect(page.locator('[data-vtt-part="table"]')).toHaveCSS(
+    'background-image',
+    /\/plugins\/parchment-skin\/images\/parchment\.png/,
+  );
+
+  await page.goto(`/tables/${plain}`);
+  await expect(header).toBeVisible();
+  await expect(page.locator('html')).not.toHaveAttribute('data-vtt-modules');
+  await expect(header).not.toHaveCSS('border-bottom-style', 'double');
+  await expect(body).not.toHaveCSS('background-color', PARCHMENT);
   await gm.context.close();
 });

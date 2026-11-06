@@ -1,0 +1,190 @@
+{
+  "title": "Module theme (theme.json)",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "light": {
+      "description": "Colours in the light scheme.",
+      "type": "object",
+      "properties": {
+        "canvas": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "surface": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "fg": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "muted": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "line": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "primary": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "primaryHover": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "onPrimary": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "danger": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "dangerSoft": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "infoSoft": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dark": {
+      "description": "Colours in the dark scheme.",
+      "type": "object",
+      "properties": {
+        "canvas": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "surface": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "fg": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "muted": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "line": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "primary": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "primaryHover": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "onPrimary": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "danger": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "dangerSoft": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        },
+        "infoSoft": {
+          "type": "string",
+          "pattern": "^(?:#[0-9a-fA-F]{3,8}|[a-zA-Z]{3,30}|(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\([0-9a-z.%\\s,/+-]{1,80}\\))$",
+          "title": "Colour"
+        }
+      },
+      "additionalProperties": false
+    },
+    "font": {
+      "description": "The text font, as a CSS font list such as `\"IM Fell English\", Georgia, serif`.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9 ,'\"_-]{1,200}$"
+    },
+    "radius": {
+      "description": "The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it.",
+      "type": "string",
+      "pattern": "^(?:0|\\d{1,3}(?:\\.\\d{1,3})?(?:px|rem|em))$"
+    },
+    "fonts": {
+      "description": "Fonts loaded from the module’s files.",
+      "maxItems": 16,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "family": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9 _-]{1,60}$",
+            "description": "The name `font` and stylesheets use."
+          },
+          "src": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+            "title": "Module file",
+            "description": "A `.woff2`, `.woff`, `.ttf` or `.otf` file of the module."
+          },
+          "weight": {
+            "type": "string",
+            "pattern": "^(?:normal|bold|[1-9]00(?: [1-9]00)?)$"
+          },
+          "style": {
+            "type": "string",
+            "enum": [
+              "normal",
+              "italic"
+            ]
+          }
+        },
+        "required": [
+          "family",
+          "src"
+        ],
+        "additionalProperties": false,
+        "title": "Font face"
+      }
+    },
+    "background": {
+      "description": "An image of the module tiled behind the table page, such as `images/paper.webp`. Parts with a colour of their own, such as panels, cover it unless the module’s styles clear it.",
+      "type": "string",
+      "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+      "title": "Module file"
+    }
+  },
+  "additionalProperties": false,
+  "description": "A module’s theme: the app’s design tokens on the table page while the module is on."
+}

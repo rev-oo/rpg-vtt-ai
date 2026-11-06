@@ -146,7 +146,7 @@ export function PluginSheet({
     return <Alert tone="error">{t('sheet.unknownType', { type: actor.type })}</Alert>;
   }
   return (
-    <div className="flex flex-col gap-3">
+    <div data-vtt-part="sheet" className="flex flex-col gap-3">
       {system.clientError && (
         <Alert tone="error">{t('plugin.clientFailed', { detail: system.clientError })}</Alert>
       )}

@@ -143,7 +143,11 @@ export function tableRoutes(context: AppContext): void {
           name: plugin.name,
           version: plugin.version,
           definition: { ...definition, packs: undefined, migrations: undefined },
-          styles: definition.styles.map((file) => base + file),
+          // The theme first, so the module's own stylesheets can build on its tokens.
+          styles: [
+            ...(definition.theme ? [`${base}theme.css`] : []),
+            ...definition.styles.map((file) => base + file),
+          ],
           client: plugin.codeEntries.includes('code/client.js') ? `${base}code/client.js` : null,
           settings: scopedSettingValues(definition.settings, {
             instance: plugin.settings,

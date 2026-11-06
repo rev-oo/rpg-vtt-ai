@@ -1,0 +1,41 @@
+/*
+ * The parchment skin's touches on the table page's named parts (ADR-076). The theme sets the
+ * colours and the font; these rules only add borders, small caps and the paper texture.
+ */
+
+/* Let the paper show behind the dock's groups, in the light scheme. */
+@media not (prefers-color-scheme: dark) {
+  [data-vtt-part='workspace'] {
+    --dv-group-view-background-color: transparent;
+  }
+}
+
+[data-vtt-part='table-header'] {
+  border-bottom: 3px double var(--color-line);
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+}
+
+[data-vtt-part='tab'] {
+  font-variant: small-caps;
+}
+
+[data-vtt-part='chat-message'] {
+  border-left: 3px solid var(--color-primary);
+  background: var(--color-surface);
+}
+
+[data-vtt-part='chat-composer'] {
+  border-top: 1px dashed var(--color-line);
+  padding-top: 0.5rem;
+}
+
+[data-vtt-part='map-toolbar'] {
+  border: 1px solid var(--color-line);
+}
+
+[data-vtt-part='sheet'] {
+  border: 1px solid var(--color-line);
+  padding: 0.75rem;
+  background: var(--color-surface);
+}

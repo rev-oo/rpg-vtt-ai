@@ -10,6 +10,7 @@ import { packSchema } from './packs.js';
 import { recipeSchema } from './rolls.js';
 import { settingSchema } from './settings.js';
 import { sheetSchema } from './sheet.js';
+import { themeSchema } from './theme.js';
 import { actorTypeSchema, itemTypeSchema } from './types.js';
 import type { PluginDefinition } from './validate/validate.js';
 
@@ -31,4 +32,5 @@ export const pluginDefinitionSchema: z.ZodType<PluginDefinition> = z.object({
   migrations: z.record(z.string(), migrationSchema).optional(),
   lang: z.record(z.string(), langSchema),
   styles: z.array(z.string()),
+  theme: themeSchema.optional(),
 });

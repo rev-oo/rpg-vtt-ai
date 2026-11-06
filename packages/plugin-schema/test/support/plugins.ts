@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const REFERENCE_PLUGINS = ['tiny-d20', 'tiny-pool'] as const;
+export const REFERENCE_PLUGINS = ['tiny-d20', 'tiny-pool', 'parchment-skin'] as const;
 
 const pluginsDir = fileURLToPath(new URL('../../../../plugins/', import.meta.url));
 

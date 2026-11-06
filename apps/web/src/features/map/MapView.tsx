@@ -63,7 +63,7 @@ export function MapView({
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div data-vtt-part="map" className="flex h-full flex-col">
       {manages && (
         <div className="flex flex-wrap items-end gap-2 border-b border-line bg-surface px-3 py-2">
           <Select

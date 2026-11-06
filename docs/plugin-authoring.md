@@ -899,6 +899,7 @@ my-system/
 ├─ packs/<name>.json        compendium packs members browse and copy
 ├─ migrations/<version>.json  steps that bring older data up to a version
 ├─ lang/<locale>.json       translations; English is required once any exist
+├─ theme.json               a module's colours, fonts and corners on the table page
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
 ```
@@ -1331,7 +1332,58 @@ Formulas read only `table` settings: the validator reports `@settings.colour` ab
 
 A plugin with `"kind": "module"` extends any table, whatever its system (FR-PLUGIN-16, ADR-075). Admins enable it on the Plugins page as they enable systems, and each table's GM adds it in the table's Settings panel, under **Modules**. Members load a table's modules with the table.
 
-A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Themes, overlays and panels arrive later in M16.
+A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Overlays and panels arrive later in M16.
+
+#### Themes
+
+A module's `theme.json` changes the app's look on the table page while the module is on (ADR-076). `plugins/parchment-skin` is a complete example.
+
+```json
+{
+  "light": { "canvas": "#efe4c8", "surface": "#f8f1df", "fg": "#2b1d0e", "primary": "#7a3b12" },
+  "dark": { "canvas": "#1c1711", "surface": "#272017", "fg": "#efe4c8", "primary": "#d9a066" },
+  "font": "Georgia, \"Palatino Linotype\", serif",
+  "radius": "0.125rem",
+  "fonts": [{ "family": "Fell", "src": "fonts/fell.woff2" }],
+  "background": "images/parchment.png"
+}
+```
+
+- **`light` and `dark`** set colour tokens for each scheme: `canvas` (the page), `surface` (cards, panels, inputs), `fg` (text), `muted` (secondary text), `line` (borders), `primary`, `primaryHover` and `onPrimary` (buttons and links), `danger`, `dangerSoft` and `infoSoft`. Tokens you leave out, and a scheme you leave out, keep the app's. Check that text keeps enough contrast in both.
+- **`font`** is the text font, as a CSS font list. **`fonts`** loads fonts from the module's files (`.woff2`, `.woff`, `.ttf` or `.otf`) under the family names `font` and your stylesheets use.
+- **`radius`** is the corner of cards, panels and inputs (`0` for square ones); smaller and larger corners scale with it.
+- **`background`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled behind the table page. Panels have colours of their own that cover it; your stylesheets can clear them.
+
+Values are checked strictly: colours are hex codes, colour names or colour functions such as `rgb(120 60 20)`; anything else, such as `url()`, is refused.
+
+#### Named parts
+
+Module stylesheets (`styles/*.css`) style named parts of the table page, which carry `data-vtt-part`. The names stay the same across versions:
+
+| Part            | What it is                               |
+| --------------- | ---------------------------------------- |
+| `table`         | The whole table page                     |
+| `table-header`  | The bar with the table's name and Panels |
+| `workspace`     | The area that holds the panels           |
+| `tab`           | A panel's tab                            |
+| `panel`         | A panel's content, for most panels       |
+| `chat`          | The chat panel                           |
+| `chat-message`  | One chat message                         |
+| `chat-composer` | The form that sends messages and rolls   |
+| `map`           | The map panel                            |
+| `map-toolbar`   | The map's tools                          |
+| `sheet`         | An actor's or item's sheet               |
+
+```css
+[data-vtt-part='chat-message'] {
+  border-left: 3px solid var(--color-primary);
+}
+:root {
+  --color-line: #c4ab7f;
+}
+```
+
+Every selector must name a part, or be `:root` alone, which sets tokens for the page; others are removed with a warning (`css_part_required`), and a part name that does not exist is a warning too. Rules apply only on tables that use the module, in `@layer module`, after a system's sheet styles. The other rules of [Styles](#styles) hold: no `@import`, no `html` or `body`, and URLs only inside the module. The app's own classes inside a part are not part of the API and may change.
 
 ### Translations
 

@@ -14,6 +14,11 @@ import { OpenButton } from '../features/workspace/OpenButton.js';
 import { Workspace } from '../features/workspace/Workspace.js';
 import { t } from '../i18n/index.js';
 import { TableSystemContext, useTableSystem } from '../plugin-host/system-context.js';
+import {
+  TableModulesContext,
+  useModuleLook,
+  useTableModules,
+} from '../plugin-host/table-modules.js';
 import { useTableEvents } from '../realtime/use-table-events.js';
 import { useSession } from '../shell/use-session.js';
 
@@ -82,6 +87,8 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
   const { table } = data;
   const revalidator = useRevalidator();
   const system = useTableSystem(table);
+  const modules = useTableModules(table);
+  useModuleLook(modules.state);
   // Other members' changes refresh the lists (FR-ENT-07); so does a reconnection, which may
   // have missed some.
   useTableEvents(table.id, {
@@ -119,7 +126,9 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
 
   return (
     <TableSystemContext value={system}>
-      <Workspace data={data} userId={userId} notices={notices} />
+      <TableModulesContext value={modules}>
+        <Workspace data={data} userId={userId} notices={notices} />
+      </TableModulesContext>
     </TableSystemContext>
   );
 }
