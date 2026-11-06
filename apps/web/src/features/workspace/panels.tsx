@@ -34,7 +34,11 @@ import { usePanelList } from './use-panel-list.js';
  * labels stays inside too. dockview names its tab panel after the tab.
  */
 function Body({ children }: { children: ReactNode }): ReactElement {
-  return <div className="relative h-full overflow-y-auto p-3">{children}</div>;
+  return (
+    <div data-vtt-part="panel" className="relative h-full overflow-y-auto p-3">
+      {children}
+    </div>
+  );
 }
 
 const param = (params: unknown, key: string): unknown =>

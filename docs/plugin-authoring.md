@@ -27,7 +27,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Combat](#combat)
   - [Compendium packs](#compendium-packs)
   - [Data migrations](#data-migrations)
-  - [Table settings](#table-settings)
+  - [Plugin settings](#plugin-settings)
   - [Translations](#translations)
   - [Styles](#styles)
   - [Plugin code](#plugin-code)
@@ -899,6 +899,7 @@ my-system/
 ├─ packs/<name>.json        compendium packs members browse and copy
 ├─ migrations/<version>.json  steps that bring older data up to a version
 ├─ lang/<locale>.json       translations; English is required once any exist
+├─ theme.json               a module's colours, fonts and corners on the table page
 ├─ styles/<name>.css        scoped CSS
 └─ code/client.tsx          custom sheet nodes and cards (optional)
 ```
@@ -1091,7 +1092,7 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | ------------------------ | --------------------------------------------------------------------- | ------------------------------------ |
 | `@str`, `@hp.value`      | The entity's fields                                                   | Everywhere tied to a type            |
 | `@derived.strMod`        | A derived value                                                       | Everywhere tied to a type            |
-| `@settings.startingHp`   | A [table setting](#table-settings)                                    | Everywhere                           |
+| `@settings.startingHp`   | A [table setting](#plugin-settings)                                   | Everywhere                           |
 | `@items.acBonus`         | A total of the actor's [items](#item-contributions)                   | Everywhere tied to an actor type     |
 | `@skills['id'].rank`     | One row of a collection, by id                                        | Everywhere tied to a type            |
 | `@skills[@args.id].rank` | The row a roll button named                                           | Recipes                              |
@@ -1292,7 +1293,7 @@ When a GM upgrades a table to a new version, each actor and item, trash included
 
 Migrations only run forwards: data from a newer version than the table's, after a downgrade, is left as it is. A migration file may not be named after a version later than the manifest's. Browsers never receive migrations.
 
-### Table settings
+### Plugin settings
 
 `settings.json` declares options. By default each is a house rule that the table's GM sets on the table settings page, and formulas read it as `@settings.<name>`:
 
@@ -1331,7 +1332,64 @@ Formulas read only `table` settings: the validator reports `@settings.colour` ab
 
 A plugin with `"kind": "module"` extends any table, whatever its system (FR-PLUGIN-16, ADR-075). Admins enable it on the Plugins page as they enable systems, and each table's GM adds it in the table's Settings panel, under **Modules**. Members load a table's modules with the table.
 
-A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Themes, overlays and panels arrive later in M16.
+A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Overlays and panels arrive later in M16.
+
+#### Themes
+
+A module's `theme.json` changes the app's look on the table page while the module is on (ADR-076). `plugins/parchment-skin` is a complete example.
+
+```json
+{
+  "light": { "canvas": "#efe4c8", "fg": "#2b1d0e", "primary": "#7a3b12" },
+  "dark": { "canvas": "#1c1711", "fg": "#efe4c8", "primary": "#d9a066" },
+  "font": "Georgia, \"Palatino Linotype\", serif",
+  "radius": "0.125rem",
+  "border": "2px",
+  "density": 0.9,
+  "fonts": [{ "family": "Fell", "src": "fonts/fell.woff2" }],
+  "panelBackground": { "light": "images/parchment.png" },
+  "background": "images/wood.webp"
+}
+```
+
+- **`light` and `dark`** set colour tokens for each scheme: `canvas` (the page), `surface` (cards, panels, inputs), `fg` (text), `muted` (secondary text), `line` (borders), `primary`, `primaryHover` and `onPrimary` (buttons and links), `danger`, `dangerSoft` and `infoSoft`, and `panel`, the colour behind docked panels. Tokens you leave out, and a scheme you leave out, keep the app's. Check that text keeps enough contrast in both.
+- **`font`** is the text font, as a CSS font list. **`fonts`** loads fonts from the module's files (`.woff2`, `.woff`, `.ttf` or `.otf`) under the family names `font` and your stylesheets use.
+- **`radius`** is the corner of cards, panels and inputs (`0` for square ones); smaller and larger corners scale with it.
+- **`border`** is the width of thin borders, around cards, inputs and panels, such as `2px` (`0` for none). Their colour is `line`.
+- **`density`** scales paddings and gaps everywhere, from `0.75` (compact) to `1.5` (roomy); `1` is the app's.
+- **`panelBackground`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled inside panels over their `panel` colour: one for both schemes, or one per scheme (`{ "light": …, "dark": … }`). Keep `panel` close to the image's colour, since it shows while the image loads. This suits textures such as paper or leather.
+- **`background`** is an image tiled behind the table page, one or one per scheme as well. Docked panels cover it with their `panel` colour; make that `transparent`, or a colour with some transparency such as `rgb(248 241 223 / 0.5)`, to show one picture across the whole page. Floating panels stay opaque.
+
+Values are checked strictly: colours are hex codes, colour names or colour functions such as `rgb(120 60 20)`; anything else, such as `url()`, is refused.
+
+#### Named parts
+
+Module stylesheets (`styles/*.css`) style named parts of the table page, which carry `data-vtt-part`. The names stay the same across versions:
+
+| Part            | What it is                               |
+| --------------- | ---------------------------------------- |
+| `table`         | The whole table page                     |
+| `table-header`  | The bar with the table's name and Panels |
+| `workspace`     | The area that holds the panels           |
+| `tab`           | A panel's tab                            |
+| `panel`         | A panel's content, for most panels       |
+| `chat`          | The chat panel                           |
+| `chat-message`  | One chat message                         |
+| `chat-composer` | The form that sends messages and rolls   |
+| `map`           | The map panel                            |
+| `map-toolbar`   | The map's tools                          |
+| `sheet`         | An actor's or item's sheet               |
+
+```css
+[data-vtt-part='chat-message'] {
+  border-left: 3px solid var(--color-primary);
+}
+:root {
+  --color-line: #c4ab7f;
+}
+```
+
+Every selector must name a part, or be `:root` alone, which sets tokens for the page; others are removed with a warning (`css_part_required`), and a part name that does not exist is a warning too. Rules apply only on tables that use the module, in `@layer module`, after a system's sheet styles. The other rules of [Styles](#styles) hold: no `@import`, no `html` or `body`, and URLs only inside the module. The app's own classes inside a part are not part of the API and may change.
 
 ### Translations
 

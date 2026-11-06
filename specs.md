@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 17%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 33%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1602` (themes and named parts)
+- **Next task:** `T-1603` (module frames: overlays, panels, events and actions)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -56,6 +56,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-05 | M15 done: plugin data migrations, plugin client code in sandboxed frames, and plugin shared and server code in QuickJS. SES was tried as an alternative to the frames and dropped (ADR-074). M16 is active.                                                                                                                                                                                                                                                                   |
 | 2026-11-06 | M16 replanned at the user's request: module plugins, a generic way to extend any table (themes and named-part styles; sandboxed overlays and panels that receive table events and act as the viewer), with a parchment skin and 3D dice as examples, chosen per table by the GM; plugin settings scoped to the instance, the table or the user; a D&D 5e SRD 5.2 plugin as a study of the plugin format; and an interface review. The system builder moves to M18, after 1.0. |
 | 2026-11-06 | T-1601 done: plugins of `kind: module` extend any table; admins enable them and GMs add them to a table in its Settings panel; modules may not ship types, sheets, rolls, packs or server code. Plugin settings get a scope: table (GM), instance (admins) or user (each member's own, in the Settings panel, which now opens for every member). Formulas read table settings only (ADR-075).                                                                                 |
+| 2026-11-06 | T-1602 done: a module's `theme.json` sets the app's colours (light and dark, panels included), font, corners, border width, density, font files and images in panels and behind the page, per scheme, on the table page; module stylesheets style the page's named parts (`data-vtt-part`), only on tables that use the module; `plugins/parchment-skin` is the example (ADR-076).                                                                                            |
 
 ---
 
@@ -804,7 +805,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** Plugins of `kind: module` (FR-PLUGIN-16) extend any table, whatever its system, and change no system data. A module may ship a theme, stylesheets for named parts, client code for frames, settings and lang files; it may not ship types, sheets, rolls or packs. The validator checks modules like systems. Admins install and enable modules as they do systems, acknowledging code. GMs choose which enabled modules a table uses in its settings, and its members load them with the table. `settings.json` gains a `scope` per setting, for systems and modules alike: `instance` (set by admins on the Plugins page), `table` (set by the GM in table settings; the default, so today's system settings keep working) or `user` (set by each member for themselves on the table page). The app draws each form from the declarations and the server checks the values against them. Formulas keep reading table settings as `@settings`. Record the design in an ADR.
   - **Done when:** validator tests cover module files and refuse system-only files in a module; server tests cover enabling a module and choosing it for a table; a test module loads for that table's members only; tests cover each settings scope: who may set it, where it is stored, and that values outside the declaration are refused.
 
-- [ ] **T-1602 · Themes and named parts**
+- [x] **T-1602 · Themes and named parts**
   - **Deps:** T-1601
   - **Do:** A module's `theme.json` sets the app's design tokens on the table page (colours, fonts, radius; light and dark), with images from its own files. Its stylesheets style the table page's named parts (`data-vtt-part`: chat, dock tabs, panels, map toolbar, sheet frame…), scoped to those parts; the app documents the names and keeps them stable across versions. Ship `plugins/parchment-skin` as an example.
   - **Done when:** web tests cover tokens and parts applied and removed with the module; e2e shows the example skin on a table and not on another; the authoring guide documents tokens and parts.
@@ -1027,6 +1028,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-073 | [Plugin shared and server code run in QuickJS inside their worker](docs/adr/ADR-073-server-code-isolation.md)                                   | Accepted; amended by ADR-074               |
 | ADR-074 | [Plugin client code runs in sandboxed frames; shared code in QuickJS in the browser](docs/adr/ADR-074-client-code-sandbox.md)                   | Accepted                                   |
 | ADR-075 | [Module plugins, and plugin settings by scope](docs/adr/ADR-075-module-plugins.md)                                                              | Accepted                                   |
+| ADR-076 | [Module themes and named parts of the table page](docs/adr/ADR-076-module-themes-and-parts.md)                                                  | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

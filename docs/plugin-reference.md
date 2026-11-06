@@ -11,11 +11,12 @@ Every file a plugin may contain, with each key it accepts. This page is generate
 - [Roll recipes (rolls.json)](#rolls)
 - [Custom dice (dice.json)](#dice)
 - [Chat card (cards/<name>.json)](#card)
-- [Table settings (settings.json)](#settings)
+- [Plugin settings (settings.json)](#settings)
 - [Combat (combat.json)](#combat)
 - [Compendium pack (packs/<name>.json)](#pack)
 - [Data migration (migrations/<version>.json)](#migration)
 - [Translations (lang/<locale>.json)](#lang)
+- [Module theme (theme.json)](#theme)
 
 ## Value types
 
@@ -32,6 +33,11 @@ The tables below name these kinds of text:
 | <a id="locale"></a>Locale | A language code, such as `en` or `pt-BR`. | `^[a-z]{2,3}(?:-[A-Z]{2})?$` |
 | <a id="path"></a>Path | Identifiers joined by dots, such as `hp.value`. | `^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$` |
 | <a id="css-classes"></a>CSS classes | Class names separated by spaces. | at most 200 characters |
+| <a id="colour"></a>Colour | A CSS colour: a hex code such as `#7a3b12`, a name such as `transparent`, or a colour function of numbers such as `rgb(120 60 20 / 0.5)`. | `^(?:#[0-9a-fA-F]{3,8}\|[a-zA-Z]{3,30}\|(?:rgba?\|hsla?\|hwb\|lab\|lch\|oklab\|oklch)\([0-9a-z.%\s,/+-]{1,80}\))$` |
+| <a id="length"></a>Length | A CSS length in `px`, `rem` or `em`, such as `2px` or `0.25rem`, or `0`. | `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$` |
+| <a id="font-list"></a>Font list | CSS font names separated by commas, quoted when they have spaces. | `^[A-Za-z0-9 ,'"_-]{1,200}$` |
+| <a id="font-name"></a>Font name | A font family name: letters, digits, spaces, `_` and `-`. | `^[A-Za-z0-9 _-]{1,60}$` |
+| <a id="module-file"></a>Module file | A file of the module, relative to its folder, such as `images/paper.webp`; it may not leave the folder. | `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$` |
 
 <a id="plugin"></a>
 
@@ -505,7 +511,7 @@ How a recipe roll shows in chat.
 
 <a id="settings"></a>
 
-## Table settings (settings.json)
+## Plugin settings (settings.json)
 
 Options under identifiers such as `startingHp`, set per table (the default), per instance or per user. Formulas read table options as `@settings.<name>`.
 
@@ -699,3 +705,61 @@ Removes a field and its value.
 Texts by lang key, such as `"field.str": "Strength"`. The file name is the locale.
 
 Every key is text (1–200 characters) and maps to text.
+
+<a id="theme"></a>
+
+## Module theme (theme.json)
+
+A module’s theme: the app’s design tokens on the table page while the module is on.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
+| `light` | [Colours](#theme-colours) |  | Colours in the light scheme. |
+| `dark` | [Colours](#theme-colours) |  | Colours in the dark scheme. |
+| `font` | [font list](#font-list) |  | The text font, as a CSS font list such as `"IM Fell English", Georgia, serif`. |
+| `radius` | [length](#length) |  | The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it. |
+| `border` | [length](#length) |  | The width of the borders of cards, panels and inputs, such as `2px`; `0` for none. |
+| `density` | number, 0.75–1.5 |  | How far apart things are: paddings and gaps, as a multiple of the app’s (0.75–1.5). Below 1 is more compact, above 1 roomier. |
+| `fonts` | list of [Font face](#theme-font-face) (at most 16 items) |  | Fonts loaded from the module’s files. |
+| `background` | [module file](#module-file) or [Image per scheme](#theme-image-per-scheme) |  | An image of the module tiled behind the table page, such as `images/wood.webp`, or one per scheme (`{ "light": …, "dark": … }`). Docked panels cover it unless the theme’s `panel` colour lets it through, such as `transparent`. |
+| `panelBackground` | [module file](#module-file) or [Image per scheme](#theme-image-per-scheme) |  | An image of the module tiled inside panels, over the `panel` colour, such as `images/paper.webp`, or one per scheme. |
+
+<a id="theme-colours"></a>
+
+### Colours
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `canvas` | [colour](#colour) |  | The page. |
+| `surface` | [colour](#colour) |  | Cards, inputs, menus and tab bars. |
+| `fg` | [colour](#colour) |  | Text. |
+| `muted` | [colour](#colour) |  | Secondary text, such as hints and times. |
+| `line` | [colour](#colour) |  | Borders and dividers. |
+| `primary` | [colour](#colour) |  | Buttons, links, focus rings and accents. |
+| `primaryHover` | [colour](#colour) |  | Buttons under the pointer. |
+| `onPrimary` | [colour](#colour) |  | Text on `primary`. |
+| `danger` | [colour](#colour) |  | Errors and destructive buttons. |
+| `dangerSoft` | [colour](#colour) |  | The background of error notices. |
+| `infoSoft` | [colour](#colour) |  | The background of notices and selected items. |
+| `panel` | [colour](#colour) |  | Docked panels; `canvas` by default. `transparent` shows the page’s `background`. |
+
+<a id="theme-font-face"></a>
+
+### Font face
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `family` | [font name](#font-name) | yes | The name `font` and stylesheets use. |
+| `src` | [module file](#module-file) | yes | A `.woff2`, `.woff`, `.ttf` or `.otf` file of the module. |
+| `weight` | text (matching `^(?:normal\|bold\|[1-9]00(?: [1-9]00)?)$`) |  | The weight this file draws, such as `400` or `bold`, or a range such as `100 900` for a variable font. Defaults to `normal`. |
+| `style` | one of `"normal"`, `"italic"` |  | Whether this file draws the italic. Defaults to `normal`. |
+
+<a id="theme-image-per-scheme"></a>
+
+### Image per scheme
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `light` | [module file](#module-file) |  | The image in the light scheme. |
+| `dark` | [module file](#module-file) |  | The image in the dark scheme. |

@@ -366,6 +366,13 @@ export const ptBR: Messages = {
   'pluginIssue.code_required':
     '{feature} precisa de código no plugin; defina hasCode e adicione code/.',
   'pluginIssue.module_file': '{file} é para sistemas; um módulo não pode tê-lo.',
+  'pluginIssue.system_file': '{file} é para módulos; um sistema não pode tê-lo.',
+  'pluginIssue.theme_file':
+    '{file} é do tipo errado: fontes precisam ser arquivos .woff2, .woff, .ttf ou .otf, e o fundo, uma imagem.',
+  'pluginIssue.css_part_required':
+    '{rule} (linha {line}) foi removida: estilos de módulo precisam nomear uma parte da página da mesa.',
+  'pluginIssue.css_unknown_part':
+    '“{part}” (linha {line}) não é uma parte nomeada da página da mesa.',
   'pluginIssue.missing_lang_file': 'Não há o arquivo de tradução lang/{locale}.json.',
   'pluginIssue.missing_lang_key': '“{key}” não tem tradução para {locale}.',
   'pluginIssue.unlisted_locale': '{locale} não está na lista de locales do manifesto.',

@@ -358,6 +358,12 @@ export const en = {
   'pluginIssue.has_code_mismatch.false': 'The plugin has a code/ folder, so hasCode must be true.',
   'pluginIssue.code_required': '{feature} needs plugin code; set hasCode and add code/.',
   'pluginIssue.module_file': '{file} is for systems; a module cannot have it.',
+  'pluginIssue.system_file': '{file} is for modules; a system cannot have it.',
+  'pluginIssue.theme_file':
+    '{file} is the wrong kind of file: fonts must be .woff2, .woff, .ttf or .otf files and the background an image.',
+  'pluginIssue.css_part_required':
+    '{rule} (line {line}) was removed: module styles must name a part of the table page.',
+  'pluginIssue.css_unknown_part': '“{part}” (line {line}) is not a named part of the table page.',
   'pluginIssue.missing_lang_file': 'There is no translation file lang/{locale}.json.',
   'pluginIssue.missing_lang_key': '“{key}” has no {locale} translation.',
   'pluginIssue.unlisted_locale': '{locale} is not listed in the manifest’s locales.',

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/plugin.schema.json",
+  "id": "parchment-skin",
+  "name": "Parchment skin",
+  "version": "1.0.0",
+  "kind": "module",
+  "coreApi": "^0.1.0",
+  "hasCode": false,
+  "description": "An example module: a parchment look for the table page, in light and dark.",
+  "author": "rpg-vtt-ai",
+  "license": "MIT"
+}

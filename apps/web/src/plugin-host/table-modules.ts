@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { createContext, use, useCallback, useEffect, useState } from 'react';
 
 import type { Value } from '@vtt/formula';
 import { pluginDefinitionSchema, type PluginDefinition } from '@vtt/plugin-schema';
@@ -10,7 +10,8 @@ import { LOCALE } from '../i18n/index.js';
 
 import { systemTranslator } from './load.js';
 
-// A table's module plugins (T-1601, ADR-075), as its members load them with the table.
+// A table's module plugins (T-1601, ADR-075), as its members load them with the table, and
+// their look on the table page: themes and named-part styles (T-1602, ADR-076).
 
 export interface LoadedModule {
   id: string;
@@ -75,4 +76,59 @@ export function useTableModules(table: TableView): {
     setRound((current) => current + 1);
   }, []);
   return { state, reload };
+}
+
+export interface TableModules {
+  state: TableModulesState;
+  /** Loads them again, as after the viewer changed their own settings. */
+  reload: () => void;
+}
+
+/** The table page's modules, loaded once by the page. */
+export const TableModulesContext = createContext<TableModules | null>(null);
+
+export function useLoadedModules(): TableModules {
+  const modules = use(TableModulesContext);
+  if (!modules) throw new Error('useLoadedModules used outside a table page');
+  return modules;
+}
+
+/** The attribute on `<html>` that module styles match: the ids of the modules that are on. */
+export const MODULES_ATTRIBUTE = 'data-vtt-modules';
+
+/**
+ * Puts the modules' look on the page while it shows them (ADR-076): their ids on `<html>`, which
+ * their themes and stylesheets are scoped to, and links to those stylesheets. Both go when the
+ * table page closes or a module leaves the table.
+ */
+export function useModuleLook(state: TableModulesState): void {
+  const key =
+    state.status === 'ready'
+      ? JSON.stringify(
+          state.modules.map((module) => [
+            module.id,
+            module.styles.map((url) => `${url}?v=${encodeURIComponent(module.version)}`),
+          ]),
+        )
+      : '[]';
+  useEffect(() => {
+    const modules = JSON.parse(key) as [string, string[]][];
+    if (modules.length === 0) return;
+    const root = document.documentElement;
+    root.setAttribute(MODULES_ATTRIBUTE, modules.map(([id]) => id).join(' '));
+    const links = modules.flatMap(([id, urls]) =>
+      urls.map((url) => {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = url;
+        link.dataset.moduleStyle = id;
+        document.head.append(link);
+        return link;
+      }),
+    );
+    return () => {
+      root.removeAttribute(MODULES_ATTRIBUTE);
+      for (const link of links) link.remove();
+    };
+  }, [key]);
 }

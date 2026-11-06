@@ -12,7 +12,7 @@ import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { useTableSystem } from '../../plugin-host/system-context.js';
-import { useTableModules } from '../../plugin-host/table-modules.js';
+import { useLoadedModules } from '../../plugin-host/table-modules.js';
 import { useTableData } from '../table/table-data.js';
 
 import { ArchiveTable } from './ArchiveTable.js';
@@ -30,7 +30,7 @@ const { name: nameSchema, description: descriptionSchema } = createTableBody.sha
  */
 export function TableSettings(): ReactElement {
   const { table } = useTableData();
-  const modules = useTableModules(table);
+  const modules = useLoadedModules();
   const mine = <MySettings table={table} modules={modules.state} onSaved={modules.reload} />;
   if (!canManageTable(table.role)) return mine;
   return (

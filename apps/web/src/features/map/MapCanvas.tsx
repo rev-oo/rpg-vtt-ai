@@ -678,6 +678,7 @@ export default function MapCanvas({
         {t('map.keys')}
       </p>
       <div
+        data-vtt-part="map-toolbar"
         role="toolbar"
         aria-label={t('map.tools')}
         aria-orientation="vertical"

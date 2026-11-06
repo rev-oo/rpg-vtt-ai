@@ -46,6 +46,14 @@ async function writeModule(dataDir: string): Promise<void> {
     },
   });
   await json('lang/en.json', { 'setting.bright': 'Bright' });
+  await json('theme.json', { light: { canvas: '#f4ecd8' }, background: 'images/paper.webp' });
+  await mkdir(path.join(dir, 'styles'), { recursive: true });
+  await mkdir(path.join(dir, 'images'), { recursive: true });
+  await writeFile(path.join(dir, 'images', 'paper.webp'), 'RIFF');
+  await writeFile(
+    path.join(dir, 'styles', 'table.css'),
+    '[data-vtt-part="chat"] { color: brown }\n.loose { color: red }',
+  );
   await writeFile(path.join(dir, 'code', 'client.js'), 'export default {};');
 }
 
@@ -131,7 +139,7 @@ describe('module plugins', () => {
     const [module] = loaded.json<{ modules: TableModule[] }>().modules;
     expect(module).toMatchObject({
       id: MODULE,
-      styles: [],
+      styles: [`/plugins/${MODULE}/theme.css`, `/plugins/${MODULE}/styles/table.css`],
       client: `/plugins/${MODULE}/code/client.js`,
       settings: { bright: false, colour: 'red', quality: 'high' },
     });
@@ -148,6 +156,30 @@ describe('module plugins', () => {
     expect((await call(player, 'GET', `/tables/${table.id}/modules`)).json()).toEqual({
       modules: [],
     });
+  });
+});
+
+describe('module themes and styles (T-1602, ADR-076)', () => {
+  it('serves the theme as CSS and scopes stylesheets to named parts', async () => {
+    await enableModule();
+    const get = (url: string) => t.app.inject({ method: 'GET', url, headers: authHeaders(player) });
+    const theme = await get(`/plugins/${MODULE}/theme.css`);
+    expect(theme.statusCode).toBe(200);
+    expect(theme.headers['content-type']).toContain('text/css');
+    const root = `:root[data-vtt-modules~="${MODULE}"]`;
+    expect(theme.body).toContain(`${root} {\n  --color-canvas: #f4ecd8;`);
+    expect(theme.body).toContain(`url("/plugins/${MODULE}/images/paper.webp")`);
+
+    const styles = await get(`/plugins/${MODULE}/styles/table.css`);
+    expect(styles.body).toContain(`${root} [data-vtt-part="chat"] { color: brown }`);
+    expect(styles.body).not.toContain('.loose');
+
+    // Systems have no theme.
+    expect((await get('/plugins/tiny-d20/theme.css')).statusCode).toBe(404);
+    const plugins = (await call(gm, 'GET', '/plugins')).json<{ plugins: AdminPlugin[] }>();
+    expect(plugins.plugins.find((plugin) => plugin.id === MODULE)?.issues).toEqual([
+      expect.objectContaining({ code: 'css_part_required', file: 'styles/table.css' }),
+    ]);
   });
 });
 

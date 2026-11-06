@@ -63,6 +63,52 @@ describe('validatePlugin', () => {
     expect(Object.keys(plugin?.settings ?? {})).toEqual(['glow', 'colour', 'quality']);
   });
 
+  it('checks the page and panel images of each colour scheme (ADR-076)', () => {
+    const fixture = miniModule();
+    fixture['theme.json'] = {
+      background: { light: 'images/paper.png', dark: 'images/leather.png' },
+      panelBackground: 'images/gone.png',
+    };
+    fixture['images/paper.png'] = '';
+    const { issues } = validatePlugin(toFiles(fixture));
+    expect(issues.map(summary)).toEqual([
+      'error missing_file theme.json $.background.dark',
+      'error missing_file theme.json $.panelBackground',
+    ]);
+  });
+
+  it('checks a module theme and the files it loads (ADR-076)', () => {
+    const fixture = miniModule();
+    fixture['theme.json'] = {
+      light: { canvas: '#fff' },
+      fonts: [
+        { family: 'Fell', src: 'fonts/fell.woff2' },
+        { family: 'Gone', src: 'fonts/gone.woff2' },
+      ],
+      background: 'fonts/fell.woff2',
+    };
+    fixture['fonts/fell.woff2'] = '';
+    const { issues, plugin } = validatePlugin(toFiles(fixture));
+    expect(issues.map(summary)).toEqual([
+      'error missing_file theme.json $.fonts[1].src',
+      'error theme_file theme.json $.background',
+    ]);
+    expect(plugin).toBeUndefined();
+
+    fixture['theme.json'] = { light: { canvas: '#fff' } };
+    const valid = validatePlugin(toFiles(fixture));
+    expect(valid.issues).toEqual([]);
+    expect(valid.plugin?.theme).toEqual({ light: { canvas: '#fff' } });
+  });
+
+  it('refuses a theme in a system', () => {
+    const fixture = mini();
+    fixture['theme.json'] = {};
+    expect(validatePlugin(toFiles(fixture)).issues.map(summary)).toEqual([
+      'error system_file theme.json $',
+    ]);
+  });
+
   it('refuses the files only systems may have in a module', () => {
     const fixture: PluginFixture = { ...mini(), ...miniModule() };
     fixture['code/server.js'] = '';

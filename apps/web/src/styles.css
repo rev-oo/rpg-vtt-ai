@@ -1,9 +1,43 @@
 @import 'tailwindcss';
 @import '@vtt/ui/theme.css';
 
+/*
+ * Plugin layers after Tailwind's, in a fixed order whichever stylesheet loads first: a
+ * system's sheet styles (ADR-021), then modules' named-part styles (ADR-076).
+ */
+@layer theme, base, components, utilities, plugin, module;
+
 /* Tailwind only scans this app by default; the primitives and sheets live in packages. */
 @source '../../../packages/ui/src';
 @source '../../../packages/sheet-renderer/src';
+
+/*
+ * Thin borders read their width from `--vtt-border-width`, which module themes set (ADR-076).
+ * Tailwind writes them as 1px; these come later in the same layer, so they win.
+ */
+@layer utilities {
+  .border {
+    border-width: var(--vtt-border-width, 1px);
+  }
+  .border-x {
+    border-inline-width: var(--vtt-border-width, 1px);
+  }
+  .border-y {
+    border-block-width: var(--vtt-border-width, 1px);
+  }
+  .border-t {
+    border-top-width: var(--vtt-border-width, 1px);
+  }
+  .border-b {
+    border-bottom-width: var(--vtt-border-width, 1px);
+  }
+  .border-l {
+    border-left-width: var(--vtt-border-width, 1px);
+  }
+  .border-r {
+    border-right-width: var(--vtt-border-width, 1px);
+  }
+}
 
 /* Rich text (ADR-037): Tailwind's reset removes the look of headings and lists. */
 .vtt-rich-text {
@@ -41,6 +75,22 @@
   & img.ProseMirror-selectednode {
     outline: 2px solid var(--color-primary);
   }
+}
+
+/*
+ * Panels in a module theme's look (ADR-076): docked ones in its `panel` colour
+ * (`--vtt-panel-background`), such as `transparent` to show the page's background; floating
+ * ones stay opaque. Both show its panel image (`--vtt-panel-image`) over their colour.
+ */
+.vtt-dock .dv-grid-view,
+.vtt-dock .dv-grid-view .dv-groupview {
+  background-color: var(--vtt-panel-background, var(--dv-group-view-background-color));
+}
+.vtt-dock .dv-resize-container .dv-groupview {
+  background-color: var(--dv-group-view-background-color);
+}
+.vtt-dock .dv-groupview {
+  background-image: var(--vtt-panel-image, none);
 }
 
 /* dockview in the app's colours, light and dark (ADR-059). */

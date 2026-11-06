@@ -10,6 +10,7 @@ import { packSchema } from './packs.js';
 import { rollsSchema } from './rolls.js';
 import { settingsSchema } from './settings.js';
 import { sheetSchema } from './sheet.js';
+import { themeSchema } from './theme.js';
 import { actorTypeSchema, itemTypeSchema } from './types.js';
 
 /** Every plugin file kind, with the folder pattern it lives under (specs §8.2). */
@@ -21,11 +22,12 @@ export const PLUGIN_FILES = {
   rolls: { schema: rollsSchema, title: 'Roll recipes (rolls.json)' },
   dice: { schema: diceSchema, title: 'Custom dice (dice.json)' },
   card: { schema: cardSchema, title: 'Chat card (cards/<name>.json)' },
-  settings: { schema: settingsSchema, title: 'Table settings (settings.json)' },
+  settings: { schema: settingsSchema, title: 'Plugin settings (settings.json)' },
   combat: { schema: combatSchema, title: 'Combat (combat.json)' },
   pack: { schema: packSchema, title: 'Compendium pack (packs/<name>.json)' },
   migration: { schema: migrationSchema, title: 'Data migration (migrations/<version>.json)' },
   lang: { schema: langSchema, title: 'Translations (lang/<locale>.json)' },
+  theme: { schema: themeSchema, title: 'Module theme (theme.json)' },
 } as const;
 export type PluginFileKind = keyof typeof PLUGIN_FILES;
 
@@ -42,6 +44,7 @@ const FILE_PATTERNS: readonly (readonly [RegExp, PluginFileKind])[] = [
   [/^packs\/[^/]+\.json$/, 'pack'],
   [/^migrations\/[^/]+\.json$/, 'migration'],
   [/^lang\/[^/]+\.json$/, 'lang'],
+  [/^theme\.json$/, 'theme'],
 ];
 
 /** Which kind a file is, from its path inside the plugin folder (`/`-separated). */

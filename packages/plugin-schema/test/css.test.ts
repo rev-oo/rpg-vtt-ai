@@ -158,3 +158,50 @@ describe('scopeCss (specs §8.6)', () => {
     expect(plugin.postcssPlugin).toBe('vtt-scope-plugin-css');
   });
 });
+
+describe('module styles (T-1602, ADR-076)', () => {
+  const moduleOptions = { pluginId: 'skin', file: 'styles/table.css', kind: 'module' as const };
+  const ROOT = ':root[data-vtt-modules~="skin"]';
+
+  it('scopes selectors to the page while the module is on, in @layer module', () => {
+    const { css, issues } = scopeCss(
+      [
+        '[data-vtt-part="chat"] .x, [data-vtt-part~="tab"]:hover { color: red }',
+        ':root { --color-primary: brown }',
+        '@media (min-width: 40rem) { [data-vtt-part="panel"] { padding: 0 } }',
+      ].join('\n'),
+      moduleOptions,
+    );
+    expect(issues).toEqual([]);
+    expect(css).toContain('@layer module {');
+    expect(css).toContain(
+      `${ROOT} [data-vtt-part="chat"] .x, ${ROOT} [data-vtt-part~="tab"]:hover { color: red }`,
+    );
+    expect(css).toContain(`${ROOT} { --color-primary: brown }`);
+    expect(css).toContain(`${ROOT} [data-vtt-part="panel"] { padding: 0 }`);
+    expect(css).not.toContain('contain: layout paint');
+  });
+
+  it('removes selectors that name no part and warns about unknown parts', () => {
+    const { css, issues } = scopeCss(
+      '.chat, [data-vtt-part="chat"] { color: red }\n[data-vtt-part="chatt"] { color: blue }',
+      moduleOptions,
+    );
+    expect(css).toContain(`${ROOT} [data-vtt-part="chat"] { color: red }`);
+    expect(css).not.toContain('.chat,');
+    expect(issues.map((issue) => [issue.code, issue.params])).toEqual([
+      ['css_part_required', { rule: '.chat', line: 1 }],
+      ['css_unknown_part', { part: 'chatt', line: 2 }],
+    ]);
+  });
+
+  it('keeps the other rules: no document selectors, no URLs outside the module', () => {
+    const { css, issues } = scopeCss(
+      'body [data-vtt-part="table"] { color: red }\n[data-vtt-part="table"] { background: url(../images/a.webp), url(https://x.test/a.png) }',
+      moduleOptions,
+    );
+    expect(css).not.toContain('body');
+    expect(css).not.toContain('x.test');
+    expect(issues.map((issue) => issue.code)).toEqual(['css_stripped', 'css_stripped']);
+  });
+});

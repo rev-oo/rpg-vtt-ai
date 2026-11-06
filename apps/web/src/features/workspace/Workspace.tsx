@@ -143,8 +143,11 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         },
       }}
     >
-      <div className="flex h-dvh flex-col">
-        <header className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">
+      <div data-vtt-part="table" className="flex h-dvh flex-col">
+        <header
+          data-vtt-part="table-header"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2"
+        >
           <Link to="/" className="inline-flex items-center gap-1 text-sm">
             <IconSlot>
               <ICON.back />
@@ -182,7 +185,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         {notices}
         {/* Its own stacking context: dockview's sashes and groups carry z-indexes of 99 and up,
             which would otherwise cover the header's Panels menu. */}
-        <div className="vtt-dock isolate min-h-0 flex-1">
+        <div data-vtt-part="workspace" className="vtt-dock isolate min-h-0 flex-1">
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}
@@ -228,7 +231,7 @@ function IconTab({ api }: IDockviewPanelHeaderProps): ReactElement {
     () => api.title ?? '',
   );
   return (
-    <div className="dv-default-tab">
+    <div data-vtt-part="tab" className="dv-default-tab">
       <span className="dv-default-tab-content flex items-center gap-1.5">
         <PanelIcon panelId={api.id} />
         {title}
