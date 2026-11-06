@@ -30,8 +30,9 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 | M13       | Asset uploads and manager → **v0.4.0**                                                             |
 | M14       | Maps: scenes, tokens, fog of war → **1.0.0**                                                       |
 | M15       | Plugin data migrations, client sandbox, server isolation → **1.0.0**                               |
-| M16       | System builder → **1.0.0**                                                                         |
+| M16       | Module plugins (themes, overlays, panels), D&D 5e SRD study, interface review → **1.0.0**          |
 | M17       | API freeze, hardening → **1.0.0**                                                                  |
+| M18       | System builder (after 1.0)                                                                         |
 
 ## Tech stack
 
