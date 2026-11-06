@@ -179,7 +179,7 @@
       }
     },
     "background": {
-      "description": "An image of the module tiled behind the table page, such as `images/paper.webp`. Parts with a colour of their own, such as panels, cover it unless the module’s styles clear it.",
+      "description": "An image of the module tiled behind the table page, such as `images/paper.webp`. Docked panels cover it unless the module’s styles set `--vtt-panel-background`, such as to `transparent`.",
       "type": "string",
       "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
       "title": "Module file"

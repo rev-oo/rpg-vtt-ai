@@ -96,7 +96,7 @@ export const themeSchema = z
     background: file
       .optional()
       .describe(
-        'An image of the module tiled behind the table page, such as `images/paper.webp`. Parts with a colour of their own, such as panels, cover it unless the module’s styles clear it.',
+        'An image of the module tiled behind the table page, such as `images/paper.webp`. Docked panels cover it unless the module’s styles set `--vtt-panel-background`, such as to `transparent`.',
       ),
   })
   .describe('A module’s theme: the app’s design tokens on the table page while the module is on.');

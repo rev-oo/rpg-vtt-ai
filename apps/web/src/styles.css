@@ -49,6 +49,18 @@
   }
 }
 
+/*
+ * Behind docked panels: modules may set `--vtt-panel-background` (ADR-076), such as to
+ * `transparent` to show their theme's background. Floating panels stay opaque.
+ */
+.vtt-dock .dv-grid-view,
+.vtt-dock .dv-grid-view .dv-groupview {
+  background-color: var(--vtt-panel-background, var(--dv-group-view-background-color));
+}
+.vtt-dock .dv-resize-container .dv-groupview {
+  background-color: var(--dv-group-view-background-color);
+}
+
 /* dockview in the app's colours, light and dark (ADR-059). */
 .vtt-dock .dockview-theme-light {
   --dv-group-view-background-color: var(--color-canvas);

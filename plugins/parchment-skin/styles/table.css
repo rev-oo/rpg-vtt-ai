@@ -3,10 +3,10 @@
  * colours and the font; these rules only add borders, small caps and the paper texture.
  */
 
-/* Let the paper show behind the dock's groups, in the light scheme. */
+/* Let the paper show behind the docked panels, in the light scheme only: it is a light paper. */
 @media not (prefers-color-scheme: dark) {
-  [data-vtt-part='workspace'] {
-    --dv-group-view-background-color: transparent;
+  :root {
+    --vtt-panel-background: transparent;
   }
 }
 

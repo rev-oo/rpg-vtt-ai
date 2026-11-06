@@ -1352,7 +1352,7 @@ A module's `theme.json` changes the app's look on the table page while the modul
 - **`light` and `dark`** set colour tokens for each scheme: `canvas` (the page), `surface` (cards, panels, inputs), `fg` (text), `muted` (secondary text), `line` (borders), `primary`, `primaryHover` and `onPrimary` (buttons and links), `danger`, `dangerSoft` and `infoSoft`. Tokens you leave out, and a scheme you leave out, keep the app's. Check that text keeps enough contrast in both.
 - **`font`** is the text font, as a CSS font list. **`fonts`** loads fonts from the module's files (`.woff2`, `.woff`, `.ttf` or `.otf`) under the family names `font` and your stylesheets use.
 - **`radius`** is the corner of cards, panels and inputs (`0` for square ones); smaller and larger corners scale with it.
-- **`background`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled behind the table page. Panels have colours of their own that cover it; your stylesheets can clear them.
+- **`background`** is an image of the module (PNG, JPEG, GIF, WebP or AVIF), tiled behind the table page. Docked panels have a colour of their own that covers it: set `--vtt-panel-background: transparent` in a stylesheet's `:root` to show it, perhaps only in the scheme the image suits (`parchment-skin` does so in the light scheme). Floating panels stay opaque.
 
 Values are checked strictly: colours are hex codes, colour names or colour functions such as `rgb(120 60 20)`; anything else, such as `url()`, is refused.
 

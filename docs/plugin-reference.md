@@ -715,7 +715,7 @@ A module’s theme: the app’s design tokens on the table page while the module
 | `font` | text (matching `^[A-Za-z0-9 ,'"_-]{1,200}$`) |  | The text font, as a CSS font list such as `"IM Fell English", Georgia, serif`. |
 | `radius` | text (matching `^(?:0\|\d{1,3}(?:\.\d{1,3})?(?:px\|rem\|em))$`) |  | The corner radius of cards, panels and inputs, such as `0` or `0.25rem`; smaller and larger corners scale with it. |
 | `fonts` | list of [Font face](#theme-font-face) (at most 16 items) |  | Fonts loaded from the module’s files. |
-| `background` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) |  | An image of the module tiled behind the table page, such as `images/paper.webp`. Parts with a colour of their own, such as panels, cover it unless the module’s styles clear it. |
+| `background` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) |  | An image of the module tiled behind the table page, such as `images/paper.webp`. Docked panels cover it unless the module’s styles set `--vtt-panel-background`, such as to `transparent`. |
 
 <a id="theme-light"></a>
 
