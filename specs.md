@@ -21,14 +21,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | System builder                                                                                                                   | 1.0.0   | Not started | 0%       |
+| M16    | Module plugins (skins, 3D dice), a D&D 5e SRD study, interface review                                                            | 1.0.0   | Not started | 0%       |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
+| M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1601`
+- **Next task:** `T-1601` (module plugins)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -52,6 +53,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-03 | T-1503 done: plugin shared and server code run in QuickJS (WebAssembly) inside their worker, with no Node API reachable, values passed as JSON, a 32 MB engine memory limit, and the time limits of ADR-047 (ADR-073).                                                                                 |
 | 2026-11-04 | T-1502 done: plugin custom nodes and cards render in sandboxed frames, one each, with an opaque origin and no network, and reach sheets only through the SDK hooks over `postMessage`; the browser runs `code/shared` in QuickJS, like the server (ADR-074). Q17 is decided.                           |
 | 2026-11-05 | M15 done: plugin data migrations, plugin client code in sandboxed frames, and plugin shared and server code in QuickJS. SES was tried as an alternative to the frames and dropped (ADR-074). M16 is active.                                                                                            |
+| 2026-11-06 | M16 replanned at the user's request: module plugins (table-page skins and effects such as 3D dice, chosen per table by the GM), a D&D 5e SRD 5.2 plugin as a study of the plugin format, and an interface review. The system builder moves to M18, after 1.0.                                          |
 | 2026-10-30 | T-1403 done: tokens on scene cells, for an actor (its name and image) or standing alone. GMs place, hide and remove them; owners move their actors' tokens by dragging or by arrow keys in a token list; hidden tokens and their moves reach only GMs and assistants (ADR-068).                        |
 
 ---
@@ -393,23 +395,24 @@ Requirement IDs are stable. Reference them in tasks and tests (for example `FR-A
 
 ### 7.8 Plugins (`FR-PLUGIN`)
 
-| ID           | Requirement                                                                                                                                                                                   | Priority | Status                       |
-| ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ---------------------------- |
-| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                                                    | MVP      | 0.1.0                        |
-| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                                                    | MVP      | 0.1.0                        |
-| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                                                     | MVP      | 0.1.0                        |
-| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                                                | MVP      | 0.1.0                        |
-| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                                       | MVP      | 0.1.0                        |
-| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                                       | MVP      | 0.1.0                        |
-| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                                                | MVP      | 0.1.0                        |
-| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                                          | MVP      | 0.1.0 (`code/client`); 0.2.0 |
-| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                       | v1       | 0.3.0 (browser, ADR-060)     |
-| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                              | v1       | 0.2.0                        |
-| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                         | 1.0      | 0.3.0 (ADR-061)              |
-| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                               | 1.0      | 1.0.0 (T-1501, ADR-072)      |
-| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                     | 1.0      | 1.0.0 (T-1502, T-1503)       |
-| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                            | 1.0      | planned (M16)                |
-| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`). | 1.0      | 0.3.0                        |
+| ID           | Requirement                                                                                                                                                                                                                                                   | Priority  | Status                       |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------- |
+| FR-PLUGIN-01 | Plugins are folders placed in `DATA_DIR/plugins/`. A restart or admin "rescan" makes them available. No rebuild is needed.                                                                                                                                    | MVP       | 0.1.0                        |
+| FR-PLUGIN-02 | Plugin manifests and all JSON files are validated against the plugin schemas. Errors are reported with file and JSON path.                                                                                                                                    | MVP       | 0.1.0                        |
+| FR-PLUGIN-03 | Plugins declare `coreApi` as a semver range. Incompatible plugins are listed as disabled with the reason.                                                                                                                                                     | MVP       | 0.1.0                        |
+| FR-PLUGIN-04 | Plugin CSS is scoped by the loader (see §8.6).                                                                                                                                                                                                                | MVP       | 0.1.0                        |
+| FR-PLUGIN-05 | Plugin language files (`lang/*.json`) are merged into the UI, with fallback to English.                                                                                                                                                                       | MVP       | 0.1.0                        |
+| FR-PLUGIN-06 | Plugins containing a `code/` folder are flagged as "includes code" in the admin UI. Admins must enable them explicitly.                                                                                                                                       | MVP       | 0.1.0                        |
+| FR-PLUGIN-07 | A plugin can be enabled or disabled per instance by an admin. Tables using a disabled plugin become read-only.                                                                                                                                                | MVP       | 0.1.0                        |
+| FR-PLUGIN-08 | Plugin-owned code (`code/`) runs in-process and is trusted in v1. Sandboxing is out of scope for v1.                                                                                                                                                          | MVP       | 0.1.0 (`code/client`); 0.2.0 |
+| FR-PLUGIN-09 | Plugin compendium packs (`packs/*.json`) are browsable by every member. GMs and assistants copy chosen entries into the table; players copy items onto actors they own.                                                                                       | v1        | 0.3.0 (browser, ADR-060)     |
+| FR-PLUGIN-10 | Plugins can declare slash commands and chat handlers in `code/`.                                                                                                                                                                                              | v1        | 0.2.0                        |
+| FR-PLUGIN-11 | Item types may declare a `group` and a plural label; lists of items (library, actor, compendium) are grouped by them, so a system can show "Spells" and "Gear" (Q16).                                                                                         | 1.0       | 0.3.0 (ADR-061)              |
+| FR-PLUGIN-12 | Plugins can ship data migrations that run when a GM upgrades a table to a new system version, and bring each entity's `dataVersion` up to date.                                                                                                               | 1.0       | 1.0.0 (T-1501, ADR-072)      |
+| FR-PLUGIN-13 | `code/client` runs sandboxed (no access to the app's DOM, cookies or APIs except through the SDK bridge); `code/server` runs with no Node APIs reachable.                                                                                                     | 1.0       | 1.0.0 (T-1502, T-1503)       |
+| FR-PLUGIN-14 | Admins can build a declarative system (types, schemas, sheets, rolls, lang) in the browser and install or download it as a plugin.                                                                                                                            | after 1.0 | planned (M18)                |
+| FR-PLUGIN-15 | Item types declare values they contribute to their holder (`contributes`); actor formulas read the combined totals (`@items.hpBonus`), and rolls read the item they were made with (`@item`).                                                                 | 1.0       | 0.3.0                        |
+| FR-PLUGIN-16 | Module plugins (`kind: module`) add to any table: skins that set theme tokens and style named parts of the table page, and effects that run in a sandboxed overlay on table events, such as 3D dice on rolls. Admins install them; GMs choose them per table. | 1.0       | planned (M16)                |
 
 ### 7.9 Combat (`FR-COMBAT`) — v1
 
@@ -488,7 +491,7 @@ Code entries are TypeScript sources in the plugin folder for development, but th
 
 ### 8.3 Manifest (`plugin.json`)
 
-The manifest names the plugin (`id`, `name`, `version`), declares the core API range it supports (`coreApi`), whether it has code (`hasCode`), and its languages (`locales`, `defaultLocale`). `kind` is `system`; `module` is reserved for future non-system plugins. Rules: [guide, The manifest](docs/plugin-authoring.md#the-manifest); keys: [reference, Plugin manifest](docs/plugin-reference.md#plugin).
+The manifest names the plugin (`id`, `name`, `version`), declares the core API range it supports (`coreApi`), whether it has code (`hasCode`), and its languages (`locales`, `defaultLocale`). `kind` is `system`, or `module` for add-ons that any table may use alongside its system: skins and effects (FR-PLUGIN-16, M16). Rules: [guide, The manifest](docs/plugin-authoring.md#the-manifest); keys: [reference, Plugin manifest](docs/plugin-reference.md#plugin).
 
 ### 8.4 Actor and item types
 
@@ -791,24 +794,34 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
   - **Do:** Plugin server code runs in an isolated runtime with no Node API reachable (no `require`, `process`, filesystem or network), keeping the worker per plugin and the time limits of ADR-047 (FR-PLUGIN-13).
   - **Done when:** tests show those APIs are unreachable from shared and server code; the reference plugins' handlers, commands and hooks pass unchanged.
 
-### M16 — System builder
+### M16 — Modules, a 5e study and the interface
 
-Declarative systems built in the browser, for people who do not write plugins by hand (FR-PLUGIN-14).
+Module plugins that restyle and enliven any table, a full system built as a test of the plugin format, and a review of the interface before the 1.0 freeze.
 
-- [ ] **T-1601 · Types and schemas builder**
+- [ ] **T-1601 · Module plugins**
   - **Deps:** none
-  - **Do:** An admin page edits a draft system: manifest, actor and item types, their schemas with defaults and bounds, and derived values. Drafts are stored on the server and validated with the plugin validator as they change.
-  - **Done when:** a draft equivalent to tiny-pool's types validates clean; web tests cover editing and validation errors.
+  - **Do:** Plugins of `kind: module` (FR-PLUGIN-16) work with any system and change no system data. A module may ship a theme (`theme.json`), stylesheets for the table page's named parts, client code for effects, and lang files; it may not ship types, sheets, rolls or packs. The validator checks modules like systems. Admins install and enable modules as they do systems, acknowledging code. GMs choose which enabled modules a table uses in its settings, and members load them with the table. Record the design in an ADR.
+  - **Done when:** validator tests cover module files and refuse system-only files in a module; server tests cover enabling a module and choosing it for a table; a test module loads for that table's members only.
 
-- [ ] **T-1602 · Sheet layout editor**
+- [ ] **T-1602 · Skins**
   - **Deps:** T-1601
-  - **Do:** A layout editor for the draft's sheets, adding and arranging layout nodes bound to schema fields, with a live preview through `sheet-renderer` on sample data.
-  - **Done when:** tiny-pool's character sheet can be rebuilt in the editor; the preview matches the installed plugin's rendering in a test.
+  - **Do:** A module's `theme.json` sets the app's design tokens on the table page (colours, fonts, radius; light and dark), with images from its own files. Its stylesheets style the table page's named parts (`data-vtt-part`: chat, dock tabs, panels, map toolbar, sheet frame…), scoped to those parts; the app documents the names and keeps them stable across versions. Ship `plugins/parchment-skin` as the example.
+  - **Done when:** web tests cover tokens and parts applied and removed with the module; e2e shows the example skin on a table and not on another; the authoring guide documents tokens and parts.
 
-- [ ] **T-1603 · Rolls, translations and export**
-  - **Deps:** T-1602
-  - **Do:** The builder edits rolls and lang files, then packs the draft as a `.vttplugin` to download or installs it directly (ADR-026).
-  - **Done when:** e2e builds a small system, installs it, creates a table with it and rolls from its sheet.
+- [ ] **T-1603 · Effects overlay and 3D dice**
+  - **Deps:** T-1601
+  - **Do:** Module client code for effects runs in a transparent, click-through sandboxed frame over the table page, as ADR-074's frames do: no network, no access to the page. The app sends it table events; a roll event carries the dice and results the server decided, only for rolls the viewer may see, so an effect shows a result and never decides it. The chat shows each roll at once; effects never hold it back. Each user can turn effects off. Ship `plugins/dice-3d`, our own module (three.js and a physics library bundled in) that throws polyhedral d4–d20 and d100 landing on the server's results.
+  - **Done when:** tests show a secret roll reaches no other player's overlay and the overlay cannot reach the page or the network; e2e rolls on a table with the dice module and the chat shows the result at once; the per-user switch hides the dice.
+
+- [ ] **T-1604 · D&D 5e SRD study**
+  - **Deps:** none
+  - **Do:** Build `plugins/dnd5e-srd` from the System Reference Document 5.2 (CC-BY-4.0, with its attribution): characters and NPCs with abilities, skills, saves, proficiency, attacks, spells and slots, conditions, rests and an SRD pack. Use only what the plugin format offers, and record each gap, workaround and rough edge in `docs/studies/dnd5e-srd.md`. From the findings, propose follow-up tasks; those the user approves join M16.
+  - **Done when:** the plugin validates, packs and installs; e2e makes a character, rolls an attack and casts a spell; the study lists its findings and the proposed tasks.
+
+- [ ] **T-1605 · Interface review**
+  - **Deps:** none
+  - **Do:** Review every screen on desktop and phone (layout, consistency, empty states, feedback, keyboard and screen-reader use) and write it up with screenshots in `docs/studies/interface-review.md`. The changes the user picks join M16 as tasks.
+  - **Done when:** the review covers each screen at both sizes, and the chosen changes are tasks in M16.
 
 ### M17 — 1.0
 
@@ -816,12 +829,12 @@ The plugin API promise, a security review, then the release. The project has no 
 
 - [ ] **T-1701 · Plugin API freeze**
   - **Deps:** M12–M16, Q19
-  - **Do:** Set `CORE_API_VERSION` to `1.0.0` and document what 1.x keeps compatible (manifest, file formats, SDK, `ctx`). Plugins for 0.x load as Q19 decides. The reference plugins and the guide move to `^1.0.0`.
+  - **Do:** Set `CORE_API_VERSION` to `1.0.0` and document what 1.x keeps compatible (manifest, file formats, SDK, `ctx`, module themes, named parts and effect events). Plugins for 0.x load as Q19 decides. The reference plugins and the guide move to `^1.0.0`.
   - **Done when:** the compatibility promise is in the guide and an ADR; tests cover loading plugins declaring each supported range.
 
 - [ ] **T-1703 · Security review and hardening**
   - **Deps:** M12–M16
-  - **Do:** Review the surfaces added since 0.2.0: uploads, scenes and tokens on the wire, fog filtering, the client sandbox, server isolation and the builder. Fix what is found, and record the review like T-0701.
+  - **Do:** Review the surfaces added since 0.2.0: uploads, scenes and tokens on the wire, fog filtering, the client sandbox, server isolation, and module skins and the effects overlay. Fix what is found, and record the review like T-0701.
   - **Done when:** the review document lists each surface with its checks; findings are fixed or recorded as accepted risks in §15.
 
 - [ ] **T-1704 · Release 1.0.0**
@@ -829,11 +842,30 @@ The plugin API promise, a security review, then the release. The project has no 
   - **Do:** Release as in §17 (item 10): versions to `1.0.0`, `CHANGELOG.md` section, tag `v1.0.0`.
   - **Done when:** the release job publishes the `1.0.0` and `1.0` image tags for both architectures and the GitHub release.
 
+### M18 — System builder
+
+Declarative systems built in the browser, for people who do not write plugins by hand (FR-PLUGIN-14). It follows 1.0.
+
+- [ ] **T-1801 · Types and schemas builder**
+  - **Deps:** none
+  - **Do:** An admin page edits a draft system: manifest, actor and item types, their schemas with defaults and bounds, and derived values. Drafts are stored on the server and validated with the plugin validator as they change.
+  - **Done when:** a draft equivalent to tiny-pool's types validates clean; web tests cover editing and validation errors.
+
+- [ ] **T-1802 · Sheet layout editor**
+  - **Deps:** T-1801
+  - **Do:** A layout editor for the draft's sheets, adding and arranging layout nodes bound to schema fields, with a live preview through `sheet-renderer` on sample data.
+  - **Done when:** tiny-pool's character sheet can be rebuilt in the editor; the preview matches the installed plugin's rendering in a test.
+
+- [ ] **T-1803 · Rolls, translations and export**
+  - **Deps:** T-1802
+  - **Do:** The builder edits rolls and lang files, then packs the draft as a `.vttplugin` to download or installs it directly (ADR-026).
+  - **Done when:** e2e builds a small system, installs it, creates a table with it and rolls from its sheet.
+
 ### LATER — Not scheduled
 
 - World export and import
 - Composition keywords (`$ref`, `oneOf`) in the schema subset
-- Other plugin kinds: the reserved `module` kind, add-ons that extend a system (new types, sheets, packs or code) without replacing it
+- Modules that extend a system: new types, sheets or packs for a named system, without replacing it
 - A book-style journal view: entries laid out as pages, with text flowing onto the next page
 
 ---
