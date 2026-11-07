@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 33%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 50%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1603` (module frames: overlays, panels, events and actions)
+- **Next task:** `T-1604` (3D dice module)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -57,6 +57,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-06 | M16 replanned at the user's request: module plugins, a generic way to extend any table (themes and named-part styles; sandboxed overlays and panels that receive table events and act as the viewer), with a parchment skin and 3D dice as examples, chosen per table by the GM; plugin settings scoped to the instance, the table or the user; a D&D 5e SRD 5.2 plugin as a study of the plugin format; and an interface review. The system builder moves to M18, after 1.0. |
 | 2026-11-06 | T-1601 done: plugins of `kind: module` extend any table; admins enable them and GMs add them to a table in its Settings panel; modules may not ship types, sheets, rolls, packs or server code. Plugin settings get a scope: table (GM), instance (admins) or user (each member's own, in the Settings panel, which now opens for every member). Formulas read table settings only (ADR-075).                                                                                 |
 | 2026-11-06 | T-1602 done: a module's `theme.json` sets the app's colours (light and dark, panels included), font, corners, border width, density, font files and images in panels and behind the page, per scheme, on the table page; module stylesheets style the page's named parts (`data-vtt-part`), only on tables that use the module; `plugins/parchment-skin` is the example (ADR-076).                                                                                            |
+| 2026-11-07 | T-1603 done: module code draws overlays over the table page and panels in the workspace, each in a sandboxed frame. Frames hear the table events the viewer sees, get the viewer's module settings, and act as the viewer (chat, roll, open sheets and entries, combat), checked by the server and limited per frame. Each member can turn a table's overlays off (ADR-077).                                                                                                  |
 
 ---
 
@@ -810,7 +811,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** A module's `theme.json` sets the app's design tokens on the table page (colours, fonts, radius; light and dark), with images from its own files. Its stylesheets style the table page's named parts (`data-vtt-part`: chat, dock tabs, panels, map toolbar, sheet frame…), scoped to those parts; the app documents the names and keeps them stable across versions. Ship `plugins/parchment-skin` as an example.
   - **Done when:** web tests cover tokens and parts applied and removed with the module; e2e shows the example skin on a table and not on another; the authoring guide documents tokens and parts.
 
-- [ ] **T-1603 · Module frames: overlays, panels, events and actions**
+- [x] **T-1603 · Module frames: overlays, panels, events and actions**
   - **Deps:** T-1601
   - **Do:** Module client code runs in sandboxed frames, as ADR-074's do (no network, no access to the page), mounted at two places: overlays over the table page (click-through or interactive) and panels in the table workspace (in the Panels menu, dockable like Chat). Frames receive table events (rolls with the dice and results the server decided, chat messages, combat, scene and token changes), each only if the viewer may see it, so a frame shows results and never decides them; the chat never waits on a frame. Frames get the module's settings for the viewer, merged from instance, table and user scopes, and are told when they change; a frame may change only the viewer's own `user` settings. Through the SDK, a frame can act as the viewer: post a chat message, roll, open a sheet or journal entry, and the combat actions the viewer may take. The server checks each action as the viewer's own, and the app rate-limits them per frame. Each user can turn a table's overlays off.
   - **Done when:** tests show a frame gets no event the viewer may not see, cannot reach the page or the network, and cannot act beyond the viewer's rights; e2e covers an overlay and a panel from a test module, including a roll posted from the panel.
@@ -1029,6 +1030,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-074 | [Plugin client code runs in sandboxed frames; shared code in QuickJS in the browser](docs/adr/ADR-074-client-code-sandbox.md)                   | Accepted                                   |
 | ADR-075 | [Module plugins, and plugin settings by scope](docs/adr/ADR-075-module-plugins.md)                                                              | Accepted                                   |
 | ADR-076 | [Module themes and named parts of the table page](docs/adr/ADR-076-module-themes-and-parts.md)                                                  | Accepted                                   |
+| ADR-077 | [Module overlays and panels](docs/adr/ADR-077-module-overlays-and-panels.md)                                                                    | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

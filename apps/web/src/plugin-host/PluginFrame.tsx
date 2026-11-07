@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 
 
 import { t } from '../i18n/index.js';
 
-import { listen, send } from './frame-channel.js';
+import { listen, pageStyles, send } from './frame-channel.js';
 import {
   FRAME_URL,
   MAX_FRAME_HEIGHT,
@@ -14,18 +14,6 @@ import {
 // The app's half of the plugin bridge (T-1502, ADR-074): one sandboxed <iframe> per custom
 // node or card. `allow-scripts` alone gives the frame an opaque origin, so it has no cookies,
 // no storage and no access to this page; its own policy gives it no network.
-
-/** The page's stylesheets as text, for plugin components to look like the rest of the app. */
-function pageStyles(): string[] {
-  return [...document.styleSheets].flatMap((sheet) => {
-    try {
-      return [[...sheet.cssRules].map((rule) => rule.cssText).join('\n')];
-    } catch {
-      // A stylesheet from another origin keeps its rules; the app has none.
-      return [];
-    }
-  });
-}
 
 export interface PluginFrameProps {
   code: Omit<FrameSetup, 'view' | 'styles'>;

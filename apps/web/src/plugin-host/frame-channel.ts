@@ -13,6 +13,18 @@ import {
 /** The plugin parts every frame of a system gets. */
 export type FrameCode = Omit<FrameSetup, 'view' | 'styles'>;
 
+/** The page's stylesheets as text, for plugin components to look like the rest of the app. */
+export function pageStyles(): string[] {
+  return [...document.styleSheets].flatMap((sheet) => {
+    try {
+      return [[...sheet.cssRules].map((rule) => rule.cssText).join('\n')];
+    } catch {
+      // A stylesheet from another origin keeps its rules; the app has none.
+      return [];
+    }
+  });
+}
+
 export const send = (frame: HTMLIFrameElement | null, message: HostMessage): void => {
   // The frame's origin is opaque, so no target origin can name it.
   frame?.contentWindow?.postMessage(message, '*');
@@ -39,15 +51,24 @@ export function listen(
 const PROBE_TIME_LIMIT_MS = 10_000;
 
 /**
- * Runs a plugin's client code once in a hidden frame and lists the nodes and cards it exports,
+ * Runs a plugin's client code once in a hidden frame and lists the components it exports,
  * so the app knows what to render in frames. Rejects when the code fails to load.
  */
-export function probeClient(code: FrameCode): Promise<{ nodes: string[]; cards: string[] }> {
+/** What a plugin's client code exports. */
+export interface ClientExports {
+  nodes: string[];
+  cards: string[];
+  /** A module's overlays and panels (ADR-077). */
+  overlays: { name: string; interactive: boolean }[];
+  panels: { name: string; title: string }[];
+}
+
+export function probeClient(code: FrameCode): Promise<ClientExports> {
   const frame = document.createElement('iframe');
   frame.setAttribute('sandbox', 'allow-scripts');
   frame.hidden = true;
   frame.src = FRAME_URL;
-  return new Promise<{ nodes: string[]; cards: string[] }>((resolve, reject) => {
+  return new Promise<ClientExports>((resolve, reject) => {
     let stop = (): void => undefined;
     const timer = setTimeout(() => {
       fail(new Error('the client code took too long to load'));
@@ -71,7 +92,12 @@ export function probeClient(code: FrameCode): Promise<{ nodes: string[]; cards: 
           });
         } else if (message.type === 'exports') {
           done();
-          resolve({ nodes: message.nodes, cards: message.cards });
+          resolve({
+            nodes: message.nodes,
+            cards: message.cards,
+            overlays: message.overlays,
+            panels: message.panels,
+          });
         } else if (message.type === 'failed') {
           fail(new Error(message.message));
         }

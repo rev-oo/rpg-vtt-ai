@@ -2,6 +2,7 @@ import type { AddPanelPositionOptions, DockviewApi, SerializedDockview } from 'd
 
 import { t } from '../../i18n/index.js';
 
+import { modulePanelId } from './module-ids.js';
 import {
   isDocument,
   LIST_PANELS,
@@ -96,6 +97,32 @@ export function showPanel(api: DockviewApi, id: ToolPanel | PagePanel, phone: bo
     component: id,
     tabComponent: PANEL_TAB,
     title: titleOf(id),
+    ...(position && { position }),
+  });
+}
+
+/** Opens a module's panel, or brings it to the front (ADR-077); it docks like Chat. */
+export function showModulePanel(
+  api: DockviewApi,
+  panel: { moduleId: string; name: string; title: string },
+  phone: boolean,
+): void {
+  const id = modulePanelId(panel.moduleId, panel.name);
+  const open = api.getPanel(id);
+  if (open) {
+    open.api.setActive();
+    return;
+  }
+  const position = placeOf(api, id, phone);
+  api.addPanel({
+    id,
+    component: 'module',
+    tabComponent: PANEL_TAB,
+    // Kept in place while hidden: moving its frame in the page would reload it, and a module
+    // panel keeps hearing the table while another tab is in front (ADR-077).
+    renderer: 'always',
+    params: { moduleId: panel.moduleId, name: panel.name },
+    title: panel.title,
     ...(position && { position }),
   });
 }

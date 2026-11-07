@@ -413,6 +413,12 @@ export const en = {
   'sheet.missingNode':
     'This part of the sheet needs the plugin “{name}” component, which is not available.',
 
+  'module.badAction': 'The module asked for something the app does not offer.',
+  'module.notFound': 'That is not something you can see at this table.',
+  'module.tooFast': 'The module acted too often; try again in a few seconds.',
+  'module.overlays': 'Overlays',
+  'module.overlaysHint': 'Show the modules’ overlays on this table',
+  'module.panelGone': 'This module’s panel is not available at this table.',
   'plugin.componentFailed': 'The plugin component “{name}” failed to show.',
   'plugin.clientFailed':
     'The system’s code could not be loaded, so some parts are missing: {detail}',

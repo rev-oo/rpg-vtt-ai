@@ -1,3 +1,4 @@
+import { ModulePanel } from './ModuleFrames.js';
 import {
   ActorsPanel,
   AssetsPanel,
@@ -35,4 +36,6 @@ export const PANEL_COMPONENTS = {
   combat: CombatPanel,
   chat: ChatDockPanel,
   dice: DicePanel,
+  /** A module's panel (ADR-077); its params name the module and panel. */
+  module: ModulePanel,
 };

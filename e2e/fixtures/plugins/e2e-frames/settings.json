@@ -1,0 +1,3 @@
+{
+  "label": { "type": "string", "default": "Last roll", "label": "setting.label", "scope": "user" }
+}

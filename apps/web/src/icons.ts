@@ -23,6 +23,7 @@ import {
   MousePointer2,
   Package,
   PanelsTopLeft,
+  Puzzle,
   Pencil,
   Plus,
   RotateCcw,
@@ -102,6 +103,7 @@ export function panelIcon(panelId: string): LucideIcon | undefined {
   if (panelId.startsWith('actor:')) return User;
   if (panelId.startsWith('item:')) return Package;
   if (panelId.startsWith('entry:')) return ScrollText;
+  if (panelId.startsWith('module:')) return Puzzle;
   return undefined;
 }
 
