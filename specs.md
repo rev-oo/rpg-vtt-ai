@@ -819,7 +819,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
 
 - [ ] **T-1604 · 3D dice study**
   - **Deps:** T-1603
-  - **Do:** Build `plugins/dice-3d`, our own module (three.js and a physics library bundled in, not dddice): an overlay that throws polyhedral d4–d20 and d100 for each roll the viewer sees and lands them on the server's results. Use only what the plugin format and the module SDK offer, and record each gap, workaround and rough edge in `docs/studies/dice-3d.md`. Topics to cover include: npm dependencies in client code (`vtt-plugin pack` resolves imports from the plugin folder, which has no `node_modules` of its own), the 1 MiB limit per plugin file against the bundle's size, WebGL inside sandboxed frames, landing dice on given results, and reduced motion. From the findings, propose follow-up tasks; those the user approves join M16.
+  - **Do:** Build `plugins/dice-3d`, our own module (three.js and a physics library bundled in, not dddice): an overlay that throws polyhedral d4–d20 and d100 for each roll the viewer sees and lands them on the server's results. Use only what the plugin format and the module SDK offer, and record each gap, workaround and rough edge in `docs/studies/dice-3d.md`. From the findings, propose follow-up tasks; those the user approves join M16.
   - **Done when:** the plugin validates, packs and installs; e2e rolls on a table with the module, sees the dice frame animate and the chat show the result at once, and the per-user switch hides the dice; the study lists its findings and the proposed tasks.
 
 - [ ] **T-1605 · D&D 5e SRD study**
