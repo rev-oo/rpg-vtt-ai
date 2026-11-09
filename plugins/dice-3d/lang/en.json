@@ -1,0 +1,8 @@
+{
+  "setting.colour": "Dice colour",
+  "setting.seconds": "Seconds the dice stay on the table",
+  "setting.secondsHint": "After they stop rolling.",
+  "setting.maxDice": "Most dice in one throw",
+  "setting.maxDiceHint": "Larger rolls throw only the first dice.",
+  "setting.showOthers": "Throw other people's rolls too"
+}

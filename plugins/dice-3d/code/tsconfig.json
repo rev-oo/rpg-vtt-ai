@@ -1,0 +1,10 @@
+{
+  "extends": ["../../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "noEmit": true
+  },
+  "include": ["client.tsx", "src", "test"]
+}
