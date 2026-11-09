@@ -60,6 +60,12 @@
         ],
         "default": "slashing"
       },
+      "extraDamage": {
+        "type": "string",
+        "format": "dice",
+        "default": "",
+        "maxLength": 40
+      },
       "properties": {
         "type": "string",
         "default": "",

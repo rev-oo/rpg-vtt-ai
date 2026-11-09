@@ -78,7 +78,12 @@ export function print(node: Expression): string {
           : count.kind === 'number' && /^\d+$/.test(count.raw)
             ? count.raw
             : `(${print(count)})`;
-      const die = node.die.kind === 'standard' ? `d${String(node.die.sides)}` : node.die.name;
+      const die =
+        node.die.kind === 'standard'
+          ? `d${String(node.die.sides)}`
+          : node.die.kind === 'custom'
+            ? node.die.name
+            : `d(${print(node.die.sides)})`;
       return `${prefix}${die}${node.modifiers.map(printModifier).join('')}`;
     }
   }

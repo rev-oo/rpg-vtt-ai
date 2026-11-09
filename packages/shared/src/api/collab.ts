@@ -15,6 +15,8 @@ export const DATA_ISSUE_REASONS = [
   'maximum',
   'minLength',
   'maxLength',
+  /** Not in the field's `format`, such as a dice expression (T-1607). */
+  'format',
 ] as const;
 export type DataIssueReason = (typeof DATA_ISSUE_REASONS)[number];
 

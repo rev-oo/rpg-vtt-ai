@@ -92,10 +92,3 @@ const ABILITY_NAMES: Readonly<Record<string, string>> = {
 export function abilityName(key: string): string {
   return Object.hasOwn(ABILITY_NAMES, key) ? (ABILITY_NAMES[key] ?? key) : key;
 }
-
-/** `2d6 + 3`, `1d8`, `1d4 − 1`: formulas cannot turn numbers into text. */
-export function damageText(count: number, die: number, bonus: number): string {
-  const dice = `${String(count)}d${String(die)}`;
-  if (bonus === 0) return dice;
-  return `${dice} ${bonus > 0 ? '+' : '−'} ${String(Math.abs(bonus))}`;
-}

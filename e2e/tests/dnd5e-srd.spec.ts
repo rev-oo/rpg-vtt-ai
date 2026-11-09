@@ -94,15 +94,32 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     const card = log.locator('[data-plugin="dnd5e-srd"]').last();
     await expect(card.getByText('Weapon attack')).toBeVisible();
     await expect(card.locator('dd').nth(0)).toHaveText('Longsword');
-    await expect(card.locator('dd').nth(3)).toHaveText('1d8 + 3 slashing');
+    await expect(card.locator('dd').nth(3)).toHaveText('1d8 +3 slashing');
 
     // Versatile: with two hands the longsword deals 1d10.
     await sword.getByLabel('Two hands').check();
     await sword.getByRole('button', { name: 'Damage' }).click();
     const damage = log.locator('[data-plugin="dnd5e-srd"]').last();
     await expect(damage.getByText('Damage', { exact: true }).first()).toBeVisible();
-    await expect(damage.locator('dd').nth(1)).toContainText('1d10');
+    // Only the branches the formula took, with their values (T-1607).
+    await expect(damage.locator('dd').nth(1)).toHaveText('1d10 + 3');
     await expect(damage.locator('dd').nth(3)).toHaveText('slashing');
+  });
+
+  await test.step('extra damage is a dice expression the damage roll adds', async () => {
+    const sword = sheet.getByRole('listitem', { name: 'Longsword' });
+    const extra = sword.getByRole('textbox', { name: 'Extra damage' });
+    await extra.fill('1d6 + @str');
+    await expect(sword.getByText('Enter dice, such as 2d6 + 3.')).toBeVisible();
+    await extra.fill('1d6');
+    await expect(sword.getByText('Enter dice, such as 2d6 + 3.')).toBeHidden();
+    await extra.blur();
+
+    await sword.getByRole('button', { name: 'Critical' }).click();
+    const crit = log.locator('[data-plugin="dnd5e-srd"]').last();
+    // A critical hit doubles every die, the extra ones too, but not the bonus.
+    await expect(crit.locator('dd').nth(1)).toHaveText('2d10 + 3 + 2d6');
+    await expect(crit.getByRole('list', { name: 'Dice of 2d6' })).toBeVisible();
   });
 
   await test.step('Fire Bolt rolls a spell attack, then 2d10 at level 5', async () => {

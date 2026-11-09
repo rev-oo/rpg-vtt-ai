@@ -45,6 +45,7 @@ const strings = (): SheetStrings => ({
   tooSmall: t('validation.tooSmallNumber'),
   tooBig: t('validation.tooBigNumber'),
   tooLong: t('validation.tooLong'),
+  notDice: t('validation.notDice'),
 });
 
 /**

@@ -155,6 +155,11 @@ export function checkFormula(
     } else if (node.kind === 'call') {
       if (!rules.anyFunction && !BUILTINS.has(node.name))
         report('unknown_function', { name: node.name });
+      // `roll()` rolls dice kept as text, so it belongs where dice do.
+      if (node.name === 'roll' && !rules.dice && !diceReported) {
+        report('dice_not_allowed');
+        diceReported = true;
+      }
     } else if (node.kind === 'dice') {
       if (!rules.dice && !diceReported) {
         report('dice_not_allowed');

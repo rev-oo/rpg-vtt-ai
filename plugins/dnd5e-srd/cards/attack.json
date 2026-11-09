@@ -17,7 +17,7 @@
     },
     {
       "label": "card.onHit",
-      "value": "damage(@item.dice, @item.derived.die, (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic) + ' ' + @item.damageType"
+      "value": "@item.dice + 'd' + @item.derived.die + ' ' + signed((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic) + (@item.extraDamage == '' ? '' : ' + ' + @item.extraDamage) + ' ' + @item.damageType"
     }
   ],
   "outcome": true

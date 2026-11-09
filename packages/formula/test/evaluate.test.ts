@@ -59,6 +59,15 @@ describe('evaluate in pure mode (T-0302)', () => {
     ['not @flags.ready or @str != 15', false],
     ['true == false', false],
     ['@str > 10 ? 1 : @str > 5 ? 2 : 3', 1],
+    ["@name + ' has ' + @str + ' Strength'", 'Seoni has 15 Strength'],
+    ["1 + 2 + 'd6'", '3d6'],
+    ["'d' + (1 + 2)", 'd3'],
+    ['text(@str)', '15'],
+    ['text(2.5) + text(true) + text(@name)', '2.5trueSeoni'],
+    ['signed(@derived.strMod)', '+2'],
+    ['signed(0)', '+0'],
+    ['signed(-1)', '-1'],
+    ["'1d8 ' + signed(@derived.strMod - 3)", '1d8 -1'],
   ] as [string, unknown][])('%s → %j', (source, expected) => {
     expect(run(source)).toEqual(expected);
   });
@@ -138,7 +147,10 @@ describe('evaluation errors point at the failing part', () => {
     ['@str[*]', 'type_error', 1, '@str[*]: [*] needs a collection'],
     ['@skills[true]', 'type_error', 9, 'An index must be text or a number, not true/false'],
     ['@skills[*].rank + 1', 'type_error', 1, 'Cannot add a list and a number'],
-    ["'a' + 1", 'type_error', 1, 'Cannot add text and a number'],
+    ["'a' + true", 'type_error', 1, 'Cannot add text and true/false'],
+    ['text(@skills[*].rank)', 'type_error', 6, 'Expected a single value, got a list'],
+    ["signed('a')", 'type_error', 8, 'Expected a number, got text'],
+    ["roll('1d6')", 'dice_not_allowed', 1, 'roll() can only be used in a roll'],
     ["1 - 'a'", 'type_error', 5, 'Expected a number, got text'],
     ["1 < 'a'", 'type_error', 1, 'Cannot order a number and text'],
     ['true < false', 'type_error', 1, 'Cannot order true/false and true/false'],
@@ -205,7 +217,7 @@ describe('evaluation errors point at the failing part', () => {
     expect(failure('odd()', { functions }).message).toContain('odd() failed: bad');
     expect(failure('obj()', { functions })).toMatchObject({ code: 'invalid_value' });
     expect(failure('nan()', { functions })).toMatchObject({ code: 'invalid_value' });
-    expect(failure('nope()', { functions }).message).toContain('clamp, boom, odd, obj, nan');
+    expect(failure('nope()', { functions }).message).toContain('signed, boom, odd, obj, nan');
   });
 });
 

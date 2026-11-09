@@ -6,6 +6,7 @@ export {
   BUILTIN_FUNCTIONS,
   compile,
   DEFAULT_MAX_STEPS,
+  MAX_DICE_MULTIPLIER,
   evaluate,
   roll,
   type BuiltinFunction,
@@ -25,4 +26,5 @@ export {
   type DieFace,
   type DieResult,
 } from './dice.js';
+export { isDiceText, parseDice } from './dice-text.js';
 export { seededRng, type Rng } from './rng.js';

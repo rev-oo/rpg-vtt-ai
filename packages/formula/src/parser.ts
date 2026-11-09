@@ -3,6 +3,7 @@ import {
   COMPARISON_OPERATORS,
   type BinaryOperator,
   type ComparisonOperator,
+  type Dice,
   type Expression,
   type PathSegment,
   type Reference,
@@ -188,6 +189,7 @@ class Parser {
           return { kind: 'unary', operator: '-', operand, span: join(token.span, operand.span) };
         }
         throw this.unexpected(token);
+      case 'modifiers':
       case 'end':
         throw this.unexpected(token);
     }
@@ -240,7 +242,22 @@ class Parser {
     return { ...inner, span: join(open, close.span) };
   }
 
-  private dice(token: DiceToken, count: Expression | null, span: Span): Expression {
+  private dice(token: DiceToken, count: Expression | null, start: Span): Expression {
+    let span = start;
+    let die: Dice['die'];
+    let modifiers = token.modifiers;
+    if (token.die.kind === 'sized') {
+      const sides = this.expression();
+      this.expect(')');
+      // The lexer puts the modifiers right after the `)` of a die's size.
+      const after = this.next();
+      if (after.kind !== 'modifiers') throw this.unexpected(after);
+      modifiers = after.modifiers;
+      span = { start: start.start, end: after.span.end };
+      die = { kind: 'sized', sides };
+    } else {
+      die = token.die;
+    }
     const literal: Expression | null =
       token.count === null || token.countRaw === null
         ? null
@@ -253,8 +270,8 @@ class Parser {
     return {
       kind: 'dice',
       count: count ?? literal,
-      die: token.die,
-      modifiers: token.modifiers,
+      die,
+      modifiers,
       span,
     };
   }

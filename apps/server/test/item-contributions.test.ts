@@ -208,7 +208,7 @@ describe('rolls made with an item (T-1207, ADR-063)', () => {
       .where(eq(items.id, armor.id))
       .run();
     const peek = await roll({ name: 'peek', itemId: armor.id });
-    expect(peek.json<{ message: ChatMessage }>().message.rolls[0]?.resolved).toBe('1d20 + 0');
+    expect(peek.json<{ message: ChatMessage }>().message.rolls[0]?.resolved).toBe('1d20');
 
     expect((await roll({ name: 'brace' })).json()).toMatchObject({
       error: { code: 'item_required' },

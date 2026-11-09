@@ -1,8 +1,10 @@
-import type { Dice, Expression, PathSegment, Span } from './ast.js';
+import type { Dice, Die, Expression, PathSegment, Span } from './ast.js';
+import { parseDice } from './dice-text.js';
 import {
   customDie,
   DEFAULT_MAX_DICE,
   DiceError,
+  MAX_SIDES,
   rollDice,
   standardDie,
   type CustomDie,
@@ -35,6 +37,9 @@ export const BUILTIN_FUNCTIONS = [
   'count',
   'if',
   'clamp',
+  'roll',
+  'text',
+  'signed',
 ] as const;
 export type BuiltinFunction = (typeof BUILTIN_FUNCTIONS)[number];
 
@@ -76,8 +81,14 @@ interface Rolling {
   customDice: Readonly<Record<string, CustomDie>>;
   budget: DiceBudget;
   rolls: DiceRoll[];
-  /** What each reference and dice count evaluated to, for the resolved expression. */
+  /** What each reference evaluated to, for the resolved expression. */
   values: Map<Expression, Value>;
+  /** Each dice term with its count and size worked out. */
+  dice: Map<Expression, Dice>;
+  /** The branch each conditional and `if()` took. */
+  branches: Map<Expression, Expression>;
+  /** The dice expression each `roll()` rolled. */
+  inlined: Map<Expression, Expression>;
 }
 
 /** A parsed formula with its source, which error positions refer to. */
@@ -195,9 +206,9 @@ class Evaluator {
           ? this.finite(-this.number(node.operand), node.span)
           : !this.boolean(node.operand);
       case 'conditional':
-        return this.boolean(node.test) ? this.evaluate(node.then) : this.evaluate(node.otherwise);
+        return this.branch(node, node.test, node.then, node.otherwise);
       case 'call':
-        return this.call(node.name, node.args, node.span);
+        return this.call(node);
       case 'dice':
         return this.dice(node);
       case 'binary':
@@ -222,14 +233,22 @@ class Evaluator {
         node.count?.span ?? node.span,
       );
     }
-    this.rolling.values.set(node, count);
+    const die = node.die.kind === 'sized' ? this.sides(node.die.sides) : node.die;
     const resolved: Dice = {
       ...node,
       count: { kind: 'number', value: count, raw: String(count), span: node.span },
+      die,
     };
+    this.rolling.dice.set(node, resolved);
     try {
-      const die = this.die(node, customDice);
-      const roll = rollDice(node, die, count, rng, budget, print(resolved));
+      const roll = rollDice(
+        node,
+        this.die(die, node.span, customDice),
+        count,
+        rng,
+        budget,
+        print(resolved),
+      );
       rolls.push(roll);
       return roll.total;
     } catch (error) {
@@ -238,7 +257,24 @@ class Evaluator {
     }
   }
 
-  private die({ die, span }: Dice, customDice: Readonly<Record<string, CustomDie>>): ResolvedDie {
+  /** A die whose size a formula works out: `d(@item.die)`. */
+  private sides(node: Expression): Extract<Die, { kind: 'standard' }> {
+    const sides = this.number(node);
+    if (!Number.isInteger(sides) || sides < 1 || sides > MAX_SIDES) {
+      throw this.error(
+        'invalid_dice',
+        `A die needs a whole number of sides from 1 to ${String(MAX_SIDES)}, not ${String(sides)}`,
+        node.span,
+      );
+    }
+    return { kind: 'standard', sides };
+  }
+
+  private die(
+    die: Exclude<Die, { kind: 'sized' }>,
+    span: Span,
+    customDice: Readonly<Record<string, CustomDie>>,
+  ): ResolvedDie {
     if (die.kind === 'standard') return standardDie(die.sides);
     const custom = Object.hasOwn(customDice, die.name) ? customDice[die.name] : undefined;
     if (!custom) {
@@ -291,11 +327,18 @@ class Evaluator {
       case '+': {
         const a = this.evaluate(left);
         const b = this.evaluate(right);
-        if (typeof a === 'string' && typeof b === 'string') return a + b;
         if (typeof a === 'number' && typeof b === 'number') return this.finite(a + b, span);
+        // Text joins with text or a number: `@dice + 'd' + @die`.
+        if (
+          (typeof a === 'string' || typeof b === 'string') &&
+          (typeof a === 'string' || typeof a === 'number') &&
+          (typeof b === 'string' || typeof b === 'number')
+        ) {
+          return `${String(a)}${String(b)}`;
+        }
         throw this.error(
           'type_error',
-          `Cannot add ${typeName(a)} and ${typeName(b)}; add two numbers or join two texts`,
+          `Cannot add ${typeName(a)} and ${typeName(b)}; add two numbers or join text with text or a number`,
           span,
         );
       }
@@ -387,8 +430,21 @@ class Evaluator {
     );
   }
 
-  private call(name: string, args: Expression[], span: Span): Value {
-    if (isBuiltin(name)) return this.builtin(name, args, span);
+  /** Evaluates the branch `test` picks, and remembers it for the resolved expression. */
+  private branch(
+    node: Expression,
+    test: Expression,
+    then: Expression,
+    otherwise: Expression,
+  ): Value {
+    const taken = this.boolean(test) ? then : otherwise;
+    this.rolling?.branches.set(node, taken);
+    return this.evaluate(taken);
+  }
+
+  private call(node: Extract<Expression, { kind: 'call' }>): Value {
+    const { name, args, span } = node;
+    if (isBuiltin(name)) return this.builtin(node, name);
     const fn = Object.hasOwn(this.functions, name) ? this.functions[name] : undefined;
     if (typeof fn !== 'function') {
       throw this.error(
@@ -429,6 +485,53 @@ class Evaluator {
     return first;
   }
 
+  /**
+   * `roll(@item.damage)`: rolls a dice expression kept as text, in the same roll. A second
+   * argument multiplies every die count, as critical hits do: `roll(@item.damage, 2)`.
+   */
+  private rollText(node: Extract<Expression, { kind: 'call' }>): number {
+    const { args, span } = node;
+    const [textArg, timesArg] = args;
+    if (!textArg || args.length > 2) {
+      throw this.error(
+        'invalid_arguments',
+        `roll() takes 1 or 2 arguments, not ${String(args.length)}`,
+        span,
+      );
+    }
+    if (!this.rolling) {
+      throw this.error(
+        'dice_not_allowed',
+        'roll() can only be used in a roll, not in a derived value or a condition',
+        span,
+      );
+    }
+    const text = this.evaluate(textArg);
+    if (typeof text !== 'string') {
+      throw this.error('type_error', `roll() needs text, got ${typeName(text)}`, textArg.span);
+    }
+    const times = timesArg ? this.number(timesArg) : 1;
+    if (!Number.isInteger(times) || times < 1 || times > MAX_DICE_MULTIPLIER) {
+      throw this.error(
+        'invalid_arguments',
+        `roll() multiplies dice by a whole number from 1 to ${String(MAX_DICE_MULTIPLIER)}, not ${String(times)}`,
+        timesArg?.span ?? span,
+      );
+    }
+    try {
+      const parsed = parseDice(text);
+      const tree = parsed ? multiplyDice(parsed, times) : literal(0, span);
+      this.rolling.inlined.set(node, tree);
+      const inner = new Evaluator(text, { maxSteps: this.maxSteps - this.steps }, this.rolling);
+      const total = inner.number(tree);
+      this.steps += inner.steps;
+      return total;
+    } catch (error) {
+      if (!(error instanceof FormulaError)) throw error;
+      throw this.error(error.code, `roll('${text}'): ${error.detail}`, span);
+    }
+  }
+
   private three(
     name: string,
     args: Expression[],
@@ -453,7 +556,8 @@ class Evaluator {
     });
   }
 
-  private builtin(name: BuiltinFunction, args: Expression[], span: Span): Value {
+  private builtin(node: Extract<Expression, { kind: 'call' }>, name: BuiltinFunction): Value {
+    const { args, span } = node;
     switch (name) {
       case 'floor':
       case 'ceil':
@@ -476,7 +580,15 @@ class Evaluator {
       case 'if': {
         const [test, then, otherwise] = this.three(name, args, span);
         // Only the chosen branch runs, as with `?:`.
-        return this.boolean(test) ? this.evaluate(then) : this.evaluate(otherwise);
+        return this.branch(node, test, then, otherwise);
+      }
+      case 'roll':
+        return this.rollText(node);
+      case 'text':
+        return String(this.scalar(this.one(name, args, span)));
+      case 'signed': {
+        const value = this.number(this.one(name, args, span));
+        return value >= 0 ? `+${String(value)}` : String(value);
       }
       case 'min':
       case 'max': {
@@ -530,6 +642,9 @@ export function roll(formula: Formula | string, context: RollContext): RollResul
     budget: { remaining: context.maxDice ?? DEFAULT_MAX_DICE },
     rolls: [],
     values: new Map(),
+    dice: new Map(),
+    branches: new Map(),
+    inlined: new Map(),
   };
   const total = new Evaluator(source, context, rolling).evaluate(ast);
   if (typeof total !== 'number') {
@@ -542,7 +657,7 @@ export function roll(formula: Formula | string, context: RollContext): RollResul
   }
   return {
     expression: source,
-    resolved: print(substitute(ast, rolling.values)),
+    resolved: print(substitute(ast, rolling)),
     total,
     dice: rolling.rolls,
   };
@@ -555,16 +670,88 @@ function literal(value: Scalar, span: Span): Expression {
   return { kind: 'boolean', value, span };
 }
 
+/** The most `roll()` may multiply a dice expression's counts by. */
+export const MAX_DICE_MULTIPLIER = 10;
+
+/** A dice expression with every die count multiplied by `times`: `1d8 + 2` to `2d8 + 2`. */
+function multiplyDice(node: Expression, times: number): Expression {
+  if (times === 1) return node;
+  switch (node.kind) {
+    case 'dice': {
+      const count: Expression = node.count
+        ? {
+            kind: 'binary',
+            operator: '*',
+            left: node.count,
+            right: literal(times, node.span),
+            span: node.span,
+          }
+        : literal(times, node.span);
+      return { ...node, count };
+    }
+    case 'unary':
+      return { ...node, operand: multiplyDice(node.operand, times) };
+    case 'binary':
+      return {
+        ...node,
+        left: multiplyDice(node.left, times),
+        right: multiplyDice(node.right, times),
+      };
+    default:
+      return node;
+  }
+}
+
+/** Functions that always give a number. */
+const NUMERIC_FUNCTIONS: ReadonlySet<string> = new Set([
+  'floor',
+  'ceil',
+  'round',
+  'min',
+  'max',
+  'abs',
+  'sum',
+  'count',
+  'clamp',
+]);
+
+/** Whether a resolved node can only be a number, so adding zero to it changes nothing. */
+function isNumeric(node: Expression): boolean {
+  switch (node.kind) {
+    case 'number':
+    case 'dice':
+      return true;
+    case 'unary':
+      return node.operator === '-';
+    case 'binary':
+      return (
+        ['+', '-', '*', '/', '%'].includes(node.operator) &&
+        isNumeric(node.left) &&
+        isNumeric(node.right)
+      );
+    case 'call':
+      return NUMERIC_FUNCTIONS.has(node.name);
+    default:
+      return false;
+  }
+}
+
+const isZero = (node: Expression): boolean => node.kind === 'number' && node.value === 0;
+
 /**
- * The tree with every evaluated reference replaced by its value and every dice count resolved.
- * A list passed to a function is spread into its arguments: `sum(@skills[*].rank)` becomes
- * `sum(1, 3)`. Branches that were not evaluated keep their references.
+ * The tree as it was rolled (FR-DICE-02): references replaced by the values they read, dice
+ * counts and sizes worked out, each conditional and `if()` replaced by the branch it took,
+ * each `roll()` by the dice it rolled, and `+ 0` left out. A list passed to a function is
+ * spread into its arguments: `sum(@skills[*].rank)` becomes `sum(1, 3)`. Parts that were
+ * not evaluated, such as the right side of `false and …`, keep their references.
  */
-function substitute(node: Expression, values: Map<Expression, Value>): Expression {
-  const recurse = (child: Expression) => substitute(child, values);
+function substitute(node: Expression, rolling: Rolling): Expression {
+  const recurse = (child: Expression) => substitute(child, rolling);
+  const replaced = rolling.branches.get(node) ?? rolling.inlined.get(node);
+  if (replaced) return recurse(replaced);
   switch (node.kind) {
     case 'reference': {
-      const value = values.get(node);
+      const value = rolling.values.get(node);
       if (value === undefined || typeof value === 'object') {
         return {
           ...node,
@@ -577,8 +764,15 @@ function substitute(node: Expression, values: Map<Expression, Value>): Expressio
     }
     case 'unary':
       return { ...node, operand: recurse(node.operand) };
-    case 'binary':
-      return { ...node, left: recurse(node.left), right: recurse(node.right) };
+    case 'binary': {
+      const left = recurse(node.left);
+      const right = recurse(node.right);
+      if (node.operator === '+' || node.operator === '-') {
+        if (isZero(right) && isNumeric(left)) return left;
+        if (node.operator === '+' && isZero(left) && isNumeric(right)) return right;
+      }
+      return { ...node, left, right };
+    }
     case 'conditional':
       return {
         ...node,
@@ -590,17 +784,20 @@ function substitute(node: Expression, values: Map<Expression, Value>): Expressio
       return {
         ...node,
         args: node.args.flatMap((arg) => {
-          const value = arg.kind === 'reference' ? values.get(arg) : undefined;
+          const value = arg.kind === 'reference' ? rolling.values.get(arg) : undefined;
           return typeof value === 'object'
             ? value.map((item) => literal(item, arg.span))
             : [recurse(arg)];
         }),
       };
     case 'dice': {
-      const count = values.get(node);
-      return typeof count === 'number'
-        ? { ...node, count: literal(count, node.span) }
-        : { ...node, count: node.count && recurse(node.count) };
+      const resolved = rolling.dice.get(node);
+      if (resolved) return resolved;
+      return {
+        ...node,
+        count: node.count && recurse(node.count),
+        die: node.die.kind === 'sized' ? { ...node.die, sides: recurse(node.die.sides) } : node.die,
+      };
     }
     default:
       return node;

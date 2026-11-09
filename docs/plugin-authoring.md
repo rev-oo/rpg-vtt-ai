@@ -957,6 +957,7 @@ Once any item type has a `group`, a type without one gets a heading of its own: 
 | `default`                 | The value new entities start with. It must fit the field's type and limits. |
 | `minimum`, `maximum`      | Limits for numbers                                                          |
 | `minLength`, `maxLength`  | Limits for text                                                             |
+| `format: "dice"`          | Text that holds dice, such as `2d6 + 3`, or nothing; see `roll()`           |
 | `enum`                    | The allowed values, offered by a `select` input                             |
 | `properties`              | The fields of an `object`                                                   |
 | `items`                   | The rows of an `array`                                                      |
@@ -1102,35 +1103,40 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | `@item.bonus`            | The item the roll is [made with](#rolls-made-with-an-item)            | Recipes with `item`, outcomes, cards |
 | `@total`                 | The roll's result                                                     | Outcomes and card rows               |
 | `@roll.expression`       | The formula as written                                                | Outcomes and card rows               |
-| `@roll.resolved`         | The formula with values filled in: `1d20 + 2 + 3`                     | Outcomes and card rows               |
+| `@roll.resolved`         | The formula as rolled: `1d20 + 2 + 3` (see below)                     | Outcomes and card rows               |
 
 The validator checks every reference against the type that uses it: `@agilty` is an error that names the type.
+
+`@roll.resolved`, which the chat shows next to every roll, is the formula as it was rolled: references hold the values they read, dice their counts and sizes, each `?:` and `if()` only the branch it took, each `roll()` the dice it rolled, and `+ 0` is left out. `(@item.dice)d(@item.die) + (@item.finesse ? @derived.dexMod : @derived.strMod) + @item.magic` reads `1d8 + 3` for a mundane longsword.
 
 #### Operators
 
 From loosest to tightest:
 
-| Operator                    | Meaning                                                   |
-| --------------------------- | --------------------------------------------------------- |
-| `cond ? a : b`              | `a` if `cond` is true, else `b`                           |
-| `or`, `and`, `not`          | Logic on `true`/`false`                                   |
-| `==` `!=` `<` `<=` `>` `>=` | Comparisons; they do not chain (`1 < @a < 3` is an error) |
-| `+` `-`                     | Add or subtract numbers; `+` also joins two texts         |
-| `*` `/` `%`                 | Multiply, divide, remainder                               |
-| `-x`                        | Negation                                                  |
+| Operator                    | Meaning                                                            |
+| --------------------------- | ------------------------------------------------------------------ |
+| `cond ? a : b`              | `a` if `cond` is true, else `b`                                    |
+| `or`, `and`, `not`          | Logic on `true`/`false`                                            |
+| `==` `!=` `<` `<=` `>` `>=` | Comparisons; they do not chain (`1 < @a < 3` is an error)          |
+| `+` `-`                     | Add or subtract numbers; `+` also joins text with text or a number |
+| `*` `/` `%`                 | Multiply, divide, remainder                                        |
+| `-x`                        | Negation                                                           |
 
-Types are strict: nothing converts silently, so `@str + 'x'` and `if(1, …)` are errors. Dividing by zero is an error. `and`, `or`, `?:` and `if` only evaluate the side they need.
+Types are strict: nothing converts silently, except that `+` writes a number into text (`@dice + 'd' + @die` gives `2d6`), so `'a' + true` and `if(1, …)` are errors. Dividing by zero is an error. `and`, `or`, `?:` and `if` only evaluate the side they need.
 
 #### Functions
 
-| Function                                    | Result                                        |
-| ------------------------------------------- | --------------------------------------------- |
-| `floor(x)`, `ceil(x)`, `round(x)`, `abs(x)` | As in maths                                   |
-| `min(…)`, `max(…)`                          | The smallest or largest of numbers or lists   |
-| `sum(…)`                                    | The total of numbers or lists; `0` when empty |
-| `count(@list[*])`                           | How many rows a collection has                |
-| `clamp(x, low, high)`                       | `x` kept between `low` and `high`             |
-| `if(cond, a, b)`                            | The same as `cond ? a : b`                    |
+| Function                                    | Result                                                         |
+| ------------------------------------------- | -------------------------------------------------------------- |
+| `floor(x)`, `ceil(x)`, `round(x)`, `abs(x)` | As in maths                                                    |
+| `min(…)`, `max(…)`                          | The smallest or largest of numbers or lists                    |
+| `sum(…)`                                    | The total of numbers or lists; `0` when empty                  |
+| `count(@list[*])`                           | How many rows a collection has                                 |
+| `clamp(x, low, high)`                       | `x` kept between `low` and `high`                              |
+| `if(cond, a, b)`                            | The same as `cond ? a : b`                                     |
+| `text(x)`                                   | A number or `true`/`false` as text: `'3'`                      |
+| `signed(x)`                                 | A number as text with its sign: `'+3'`, `'-1'`, `'+0'`         |
+| `roll(text)`, `roll(text, n)`               | Rolls the dice a text holds; only in rolls (see [Dice](#dice)) |
 
 A plugin can add its own functions in [`code/shared`](#shared-code).
 
@@ -1142,12 +1148,15 @@ Dice belong only in roll formulas (recipes); anywhere else they are an error.
 | --------------------- | ---------------------------------------------------------------------------- |
 | `2d6`, `d20`          | Dice, summed                                                                 |
 | `(@pool)d6`           | A count from a formula; the `(` must touch the `d`                           |
+| `(@n)d(@item.die)`    | A size from a formula too: a whole number from 1 to 1,000,000                |
 | `4d6kh3`              | Keep the highest 3 (`kl`: lowest; `dh`, `dl`: drop highest or lowest)        |
 | `3d6!`                | Exploding: a die showing its highest value adds another die                  |
 | `2d20r1`              | Reroll a die showing 1, once (`r<3`, `r<=2` and so on also work)             |
 | `5d10cs>=7`           | Count successes instead of summing (`cf` counts failures and subtracts them) |
 | `(@args.pool)d6cs>=5` | A pool: as many d6 as the argument says, counting 5s and 6s                  |
 | `4dF`                 | A [custom die](#custom-dice) declared in `dice.json`                         |
+
+A text field with `"format": "dice"` holds dice a player or GM types, such as a weapon's extra damage: `2d6 + 3`. It accepts numbers, dice and `+ - * /` only, or nothing; the sheet refuses anything else and so does the server. `roll(@item.extraDamage)` rolls it as part of the formula, and an empty one rolls `0`. `roll(text, 2)` doubles every die count but not the numbers, as critical hits do in many games: `1d8 + 3` rolls as `2d8 + 3`. Its dice count toward the roll's limit.
 
 With `cs` or `cf`, a term is worth its successes minus its failures, so the `@total` of `(@args.pool)d6cs>=5` is the number of successes. Modifiers can be combined, once each, and apply in a fixed order: reroll, explode, keep or drop, then count. A roll may use up to 1,000 dice, explosions included.
 

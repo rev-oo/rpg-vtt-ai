@@ -428,6 +428,11 @@
                       "path": "damageType",
                       "label": "field.damageType",
                       "input": "select"
+                    },
+                    {
+                      "type": "field",
+                      "path": "extraDamage",
+                      "label": "field.extraDamage"
                     }
                   ]
                 },

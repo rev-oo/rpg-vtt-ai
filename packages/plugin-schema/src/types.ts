@@ -31,6 +31,7 @@ export interface FieldSchema {
   maximum?: number | undefined;
   minLength?: number | undefined;
   maxLength?: number | undefined;
+  format?: 'dice' | undefined;
   required?: string[] | undefined;
   properties?: Record<string, FieldSchema> | undefined;
   items?: FieldSchema | undefined;
@@ -57,6 +58,12 @@ export const fieldSchema: z.ZodType<FieldSchema> = z.lazy(() =>
       maximum: z.number().optional(),
       minLength: z.int().min(0).optional(),
       maxLength: z.int().min(0).optional(),
+      format: z
+        .literal('dice')
+        .optional()
+        .describe(
+          'For a `string`: the text must be a dice expression, such as `2d6 + 3` (numbers, dice and + - * / only), or blank. Formulas roll it with `roll(@field)`.',
+        ),
       required: z.array(identifier).optional(),
       /** Field names are identifiers, so formulas can reference them. */
       properties: z

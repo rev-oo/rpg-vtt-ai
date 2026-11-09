@@ -1,3 +1,4 @@
+import { isDiceText } from '@vtt/formula';
 import type { FieldSchema } from '@vtt/plugin-schema';
 import type { DataIssueReason } from '@vtt/shared/api';
 
@@ -21,7 +22,9 @@ export function valueIssue(field: FieldSchema, value: unknown): DataIssueReason 
   if (field.enum && !field.enum.includes(value as string | number)) return 'enum';
   switch (field.type) {
     case 'string':
-      return typeof value === 'string' ? lengthIssue(field, value.length) : 'type';
+      if (typeof value !== 'string') return 'type';
+      if (field.format === 'dice' && !isDiceText(value)) return 'format';
+      return lengthIssue(field, value.length);
     case 'integer':
       return Number.isSafeInteger(value) ? rangeIssue(field, value as number) : 'type';
     case 'number':

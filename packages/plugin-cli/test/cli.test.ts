@@ -220,7 +220,7 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
       default: { functions: Record<string, (...args: unknown[]) => unknown> };
     };
     expect(definition.functions.slots?.('class.wizard', 5, 3)).toBe(2);
-    expect(definition.functions.damage?.(1, 8, 3)).toBe('1d8 + 3');
+    expect(definition.functions.saveText?.('ability.dex', 13)).toBe('Dexterity DC 13');
   });
 
   it('packs tiny-d20’s /check command into code that runs on its own (T-0804)', async () => {

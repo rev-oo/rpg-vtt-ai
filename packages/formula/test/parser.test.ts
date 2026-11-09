@@ -94,7 +94,14 @@ describe('parse (specs §8.9)', () => {
     ['dF', 'dF'],
     ['4dFcs>=1', '4dFcs>=1'],
     ['(@pool)d6cs>=5', '(@pool)d6cs>=5'],
-    ['(@a + 1)d(6)', null],
+    ['(@a + 1)d(6)', '(@a + 1)d(6)'],
+    ['(@item.dice)d(@item.die)', '(@item.dice)d(@item.die)'],
+    ['2d(@die)kh1', '2d(@die)kh1'],
+    ['d(@a ? 6 : 8)!r1 + 1', 'd(@a ? 6 : 8)!r1 + 1'],
+    ['d((@a))', 'd(@a)'],
+    ['2d(', null],
+    ['2d(6', null],
+    ['2d()', null],
     ['-2d6', '-2d6'],
   ])('reads dice terms (FR-DICE-01, 03): %s', (source, printed) => {
     if (printed === null) {
@@ -120,6 +127,18 @@ describe('parse (specs §8.9)', () => {
     expect(withoutSpans(parse('2d6!=7'))).toMatchObject({ kind: 'binary', operator: '!=' });
     // A group followed by a die with a space is not a count.
     expect(() => parse('(2) d6')).toThrow('Unexpected "d6"');
+  });
+
+  it('reads a die whose size is a formula', () => {
+    expect(withoutSpans(parse('(@n)d(@die)kh1'))).toEqual({
+      kind: 'dice',
+      count: { kind: 'reference', name: 'n', path: [] },
+      die: { kind: 'sized', sides: { kind: 'reference', name: 'die', path: [] } },
+      modifiers: [{ kind: 'keep', which: 'highest', count: 1 }],
+    });
+    expect(parse('2d(@die)kh1 + 1')).toMatchObject({ left: { span: { start: 0, end: 11 } } });
+    // Parentheses inside the size do not end it early.
+    expect(canonical('d(max(@a, (6)))r1')).toBe('d(max(@a, 6))r1');
   });
 
   it('keeps dice-like words as names and fields', () => {

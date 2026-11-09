@@ -284,6 +284,12 @@
               ],
               "default": "slashing"
             },
+            "extraDamage": {
+              "type": "string",
+              "format": "dice",
+              "default": "",
+              "maxLength": 40
+            },
             "notes": {
               "type": "string",
               "default": "",

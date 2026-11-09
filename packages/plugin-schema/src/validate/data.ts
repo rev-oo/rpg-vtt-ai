@@ -1,3 +1,5 @@
+import { isDiceText } from '@vtt/formula';
+
 import type { FieldSchema } from '../types.js';
 
 import { RESERVED_ROOTS } from './formulas.js';
@@ -35,6 +37,9 @@ function defaultProblem(field: FieldSchema, value: unknown): PluginIssue['params
     return { reason: 'too_small', origin, minimum: low };
   if (size !== undefined && high !== undefined && size > high)
     return { reason: 'too_big', origin, maximum: high };
+  if (field.format === 'dice' && typeof value === 'string' && !isDiceText(value)) {
+    return { reason: 'invalid_format' };
+  }
   return undefined;
 }
 
@@ -54,6 +59,9 @@ function checkField(field: FieldSchema, path: JsonPath, add: Add): void {
       key: `x-kind "${kind}"`,
       type: field.type,
     });
+  if (field.format !== undefined && field.type !== 'string') {
+    add('invalid_annotation', [...path, 'format'], { key: 'format', type: field.type });
+  }
   if (field['x-counter'] === true && field.type !== 'integer' && field.type !== 'number') {
     add('invalid_annotation', [...path, 'x-counter'], { key: 'x-counter', type: field.type });
   }

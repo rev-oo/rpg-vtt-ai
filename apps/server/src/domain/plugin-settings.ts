@@ -23,6 +23,8 @@ function settingMessage({ reason }: SettingIssue): string {
     case 'minLength':
     case 'maxLength':
       return 'Wrong length.';
+    case 'format':
+      return 'Not in the expected format.';
   }
 }
 

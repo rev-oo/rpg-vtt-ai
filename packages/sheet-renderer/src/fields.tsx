@@ -1,6 +1,6 @@
 import { useId, useState, type ReactElement, type ReactNode } from 'react';
 
-import type { Value } from '@vtt/formula';
+import { isDiceText, type Value } from '@vtt/formula';
 import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
 import { Button, cn, controlClass } from '@vtt/ui';
 
@@ -64,7 +64,8 @@ function problemWith(
   const { strings } = sheet;
   if (!numeric) {
     const max = schema?.maxLength;
-    return max !== undefined && text.length > max ? fill(strings.tooLong, { max }) : undefined;
+    if (max !== undefined && text.length > max) return fill(strings.tooLong, { max });
+    return schema?.format === 'dice' && !isDiceText(text) ? strings.notDice : undefined;
   }
   const value = Number(text);
   if (text.trim() === '' || !Number.isFinite(value)) return strings.notNumber;
