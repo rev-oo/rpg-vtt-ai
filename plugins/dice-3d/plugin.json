@@ -1,0 +1,14 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/plugin.schema.json",
+  "id": "dice-3d",
+  "name": "3D dice",
+  "version": "1.0.0",
+  "kind": "module",
+  "coreApi": "^0.1.0",
+  "hasCode": true,
+  "description": "Throws 3D dice over the table for each roll you see, landing on the server's results.",
+  "author": "rpg-vtt-ai",
+  "license": "MIT",
+  "locales": ["en", "pt-BR"],
+  "defaultLocale": "en"
+}

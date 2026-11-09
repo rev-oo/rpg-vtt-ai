@@ -1395,6 +1395,8 @@ Every selector must name a part, or be `:root` alone, which sets tokens for the 
 
 A module's `code/client.js` can export overlays, drawn over the whole table page, and panels, which members open from the **Panels** menu and dock like Chat (ADR-077). Each runs in its own sandboxed frame, as sheet nodes do (see [Plugin code](#plugin-code)): it cannot reach the page, cookies, storage or the network. It learns about the table only through these hooks from `@vtt/sdk/client`, and acts only as the viewer.
 
+`plugins/dice-3d` is a complete example: an overlay that throws 3D dice for each roll, with three.js and cannon-es bundled in by `vtt-plugin pack`.
+
 ```js
 import { useState } from 'react';
 import { jsx } from 'react/jsx-runtime';

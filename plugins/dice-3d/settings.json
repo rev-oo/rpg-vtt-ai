@@ -1,0 +1,39 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/settings.schema.json",
+  "colour": {
+    "type": "string",
+    "default": "#8b1e1e",
+    "label": "setting.colour",
+    "description": "setting.colour.description",
+    "scope": "user"
+  },
+  "numbers": {
+    "type": "string",
+    "default": "#ffffff",
+    "label": "setting.numbers",
+    "description": "setting.colour.description",
+    "scope": "user"
+  },
+  "size": {
+    "type": "string",
+    "default": "size.medium",
+    "enum": ["size.small", "size.medium", "size.large"],
+    "label": "setting.size",
+    "scope": "user"
+  },
+  "whose": {
+    "type": "string",
+    "default": "whose.everyone",
+    "enum": ["whose.everyone", "whose.mine"],
+    "label": "setting.whose",
+    "scope": "user"
+  },
+  "seconds": {
+    "type": "integer",
+    "default": 3,
+    "minimum": 1,
+    "maximum": 15,
+    "label": "setting.seconds",
+    "scope": "user"
+  }
+}

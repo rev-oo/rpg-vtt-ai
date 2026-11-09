@@ -1,0 +1,13 @@
+{
+  "setting.colour": "Cor dos dados",
+  "setting.colour.description": "Uma cor no formato #rrggbb, como #8b1e1e.",
+  "setting.numbers": "Cor dos números",
+  "setting.size": "Tamanho dos dados",
+  "setting.whose": "Lançar dados para",
+  "setting.seconds": "Segundos que os dados ficam depois de parar",
+  "size.small": "Pequenos",
+  "size.medium": "Médios",
+  "size.large": "Grandes",
+  "whose.everyone": "Toda rolagem que vejo",
+  "whose.mine": "Só as minhas rolagens"
+}

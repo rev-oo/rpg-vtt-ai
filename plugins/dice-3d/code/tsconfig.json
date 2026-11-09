@@ -1,0 +1,12 @@
+{
+  "extends": ["../../../tsconfig.base.json", "@vtt/config/tsconfig/react.json"],
+  "//": "Type checks the module's client code; vtt-plugin pack compiles it, so nothing is emitted.",
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": true
+  },
+  "include": ["client.tsx", "src", "test"]
+}

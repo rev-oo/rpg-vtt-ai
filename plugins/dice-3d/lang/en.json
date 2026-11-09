@@ -1,0 +1,13 @@
+{
+  "setting.colour": "Dice colour",
+  "setting.colour.description": "A colour as #rrggbb, such as #8b1e1e.",
+  "setting.numbers": "Number colour",
+  "setting.size": "Dice size",
+  "setting.whose": "Throw dice for",
+  "setting.seconds": "Seconds the dice stay after landing",
+  "size.small": "Small",
+  "size.medium": "Medium",
+  "size.large": "Large",
+  "whose.everyone": "Every roll I see",
+  "whose.mine": "My rolls only"
+}
