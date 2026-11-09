@@ -8,7 +8,8 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { LOCALE } from '../i18n/index.js';
 
-import { systemTranslator } from './load.js';
+import { probeClient, type ClientExports, type FrameCode } from './frame-channel.js';
+import { fetchText, systemLang, systemTranslator } from './load.js';
 
 // A table's module plugins (T-1601, ADR-075), as its members load them with the table, and
 // their look on the table page: themes and named-part styles (T-1602, ADR-076).
@@ -24,6 +25,45 @@ export interface LoadedModule {
   /** URLs of its scoped stylesheets and of `code/client.js`. */
   styles: readonly string[];
   client: string | null;
+  /** Its client code for frames, with the overlays and panels it exports (ADR-077). */
+  frames: ModuleFrames | null;
+  /** Why the client code did not load; its overlays and panels then do not show. */
+  clientError: string | null;
+}
+
+export interface ModuleFrames {
+  code: FrameCode;
+  overlays: ClientExports['overlays'];
+  panels: ClientExports['panels'];
+}
+
+/** Each module version's client code, probed once per page. */
+const loadedFrames = new Map<string, Promise<ModuleFrames>>();
+
+function moduleFrames(
+  id: string,
+  version: string,
+  url: string,
+  definition: PluginDefinition,
+): Promise<ModuleFrames> {
+  const key = `${id}@${version}`;
+  let frames = loadedFrames.get(key);
+  if (!frames) {
+    frames = (async () => {
+      // The version keeps the browser from reusing the code of an older install.
+      const code: FrameCode = {
+        pluginId: id,
+        code: await fetchText(`${url}?v=${encodeURIComponent(version)}`),
+        lang: systemLang(definition, LOCALE),
+      };
+      const { overlays, panels } = await probeClient(code);
+      return { code, overlays, panels };
+    })();
+    // A failure is not kept: the next load tries again.
+    frames.catch(() => loadedFrames.delete(key));
+    loadedFrames.set(key, frames);
+  }
+  return frames;
 }
 
 export type TableModulesState =
@@ -45,12 +85,19 @@ export function useTableModules(table: TableView): {
     const [tableId] = JSON.parse(key) as [string];
     api
       .getTableModules(tableId)
-      .then((modules) => {
-        if (!live) return;
-        setState({
-          status: 'ready',
-          modules: modules.map((module) => {
+      .then((modules) =>
+        Promise.all(
+          modules.map(async (module): Promise<LoadedModule> => {
             const definition = pluginDefinitionSchema.parse(module.definition);
+            let frames: ModuleFrames | null = null;
+            let clientError: string | null = null;
+            if (module.client) {
+              try {
+                frames = await moduleFrames(module.id, module.version, module.client, definition);
+              } catch (error) {
+                clientError = error instanceof Error ? error.message : String(error);
+              }
+            }
             return {
               id: module.id,
               name: module.name,
@@ -60,9 +107,14 @@ export function useTableModules(table: TableView): {
               settings: module.settings as Record<string, Value>,
               styles: module.styles,
               client: module.client,
+              frames,
+              clientError,
             };
           }),
-        });
+        ),
+      )
+      .then((modules) => {
+        if (live) setState({ status: 'ready', modules });
       })
       .catch((caught: unknown) => {
         if (live) setState({ status: 'error', error: errorMessage(caught) });
@@ -91,6 +143,16 @@ export function useLoadedModules(): TableModules {
   const modules = use(TableModulesContext);
   if (!modules) throw new Error('useLoadedModules used outside a table page');
   return modules;
+}
+
+export type FramedModule = LoadedModule & { frames: ModuleFrames };
+
+/** The table's modules whose client code loaded, so their overlays and panels can show. */
+export function useFramedModules(): FramedModule[] {
+  const { state } = useLoadedModules();
+  return state.status === 'ready'
+    ? state.modules.filter((module): module is FramedModule => module.frames !== null)
+    : [];
 }
 
 /** The attribute on `<html>` that module styles match: the ids of the modules that are on. */

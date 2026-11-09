@@ -1332,7 +1332,7 @@ Formulas read only `table` settings: the validator reports `@settings.colour` ab
 
 A plugin with `"kind": "module"` extends any table, whatever its system (FR-PLUGIN-16, ADR-075). Admins enable it on the Plugins page as they enable systems, and each table's GM adds it in the table's Settings panel, under **Modules**. Members load a table's modules with the table.
 
-A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). Overlays and panels arrive later in M16.
+A module may have `plugin.json`, `settings.json`, `lang/`, `styles/` and `code/client.js`. It cannot change a system's data or rules, so it may not have `types/`, `sheets/`, `cards/`, `packs/`, `migrations/`, `rolls.json`, `dice.json`, `combat.json`, `code/server.js` or `code/shared.js`; the validator refuses them (`module_file`). A module draws things on the table page through [overlays and panels](#overlays-and-panels).
 
 #### Themes
 
@@ -1390,6 +1390,53 @@ Module stylesheets (`styles/*.css`) style named parts of the table page, which c
 ```
 
 Every selector must name a part, or be `:root` alone, which sets tokens for the page; others are removed with a warning (`css_part_required`), and a part name that does not exist is a warning too. Rules apply only on tables that use the module, in `@layer module`, after a system's sheet styles. The other rules of [Styles](#styles) hold: no `@import`, no `html` or `body`, and URLs only inside the module. The app's own classes inside a part are not part of the API and may change.
+
+#### Overlays and panels
+
+A module's `code/client.js` can export overlays, drawn over the whole table page, and panels, which members open from the **Panels** menu and dock like Chat (ADR-077). Each runs in its own sandboxed frame, as sheet nodes do (see [Plugin code](#plugin-code)): it cannot reach the page, cookies, storage or the network. It learns about the table only through these hooks from `@vtt/sdk/client`, and acts only as the viewer.
+
+```js
+import { useState } from 'react';
+import { jsx } from 'react/jsx-runtime';
+import { defineClient, useActions, useModuleSettings, useTableEvents } from '@vtt/sdk/client';
+
+function LastRoll() {
+  const [total, setTotal] = useState(null);
+  const [settings] = useModuleSettings();
+  useTableEvents((event) => {
+    if (event.type === 'chat.message' && event.message.rolls.length > 0) {
+      setTotal(event.message.rolls[0].total);
+    }
+  });
+  return jsx('p', { className: 'last', children: `${settings.label}: ${total ?? '–'}` });
+}
+
+function Tools() {
+  const actions = useActions();
+  return jsx('button', { type: 'button', onClick: () => actions.roll('1d20'), children: 'Roll' });
+}
+
+export default defineClient({
+  overlays: { lastRoll: { component: LastRoll } },
+  panels: { tools: { component: Tools, title: 'panel.tools' } },
+});
+```
+
+- **Overlays** cover the page, with a transparent background. Clicks pass through them to the page, unless the overlay is declared `interactive: true`; then it takes every click over the page, so keep interactive overlays rare. Each member can turn a table's overlays off with **Overlays** in the table's header; the choice is kept in their browser.
+- **Panels** have a `title`, a lang key or text, shown in the Panels menu and on the tab. A panel stays loaded while another tab is in front of it, so it keeps hearing the table.
+- **`useTableEvents(listener)`** calls `listener` with each table event the viewer can see. The server has already decided and filtered each one, so a whisper or a GM-only roll reaches only the frames of those who see it in the chat:
+  - `chat.message` and `chat.updated` come with the `message`, including its `rolls` with dice and totals;
+  - `chat.deleted` comes with the message `id`;
+  - `combat.updated`, `scene.updated` and `token.updated` (with `sceneId`) say only that something changed.
+
+  The chat never waits for a frame. A frame shows results; it never decides them.
+
+- **`useModuleSettings()`** returns the module's settings for the viewer, with each setting's value taken from its scope (instance, table or user), and a setter. The frame redraws when the viewer's or the GM's settings change. The setter changes only the viewer's own `user` settings; the server refuses the others.
+- **`useViewer()`** returns the viewer's `id`, `role` and the `tableId`.
+- **`useActions()`** acts as the viewer: `sendChat(text, options)`, `roll(formula, options)` (options: `audience`, `recipientIds`, `actorId`), `openSheet(actorId)`, `openJournal(entryId)`, `combat('start' | 'end' | 'next' | 'previous' | 'initiative')` and `encounter()`. The server checks each one exactly as if the viewer had done it, so a player's frame cannot run combat. Each returns a promise that rejects with the reason when the action is refused. A frame may take 10 actions in any 10 seconds; the app refuses more.
+- **`useTranslate()`** works in overlays and panels too, with the module's lang files.
+
+A frame that throws is replaced: a panel shows a notice, and an overlay disappears.
 
 ### Translations
 

@@ -1,10 +1,12 @@
-import { createContext, useContext, type ComponentType } from 'react';
+import { createContext, useContext, useEffect, useRef, type ComponentType } from 'react';
 
 import type { Value } from '@vtt/formula';
-import type { RecipeCard, Roll, Speaker } from '@vtt/shared/api';
+import type { Audience, TableRole } from '@vtt/shared';
+import type { ChatMessage, EncounterView, RecipeCard, Roll, Speaker } from '@vtt/shared/api';
 
-// What plugin client code may use (specs §8.10): hooks into the sheet it renders in, and
-// `defineClient` to declare its custom nodes and cards. It gets no sockets and no API client.
+// What plugin client code may use (specs §8.10): hooks into the sheet it renders in, hooks for
+// module overlays and panels (ADR-077), and `defineClient` to declare its components. It gets
+// no sockets and no API client: modules act through the host, as the viewer.
 
 /** The entity a sheet shows. */
 export interface SheetActor {
@@ -59,7 +61,114 @@ export function useActor(): SheetActor | null {
 
 /** Translates the plugin's lang keys into the viewer's language. */
 export function useTranslate(): (text: string) => string {
+  const module = useContext(ModuleFrameContext);
+  if (module) return module.translate;
   return useSheetContext('useTranslate').translate;
+}
+
+/**
+ * What a module's overlay or panel hears of its table (ADR-077): only what the viewer sees,
+ * after the server decided it. Rolls arrive inside chat messages, with their dice and results.
+ * Scenes, tokens and combat say only that they changed.
+ */
+export type TableEvent =
+  | { type: 'chat.message'; message: ChatMessage }
+  | { type: 'chat.updated'; message: ChatMessage }
+  | { type: 'chat.deleted'; id: string }
+  | { type: 'combat.updated' }
+  | { type: 'scene.updated' }
+  | { type: 'token.updated'; sceneId: string };
+
+/** Who views the table the module runs in. */
+export interface Viewer {
+  id: string;
+  role: TableRole;
+}
+
+/** A message or roll's audience and speaker, as in the chat. */
+export interface PostOptions {
+  audience?: Audience;
+  /** Whisper recipients (user ids). */
+  recipientIds?: string[];
+  /** Speak as one of the viewer's actors. */
+  actorId?: string | null;
+}
+
+/** The combat actions a frame may ask for; only GMs and assistants may take them. */
+export const COMBAT_ACTIONS = ['start', 'end', 'next', 'previous', 'initiative'] as const;
+export type CombatAction = (typeof COMBAT_ACTIONS)[number];
+
+/**
+ * What a module may do, as the viewer: the server checks each like the viewer's own, and the
+ * app limits how often a frame acts. Each rejects with the reason when refused.
+ */
+export interface ModuleActions {
+  sendChat: (text: string, options?: PostOptions) => Promise<void>;
+  /** Rolls a formula; the result arrives as a `chat.message` event. */
+  roll: (formula: string, options?: PostOptions) => Promise<void>;
+  openSheet: (actorId: string) => Promise<void>;
+  openJournal: (entryId: string) => Promise<void>;
+  combat: (action: CombatAction) => Promise<void>;
+  /** The table's encounter as the viewer sees it, or null. */
+  encounter: () => Promise<EncounterView | null>;
+}
+
+/** The table a module's frame runs in, as the host provides it. */
+export interface ModuleFrame {
+  tableId: string;
+  viewer: Viewer;
+  /** Every setting's value for the viewer: instance, table or user, by its scope. */
+  settings: Readonly<Record<string, Value>>;
+  /** Changes one of the viewer's own (`user`) settings. */
+  setSetting: (name: string, value: Value) => Promise<void>;
+  /** Calls `listener` with each table event; returns a function that stops it. */
+  listen: (listener: (event: TableEvent) => void) => () => void;
+  actions: ModuleActions;
+  translate: (text: string) => string;
+}
+
+export const ModuleFrameContext = createContext<ModuleFrame | null>(null);
+
+function useModuleFrame(hook: string): ModuleFrame {
+  const frame = useContext(ModuleFrameContext);
+  if (!frame) throw new Error(`${hook}() only works inside a module overlay or panel`);
+  return frame;
+}
+
+/** Calls `listener` with each event of the table, while the component is mounted. */
+export function useTableEvents(listener: (event: TableEvent) => void): void {
+  const frame = useModuleFrame('useTableEvents');
+  const latest = useRef(listener);
+  useEffect(() => {
+    latest.current = listener;
+  });
+  useEffect(
+    () =>
+      frame.listen((event) => {
+        latest.current(event);
+      }),
+    [frame],
+  );
+}
+
+/** The module's settings for the viewer, and a setter for the viewer's own (`user`) ones. */
+export function useModuleSettings(): [
+  settings: Readonly<Record<string, Value>>,
+  set: (name: string, value: Value) => Promise<void>,
+] {
+  const frame = useModuleFrame('useModuleSettings');
+  return [frame.settings, frame.setSetting];
+}
+
+/** The viewer and the table. */
+export function useViewer(): Viewer & { tableId: string } {
+  const frame = useModuleFrame('useViewer');
+  return { ...frame.viewer, tableId: frame.tableId };
+}
+
+/** What the module may do as the viewer. */
+export function useActions(): ModuleActions {
+  return useModuleFrame('useActions').actions;
 }
 
 /** What a `custom:<name>` node receives. */
@@ -75,12 +184,30 @@ export interface CardProps {
   translate: (text: string) => string;
 }
 
+/** A module's overlay, drawn over the whole table page. */
+export interface OverlayDefinition {
+  component: ComponentType;
+  /** Takes the pointer; otherwise clicks pass through to the page. */
+  interactive?: boolean;
+}
+
+/** A module's panel, which the viewer opens from the Panels menu. */
+export interface PanelDefinition {
+  component: ComponentType;
+  /** The panel's title: a lang key or text. */
+  title: string;
+}
+
 /** The default export of `code/client.js`. */
 export interface ClientDefinition {
   /** Components for `custom:<name>` sheet nodes. */
   nodes?: Readonly<Record<string, ComponentType<NodeProps>>>;
   /** Components that replace the core rendering of `cards/<name>.json`. */
   cards?: Readonly<Record<string, ComponentType<CardProps>>>;
+  /** A module's overlays, over the table page (ADR-077). */
+  overlays?: Readonly<Record<string, OverlayDefinition>>;
+  /** A module's panels in the table workspace (ADR-077). */
+  panels?: Readonly<Record<string, PanelDefinition>>;
 }
 
 /** Declares a plugin's client code; it returns its argument, typed. */

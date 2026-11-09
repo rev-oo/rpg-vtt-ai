@@ -24,6 +24,7 @@ import { Button, cn, IconSlot } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 import { ICON, PanelIcon } from '../../icons.js';
+import { useFramedModules } from '../../plugin-host/table-modules.js';
 import type { TableData } from '../table/table-data.js';
 
 import { DockContext } from './dock-context.js';
@@ -33,10 +34,13 @@ import {
   PANEL_TAB,
   restoreLayout,
   saveLayout,
+  showModulePanel,
   showPanel,
   showTarget,
   titleOf,
 } from './layout.js';
+import { modulePanelId, overlaysShown, setOverlaysShown } from './module-ids.js';
+import { ModuleOverlays } from './ModuleFrames.js';
 import { PANEL_COMPONENTS } from './panel-components.js';
 import type { PagePanel, PanelTarget, ToolPanel } from './panel-ids.js';
 import { useDesktop } from './use-desktop.js';
@@ -95,6 +99,32 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const [dock, setDock] = useState<DockviewApi | null>(null);
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
+  const modules = useFramedModules();
+  const hasOverlays = modules.some((module) => module.frames.overlays.length > 0);
+  const [overlays, setOverlays] = useState(() => overlaysShown(userId, table.id));
+  const modulePanels = modules.flatMap((module) =>
+    module.frames.panels.map((panel) => ({
+      id: modulePanelId(module.id, panel.name),
+      title: module.translate(panel.title),
+      pick: (api: DockviewApi) => {
+        showModulePanel(
+          api,
+          { moduleId: module.id, name: panel.name, title: module.translate(panel.title) },
+          phone,
+        );
+      },
+    })),
+  );
+  const menu: MenuItem[] = [
+    ...MENU.filter((id) => id !== 'scenes' || scenes).map((id) => ({
+      id,
+      title: titleOf(id),
+      pick: (api: DockviewApi) => {
+        showPanel(api, id, phone);
+      },
+    })),
+    ...modulePanels,
+  ];
 
   const onActive = useEffectEvent((panelId: string | undefined) => {
     if (panelId?.startsWith(ACTOR_PREFIX)) setDiceActorId(panelId.slice(ACTOR_PREFIX.length));
@@ -161,13 +191,27 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           </span>
           <div className="ml-auto flex items-center gap-1">
             <PanelsMenu
-              items={MENU.filter((id) => id !== 'scenes' || scenes)}
+              items={menu}
               openIds={openIds}
               disabled={!dock}
-              onPick={(id) => {
-                if (dock) showPanel(dock, id, phone);
+              onPick={(item) => {
+                if (dock) item.pick(dock);
               }}
             />
+            {hasOverlays && (
+              <Button
+                variant="ghost"
+                icon={overlays ? <ICON.show /> : <ICON.hide />}
+                aria-pressed={overlays}
+                title={t('module.overlaysHint')}
+                onClick={() => {
+                  setOverlaysShown(userId, table.id, !overlays);
+                  setOverlays(!overlays);
+                }}
+              >
+                {t('module.overlays')}
+              </Button>
+            )}
             <Button
               variant="ghost"
               icon={<ICON.reset />}
@@ -207,6 +251,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
             }}
           />
         </div>
+        <ModuleOverlays shown={overlays} />
       </div>
     </DockContext>
   );
@@ -264,6 +309,13 @@ function Empty(): ReactElement {
   );
 }
 
+/** An entry of the Panels menu: a tool, page or module panel. */
+interface MenuItem {
+  id: string;
+  title: string;
+  pick: (api: DockviewApi) => void;
+}
+
 /** Lists every panel; picking one opens it, or brings it to the front. */
 function PanelsMenu({
   items,
@@ -271,10 +323,10 @@ function PanelsMenu({
   disabled,
   onPick,
 }: {
-  items: readonly (ToolPanel | PagePanel)[];
+  items: readonly MenuItem[];
   openIds: readonly string[];
   disabled: boolean;
-  onPick: (id: ToolPanel | PagePanel) => void;
+  onPick: (item: MenuItem) => void;
 }): ReactElement {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -317,10 +369,10 @@ function PanelsMenu({
           aria-label={t('workspace.panels')}
           className="absolute right-0 z-20 mt-1 flex min-w-48 flex-col rounded-lg border border-line bg-surface p-1 shadow-lg"
         >
-          {items.map((id) => {
-            const shown = openIds.includes(id);
+          {items.map((item) => {
+            const shown = openIds.includes(item.id);
             return (
-              <li key={id}>
+              <li key={item.id}>
                 <button
                   type="button"
                   className={cn(
@@ -328,12 +380,12 @@ function PanelsMenu({
                   )}
                   onClick={() => {
                     setOpen(false);
-                    onPick(id);
+                    onPick(item);
                   }}
                 >
                   <span className="flex items-center gap-2">
-                    <PanelIcon panelId={id} />
-                    {titleOf(id)}
+                    <PanelIcon panelId={item.id} />
+                    {item.title}
                   </span>
                   {shown && <span className="text-sm text-muted">{t('workspace.isOpen')}</span>}
                 </button>
