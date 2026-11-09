@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
 import type { Viewer } from '@vtt/sdk/client';
 
@@ -7,6 +14,7 @@ import { useTableEvents } from '../realtime/use-table-events.js';
 
 import { listen, pageStyles, send } from './frame-channel.js';
 import { FRAME_URL } from './frame-protocol.js';
+import { useFrameRestarts } from './frame-restarts.js';
 import { frameEvent, rateLimiter, runAction, type ActionContext } from './module-actions.js';
 import type { LoadedModule, ModuleFrames } from './table-modules.js';
 
@@ -35,8 +43,11 @@ export function ModuleFrame({
 }: ModuleFrameProps): ReactElement | null {
   const frame = useRef<HTMLIFrameElement>(null);
   const [failed, setFailed] = useState(false);
-  const started = useRef(false);
-  const loads = useRef(0);
+  const giveUp = useCallback(() => {
+    setFailed(true);
+  }, []);
+  const restarts = useFrameRestarts(giveUp);
+  const { begin, live } = restarts;
   const latest = useRef({ module, viewer, context });
   useLayoutEffect(() => {
     latest.current = { module, viewer, context };
@@ -46,7 +57,7 @@ export function ModuleFrame({
 
   useTableEvents(context.tableId, {
     onEvent: (event) => {
-      if (!started.current) return;
+      if (!live()) return;
       const forFrame = frameEvent(event);
       if (forFrame) send(frame.current, { type: 'event', event: forFrame });
     },
@@ -60,8 +71,7 @@ export function ModuleFrame({
           const current = latest.current;
           switch (message.type) {
             case 'ready':
-              if (started.current) return;
-              started.current = true;
+              if (!begin()) return;
               send(frame.current, {
                 type: 'init',
                 setup: {
@@ -80,6 +90,7 @@ export function ModuleFrame({
               });
               return;
             case 'action': {
+              if (!live()) return;
               const { id } = message;
               if (!allowed()) {
                 send(frame.current, { type: 'result', id, ok: false, error: t('module.tooFast') });
@@ -105,13 +116,13 @@ export function ModuleFrame({
           }
         },
       ),
-    [kind, name, title, allowed],
+    [kind, name, title, allowed, begin, live],
   );
 
   // The viewer's settings changed: own changes, the GM's or a reload.
   useEffect(() => {
-    if (started.current) send(frame.current, { type: 'settings', settings: module.settings });
-  }, [module.settings]);
+    if (live()) send(frame.current, { type: 'settings', settings: module.settings });
+  }, [module.settings, live]);
 
   if (failed) {
     // A failed overlay stays out of the way; a failed panel says so.
@@ -121,17 +132,14 @@ export function ModuleFrame({
   }
   return (
     <iframe
+      key={restarts.generation}
       ref={frame}
       src={FRAME_URL}
       title={title}
       sandbox="allow-scripts"
       className={className}
       data-module={module.id}
-      onLoad={() => {
-        // A frame that navigates away is no longer the module's page: stop talking to it.
-        loads.current += 1;
-        if (loads.current > 1) setFailed(true);
-      }}
+      onLoad={restarts.onLoad}
     />
   );
 }
