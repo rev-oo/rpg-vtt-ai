@@ -878,7 +878,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Done when:** tests cover targets, their rights and statuses; e2e attacks a selected token, applies damage and sees a condition on the token.
 
 - [ ] **T-1606 · Interface review**
-  - **Deps:** T-1607 to T-1615 (it reviews the screens they change)
+  - **Deps:** none
   - **Do:** Review every screen on desktop and phone (layout, consistency, empty states, feedback, keyboard and screen-reader use) and write it up with screenshots in `docs/studies/interface-review.md`. The changes the user picks join M16 as tasks.
   - **Done when:** the review covers each screen at both sizes, and the chosen changes are tasks in M16.
 
