@@ -88,6 +88,7 @@ export const PLUGIN: PluginDefinition = {
       card: 'skill',
     },
     plain: { formula: '1d6' },
+    monster: { formula: '1d20', actors: ['npc'] },
     lostCard: { label: 'roll.lost', formula: '1d6 + 1', card: 'gone' },
     fate: { formula: '4dF' },
     attack: { handler: 'attack' },

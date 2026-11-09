@@ -21,7 +21,18 @@ export const RESERVED_ROOTS = [
   'roll',
   'items',
   'item',
+  'let',
+  'rolls',
 ] as const;
+
+/** What `@roll` and each `@rolls.<name>` hold (T-1608). */
+export const ROLL_KEYS: ReadonlySet<string> = new Set([
+  'expression',
+  'resolved',
+  'total',
+  'natural',
+  'dice',
+]);
 
 /** What `@item` names in a row of an `items` node (ADR-063). */
 export const ITEM_KEYS: ReadonlySet<string> = new Set(['id', 'name', 'type']);
@@ -50,6 +61,10 @@ export interface FormulaScope {
   args?: boolean;
   /** `@total` and `@roll.*`: in outcomes and cards. */
   roll?: boolean;
+  /** `@let.*`: a recipe's named values, in its formulas, outcomes and card (T-1608). */
+  let?: ReadonlySet<string> | undefined;
+  /** `@rolls.<name>.*`: a recipe's formulas rolled so far (T-1608). */
+  rolls?: ReadonlySet<string> | undefined;
   settings: ReadonlySet<string>;
 }
 
@@ -112,8 +127,21 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
       );
     case 'total':
       return scope.roll === true && path.length === 0;
-    case 'roll':
-      return scope.roll === true;
+    case 'roll': {
+      const [first] = path;
+      return scope.roll === true && first?.kind === 'field' && ROLL_KEYS.has(first.name);
+    }
+    case 'let':
+      return onlyName(path, scope.let);
+    case 'rolls': {
+      const [first, second] = path;
+      return (
+        first?.kind === 'field' &&
+        scope.rolls?.has(first.name) === true &&
+        second?.kind === 'field' &&
+        ROLL_KEYS.has(second.name)
+      );
+    }
     default:
       return scope.data === undefined || resolvesIn(scope.data, [{ kind: 'field', name }, ...path]);
   }

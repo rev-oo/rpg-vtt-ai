@@ -453,22 +453,6 @@
                       "args": {
                         "id": "@row.id"
                       }
-                    },
-                    {
-                      "type": "rollButton",
-                      "roll": "npcDamage",
-                      "label": "button.damage",
-                      "args": {
-                        "id": "@row.id"
-                      }
-                    },
-                    {
-                      "type": "rollButton",
-                      "roll": "npcCrit",
-                      "label": "button.crit",
-                      "args": {
-                        "id": "@row.id"
-                      }
                     }
                   ]
                 }

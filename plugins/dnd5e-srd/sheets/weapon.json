@@ -125,16 +125,6 @@
             "type": "rollButton",
             "roll": "weaponAttack",
             "label": "button.attack"
-          },
-          {
-            "type": "rollButton",
-            "roll": "weaponDamage",
-            "label": "button.damage"
-          },
-          {
-            "type": "rollButton",
-            "roll": "weaponCrit",
-            "label": "button.crit"
           }
         ]
       }

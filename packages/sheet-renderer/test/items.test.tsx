@@ -29,6 +29,17 @@ const ROW: SheetNode = {
   ],
 };
 
+/** A row whose formulas read the item (T-1608). */
+const ITEM_ROW: SheetNode = {
+  type: 'column',
+  children: [
+    { type: 'field', path: 'equipped', label: 'Equipped', input: 'checkbox' },
+    { type: 'text', text: 'Worn', visibleIf: '@item.equipped' },
+    { type: 'text', text: 'Sturdy', visibleIf: '@item.derived.total == 4' },
+    { type: 'rollButton', roll: 'brace', label: 'Brace', args: { bonus: '@item.bonus + @str' } },
+  ],
+};
+
 describe('items nodes (T-1206)', () => {
   it('shows nothing without a host', () => {
     const { container } = renderSheet({ type: 'items', item: ROW });
@@ -58,6 +69,36 @@ describe('items nodes (T-1206)', () => {
     await userEvent.click(within(gear).getByLabelText('Equipped'));
     expect(item.getSnapshot()).toEqual({ bonus: 3, equipped: true });
     expect(store.getSnapshot()).toEqual({});
+  });
+
+  it("reads the row's item fields and derived values (T-1608)", async () => {
+    const item = createMemoryStore({ bonus: 3 });
+    const rolls: unknown[] = [];
+    const renderItems: ItemsRenderer = ({ node }) => (
+      <ItemRow
+        item={{ id: 'i1', name: 'Mail', type: 'armor' }}
+        store={item}
+        schema={ARMOR}
+        readOnly={false}
+        layout={node.item}
+        derived={{ total: '@bonus + 1' }}
+      />
+    );
+    renderSheet(
+      { type: 'items', item: ITEM_ROW },
+      {
+        renderItems,
+        onRoll: (...call) => {
+          rolls.push(call);
+        },
+      },
+    );
+    expect(screen.getByText('Sturdy')).toBeVisible();
+    expect(screen.queryByText('Worn')).toBeNull();
+    await userEvent.click(screen.getByLabelText('Equipped'));
+    expect(screen.getByText('Worn')).toBeVisible();
+    await userEvent.click(screen.getByRole('button', { name: 'Brace' }));
+    expect(rolls).toEqual([['brace', { bonus: 17 }, { id: 'i1', name: 'Mail', type: 'armor' }]]);
   });
 
   it('keeps a read-only item read-only', () => {

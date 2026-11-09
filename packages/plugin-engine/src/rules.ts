@@ -156,6 +156,12 @@ export function createRules(
       if (!('formula' in recipe)) {
         throw new EngineError('handler_recipe', `The roll "${name}" runs plugin code`);
       }
+      if (kind === 'actor' && recipe.actors && !recipe.actors.includes(typeName)) {
+        throw new EngineError(
+          'wrong_actor_type',
+          `The roll "${name}" is not for actors of type "${typeName}"`,
+        );
+      }
       const scope = scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
       return rollRecipe(name, recipe, { scope, rng, cards: plugin.cards, customDice, functions });
     },

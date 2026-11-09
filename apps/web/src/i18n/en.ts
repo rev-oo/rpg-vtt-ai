@@ -331,6 +331,8 @@ export const en = {
     'The roll “{roll}” is made with an item: put its button in an items row or on an item sheet.',
   'pluginIssue.item_mismatch':
     'The roll “{roll}” is not made with items of type “{type}”; list it in the roll’s item.',
+  'pluginIssue.actor_mismatch':
+    'The roll “{roll}” is not for actors of type “{type}”; list it in the roll’s actors.',
   'pluginIssue.invalid_default': 'The default does not fit the field: {reason}',
   'pluginIssue.invalid_annotation': '{key} cannot be used on a field of type {type}.',
   'pluginIssue.reserved_name': '“{name}” is reserved for formulas and cannot name a field.',

@@ -433,10 +433,12 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `label` | [text](#text) |  | The roll name in chat; a lang key or literal text. |
-| `formula` | [formula](#formula) | yes | What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`. |
+| `let` | map from [identifier](#identifier) to [formula](#formula) |  | Named values worked out before rolling, in order, without dice. The formulas, outcomes and card read them as `@let.<name>`; each reads the ones before it. |
+| `formula` | [formula](#formula) or map from [identifier](#identifier) to [formula](#formula) | yes | What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`. Or several formulas by name, rolled in order into one message; each reads those before it as `@rolls.<name>`. |
 | `outcomes` | list of [Outcome](#rolls-outcome) |  | Checked in order; the first whose `when` is true is shown. |
 | `card` | [name](#name) |  | A card in `cards/`, without `.json`, to show the roll with. |
 | `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`. |
+| `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
 <a id="rolls-handler-recipe"></a>
 
@@ -446,6 +448,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | --- | --- | --- | --- |
 | `label` | [text](#text) |  |  |
 | `handler` | [name](#name) | yes | A handler in `code/server`, run on the server when the recipe is rolled. |
+| `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
 <a id="rolls-outcome"></a>
 
@@ -453,7 +456,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
-| `when` | [formula](#formula) |  | A true/false formula that can read `@total` and `@roll`; leave it out for the fallback. |
+| `when` | [formula](#formula) |  | A true/false formula that can read `@total`, `@roll`, `@rolls` and `@let`; leave it out for the fallback. |
 | `label` | [text](#text) | yes | Shown with the roll; a lang key or literal text. |
 | `class` | [css classes](#css-classes) |  | A CSS class for the outcome, for `styles/*.css`. |
 
@@ -508,7 +511,7 @@ How a recipe roll shows in chat.
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | A lang key or literal text. |
-| `value` | [formula](#formula) | yes | Reads `@total`, `@roll.expression`, `@roll.resolved` and the entity's data. It cannot roll dice. |
+| `value` | [formula](#formula) | yes | Reads `@total`, `@roll` (`expression`, `resolved`, `total`, `natural`, `dice`), the recipe's `@rolls` and `@let`, and the entity's data. It cannot roll dice. |
 | `class` | [css classes](#css-classes) |  |  |
 
 <a id="settings"></a>
