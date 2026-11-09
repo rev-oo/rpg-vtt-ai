@@ -17,5 +17,5 @@
 
 ## Consequences
 
-- The workspace and its lockfile are unchanged. The e2e test `dice-3d.spec.ts` installs the code's dependencies before packing the plugin; the type check and unit tests run by hand in `code/`, and the T-1604 study proposes bringing them into CI.
+- The workspace and its lockfile are unchanged. The e2e test `dice-3d.spec.ts` installs the code's dependencies before packing the plugin; the plugin-schema tests validate its files like the other reference plugins, skipping `code/node_modules` and the JSON under `code/`; the type check and unit tests of its code run by hand in `code/`, and the T-1604 study proposes bringing them into CI.
 - Authors outside this repository have no documented way to declare dependencies; the study proposes one.
