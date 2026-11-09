@@ -1,0 +1,546 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/actor-type.schema.json",
+  "label": "type.character",
+  "controlledBy": "player",
+  "sheet": "character",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "class": {
+        "type": "string",
+        "enum": [
+          "class.barbarian",
+          "class.bard",
+          "class.cleric",
+          "class.druid",
+          "class.fighter",
+          "class.monk",
+          "class.paladin",
+          "class.ranger",
+          "class.rogue",
+          "class.sorcerer",
+          "class.warlock",
+          "class.wizard"
+        ],
+        "default": "class.fighter"
+      },
+      "subclass": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "level": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 20
+      },
+      "species": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "background": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "xp": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0
+      },
+      "str": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "dex": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "con": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "int": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "wis": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "cha": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "saves": {
+        "type": "object",
+        "properties": {
+          "str": {
+            "type": "boolean",
+            "default": false
+          },
+          "dex": {
+            "type": "boolean",
+            "default": false
+          },
+          "con": {
+            "type": "boolean",
+            "default": false
+          },
+          "int": {
+            "type": "boolean",
+            "default": false
+          },
+          "wis": {
+            "type": "boolean",
+            "default": false
+          },
+          "cha": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "rollMode": {
+        "type": "string",
+        "enum": ["mode.normal", "mode.advantage", "mode.disadvantage"],
+        "default": "mode.normal"
+      },
+      "conditions": {
+        "type": "object",
+        "properties": {
+          "blinded": {
+            "type": "boolean",
+            "default": false
+          },
+          "charmed": {
+            "type": "boolean",
+            "default": false
+          },
+          "deafened": {
+            "type": "boolean",
+            "default": false
+          },
+          "frightened": {
+            "type": "boolean",
+            "default": false
+          },
+          "grappled": {
+            "type": "boolean",
+            "default": false
+          },
+          "incapacitated": {
+            "type": "boolean",
+            "default": false
+          },
+          "invisible": {
+            "type": "boolean",
+            "default": false
+          },
+          "paralyzed": {
+            "type": "boolean",
+            "default": false
+          },
+          "petrified": {
+            "type": "boolean",
+            "default": false
+          },
+          "poisoned": {
+            "type": "boolean",
+            "default": false
+          },
+          "prone": {
+            "type": "boolean",
+            "default": false
+          },
+          "restrained": {
+            "type": "boolean",
+            "default": false
+          },
+          "stunned": {
+            "type": "boolean",
+            "default": false
+          },
+          "unconscious": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "exhaustion": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 6,
+        "x-counter": true
+      },
+      "skills": {
+        "type": "object",
+        "properties": {
+          "acrobatics": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "animalHandling": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "arcana": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "athletics": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "deception": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "history": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "insight": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "intimidation": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "investigation": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "medicine": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "nature": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "perception": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "performance": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "persuasion": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "religion": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "sleightOfHand": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "stealth": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          },
+          "survival": {
+            "type": "string",
+            "enum": ["prof.none", "prof.proficient", "prof.expertise"],
+            "default": "prof.none"
+          }
+        }
+      },
+      "hp": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 0,
+            "maximum": 999,
+            "x-counter": true
+          },
+          "max": {
+            "type": "integer",
+            "default": 10,
+            "minimum": 1,
+            "maximum": 999
+          },
+          "temp": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 999,
+            "x-counter": true
+          }
+        }
+      },
+      "hitDiceUsed": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 20,
+        "x-counter": true
+      },
+      "deathSaves": {
+        "type": "object",
+        "properties": {
+          "successes": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 3,
+            "x-counter": true
+          },
+          "failures": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 3,
+            "x-counter": true
+          }
+        }
+      },
+      "inspiration": {
+        "type": "boolean",
+        "default": false
+      },
+      "speed": {
+        "type": "integer",
+        "default": 30,
+        "minimum": 0,
+        "maximum": 200
+      },
+      "concentration": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "slotsUsed": {
+        "type": "object",
+        "properties": {
+          "l1": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l2": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l3": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l4": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l5": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l6": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l7": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l8": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          },
+          "l9": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 4,
+            "x-counter": true
+          }
+        }
+      },
+      "coins": {
+        "type": "object",
+        "properties": {
+          "cp": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+          },
+          "sp": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+          },
+          "ep": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+          },
+          "gp": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+          },
+          "pp": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0
+          }
+        }
+      },
+      "portrait": {
+        "type": "string",
+        "x-kind": "image",
+        "default": ""
+      },
+      "biography": {
+        "type": "string",
+        "x-kind": "richText",
+        "default": ""
+      },
+      "notes": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      },
+      "gmNotes": {
+        "type": "string",
+        "x-kind": "longText",
+        "x-layer": "secret",
+        "default": ""
+      }
+    }
+  },
+  "derived": {
+    "strMod": "floor((@str - 10) / 2)",
+    "dexMod": "floor((@dex - 10) / 2)",
+    "conMod": "floor((@con - 10) / 2)",
+    "intMod": "floor((@int - 10) / 2)",
+    "wisMod": "floor((@wis - 10) / 2)",
+    "chaMod": "floor((@cha - 10) / 2)",
+    "prof": "2 + floor((@level - 1) / 4)",
+    "d20Penalty": "2 * @exhaustion",
+    "strCheck": "@derived.strMod - @derived.d20Penalty",
+    "strSave": "@derived.strMod + (@saves.str ? @derived.prof : 0) - @derived.d20Penalty",
+    "dexCheck": "@derived.dexMod - @derived.d20Penalty",
+    "dexSave": "@derived.dexMod + (@saves.dex ? @derived.prof : 0) - @derived.d20Penalty",
+    "conCheck": "@derived.conMod - @derived.d20Penalty",
+    "conSave": "@derived.conMod + (@saves.con ? @derived.prof : 0) - @derived.d20Penalty",
+    "intCheck": "@derived.intMod - @derived.d20Penalty",
+    "intSave": "@derived.intMod + (@saves.int ? @derived.prof : 0) - @derived.d20Penalty",
+    "wisCheck": "@derived.wisMod - @derived.d20Penalty",
+    "wisSave": "@derived.wisMod + (@saves.wis ? @derived.prof : 0) - @derived.d20Penalty",
+    "chaCheck": "@derived.chaMod - @derived.d20Penalty",
+    "chaSave": "@derived.chaMod + (@saves.cha ? @derived.prof : 0) - @derived.d20Penalty",
+    "initiative": "@derived.dexMod - @derived.d20Penalty",
+    "checkEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned) and not (@rollMode == 'mode.advantage') ? -1 : 0",
+    "saveEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage') ? 1 : (@rollMode == 'mode.disadvantage') and not (@rollMode == 'mode.advantage') ? -1 : 0",
+    "attackEdge": "(@rollMode == 'mode.advantage' or @conditions.invisible) and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) and not (@rollMode == 'mode.advantage' or @conditions.invisible) ? -1 : 0",
+    "acrobatics": "@derived.dexMod + (@skills.acrobatics == 'prof.expertise' ? 2 : @skills.acrobatics == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "animalHandling": "@derived.wisMod + (@skills.animalHandling == 'prof.expertise' ? 2 : @skills.animalHandling == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "arcana": "@derived.intMod + (@skills.arcana == 'prof.expertise' ? 2 : @skills.arcana == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "athletics": "@derived.strMod + (@skills.athletics == 'prof.expertise' ? 2 : @skills.athletics == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "deception": "@derived.chaMod + (@skills.deception == 'prof.expertise' ? 2 : @skills.deception == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "history": "@derived.intMod + (@skills.history == 'prof.expertise' ? 2 : @skills.history == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "insight": "@derived.wisMod + (@skills.insight == 'prof.expertise' ? 2 : @skills.insight == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "intimidation": "@derived.chaMod + (@skills.intimidation == 'prof.expertise' ? 2 : @skills.intimidation == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "investigation": "@derived.intMod + (@skills.investigation == 'prof.expertise' ? 2 : @skills.investigation == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "medicine": "@derived.wisMod + (@skills.medicine == 'prof.expertise' ? 2 : @skills.medicine == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "nature": "@derived.intMod + (@skills.nature == 'prof.expertise' ? 2 : @skills.nature == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "perception": "@derived.wisMod + (@skills.perception == 'prof.expertise' ? 2 : @skills.perception == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "performance": "@derived.chaMod + (@skills.performance == 'prof.expertise' ? 2 : @skills.performance == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "persuasion": "@derived.chaMod + (@skills.persuasion == 'prof.expertise' ? 2 : @skills.persuasion == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "religion": "@derived.intMod + (@skills.religion == 'prof.expertise' ? 2 : @skills.religion == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "sleightOfHand": "@derived.dexMod + (@skills.sleightOfHand == 'prof.expertise' ? 2 : @skills.sleightOfHand == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "stealth": "@derived.dexMod + (@skills.stealth == 'prof.expertise' ? 2 : @skills.stealth == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "survival": "@derived.wisMod + (@skills.survival == 'prof.expertise' ? 2 : @skills.survival == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
+    "passivePerception": "10 + @derived.perception",
+    "hitDie": "@class == 'class.barbarian' ? 12 : @class == 'class.fighter' or @class == 'class.paladin' or @class == 'class.ranger' ? 10 : @class == 'class.sorcerer' or @class == 'class.wizard' ? 6 : 8",
+    "hitDiceLeft": "max(0, @level - @hitDiceUsed)",
+    "ac": "@items.armorBase > 0 ? @items.armorBase + (@items.heavyArmor ? 0 : min(@derived.dexMod, @items.dexCap)) + @items.shield : @class == 'class.barbarian' ? 10 + @derived.dexMod + @derived.conMod + @items.shield : @class == 'class.monk' and @items.shield == 0 ? 10 + @derived.dexMod + @derived.wisMod : 10 + @derived.dexMod + @items.shield",
+    "spellMod": "@class == 'class.wizard' ? @derived.intMod : @class == 'class.cleric' or @class == 'class.druid' or @class == 'class.ranger' ? @derived.wisMod : @class == 'class.bard' or @class == 'class.paladin' or @class == 'class.sorcerer' or @class == 'class.warlock' ? @derived.chaMod : 0",
+    "spellAttack": "@derived.spellMod + @derived.prof - @derived.d20Penalty",
+    "spellDc": "8 + @derived.spellMod + @derived.prof",
+    "cantripDice": "1 + (@level >= 5 ? 1 : 0) + (@level >= 11 ? 1 : 0) + (@level >= 17 ? 1 : 0)",
+    "preparedSpells": "@items.preparedSpells",
+    "load": "@items.weight",
+    "capacity": "@str * 15",
+    "slots1": "slots(@class, @level, 1)",
+    "slotsLeft1": "max(0, @derived.slots1 - @slotsUsed.l1)",
+    "slots2": "slots(@class, @level, 2)",
+    "slotsLeft2": "max(0, @derived.slots2 - @slotsUsed.l2)",
+    "slots3": "slots(@class, @level, 3)",
+    "slotsLeft3": "max(0, @derived.slots3 - @slotsUsed.l3)",
+    "slots4": "slots(@class, @level, 4)",
+    "slotsLeft4": "max(0, @derived.slots4 - @slotsUsed.l4)",
+    "slots5": "slots(@class, @level, 5)",
+    "slotsLeft5": "max(0, @derived.slots5 - @slotsUsed.l5)",
+    "slots6": "slots(@class, @level, 6)",
+    "slotsLeft6": "max(0, @derived.slots6 - @slotsUsed.l6)",
+    "slots7": "slots(@class, @level, 7)",
+    "slotsLeft7": "max(0, @derived.slots7 - @slotsUsed.l7)",
+    "slots8": "slots(@class, @level, 8)",
+    "slotsLeft8": "max(0, @derived.slots8 - @slotsUsed.l8)",
+    "slots9": "slots(@class, @level, 9)",
+    "slotsLeft9": "max(0, @derived.slots9 - @slotsUsed.l9)"
+  }
+}

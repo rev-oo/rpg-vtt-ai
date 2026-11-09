@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.gear",
+  "labelPlural": "type.gears",
+  "group": "group.gear",
+  "order": 2,
+  "sheet": "gear",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "quantity": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 0,
+        "maximum": 9999
+      },
+      "weight": {
+        "type": "number",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 1000
+      },
+      "cost": {
+        "type": "string",
+        "default": "",
+        "maxLength": 20
+      },
+      "description": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      }
+    }
+  },
+  "contributes": {
+    "weight": {
+      "formula": "@quantity * @weight"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/card.schema.json",
+  "title": "card.npcAttack",
+  "rows": [
+    {
+      "label": "card.action",
+      "value": "@actions[@args.id].name"
+    },
+    {
+      "label": "card.roll",
+      "value": "@roll.resolved"
+    },
+    {
+      "label": "card.total",
+      "value": "@total",
+      "class": "total"
+    },
+    {
+      "label": "card.onHit",
+      "value": "damage(@actions[@args.id].dice, @actions[@args.id].die, @actions[@args.id].damageBonus) + ' ' + @actions[@args.id].damageType"
+    }
+  ],
+  "outcome": true
+}

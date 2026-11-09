@@ -4,6 +4,7 @@ packages:
   - e2e
   # Plugin code with npm dependencies to bundle (T-1604).
   - plugins/dice-3d/code
+  - plugins/dnd5e-srd/code
 
 # Dependency install scripts are denied unless listed as true.
 allowBuilds:

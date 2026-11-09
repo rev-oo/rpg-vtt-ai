@@ -1,0 +1,138 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "category",
+            "label": "field.category",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "ranged",
+            "label": "field.ranged",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "finesse",
+            "label": "field.finesse",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "proficient",
+            "label": "field.proficient",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "magic",
+            "label": "field.magic",
+            "input": "number"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "dice",
+            "label": "field.dice",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "die",
+            "label": "field.die",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "versatileDie",
+            "label": "field.versatileDie",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "twoHands",
+            "label": "field.twoHands",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "damageType",
+            "label": "field.damageType",
+            "input": "select"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "properties",
+            "label": "field.properties"
+          },
+          {
+            "type": "field",
+            "path": "mastery",
+            "label": "field.mastery"
+          },
+          {
+            "type": "field",
+            "path": "range",
+            "label": "field.range"
+          },
+          {
+            "type": "field",
+            "path": "weight",
+            "label": "field.weight",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "cost",
+            "label": "field.cost"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "rollButton",
+            "roll": "weaponAttack",
+            "label": "button.attack"
+          },
+          {
+            "type": "rollButton",
+            "roll": "weaponDamage",
+            "label": "button.damage"
+          },
+          {
+            "type": "rollButton",
+            "roll": "weaponCrit",
+            "label": "button.crit"
+          }
+        ]
+      }
+    ]
+  }
+}

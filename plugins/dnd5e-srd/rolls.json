@@ -1,0 +1,250 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/rolls.schema.json",
+  "check_str": {
+    "label": "roll.check.str",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strCheck"
+  },
+  "save_str": {
+    "label": "roll.save.str",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strSave",
+    "outcomes": [
+      {
+        "when": "@conditions.paralyzed or @conditions.stunned or @conditions.unconscious or @conditions.petrified",
+        "label": "outcome.autoFail",
+        "class": "fail"
+      }
+    ]
+  },
+  "check_dex": {
+    "label": "roll.check.dex",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexCheck"
+  },
+  "save_dex": {
+    "label": "roll.save.dex",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexSave",
+    "outcomes": [
+      {
+        "when": "@conditions.paralyzed or @conditions.stunned or @conditions.unconscious or @conditions.petrified",
+        "label": "outcome.autoFail",
+        "class": "fail"
+      }
+    ]
+  },
+  "check_con": {
+    "label": "roll.check.con",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conCheck"
+  },
+  "save_con": {
+    "label": "roll.save.con",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conSave"
+  },
+  "check_int": {
+    "label": "roll.check.int",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intCheck"
+  },
+  "save_int": {
+    "label": "roll.save.int",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intSave"
+  },
+  "check_wis": {
+    "label": "roll.check.wis",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisCheck"
+  },
+  "save_wis": {
+    "label": "roll.save.wis",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisSave"
+  },
+  "check_cha": {
+    "label": "roll.check.cha",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaCheck"
+  },
+  "save_cha": {
+    "label": "roll.save.cha",
+    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaSave"
+  },
+  "skill_acrobatics": {
+    "label": "roll.skill.acrobatics",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.acrobatics"
+  },
+  "skill_animalHandling": {
+    "label": "roll.skill.animalHandling",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.animalHandling"
+  },
+  "skill_arcana": {
+    "label": "roll.skill.arcana",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.arcana"
+  },
+  "skill_athletics": {
+    "label": "roll.skill.athletics",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.athletics"
+  },
+  "skill_deception": {
+    "label": "roll.skill.deception",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.deception"
+  },
+  "skill_history": {
+    "label": "roll.skill.history",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.history"
+  },
+  "skill_insight": {
+    "label": "roll.skill.insight",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.insight"
+  },
+  "skill_intimidation": {
+    "label": "roll.skill.intimidation",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intimidation"
+  },
+  "skill_investigation": {
+    "label": "roll.skill.investigation",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.investigation"
+  },
+  "skill_medicine": {
+    "label": "roll.skill.medicine",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.medicine"
+  },
+  "skill_nature": {
+    "label": "roll.skill.nature",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.nature"
+  },
+  "skill_perception": {
+    "label": "roll.skill.perception",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.perception"
+  },
+  "skill_performance": {
+    "label": "roll.skill.performance",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.performance"
+  },
+  "skill_persuasion": {
+    "label": "roll.skill.persuasion",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.persuasion"
+  },
+  "skill_religion": {
+    "label": "roll.skill.religion",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.religion"
+  },
+  "skill_sleightOfHand": {
+    "label": "roll.skill.sleightOfHand",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.sleightOfHand"
+  },
+  "skill_stealth": {
+    "label": "roll.skill.stealth",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.stealth"
+  },
+  "skill_survival": {
+    "label": "roll.skill.survival",
+    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.survival"
+  },
+  "weaponAttack": {
+    "label": "roll.weaponAttack",
+    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty",
+    "outcomes": [
+      {
+        "when": "@total - ((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty) == 20",
+        "label": "outcome.crit",
+        "class": "crit"
+      },
+      {
+        "when": "@total - ((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty) == 1",
+        "label": "outcome.fumble",
+        "class": "fail"
+      }
+    ],
+    "card": "attack",
+    "item": ["weapon"]
+  },
+  "weaponDamage": {
+    "label": "roll.weaponDamage",
+    "formula": "(@item.derived.die == 4 ? (@item.dice)d4 : @item.derived.die == 6 ? (@item.dice)d6 : @item.derived.die == 8 ? (@item.dice)d8 : @item.derived.die == 10 ? (@item.dice)d10 : @item.derived.die == 12 ? (@item.dice)d12 : (@item.dice)d20) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic",
+    "card": "damage",
+    "item": ["weapon"]
+  },
+  "weaponCrit": {
+    "label": "roll.weaponCrit",
+    "formula": "(@item.derived.die == 4 ? (@item.dice * 2)d4 : @item.derived.die == 6 ? (@item.dice * 2)d6 : @item.derived.die == 8 ? (@item.dice * 2)d8 : @item.derived.die == 10 ? (@item.dice * 2)d10 : @item.derived.die == 12 ? (@item.dice * 2)d12 : (@item.dice * 2)d20) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic",
+    "card": "damage",
+    "item": ["weapon"]
+  },
+  "unarmedAttack": {
+    "label": "roll.unarmedAttack",
+    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strMod + @derived.prof - @derived.d20Penalty",
+    "outcomes": [
+      {
+        "when": "@total - (@derived.strMod + @derived.prof - @derived.d20Penalty) == 20",
+        "label": "outcome.crit",
+        "class": "crit"
+      },
+      {
+        "when": "@total - (@derived.strMod + @derived.prof - @derived.d20Penalty) == 1",
+        "label": "outcome.fumble",
+        "class": "fail"
+      }
+    ]
+  },
+  "unarmedDamage": {
+    "label": "roll.unarmedDamage",
+    "formula": "max(0, 1 + @derived.strMod)"
+  },
+  "spellCast": {
+    "label": "roll.spellCast",
+    "formula": "@item.attack == 'spell.attack' ? (@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack : (@item.die == 4 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d4 : @item.die == 6 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d6 : @item.die == 8 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d8 : @item.die == 10 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d10 : @item.die == 12 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d12 : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d20) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "outcomes": [
+      {
+        "when": "@item.attack == 'spell.attack' and @total - @derived.spellAttack == 20",
+        "label": "outcome.crit",
+        "class": "crit"
+      },
+      {
+        "when": "@item.attack == 'spell.attack' and @total - @derived.spellAttack == 1",
+        "label": "outcome.fumble",
+        "class": "fail"
+      }
+    ],
+    "card": "spell",
+    "item": ["spell"]
+  },
+  "spellEffect": {
+    "label": "roll.spellEffect",
+    "formula": "(@item.die == 4 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d4 : @item.die == 6 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d6 : @item.die == 8 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d8 : @item.die == 10 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d10 : @item.die == 12 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d12 : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d20) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "card": "spell",
+    "item": ["spell"]
+  },
+  "deathSave": {
+    "label": "roll.deathSave",
+    "handler": "deathSave"
+  },
+  "shortRest": {
+    "label": "roll.shortRest",
+    "handler": "spendHitDie"
+  },
+  "longRest": {
+    "label": "roll.longRest",
+    "handler": "longRest"
+  },
+  "npcAttack": {
+    "label": "roll.npcAttack",
+    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @actions[@args.id].bonus - @derived.d20Penalty",
+    "outcomes": [
+      {
+        "when": "@total - (@actions[@args.id].bonus - @derived.d20Penalty) == 20",
+        "label": "outcome.crit",
+        "class": "crit"
+      },
+      {
+        "when": "@total - (@actions[@args.id].bonus - @derived.d20Penalty) == 1",
+        "label": "outcome.fumble",
+        "class": "fail"
+      }
+    ],
+    "card": "npcAttack"
+  },
+  "npcDamage": {
+    "label": "roll.npcDamage",
+    "formula": "(@actions[@args.id].die == 4 ? (@actions[@args.id].dice)d4 : @actions[@args.id].die == 6 ? (@actions[@args.id].dice)d6 : @actions[@args.id].die == 8 ? (@actions[@args.id].dice)d8 : @actions[@args.id].die == 10 ? (@actions[@args.id].dice)d10 : @actions[@args.id].die == 12 ? (@actions[@args.id].dice)d12 : (@actions[@args.id].dice)d20) + @actions[@args.id].damageBonus",
+    "card": "npcDamage"
+  },
+  "npcCrit": {
+    "label": "roll.npcCrit",
+    "formula": "(@actions[@args.id].die == 4 ? (@actions[@args.id].dice * 2)d4 : @actions[@args.id].die == 6 ? (@actions[@args.id].dice * 2)d6 : @actions[@args.id].die == 8 ? (@actions[@args.id].dice * 2)d8 : @actions[@args.id].die == 10 ? (@actions[@args.id].dice * 2)d10 : @actions[@args.id].die == 12 ? (@actions[@args.id].dice * 2)d12 : (@actions[@args.id].dice * 2)d20) + @actions[@args.id].damageBonus",
+    "card": "npcDamage"
+  }
+}

@@ -133,6 +133,8 @@ export function defineVttConfig() {
       // …except plugin code that is a workspace package, with its own tsconfig (workspace.mjs).
       '!plugins/dice-3d/code/',
       'plugins/dice-3d/code/node_modules/',
+      '!plugins/dnd5e-srd/code/',
+      'plugins/dnd5e-srd/code/node_modules/',
       // Server data directories (git-ignored), with their installed plugins.
       'e2e/.data/',
       'apps/server/data/',

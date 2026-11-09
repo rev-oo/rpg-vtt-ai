@@ -1,0 +1,5 @@
+{
+  "$schema": "../../packages/plugin-schema/schemas/combat.schema.json",
+  "initiative": "1d20 + @derived.initiative",
+  "order": "desc"
+}

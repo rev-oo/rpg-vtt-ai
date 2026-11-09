@@ -1,0 +1,38 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "quantity",
+            "label": "field.quantity",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "weight",
+            "label": "field.weight",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "cost",
+            "label": "field.cost"
+          }
+        ]
+      },
+      {
+        "type": "longText",
+        "path": "description",
+        "label": "field.description"
+      }
+    ]
+  }
+}
