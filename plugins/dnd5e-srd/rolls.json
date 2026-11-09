@@ -2,11 +2,69 @@
   "$schema": "../../packages/plugin-schema/schemas/rolls.schema.json",
   "check_str": {
     "label": "roll.check.str",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strCheck + roll(@options.bonus)"
   },
   "save_str": {
     "label": "roll.save.str",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strSave",
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strSave + roll(@options.bonus)",
     "outcomes": [
       {
         "when": "@conditions.paralyzed or @conditions.stunned or @conditions.unconscious or @conditions.petrified",
@@ -17,11 +75,69 @@
   },
   "check_dex": {
     "label": "roll.check.dex",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexCheck + roll(@options.bonus)"
   },
   "save_dex": {
     "label": "roll.save.dex",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexSave",
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.dexSave + roll(@options.bonus)",
     "outcomes": [
       {
         "when": "@conditions.paralyzed or @conditions.stunned or @conditions.unconscious or @conditions.petrified",
@@ -32,118 +148,899 @@
   },
   "check_con": {
     "label": "roll.check.con",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conCheck + roll(@options.bonus)"
   },
   "save_con": {
     "label": "roll.save.con",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conSave"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.conSave + roll(@options.bonus)"
   },
   "check_int": {
     "label": "roll.check.int",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intCheck + roll(@options.bonus)"
   },
   "save_int": {
     "label": "roll.save.int",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intSave"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intSave + roll(@options.bonus)"
   },
   "check_wis": {
     "label": "roll.check.wis",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisCheck + roll(@options.bonus)"
   },
   "save_wis": {
     "label": "roll.save.wis",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisSave"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.wisSave + roll(@options.bonus)"
   },
   "check_cha": {
     "label": "roll.check.cha",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaCheck"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaCheck + roll(@options.bonus)"
   },
   "save_cha": {
     "label": "roll.save.cha",
-    "formula": "(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaSave"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaSave + roll(@options.bonus)"
   },
   "skill_acrobatics": {
     "label": "roll.skill.acrobatics",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.acrobatics"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.acrobatics + roll(@options.bonus)"
   },
   "skill_animalHandling": {
     "label": "roll.skill.animalHandling",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.animalHandling"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.animalHandling + roll(@options.bonus)"
   },
   "skill_arcana": {
     "label": "roll.skill.arcana",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.arcana"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.arcana + roll(@options.bonus)"
   },
   "skill_athletics": {
     "label": "roll.skill.athletics",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.athletics"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.athletics + roll(@options.bonus)"
   },
   "skill_deception": {
     "label": "roll.skill.deception",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.deception"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.deception + roll(@options.bonus)"
   },
   "skill_history": {
     "label": "roll.skill.history",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.history"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.history + roll(@options.bonus)"
   },
   "skill_insight": {
     "label": "roll.skill.insight",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.insight"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.insight + roll(@options.bonus)"
   },
   "skill_intimidation": {
     "label": "roll.skill.intimidation",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intimidation"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.intimidation + roll(@options.bonus)"
   },
   "skill_investigation": {
     "label": "roll.skill.investigation",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.investigation"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.investigation + roll(@options.bonus)"
   },
   "skill_medicine": {
     "label": "roll.skill.medicine",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.medicine"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.medicine + roll(@options.bonus)"
   },
   "skill_nature": {
     "label": "roll.skill.nature",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.nature"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.nature + roll(@options.bonus)"
   },
   "skill_perception": {
     "label": "roll.skill.perception",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.perception"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.perception + roll(@options.bonus)"
   },
   "skill_performance": {
     "label": "roll.skill.performance",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.performance"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.performance + roll(@options.bonus)"
   },
   "skill_persuasion": {
     "label": "roll.skill.persuasion",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.persuasion"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.persuasion + roll(@options.bonus)"
   },
   "skill_religion": {
     "label": "roll.skill.religion",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.religion"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.religion + roll(@options.bonus)"
   },
   "skill_sleightOfHand": {
     "label": "roll.skill.sleightOfHand",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.sleightOfHand"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.sleightOfHand + roll(@options.bonus)"
   },
   "skill_stealth": {
     "label": "roll.skill.stealth",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.stealth"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.stealth + roll(@options.bonus)"
   },
   "skill_survival": {
     "label": "roll.skill.survival",
-    "formula": "(@derived.checkEdge == 0 ? 1d20 : @derived.checkEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.survival"
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.checkAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.checkDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.survival + roll(@options.bonus)"
   },
   "weaponAttack": {
     "label": "roll.weaponAttack",
     "actors": ["character"],
     "item": ["weapon"],
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
     "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.attackAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.attackDis) ? 1 : 0)",
       "mod": "@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod",
       "toHit": "@let.mod + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty"
     },
     "formula": {
-      "attack": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @let.toHit",
+      "attack": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @let.toHit + roll(@options.bonus)",
       "damage": "(@rolls.attack.natural >= @critRange ? @item.dice * 2 : @item.dice)d(@item.derived.die) + @let.mod + @item.magic + roll(@item.extraDamage, @rolls.attack.natural >= @critRange ? 2 : 1)"
     },
     "outcomes": [
@@ -162,7 +1059,36 @@
   },
   "unarmedAttack": {
     "label": "roll.unarmedAttack",
-    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strMod + @derived.prof - @derived.d20Penalty",
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.attackAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.attackDis) ? 1 : 0)"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strMod + @derived.prof - @derived.d20Penalty + roll(@options.bonus)",
     "outcomes": [
       {
         "when": "@roll.natural >= @critRange",
@@ -185,7 +1111,45 @@
   "spellCast": {
     "label": "roll.spellCast",
     "actors": ["character"],
-    "formula": "@item.attack == 'spell.attack' ? (@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      },
+      "slot": {
+        "type": "number",
+        "label": "option.slot",
+        "default": "@item.level",
+        "minimum": "@item.level",
+        "maximum": "@item.level == 0 ? 0 : 9"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.attackAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.attackDis) ? 1 : 0)",
+      "dice": "@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice + @item.slotDice * (@options.slot - @item.level)",
+      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)"
+    },
+    "formula": "@item.attack == 'spell.attack' ? (@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack + roll(@options.bonus) : (@let.dice)d(@item.die) + @let.plus",
     "outcomes": [
       {
         "when": "@item.attack == 'spell.attack' and @roll.natural >= @critRange",
@@ -204,7 +1168,20 @@
   "spellEffect": {
     "label": "roll.spellEffect",
     "actors": ["character"],
-    "formula": "((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "options": {
+      "slot": {
+        "type": "number",
+        "label": "option.slot",
+        "default": "@item.level",
+        "minimum": "@item.level",
+        "maximum": "@item.level == 0 ? 0 : 9"
+      }
+    },
+    "let": {
+      "dice": "@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice + @item.slotDice * (@options.slot - @item.level)",
+      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)"
+    },
+    "formula": "(@let.dice)d(@item.die) + @let.plus",
     "card": "spell",
     "item": ["spell"]
   },
@@ -223,8 +1200,37 @@
   "npcAttack": {
     "label": "roll.npcAttack",
     "actors": ["npc"],
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage' or @derived.attackAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.attackDis) ? 1 : 0)"
+    },
     "formula": {
-      "attack": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @actions[@args.id].bonus - @derived.d20Penalty",
+      "attack": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @actions[@args.id].bonus - @derived.d20Penalty + roll(@options.bonus)",
       "damage": "(@rolls.attack.natural == 20 ? @actions[@args.id].dice * 2 : @actions[@args.id].dice)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage, @rolls.attack.natural == 20 ? 2 : 1)"
     },
     "outcomes": [

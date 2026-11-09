@@ -7,6 +7,7 @@ export * from './dice.js';
 export * from './errors.js';
 export * from './layout.js';
 export * from './migrate.js';
+export * from './options.js';
 export * from './recipes.js';
 export * from './rules.js';
 export * from './settings.js';

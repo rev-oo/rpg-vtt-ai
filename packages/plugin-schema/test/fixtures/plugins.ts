@@ -757,6 +757,37 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'roll options (T-1609)',
+    change: (f: PluginFixture): void => {
+      const recipe = skill(f);
+      recipe.options = {
+        mode: {
+          type: 'choice',
+          label: 'Roll',
+          choices: [
+            { value: 'normal', label: 'Normal' },
+            { value: 'advantage', label: 'Advantage', key: 'shift' },
+            { value: 'advantage', label: 'Again', key: 'shift' },
+          ],
+          default: 'great',
+        },
+        level: { type: 'number', label: 'Level', default: '@str', minimum: 1, maximum: '@nope' },
+        bonus: { type: 'dice', label: 'Bonus' },
+        early: { type: 'number', label: 'Early', default: '@options.level' },
+      };
+      recipe.let = { edge: "@options.mode == 'advantage' ? 1 : 0" };
+      recipe.formula = '1d20 + @let.edge + @options.level + roll(@options.bonus) + @options.gone';
+    },
+    issues: [
+      'error duplicate_id rolls.json $.skill.options.mode.choices[2].value',
+      'error duplicate_shortcut rolls.json $.skill.options.mode.choices[2].key',
+      'error invalid_default rolls.json $.skill.options.mode.default',
+      'error unknown_reference rolls.json $.skill.options.level.maximum',
+      'error unknown_reference rolls.json $.skill.options.early.default',
+      'error unknown_reference rolls.json $.skill.formula',
+    ],
+  },
+  {
     name: 'roll() outside rolls (T-1607)',
     change: (f: PluginFixture): void => {
       at(f, 'types/actors/hero.json', 'derived').mod = "roll('1d6')";

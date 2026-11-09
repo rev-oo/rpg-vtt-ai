@@ -683,6 +683,33 @@ export function validatePlugin(
           })),
         )
       : rollers;
+    // What the app asks for when the button is pressed (T-1609).
+    const options = Object.entries(recipe.options ?? {});
+    const optionNames = new Set(options.map(([optionName]) => optionName));
+    const shortcuts = new Set<string>();
+    for (const [optionName, option] of options) {
+      const at = [name, 'options', optionName];
+      useText(option.label, file, [...at, 'label']);
+      if (option.type !== 'choice') continue;
+      const values = new Set<string>();
+      option.choices.forEach((choice, index) => {
+        useText(choice.label, file, [...at, 'choices', index, 'label']);
+        if (values.has(choice.value))
+          error('duplicate_id', file, [...at, 'choices', index, 'value'], { id: choice.value });
+        values.add(choice.value);
+        if (choice.key === undefined) return;
+        if (shortcuts.has(choice.key))
+          error('duplicate_shortcut', file, [...at, 'choices', index, 'key'], {
+            key: choice.key,
+            roll: name,
+          });
+        shortcuts.add(choice.key);
+      });
+      if (option.default !== undefined && !values.has(option.default))
+        error('invalid_default', file, [...at, 'default'], {
+          reason: `"${option.default}" is not one of the choices`,
+        });
+    }
     // Named values, then the formulas in order; each reads those before it (T-1608).
     const lets = Object.entries(recipe.let ?? {});
     const letNames = new Set(lets.map(([letName]) => letName));
@@ -694,8 +721,19 @@ export function validatePlugin(
       roll: true,
       let: letNames,
       rolls: rollNames,
+      options: optionNames,
     });
-    for (const scope of scopes) {
+    for (const unasked of scopes) {
+      // An option's default and bounds are worked out before the others are asked.
+      for (const [optionName, option] of options) {
+        if (option.type !== 'number') continue;
+        for (const key of ['default', 'minimum', 'maximum'] as const) {
+          const source = option[key];
+          if (typeof source === 'string')
+            formula(source, unasked, false, file, [name, 'options', optionName, key]);
+        }
+      }
+      const scope: FormulaScope = { ...unasked, options: optionNames };
       lets.forEach(([letName, source], index) => {
         const before = new Set(lets.slice(0, index).map(([earlier]) => earlier));
         formula(source, { ...scope, let: before }, false, file, [name, 'let', letName]);

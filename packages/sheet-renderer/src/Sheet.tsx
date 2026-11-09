@@ -2,7 +2,7 @@ import { useMemo, useSyncExternalStore, type ComponentType, type ReactElement } 
 
 import type { FormulaFunction, Value } from '@vtt/formula';
 import { computeDerived, withDefaults } from '@vtt/plugin-engine';
-import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
+import type { FieldSchema, Recipe, SheetNode } from '@vtt/plugin-schema';
 import { cn } from '@vtt/ui';
 
 import {
@@ -42,6 +42,8 @@ export interface SheetProps {
   translate?: (text: string) => string;
   strings?: Partial<SheetStrings>;
   onRoll?: RollHandler;
+  /** The plugin's roll recipes, whose options roll buttons ask for (T-1609). */
+  rolls?: Readonly<Record<string, Recipe>>;
   /** The plugin's custom nodes by name (`custom:<name>`). */
   nodes?: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
   /** Other viewers' focus, outlined on their fields (FR-SHEET-02). */
@@ -74,6 +76,7 @@ export function Sheet({
   translate = identity,
   strings,
   onRoll,
+  rolls,
   nodes = {},
   presence,
   renderRichText,
@@ -99,6 +102,7 @@ export function Sheet({
     translate,
     strings: { ...DEFAULT_STRINGS, ...strings },
     onRoll,
+    rolls,
     nodes,
     presence,
     renderRichText,

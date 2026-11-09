@@ -219,7 +219,7 @@ export async function sendRollMessages(
       : undefined;
 
   if (input.recipe) {
-    const { name, args, itemId } = input.recipe;
+    const { name, args, itemId, options: asked } = input.recipe;
     if (!system)
       throw unprocessable('system_unavailable', 'The table’s system cannot roll recipes.');
     if (!actor) throw unprocessable('actor_required', 'Choose an actor to roll for.');
@@ -229,6 +229,8 @@ export async function sendRollMessages(
       throw unprocessable('wrong_actor_type', `The roll "${name}" is not for this actor.`);
     }
     if (isHandler(system.plugin, name)) {
+      if (Object.keys(asked).length > 0)
+        throw unprocessable('bad_option', `The roll "${name}" has no options.`);
       return runHandler(db, prepared, { name, args, code, functions }, options);
     }
     const result = rolling(() =>
@@ -237,6 +239,7 @@ export async function sendRollMessages(
         type: actor.type,
         data: actor.system,
         args,
+        options: asked,
         items: prepared.items,
         item,
         rng,

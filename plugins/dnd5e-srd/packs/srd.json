@@ -646,7 +646,9 @@
         "bonus": 3,
         "effectType": "force",
         "description": "You create three glowing darts of magical force. Each dart strikes a creature of your choice that you can see within range. A dart deals 1d4 + 1 Force damage to its target. The darts all strike simultaneously. (The effect roll is all three darts at one target.)",
-        "higherLevels": "One more dart for each spell slot level above 1."
+        "higherLevels": "One more dart for each spell slot level above 1.",
+        "slotDice": 1,
+        "slotBonus": 1
       }
     },
     {
@@ -666,7 +668,8 @@
         "addMod": true,
         "effectType": "healing",
         "description": "A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.",
-        "higherLevels": "The healing increases by 2d8 for each spell slot level above 1."
+        "higherLevels": "The healing increases by 2d8 for each spell slot level above 1.",
+        "slotDice": 2
       }
     },
     {
@@ -686,7 +689,8 @@
         "addMod": true,
         "effectType": "healing",
         "description": "A creature of your choice that you can see within range regains Hit Points equal to 2d4 plus your spellcasting ability modifier.",
-        "higherLevels": "The healing increases by 2d4 for each spell slot level above 1."
+        "higherLevels": "The healing increases by 2d4 for each spell slot level above 1.",
+        "slotDice": 2
       }
     },
     {
@@ -722,7 +726,8 @@
         "die": 6,
         "effectType": "fire",
         "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one.",
-        "higherLevels": "The damage increases by 1d6 for each spell slot level above 1."
+        "higherLevels": "The damage increases by 1d6 for each spell slot level above 1.",
+        "slotDice": 1
       }
     },
     {
@@ -743,7 +748,8 @@
         "die": 8,
         "effectType": "thunder",
         "description": "You unleash a wave of thunderous energy. Each creature in a 15-foot Cube originating from you makes a Constitution saving throw. On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you. On a successful save, a creature takes half as much damage only.",
-        "higherLevels": "The damage increases by 1d8 for each spell slot level above 1."
+        "higherLevels": "The damage increases by 1d8 for each spell slot level above 1.",
+        "slotDice": 1
       }
     },
     {
@@ -801,7 +807,8 @@
         "die": 6,
         "effectType": "fire",
         "description": "A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one.",
-        "higherLevels": "The damage increases by 1d6 for each spell slot level above 3."
+        "higherLevels": "The damage increases by 1d6 for each spell slot level above 3.",
+        "slotDice": 1
       }
     },
     {

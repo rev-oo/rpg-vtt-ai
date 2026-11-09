@@ -8,7 +8,7 @@
     },
     {
       "label": "card.spellLevel",
-      "value": "@item.level"
+      "value": "@options.slot"
     },
     {
       "label": "card.roll",

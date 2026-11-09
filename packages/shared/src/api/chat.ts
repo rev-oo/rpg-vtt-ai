@@ -56,6 +56,10 @@ export const rollRequestBody = z
         args: z.record(z.string().max(64), rollArg).default({}),
         /** The item the recipe is made with, which the actor holds (ADR-063). */
         itemId: z.uuid().optional(),
+        /** What the app asked for when the button was pressed: `@options.<name>` (T-1609). */
+        options: z
+          .record(z.string().max(64), z.union([z.number(), z.string().max(200)]))
+          .default({}),
       })
       .optional(),
     ...messageTarget,

@@ -46,6 +46,8 @@ const strings = (): SheetStrings => ({
   tooBig: t('validation.tooBigNumber'),
   tooLong: t('validation.tooLong'),
   notDice: t('validation.notDice'),
+  roll: t('sheet.roll'),
+  cancel: t('sheet.cancel'),
 });
 
 /**
@@ -169,6 +171,7 @@ export function PluginSheet({
         {...(presence && { presence })}
         {...(renderRichText && { renderRichText })}
         {...(onRoll && { onRoll })}
+        rolls={definition.rolls}
         {...(itemTotals && { itemTotals })}
         {...(renderItems && { renderItems })}
         {...(pickImage && { pickImage })}

@@ -17,6 +17,9 @@ export interface SheetStrings {
   tooBig: string;
   tooLong: string;
   notDice: string;
+  /** The roll options dialog's buttons (T-1609). */
+  roll: string;
+  cancel: string;
 }
 
 /** English defaults. `{name}` placeholders are filled by the renderer. */
@@ -39,6 +42,8 @@ export const DEFAULT_STRINGS: SheetStrings = {
   tooBig: 'Must be at most {max}.',
   tooLong: 'Must be at most {max} characters.',
   notDice: 'Enter dice, such as 2d6 + 3.',
+  roll: 'Roll',
+  cancel: 'Cancel',
 };
 
 export const fill = (text: string, params: Readonly<Record<string, string | number>>): string =>

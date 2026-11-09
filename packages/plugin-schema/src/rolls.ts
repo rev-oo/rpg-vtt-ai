@@ -8,7 +8,7 @@ export const outcomeSchema = z
     when: formula
       .optional()
       .describe(
-        'A true/false formula that can read `@total`, `@roll`, `@rolls` and `@let`; leave it out for the fallback.',
+        'A true/false formula that can read `@total`, `@roll`, `@rolls`, `@let` and `@options`; leave it out for the fallback.',
       ),
     label: text.describe('Shown with the roll; a lang key or literal text.'),
     class: cssClass.optional().describe('A CSS class for the outcome, for `styles/*.css`.'),
@@ -27,6 +27,68 @@ const actors = z
     'The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors.',
   );
 
+/** The most options one recipe asks for, and choices one option offers (T-1609). */
+export const MAX_ROLL_OPTIONS = 10;
+
+/** The keys held while clicking a roll button that pick a choice and roll at once (T-1609). */
+export const ROLL_SHORTCUTS = ['shift', 'ctrl'] as const;
+export type RollShortcut = (typeof ROLL_SHORTCUTS)[number];
+
+/** A number or a formula worked out before rolling, such as `@item.level`. */
+const bound = z.union([z.number(), formula]);
+
+const choiceOption = z
+  .strictObject({
+    type: z.literal('choice'),
+    label: text.describe('What the option asks; a lang key or literal text.'),
+    choices: z
+      .array(
+        z.strictObject({
+          value: identifier.describe("Read as `@options.<name>`, such as `'advantage'`."),
+          label: text.describe('A lang key or literal text.'),
+          key: z
+            .enum(ROLL_SHORTCUTS)
+            .optional()
+            .describe(
+              'Holding this key while clicking the button picks this choice and rolls at once, with the other options at their defaults.',
+            ),
+        }),
+      )
+      .min(2)
+      .max(MAX_ROLL_OPTIONS),
+    default: identifier.optional().describe('The value picked at first; the first when left out.'),
+  })
+  .meta({ title: 'Choice option' });
+
+const numberOption = z
+  .strictObject({
+    type: z.literal('number'),
+    label: text.describe('What the option asks; a lang key or literal text.'),
+    default: bound.describe('A whole number, or a formula such as `@item.level`.'),
+    minimum: bound.optional().describe('The lowest whole number allowed, or a formula.'),
+    maximum: bound.optional().describe('The highest whole number allowed, or a formula.'),
+  })
+  .meta({ title: 'Number option' });
+
+const diceOption = z
+  .strictObject({
+    type: z.literal('dice'),
+    label: text.describe('What the option asks; a lang key or literal text.'),
+    default: z
+      .string()
+      .max(200)
+      .optional()
+      .describe('Dice such as `1d4`, or nothing (the default).'),
+  })
+  .meta({ title: 'Dice option' });
+
+export const rollOptionSchema = z.discriminatedUnion('type', [
+  choiceOption,
+  numberOption,
+  diceOption,
+]);
+export type RollOption = z.infer<typeof rollOptionSchema>;
+
 export const formulaRecipeSchema = z
   .strictObject({
     label: text.optional().describe('The roll name in chat; a lang key or literal text.'),
@@ -35,6 +97,15 @@ export const formulaRecipeSchema = z
       .optional()
       .describe(
         'Named values worked out before rolling, in order, without dice. The formulas, outcomes and card read them as `@let.<name>`; each reads the ones before it.',
+      ),
+    options: z
+      .record(identifier, rollOptionSchema)
+      .refine((options) => Object.keys(options).length <= MAX_ROLL_OPTIONS, {
+        message: `At most ${String(MAX_ROLL_OPTIONS)} options`,
+      })
+      .optional()
+      .describe(
+        'What the app asks for when the button is pressed: a choice, a whole number or dice. Formulas, named values, outcomes and the card read them as `@options.<name>`; the server checks them.',
       ),
     formula: z
       .union([

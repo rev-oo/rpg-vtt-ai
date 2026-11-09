@@ -36,6 +36,7 @@ export const PLUGIN_ISSUE_CODES = [
   'reserved_name',
   // Packs
   'duplicate_id',
+  'duplicate_shortcut',
   // Migrations (ADR-072)
   'migration_after_version',
   'migration_row_move',
@@ -147,6 +148,8 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   invalid_default: (x) => `The default does not fit the field: ${p(x, 'reason')}`,
   invalid_annotation: (x) => `${p(x, 'key')} cannot be used on a field of type ${p(x, 'type')}`,
   duplicate_id: (x) => `Another entry already has the id "${p(x, 'id')}"`,
+  duplicate_shortcut: (x) =>
+    `Another choice of the roll "${p(x, 'roll')}" already uses the ${p(x, 'key')} key`,
   migration_after_version: (x) =>
     `The migration to ${p(x, 'version')} is for a version after the plugin's (${p(x, 'plugin')})`,
   migration_row_move: (x) =>

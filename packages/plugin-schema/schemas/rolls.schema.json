@@ -35,6 +35,179 @@
               "description": "A formula (specs §8.9)."
             }
           },
+          "options": {
+            "description": "What the app asks for when the button is pressed: a choice, a whole number or dice. Formulas, named values, outcomes and the card read them as `@options.<name>`; the server checks them.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+              "title": "Identifier"
+            },
+            "additionalProperties": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "choice"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 500,
+                      "title": "Text",
+                      "description": "What the option asks; a lang key or literal text."
+                    },
+                    "choices": {
+                      "minItems": 2,
+                      "maxItems": 10,
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "value": {
+                            "type": "string",
+                            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                            "title": "Identifier",
+                            "description": "Read as `@options.<name>`, such as `'advantage'`."
+                          },
+                          "label": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 500,
+                            "title": "Text",
+                            "description": "A lang key or literal text."
+                          },
+                          "key": {
+                            "description": "Holding this key while clicking the button picks this choice and rolls at once, with the other options at their defaults.",
+                            "type": "string",
+                            "enum": [
+                              "shift",
+                              "ctrl"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "label"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "default": {
+                      "description": "The value picked at first; the first when left out.",
+                      "type": "string",
+                      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                      "title": "Identifier"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "label",
+                    "choices"
+                  ],
+                  "additionalProperties": false,
+                  "title": "Choice option"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "number"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 500,
+                      "title": "Text",
+                      "description": "What the option asks; a lang key or literal text."
+                    },
+                    "default": {
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000,
+                          "title": "Formula",
+                          "description": "A formula (specs §8.9)."
+                        }
+                      ],
+                      "description": "A whole number, or a formula such as `@item.level`."
+                    },
+                    "minimum": {
+                      "description": "The lowest whole number allowed, or a formula.",
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000,
+                          "title": "Formula",
+                          "description": "A formula (specs §8.9)."
+                        }
+                      ]
+                    },
+                    "maximum": {
+                      "description": "The highest whole number allowed, or a formula.",
+                      "anyOf": [
+                        {
+                          "type": "number"
+                        },
+                        {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 2000,
+                          "title": "Formula",
+                          "description": "A formula (specs §8.9)."
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "label",
+                    "default"
+                  ],
+                  "additionalProperties": false,
+                  "title": "Number option"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "dice"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 500,
+                      "title": "Text",
+                      "description": "What the option asks; a lang key or literal text."
+                    },
+                    "default": {
+                      "description": "Dice such as `1d4`, or nothing (the default).",
+                      "type": "string",
+                      "maxLength": 200
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "label"
+                  ],
+                  "additionalProperties": false,
+                  "title": "Dice option"
+                }
+              ]
+            }
+          },
           "formula": {
             "anyOf": [
               {
@@ -70,7 +243,7 @@
               "type": "object",
               "properties": {
                 "when": {
-                  "description": "A true/false formula that can read `@total`, `@roll`, `@rolls` and `@let`; leave it out for the fallback.",
+                  "description": "A true/false formula that can read `@total`, `@roll`, `@rolls`, `@let` and `@options`; leave it out for the fallback.",
                   "type": "string",
                   "minLength": 1,
                   "maxLength": 2000,

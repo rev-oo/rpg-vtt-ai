@@ -354,6 +354,7 @@ export const ptBR: Messages = {
     '"{name}" é combinado com {combine}: max e min precisam de um default; os outros não aceitam.',
   'pluginIssue.secret_contribution':
     '{reference} lê um campo secreto; contribuições só podem ler campos da camada principal.',
+  'pluginIssue.duplicate_shortcut': 'Outra escolha da rolagem “{roll}” já usa a tecla {key}.',
   'pluginIssue.duplicate_id': 'Outra entrada já tem o id “{id}”.',
   'pluginIssue.migration_after_version':
     'A migração para {version} é de uma versão posterior à do plugin ({plugin}).',
@@ -412,6 +413,8 @@ export const ptBR: Messages = {
   'sheet.items.added': '{name} adicionado.',
   'sheet.items.remove': 'Remover {name}',
   'sheet.items.removed': '{name} está na lixeira.',
+  'sheet.roll': 'Rolar',
+  'sheet.cancel': 'Cancelar',
   'sheet.noRows': 'Nada aqui ainda.',
   'sheet.noImage': 'Sem imagem',
   'richText.toolbar': 'Formatação',

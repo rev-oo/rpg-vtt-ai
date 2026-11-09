@@ -98,6 +98,18 @@
         "minimum": 0,
         "maximum": 40
       },
+      "slotDice": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 20
+      },
+      "slotBonus": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 20
+      },
       "effectType": {
         "type": "string",
         "enum": [

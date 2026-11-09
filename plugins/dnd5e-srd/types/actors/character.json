@@ -115,11 +115,6 @@
           }
         }
       },
-      "rollMode": {
-        "type": "string",
-        "enum": ["mode.normal", "mode.advantage", "mode.disadvantage"],
-        "default": "mode.normal"
-      },
       "conditions": {
         "type": "object",
         "properties": {
@@ -498,9 +493,6 @@
     "chaCheck": "@derived.chaMod - @derived.d20Penalty",
     "chaSave": "@derived.chaMod + (@saves.cha ? @derived.prof : 0) - @derived.d20Penalty",
     "initiative": "@derived.dexMod - @derived.d20Penalty",
-    "checkEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned) and not (@rollMode == 'mode.advantage') ? -1 : 0",
-    "saveEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage') ? 1 : (@rollMode == 'mode.disadvantage') and not (@rollMode == 'mode.advantage') ? -1 : 0",
-    "attackEdge": "(@rollMode == 'mode.advantage' or @conditions.invisible) and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) and not (@rollMode == 'mode.advantage' or @conditions.invisible) ? -1 : 0",
     "acrobatics": "@derived.dexMod + (@skills.acrobatics == 'prof.expertise' ? 2 : @skills.acrobatics == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
     "animalHandling": "@derived.wisMod + (@skills.animalHandling == 'prof.expertise' ? 2 : @skills.animalHandling == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
     "arcana": "@derived.intMod + (@skills.arcana == 'prof.expertise' ? 2 : @skills.arcana == 'prof.proficient' ? 1 : 0) * @derived.prof - @derived.d20Penalty",
@@ -547,6 +539,10 @@
     "slots8": "slots(@class, @level, 8)",
     "slotsLeft8": "max(0, @derived.slots8 - @slotsUsed.l8)",
     "slots9": "slots(@class, @level, 9)",
-    "slotsLeft9": "max(0, @derived.slots9 - @slotsUsed.l9)"
+    "slotsLeft9": "max(0, @derived.slots9 - @slotsUsed.l9)",
+    "checkAdv": "false",
+    "checkDis": "@conditions.poisoned",
+    "attackAdv": "@conditions.invisible",
+    "attackDis": "@conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained"
   }
 }

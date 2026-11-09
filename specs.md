@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 47%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 53%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1609` (roll options)
+- **Next task:** `T-1610` (server code with items, derived values and bounds)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -64,6 +64,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-09 | The studies' proposals join M16 at the user's request, grouped into T-1607 to T-1615: formulas, recipes, roll options, server code with items, value labels and translation, module code, testing kits, attribution and packs, targets and token statuses. Workers in frames and overlay regions (dice-3d P2, P4) go to LATER. `dnd5e-srd` becomes `srd5`; its pt-BR translation waits for value labels.                                                                                                                                                                                                                                                                                 |
 | 2026-11-09 | T-1607 done: a die's size can be a formula (`(@n)d(@die)`), `roll(text)` rolls dice kept in a text field with `"format": "dice"` (`roll(text, 2)` doubles the dice for critical hits), `text()` and `signed()` write numbers as text and `+` joins text with numbers. `@roll.resolved` keeps only the branches taken and drops `+ 0`. `dnd5e-srd` uses them, with an Extra damage field on weapons and creature actions; `saveText()` stays until T-1611 translates card values.                                                                                                                                                                                                         |
 | 2026-11-09 | T-1608 done: recipes name values (`let`, read as `@let.<name>`), roll several named formulas into one message (`@rolls.<name>`), and read the natural d20 and kept dice (`@roll.natural`, `@roll.dice`; the natural d20 is `@roll.natural` rather than `@natural`, to keep formula roots few). `actors` limits a recipe to some actor types in the validator, on sheets and on the server. Item rows read their item's fields and derived values. `dnd5e-srd` attacks with one button (attack and damage, doubled on a critical, with a Critical hit on field) and its creatures lose the derived spell values that existed only to validate.                                            |
+| 2026-11-09 | T-1609 done: recipes declare `options` (a choice, a whole number or dice) that the roll button asks for in a dialog, or picks by Shift or Ctrl, read as `@options.<name>` and checked by the server (`bad_option`). Number bounds may be formulas, such as `@item.level`. Handler recipes take no options yet. `srd5` is still `dnd5e-srd` until T-1614: its d20 rolls ask for Advantage and bonus dice instead of the "Next d20 rolls" field, and spells for the slot level, with per-slot dice and bonus fields.                                                                                                                                                                       |
 
 ---
 
@@ -844,7 +845,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P4, P5, P7 and P10. Outcomes and cards read the kept dice (`@roll.dice`, `@roll.natural`), and a recipe can name values (`let`) that its formula, outcomes and card share. A recipe may list the actor types it is for; the validator checks it against those only, and the server refuses it for others. A recipe rolls named formulas in order into one card (an attack, then its damage, doubled on a critical). Formulas in an `items` row read the row's item as `@item.<field>`, so `visibleIf` and `args` can depend on it. `srd5` uses them: one attack button rolls attack and damage, and creatures lose the fields that existed only to validate.
   - **Done when:** tests cover each key; e2e attacks with one button and sees attack, damage and a critical in one card.
 
-- [ ] **T-1609 · Roll options**
+- [x] **T-1609 · Roll options**
   - **Deps:** T-1608
   - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P3. A recipe declares options the app asks for when its button is pressed: a choice (Advantage, Normal, Disadvantage), a number (a slot level) or a bonus (`1d4`), read as `@options.<name>`, with defaults and shortcuts (Shift for Advantage, Ctrl for Disadvantage). The server checks the values against the declaration. `srd5` drops its "Next d20 rolls" field and casts spells at a higher slot.
   - **Done when:** tests cover the declaration and the checks; e2e rolls with Advantage by shortcut and upcasts a spell from the options.

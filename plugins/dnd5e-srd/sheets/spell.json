@@ -111,6 +111,20 @@
           },
           {
             "type": "field",
+            "path": "slotDice",
+            "label": "field.slotDice",
+            "input": "number",
+            "visibleIf": "@level > 0"
+          },
+          {
+            "type": "field",
+            "path": "slotBonus",
+            "label": "field.slotBonus",
+            "input": "number",
+            "visibleIf": "@level > 0"
+          },
+          {
+            "type": "field",
             "path": "effectType",
             "label": "field.effectType",
             "input": "select"

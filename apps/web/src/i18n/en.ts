@@ -348,6 +348,8 @@ export const en = {
     '"{name}" combines with {combine}: max and min need a default, the others take none.',
   'pluginIssue.secret_contribution':
     '{reference} reads a secret field; contributions can only read main-layer fields.',
+  'pluginIssue.duplicate_shortcut':
+    'Another choice of the roll “{roll}” already uses the {key} key.',
   'pluginIssue.duplicate_id': 'Another entry already has the id “{id}”.',
   'pluginIssue.migration_after_version':
     'The migration to {version} is for a version after the plugin’s ({plugin}).',
@@ -396,6 +398,8 @@ export const en = {
   'sheet.moveDown': 'Move down',
   'sheet.decrease': 'Decrease {label}',
   'sheet.increase': 'Increase {label}',
+  'sheet.roll': 'Roll',
+  'sheet.cancel': 'Cancel',
   'sheet.noRows': 'Nothing here yet.',
   'sheet.items.label': 'Items of {name}',
   'sheet.items.loading': 'Loading items…',
