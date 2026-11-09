@@ -57,7 +57,9 @@ export function PluginFrame({
   const restarts = useFrameRestarts(giveUp);
   const { begin, live } = restarts;
 
-  useEffect(
+  // Listening from the commit that adds the frame: a cached frame page can load and post
+  // `ready` before passive effects run, and it says so only once.
+  useLayoutEffect(
     () =>
       listen(
         () => frame.current,
