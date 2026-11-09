@@ -1,6 +1,6 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 0.4.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-10-29
+> **Status:** 0.4.0 released (2026-10-29) · **Created:** 2026-10-19 · **Last updated:** 2026-11-09
 > **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md), [`0.3.0.md`](docs/history/0.3.0.md) and [`0.4.0.md`](docs/history/0.4.0.md).
 
 ---
@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 50%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 67%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1604` (3D dice study)
+- **Next task:** `T-1605` (D&D 5e SRD study)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -59,6 +59,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-06 | T-1602 done: a module's `theme.json` sets the app's colours (light and dark, panels included), font, corners, border width, density, font files and images in panels and behind the page, per scheme, on the table page; module stylesheets style the page's named parts (`data-vtt-part`), only on tables that use the module; `plugins/parchment-skin` is the example (ADR-076).                                                                                            |
 | 2026-11-07 | T-1603 done: module code draws overlays over the table page and panels in the workspace, each in a sandboxed frame. Frames hear the table events the viewer sees, get the viewer's module settings, and act as the viewer (chat, roll, open sheets and entries, combat), checked by the server and limited per frame. Each member can turn a table's overlays off (ADR-077).                                                                                                  |
 | 2026-11-09 | T-1604 becomes a study at the user's request, like T-1605: build the 3D dice module with what the plugin format offers, record the gaps in `docs/studies/dice-3d.md` and propose follow-up tasks.                                                                                                                                                                                                                                                                             |
+| 2026-11-09 | T-1604 done: `plugins/dice-3d`, a module whose overlay throws three.js and cannon-es dice for each roll the viewer sees and lands them on the server's results. `docs/studies/dice-3d.md` lists 13 findings, the 6 answers that took reading the code, 8 proposed tasks (P1–P8) and 3 decisions (D1–D3) for the user.                                                                                                                                                         |
 
 ---
 
@@ -817,7 +818,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** Module client code runs in sandboxed frames, as ADR-074's do (no network, no access to the page), mounted at two places: overlays over the table page (click-through or interactive) and panels in the table workspace (in the Panels menu, dockable like Chat). Frames receive table events (rolls with the dice and results the server decided, chat messages, combat, scene and token changes), each only if the viewer may see it, so a frame shows results and never decides them; the chat never waits on a frame. Frames get the module's settings for the viewer, merged from instance, table and user scopes, and are told when they change; a frame may change only the viewer's own `user` settings. Through the SDK, a frame can act as the viewer: post a chat message, roll, open a sheet or journal entry, and the combat actions the viewer may take. The server checks each action as the viewer's own, and the app rate-limits them per frame. Each user can turn a table's overlays off.
   - **Done when:** tests show a frame gets no event the viewer may not see, cannot reach the page or the network, and cannot act beyond the viewer's rights; e2e covers an overlay and a panel from a test module, including a roll posted from the panel.
 
-- [ ] **T-1604 · 3D dice study**
+- [x] **T-1604 · 3D dice study**
   - **Deps:** T-1603
   - **Do:** Build `plugins/dice-3d`, our own module (three.js and a physics library bundled in, not dddice): an overlay that throws polyhedral d4–d20 and d100 for each roll the viewer sees and lands them on the server's results. Use only what the plugin format and the module SDK offer, and record each gap, workaround and rough edge in `docs/studies/dice-3d.md`. From the findings, propose follow-up tasks; those the user approves join M16.
   - **Done when:** the plugin validates, packs and installs; e2e rolls on a table with the module, sees the dice frame animate and the chat show the result at once, and the per-user switch hides the dice; the study lists its findings and the proposed tasks.

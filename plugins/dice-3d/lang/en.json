@@ -1,0 +1,10 @@
+{
+  "setting.rolls": "Dice for",
+  "rolls.all": "Every roll I see",
+  "rolls.mine": "Only my rolls",
+  "setting.diceColour": "Dice colour",
+  "setting.numberColour": "Number colour",
+  "setting.colour.help": "A CSS colour, such as #8b1e2d or ivory.",
+  "setting.size": "Dice size",
+  "setting.stay": "Seconds the dice stay after landing"
+}

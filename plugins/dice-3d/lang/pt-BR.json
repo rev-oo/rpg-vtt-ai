@@ -1,0 +1,10 @@
+{
+  "setting.rolls": "Dados para",
+  "rolls.all": "Toda rolagem que vejo",
+  "rolls.mine": "Só as minhas rolagens",
+  "setting.diceColour": "Cor dos dados",
+  "setting.numberColour": "Cor dos números",
+  "setting.colour.help": "Uma cor CSS, como #8b1e2d ou ivory.",
+  "setting.size": "Tamanho dos dados",
+  "setting.stay": "Segundos que os dados ficam depois de parar"
+}

@@ -1,0 +1,21 @@
+{
+  "name": "dice-3d-code",
+  "private": true,
+  "type": "module",
+  "description": "The dice-3d module's client code. Not part of the workspace: install with `pnpm install --ignore-workspace --lockfile=false`, then pack the plugin folder.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "cannon-es": "0.20.0",
+    "three": "0.187.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/three": "0.187.0",
+    "@vtt/sdk": "link:../../../packages/sdk",
+    "typescript": "6.0.3",
+    "vitest": "5.0.5"
+  }
+}
