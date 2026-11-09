@@ -7,17 +7,22 @@
       "value": "@item.name"
     },
     {
-      "label": "card.roll",
-      "value": "@roll.resolved"
+      "label": "card.attackRoll",
+      "value": "@rolls.attack.resolved"
     },
     {
       "label": "card.total",
-      "value": "@total",
+      "value": "@rolls.attack.total",
       "class": "total"
     },
     {
-      "label": "card.onHit",
-      "value": "@item.dice + 'd' + @item.derived.die + ' ' + signed((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic) + (@item.extraDamage == '' ? '' : ' + ' + @item.extraDamage) + ' ' + @item.damageType"
+      "label": "card.damage",
+      "value": "@rolls.damage.resolved + ' ' + @item.damageType"
+    },
+    {
+      "label": "card.damageTotal",
+      "value": "@rolls.damage.total",
+      "class": "total"
     }
   ],
   "outcome": true

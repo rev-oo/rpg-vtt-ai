@@ -1,6 +1,6 @@
 import { useMemo, useSyncExternalStore, type ReactElement } from 'react';
 
-import { withDefaults } from '@vtt/plugin-engine';
+import { computeDerived, withDefaults } from '@vtt/plugin-engine';
 import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
 
 import { SheetContext, useSheet, type SheetEnvironment, type SheetItemRef } from './context.js';
@@ -17,6 +17,8 @@ export interface ItemRowProps {
   readOnly: boolean;
   /** The `items` node's `item` layout. */
   layout: SheetNode;
+  /** The item type's derived values, read as `@item.derived.<name>` (T-1608). */
+  derived?: Readonly<Record<string, string>> | undefined;
 }
 
 /**
@@ -24,10 +26,23 @@ export interface ItemRowProps {
  * still read the holder, its derived values and `@item`. Secret fields of the item stay on
  * its own sheet, and so do presence and rich text.
  */
-export function ItemRow({ item, store, schema, readOnly, layout }: ItemRowProps): ReactElement {
+export function ItemRow({
+  item,
+  store,
+  schema,
+  readOnly,
+  layout,
+  derived,
+}: ItemRowProps): ReactElement {
   const sheet = useSheet();
   const snapshot = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getSnapshot);
   const data = useMemo(() => withDefaults(schema, snapshot), [schema, snapshot]);
+  const { settings, functions } = sheet;
+  // Formulas in the row read the item's fields and derived values as `@item` (T-1608).
+  const itemScope = useMemo(() => {
+    const values = computeDerived(derived ?? {}, data, { settings, functions }).values;
+    return { ...data, derived: values, id: item.id, name: item.name, type: item.type };
+  }, [derived, data, settings, functions, item.id, item.name, item.type]);
   const row: SheetEnvironment = {
     ...sheet,
     store,
@@ -35,6 +50,7 @@ export function ItemRow({ item, store, schema, readOnly, layout }: ItemRowProps)
     data,
     holderData: sheet.holderData ?? sheet.data,
     item,
+    itemScope,
     readOnly: sheet.readOnly || readOnly,
     secret: false,
     presence: undefined,

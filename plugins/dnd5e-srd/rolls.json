@@ -136,65 +136,64 @@
   },
   "weaponAttack": {
     "label": "roll.weaponAttack",
-    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty",
+    "actors": ["character"],
+    "item": ["weapon"],
+    "let": {
+      "mod": "@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod",
+      "toHit": "@let.mod + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty"
+    },
+    "formula": {
+      "attack": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @let.toHit",
+      "damage": "(@rolls.attack.natural >= @critRange ? @item.dice * 2 : @item.dice)d(@item.derived.die) + @let.mod + @item.magic + roll(@item.extraDamage, @rolls.attack.natural >= @critRange ? 2 : 1)"
+    },
     "outcomes": [
       {
-        "when": "@total - ((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty) == 20",
+        "when": "@rolls.attack.natural >= @critRange",
         "label": "outcome.crit",
         "class": "crit"
       },
       {
-        "when": "@total - ((@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + (@item.proficient ? @derived.prof : 0) + @item.magic - @derived.d20Penalty) == 1",
+        "when": "@rolls.attack.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
       }
     ],
-    "card": "attack",
-    "item": ["weapon"]
-  },
-  "weaponDamage": {
-    "label": "roll.weaponDamage",
-    "formula": "(@item.dice)d(@item.derived.die) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic + roll(@item.extraDamage)",
-    "card": "damage",
-    "item": ["weapon"]
-  },
-  "weaponCrit": {
-    "label": "roll.weaponCrit",
-    "formula": "(@item.dice * 2)d(@item.derived.die) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic + roll(@item.extraDamage, 2)",
-    "card": "damage",
-    "item": ["weapon"]
+    "card": "attack"
   },
   "unarmedAttack": {
     "label": "roll.unarmedAttack",
     "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.strMod + @derived.prof - @derived.d20Penalty",
     "outcomes": [
       {
-        "when": "@total - (@derived.strMod + @derived.prof - @derived.d20Penalty) == 20",
+        "when": "@roll.natural >= @critRange",
         "label": "outcome.crit",
         "class": "crit"
       },
       {
-        "when": "@total - (@derived.strMod + @derived.prof - @derived.d20Penalty) == 1",
+        "when": "@roll.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
       }
-    ]
+    ],
+    "actors": ["character"]
   },
   "unarmedDamage": {
     "label": "roll.unarmedDamage",
-    "formula": "max(0, 1 + @derived.strMod)"
+    "formula": "max(0, 1 + @derived.strMod)",
+    "actors": ["character"]
   },
   "spellCast": {
     "label": "roll.spellCast",
+    "actors": ["character"],
     "formula": "@item.attack == 'spell.attack' ? (@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
     "outcomes": [
       {
-        "when": "@item.attack == 'spell.attack' and @total - @derived.spellAttack == 20",
+        "when": "@item.attack == 'spell.attack' and @roll.natural >= @critRange",
         "label": "outcome.crit",
         "class": "crit"
       },
       {
-        "when": "@item.attack == 'spell.attack' and @total - @derived.spellAttack == 1",
+        "when": "@item.attack == 'spell.attack' and @roll.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
       }
@@ -204,6 +203,7 @@
   },
   "spellEffect": {
     "label": "roll.spellEffect",
+    "actors": ["character"],
     "formula": "((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
     "card": "spell",
     "item": ["spell"]
@@ -222,29 +222,23 @@
   },
   "npcAttack": {
     "label": "roll.npcAttack",
-    "formula": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @actions[@args.id].bonus - @derived.d20Penalty",
+    "actors": ["npc"],
+    "formula": {
+      "attack": "(@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @actions[@args.id].bonus - @derived.d20Penalty",
+      "damage": "(@rolls.attack.natural == 20 ? @actions[@args.id].dice * 2 : @actions[@args.id].dice)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage, @rolls.attack.natural == 20 ? 2 : 1)"
+    },
     "outcomes": [
       {
-        "when": "@total - (@actions[@args.id].bonus - @derived.d20Penalty) == 20",
+        "when": "@rolls.attack.natural == 20",
         "label": "outcome.crit",
         "class": "crit"
       },
       {
-        "when": "@total - (@actions[@args.id].bonus - @derived.d20Penalty) == 1",
+        "when": "@rolls.attack.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
       }
     ],
     "card": "npcAttack"
-  },
-  "npcDamage": {
-    "label": "roll.npcDamage",
-    "formula": "(@actions[@args.id].dice)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage)",
-    "card": "npcDamage"
-  },
-  "npcCrit": {
-    "label": "roll.npcCrit",
-    "formula": "(@actions[@args.id].dice * 2)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage, 2)",
-    "card": "npcDamage"
   }
 }

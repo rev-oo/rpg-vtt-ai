@@ -175,17 +175,18 @@ function ItemRowView({
   host: ReadySystem;
   layout: SheetNode;
 }): ReactElement | null {
-  const schema = host.system.definition.itemTypes[item.type]?.schema;
+  const type = host.system.definition.itemTypes[item.type];
   const stored = useMemo(() => createMemoryStore(item.system), [item.system]);
-  if (!schema || live?.denied) return null;
+  if (!type || live?.denied) return null;
   const ready = live?.ready === true;
   return (
     <ItemRow
       item={{ id: item.id, name: item.name, type: item.type }}
       store={ready ? live.store : stored}
-      schema={schema}
+      schema={type.schema}
       readOnly={!ready || live.readOnly || item.access !== 'owner'}
       layout={layout}
+      derived={type.derived}
     />
   );
 }

@@ -85,8 +85,13 @@ export interface SheetEnvironment {
    * (`data`, `store`, `schema`) are the item's.
    */
   holderData?: Readonly<Record<string, unknown>> | undefined;
-  /** Inside an item's row, the item (`@item.*`). */
+  /** Inside an item's row, the item. */
   item?: SheetItemRef | undefined;
+  /**
+   * Inside an item's row, what `@item` reads: the item's fields, its derived values and its
+   * id, name and type (T-1608). Without it, `@item` reads only the id, name and type.
+   */
+  itemScope?: Readonly<Record<string, unknown>> | undefined;
   settings: Readonly<Record<string, Value>>;
   functions: Readonly<Record<string, FormulaFunction>>;
   readOnly: boolean;
@@ -125,7 +130,7 @@ export function formulaScope(
     derived: sheet.derived.values,
     items: sheet.itemTotals,
     settings: sheet.settings,
-    ...(sheet.item && { item: sheet.item }),
+    ...(sheet.item && { item: sheet.itemScope ?? sheet.item }),
     ...(row && { row: row.row }),
   };
 }

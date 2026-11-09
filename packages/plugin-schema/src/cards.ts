@@ -13,7 +13,7 @@ export const cardSchema = z
           label: text.describe('A lang key or literal text.'),
           /** Reads `@roll`, `@total` and the actor's data. */
           value: formula.describe(
-            "Reads `@total`, `@roll.expression`, `@roll.resolved` and the entity's data. It cannot roll dice.",
+            "Reads `@total`, `@roll` (`expression`, `resolved`, `total`, `natural`, `dice`), the recipe's `@rolls` and `@let`, and the entity's data. It cannot roll dice.",
           ),
           class: cssClass.optional(),
         })

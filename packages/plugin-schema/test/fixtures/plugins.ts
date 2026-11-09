@@ -420,9 +420,23 @@ export const CASES: FixtureCase[] = [
               visibleIf: "@item.type == 'weapon' or @item.type == 'wand'",
             },
             { type: 'rollButton', roll: 'skill', label: 'roll.skill', args: { id: '@item.id' } },
+            // Rows read their item's fields and derived values (T-1608).
+            { type: 'text', text: 'Worn', visibleIf: '@item.equipped and @str > 0' },
+            {
+              type: 'column',
+              visibleIf: "@item.type == 'weapon'",
+              children: [{ type: 'text', text: 'Heavy', visibleIf: '@item.derived.heavy' }],
+            },
+            {
+              type: 'rollButton',
+              roll: 'skill',
+              label: 'roll.skill',
+              args: { id: '@item.id', worn: '@item.equipped' },
+            },
           ],
         },
       });
+      at(f, 'types/items/weapon.json').derived = { heavy: "@damage == '2d6'" };
     },
     issues: [],
     valid: true,
@@ -697,6 +711,49 @@ export const CASES: FixtureCase[] = [
       'error unknown_function types/actors/hero.json $.derived.mod',
       'error dice_not_allowed types/actors/hero.json $.derived.mod',
       'error unknown_die rolls.json $.skill.formula',
+    ],
+  },
+  {
+    name: 'named values and several formulas in one recipe (T-1608)',
+    change: (f: PluginFixture): void => {
+      Object.assign(skill(f), {
+        let: {
+          base: '@derived.mod',
+          double: '@let.base * 2',
+          bad: '@let.later + 1d4',
+          later: '1',
+        },
+        formula: {
+          attack: '1d20 + @let.double',
+          damage: '(@rolls.attack.natural == 20 ? 2 : 1)d6 + @rolls.damage.total',
+        },
+        outcomes: [
+          { when: '@rolls.attack.natural == 20 and @roll.natural > 0', label: 'outcome.ok' },
+          { when: '@roll.nope or @rolls.attack.dice == 1', label: 'outcome.no' },
+        ],
+      });
+      (at(f, 'cards/roll.json').rows as unknown[]).push(
+        { label: 'card.total', value: '@rolls.damage.resolved + @let.base' },
+        { label: 'card.total', value: '@let.nope' },
+      );
+    },
+    issues: [
+      'error unknown_reference rolls.json $.skill.let.bad',
+      'error dice_not_allowed rolls.json $.skill.let.bad',
+      'error unknown_reference rolls.json $.skill.formula.damage',
+      'error unknown_reference rolls.json $.skill.outcomes[1].when',
+      'error unknown_reference cards/roll.json $.rows[2].value',
+    ],
+  },
+  {
+    name: 'recipes for some actor types (T-1608)',
+    change: (f: PluginFixture): void => {
+      f['types/actors/villain.json'] = { ...hero(f), label: 'type.hero' };
+      skill(f).actors = ['hero', 'ghost'];
+    },
+    issues: [
+      'error missing_target rolls.json $.skill.actors[1]',
+      'error actor_mismatch sheets/hero.json $.layout.children[3].item.children[1].roll',
     ],
   },
   {

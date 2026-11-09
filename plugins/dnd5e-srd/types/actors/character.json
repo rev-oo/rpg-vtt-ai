@@ -467,6 +467,12 @@
         "x-kind": "longText",
         "x-layer": "secret",
         "default": ""
+      },
+      "critRange": {
+        "type": "integer",
+        "default": 20,
+        "minimum": 1,
+        "maximum": 20
       }
     }
   },

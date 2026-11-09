@@ -99,6 +99,92 @@ describe('rollRecipe() (specs §8.7)', () => {
   });
 });
 
+describe('recipes with dice, named values and several rolls (T-1608)', () => {
+  it('lets outcomes and cards read the natural d20 and the kept dice', () => {
+    const result = rollRecipe(
+      'attack',
+      {
+        formula: '2d20kh1 + 1d4 + 5',
+        outcomes: [{ when: '@roll.natural == 20', label: 'crit' }, { label: 'hit' }],
+        card: 'dice',
+      },
+      {
+        scope,
+        rng: scripted(20, 3, 2),
+        cards: {
+          dice: {
+            title: 'Dice',
+            rows: [
+              { label: 'natural', value: '@roll.natural' },
+              { label: 'kept', value: 'sum(@roll.dice[1].kept[*])' },
+              { label: 'terms', value: "@roll.dice[0].formula + ' ' + @roll.dice[1].die" },
+            ],
+          },
+        },
+      },
+    );
+    expect(result.outcome?.label).toBe('crit');
+    expect(result.card?.rows.map((row) => row.value)).toEqual(['20', '2', '2d20kh1 d4']);
+  });
+
+  it('has no natural without a d20', () => {
+    const result = rollRecipe(
+      'damage',
+      { formula: '1d6', outcomes: [{ when: '@roll.natural == 20', label: 'never' }] },
+      { scope, rng: scripted(6), cards: {} },
+    );
+    expect(result.outcome).toBeNull();
+    expect(result.problems.map((problem) => problem.code)).toEqual(['unknown_reference']);
+  });
+
+  it('works out named values first, then rolls named formulas in order', () => {
+    const result = rollRecipe(
+      'strike',
+      {
+        let: { bonus: '@derived.strMod + 1', twice: '@let.bonus * 2' },
+        formula: {
+          attack: '1d20 + @let.bonus',
+          damage: '(@rolls.attack.natural == 20 ? 2 : 1)d6 + @let.twice',
+        },
+        outcomes: [{ when: '@rolls.attack.natural == 20', label: 'crit' }],
+        card: 'strike',
+      },
+      {
+        scope,
+        rng: scripted(20, 4, 5),
+        cards: {
+          strike: {
+            title: 'Strike',
+            rows: [
+              { label: 'attack', value: '@total' },
+              { label: 'damage', value: '@rolls.damage.total' },
+              { label: 'bonus', value: '@let.twice' },
+            ],
+          },
+        },
+      },
+    );
+    expect(result.rolls.map((rolled) => rolled.resolved)).toEqual(['1d20 + 3', '2d6 + 6']);
+    expect(result.roll).toBe(result.rolls[0]);
+    expect(result.outcome?.label).toBe('crit');
+    expect(result.card?.rows.map((row) => row.value)).toEqual(['23', '15', '6']);
+    expect(chatCardView(result, { hasTemplate: () => false })).toEqual({
+      kind: 'text',
+      text: 'strike: 1d20 + 3 = 23; 2d6 + 6 = 15 (crit)',
+    });
+  });
+
+  it('fails the roll when a named value fails', () => {
+    expect(() =>
+      rollRecipe(
+        'x',
+        { let: { a: '@nope' }, formula: '1d6' },
+        { scope, rng: scripted(), cards: {} },
+      ),
+    ).toThrow('@nope does not exist');
+  });
+});
+
 describe('chatCardView() (FR-CHAT-06)', () => {
   const always = { hasTemplate: () => true };
 

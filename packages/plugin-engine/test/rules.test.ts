@@ -223,6 +223,10 @@ describe('createRules()', () => {
     expect(() => rules.roll('toString', request)).toThrow(
       expect.objectContaining({ code: 'unknown_recipe' }),
     );
+    // A recipe for other actor types (T-1608).
+    expect(() => rules.roll('monster', request)).toThrow(
+      expect.objectContaining({ code: 'wrong_actor_type' }),
+    );
   });
 
   it('works without settings or functions', () => {

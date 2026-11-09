@@ -7,17 +7,22 @@
       "value": "@actions[@args.id].name"
     },
     {
-      "label": "card.roll",
-      "value": "@roll.resolved"
+      "label": "card.attackRoll",
+      "value": "@rolls.attack.resolved"
     },
     {
       "label": "card.total",
-      "value": "@total",
+      "value": "@rolls.attack.total",
       "class": "total"
     },
     {
-      "label": "card.onHit",
-      "value": "@actions[@args.id].dice + 'd' + @actions[@args.id].die + ' ' + signed(@actions[@args.id].damageBonus) + (@actions[@args.id].extraDamage == '' ? '' : ' + ' + @actions[@args.id].extraDamage) + ' ' + @actions[@args.id].damageType"
+      "label": "card.damage",
+      "value": "@rolls.damage.resolved + ' ' + @actions[@args.id].damageType"
+    },
+    {
+      "label": "card.damageTotal",
+      "value": "@rolls.damage.total",
+      "class": "total"
     }
   ],
   "outcome": true

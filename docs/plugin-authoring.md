@@ -1074,7 +1074,7 @@ An `items` node shows the actor's own items on its sheet, so players equip armou
 ```
 
 - **Which items:** those of `itemTypes`, or every item type when it is left out, under their [groups](#item-groups) and by name.
-- **Rows:** `item` lays out one item. Its paths are relative to the item's data, and inputs edit the item itself, live, as on its own sheet. Formulas in a row still read the actor, plus `@item.id`, `@item.name` and `@item.type`.
+- **Rows:** `item` lays out one item. Its paths are relative to the item's data, and inputs edit the item itself, live, as on its own sheet. Formulas in a row still read the actor, and read the row's item as `@item`: its fields, its derived values (`@item.derived.<name>`), its `id`, `name` and `type`. So `"visibleIf": "@item.versatileDie > 0"` shows a node only for versatile weapons, and `args` can pass the item's data to a recipe.
 - **Validation:** every path in `item` must exist in every listed type. A node whose `visibleIf` is `@item.type == 'armor'` (or several such tests joined by `or`) is only checked against those types.
 - **Rolls:** a `rollButton` in a row rolls for the actor with the row's item, for recipes [made with an item](#rolls-made-with-an-item).
 - **Actions:** the core shows each item's name above its row, so `item` need not lay it out. It adds a button to open each item's own sheet and, for whoever may edit the actor, to remove it and to add one from the table's library (`addLabel` names the button). Items dragged from the library or the compendium can be dropped onto the node.
@@ -1104,6 +1104,10 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | `@total`                 | The roll's result                                                     | Outcomes and card rows               |
 | `@roll.expression`       | The formula as written                                                | Outcomes and card rows               |
 | `@roll.resolved`         | The formula as rolled: `1d20 + 2 + 3` (see below)                     | Outcomes and card rows               |
+| `@roll.natural`          | The first d20 that counts, as rolled: `2d20kh1` gives the higher one  | Outcomes and card rows               |
+| `@roll.dice[0].kept[*]`  | The values of a dice term that count, as a list; `.total`, `.formula` | Outcomes and card rows               |
+| `@let.bonus`             | A recipe's [named value](#named-values-and-several-rolls)             | Recipes, their outcomes and cards    |
+| `@rolls.attack.total`    | A [named formula](#named-values-and-several-rolls) rolled earlier     | Recipes, their outcomes and cards    |
 
 The validator checks every reference against the type that uses it: `@agilty` is an error that names the type.
 
@@ -1204,6 +1208,32 @@ An attack with a sword reads the sword. A recipe that lists item types in `item`
 - Its buttons go in an [`items` row](#items-on-actor-sheets) of a listed type, or on the sheet of a listed item type. Either way the actor holding the item rolls. The validator refuses its buttons anywhere else, and a button on an item sheet whose recipe takes no item.
 - An item sheet's buttons are checked against every actor type, since any actor may hold the item. A library item has no holder, so its sheet rolls nothing.
 - The server checks that the actor holds the item and that the recipe takes its type. It reads the item as its sheet shows it, live, and never its secret fields.
+
+#### Named values and several rolls
+
+An attack rolls to hit, then its damage, doubled on a critical hit. One recipe does it all:
+
+```json
+"attack": {
+  "actors": ["character"],
+  "item": ["weapon"],
+  "let": {
+    "mod": "@item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod",
+    "toHit": "@let.mod + @derived.prof"
+  },
+  "formula": {
+    "attack": "1d20 + @let.toHit",
+    "damage": "(@rolls.attack.natural == 20 ? 2 : 1)d(@item.die) + @let.mod"
+  },
+  "outcomes": [{ "when": "@rolls.attack.natural == 20", "label": "outcome.crit" }],
+  "card": "attack"
+}
+```
+
+- `let` names values, worked out in order before anything is rolled. They cannot roll dice. The formulas, outcomes and card read them as `@let.<name>`, and each reads the ones before it, so a bonus is written once.
+- `formula` can name several formulas instead of one. They are rolled in order into one chat message; each reads those before it as `@rolls.<name>`, with `total`, `natural`, `resolved`, `expression` and `dice`. Outcomes and the card read them all. `@total` and `@roll` are the first. A recipe rolls at most 10 formulas.
+- `@roll.natural` is the die that counts of the first d20 term, so a natural 20 is `@roll.natural == 20` whatever the bonus. A roll without a d20 has none, and reading it is an error.
+- `actors` lists the actor types a recipe is for. The validator checks the recipe against those types only, refuses its buttons on sheets of other actor types, and the server refuses it for other actors. Handler recipes take `actors` too.
 
 ### Custom dice
 

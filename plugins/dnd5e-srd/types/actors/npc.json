@@ -335,10 +335,6 @@
     "initiative": "@derived.dexMod - @derived.d20Penalty",
     "checkEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned) and not (@rollMode == 'mode.advantage') ? -1 : 0",
     "saveEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage') ? 1 : (@rollMode == 'mode.disadvantage') and not (@rollMode == 'mode.advantage') ? -1 : 0",
-    "attackEdge": "(@rollMode == 'mode.advantage' or @conditions.invisible) and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) and not (@rollMode == 'mode.advantage' or @conditions.invisible) ? -1 : 0",
-    "spellMod": "0",
-    "spellAttack": "@spellAttackBonus - @derived.d20Penalty",
-    "spellDc": "@spellSaveDc",
-    "cantripDice": "1"
+    "attackEdge": "(@rollMode == 'mode.advantage' or @conditions.invisible) and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) and not (@rollMode == 'mode.advantage' or @conditions.invisible) ? -1 : 0"
   }
 }

@@ -12,6 +12,7 @@ import type { Card, Recipe } from '@vtt/plugin-schema';
 
 import { resolveCard, type ResolvedCard } from './cards.js';
 import type { FormulaFailure } from './derived.js';
+import { EngineError } from './errors.js';
 import { formatValue } from './values.js';
 
 export interface RecipeOutcome {
@@ -31,7 +32,10 @@ export interface RecipeProblem extends FormulaFailure {
 export interface RecipeResult {
   recipe: string;
   label?: string;
+  /** The first roll, which `@total` and `@roll` read. */
   roll: RollResult;
+  /** Every roll in order: one, or one per named formula (T-1608). */
+  rolls: RollResult[];
   /** The first outcome that matched, or null when none did or there are none. */
   outcome: RecipeOutcome | null;
   /** The resolved card; absent when the recipe has none or names one the plugin lacks. */
@@ -48,14 +52,46 @@ export interface RecipeContext {
   functions?: Readonly<Record<string, FormulaFunction>>;
 }
 
-type FormulaRecipe = Extract<Recipe, { formula: string }>;
+type FormulaRecipe = Extract<Recipe, { formula: unknown }>;
 
-/** `@roll.*` in outcomes and cards: the roll without its dice. */
-const rollValues = (result: RollResult): Record<string, Value> => ({
-  expression: result.expression,
-  resolved: result.resolved,
-  total: result.total,
-});
+/** The first die of the first d20 term that counts: a natural 20 is `@roll.natural == 20`. */
+function natural(result: RollResult): number | undefined {
+  const d20 = result.dice.find((term) => term.die === 'd20');
+  return d20?.results.find((die) => die.active)?.value;
+}
+
+/**
+ * `@roll` and `@rolls.<name>` (T-1608): the formula as written and as rolled, the total, the
+ * natural d20, and each dice term with the values that count (`@roll.dice[0].kept[*]`).
+ */
+const rollValues = (result: RollResult): Record<string, unknown> => {
+  const kept = natural(result);
+  return {
+    expression: result.expression,
+    resolved: result.resolved,
+    total: result.total,
+    ...(kept !== undefined && { natural: kept }),
+    dice: result.dice.map((term) => ({
+      formula: term.formula,
+      die: term.die,
+      total: term.total,
+      kept: term.results.filter((die) => die.active).map((die) => die.value),
+    })),
+  };
+};
+
+/** A recipe's named values, worked out in order without dice; each reads those before it. */
+function letValues(
+  lets: Readonly<Record<string, string>>,
+  scope: Readonly<Record<string, unknown>>,
+  functions: Readonly<Record<string, FormulaFunction>>,
+): Record<string, Value> {
+  const values: Record<string, Value> = {};
+  for (const [name, source] of Object.entries(lets)) {
+    values[name] = evaluate(source, { data: { ...scope, let: values }, functions });
+  }
+  return values;
+}
 
 /**
  * Rolls a formula recipe, then picks its outcome: outcomes are checked in order, the first
@@ -67,11 +103,29 @@ const rollValues = (result: RollResult): Record<string, Value> => ({
 export function rollRecipe(
   name: string,
   recipe: FormulaRecipe,
-  { scope, rng, cards, customDice = {}, functions = {} }: RecipeContext,
+  { scope: entity, rng, cards, customDice = {}, functions = {} }: RecipeContext,
 ): RecipeResult {
-  const result = roll(recipe.formula, { data: scope, rng, customDice, functions });
+  const scope = recipe.let ? { ...entity, let: letValues(recipe.let, entity, functions) } : entity;
+  // One formula, or several by name rolled in order; each reads those before it (T-1608).
+  const named = typeof recipe.formula === 'string' ? undefined : Object.entries(recipe.formula);
+  const rolls: RollResult[] = [];
+  const rolled: Record<string, unknown> = {};
+  for (const [name, source] of named ?? [['', recipe.formula]]) {
+    if (typeof source !== 'string') continue;
+    const data = named ? { ...scope, rolls: rolled } : scope;
+    const result = roll(source, { data, rng, customDice, functions });
+    rolls.push(result);
+    if (named) rolled[name] = rollValues(result);
+  }
+  const [result] = rolls;
+  if (!result) throw new EngineError('unknown_recipe', `The roll "${name}" has no formula`);
   const problems: RecipeProblem[] = [];
-  const after = { ...scope, total: result.total, roll: rollValues(result) };
+  const after = {
+    ...scope,
+    ...(named && { rolls: rolled }),
+    total: result.total,
+    roll: rollValues(result),
+  };
 
   let outcome: RecipeOutcome | null = null;
   for (const [index, candidate] of (recipe.outcomes ?? []).entries()) {
@@ -124,6 +178,7 @@ export function rollRecipe(
     recipe: name,
     ...(recipe.label !== undefined && { label: recipe.label }),
     roll: result,
+    rolls,
     outcome,
     ...(card && { card }),
     problems,
@@ -142,19 +197,22 @@ export type ChatCardView = { kind: 'card'; card: ResolvedCard } | { kind: 'text'
  * after the roll, the roll falls back to plain text: `Skill: 1d20 + 3 = 17 (Success)`.
  */
 export function chatCardView(
-  result: Pick<RecipeResult, 'recipe' | 'label' | 'roll' | 'outcome' | 'card'>,
+  result: Pick<RecipeResult, 'recipe' | 'label' | 'rolls' | 'outcome' | 'card'>,
   {
     hasTemplate,
     translate = (text) => text,
   }: { hasTemplate: (card: string) => boolean; translate?: Translate },
 ): ChatCardView {
   if (result.card && hasTemplate(result.card.name)) return { kind: 'card', card: result.card };
-  const { roll: rolled, outcome } = result;
+  const { rolls, outcome } = result;
   const title = translate(result.label ?? result.recipe);
-  const math =
-    rolled.resolved === String(rolled.total)
-      ? String(rolled.total)
-      : `${rolled.resolved} = ${String(rolled.total)}`;
+  const math = rolls
+    .map((rolled) =>
+      rolled.resolved === String(rolled.total)
+        ? String(rolled.total)
+        : `${rolled.resolved} = ${String(rolled.total)}`,
+    )
+    .join('; ');
   const suffix = outcome ? ` (${translate(outcome.label)})` : '';
   return { kind: 'text', text: `${title}: ${math}${suffix}` };
 }

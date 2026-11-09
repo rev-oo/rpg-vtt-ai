@@ -337,6 +337,8 @@ export const ptBR: Messages = {
     'A rolagem “{roll}” não é feita com itens do tipo “{type}”; liste-o em item da rolagem.',
   'pluginIssue.nested_items':
     'Um nó de itens não pode ficar dentro de uma lista ou de outro nó de itens.',
+  'pluginIssue.actor_mismatch':
+    'A rolagem “{roll}” não é para atores do tipo “{type}”; liste-o em actors da rolagem.',
   'pluginIssue.invalid_default': 'O valor padrão não serve para o campo: {reason}',
   'pluginIssue.invalid_annotation': '{key} não pode ser usado em um campo do tipo {type}.',
   'pluginIssue.reserved_name': '“{name}” é reservado para fórmulas e não pode nomear um campo.',

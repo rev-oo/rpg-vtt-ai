@@ -922,6 +922,12 @@
             "input": "select"
           },
           {
+            "type": "field",
+            "path": "critRange",
+            "label": "field.critRange",
+            "input": "number"
+          },
+          {
             "type": "items",
             "itemTypes": ["weapon"],
             "addLabel": "add.weapon",
@@ -934,7 +940,8 @@
                   "type": "field",
                   "path": "twoHands",
                   "label": "field.twoHands",
-                  "input": "checkbox"
+                  "input": "checkbox",
+                  "visibleIf": "@item.versatileDie > 0"
                 },
                 {
                   "type": "field",
@@ -945,16 +952,6 @@
                   "type": "rollButton",
                   "roll": "weaponAttack",
                   "label": "button.attack"
-                },
-                {
-                  "type": "rollButton",
-                  "roll": "weaponDamage",
-                  "label": "button.damage"
-                },
-                {
-                  "type": "rollButton",
-                  "roll": "weaponCrit",
-                  "label": "button.crit"
                 }
               ]
             }
@@ -1265,12 +1262,14 @@
                 {
                   "type": "rollButton",
                   "roll": "spellCast",
-                  "label": "button.cast"
+                  "label": "button.cast",
+                  "visibleIf": "@item.attack != 'spell.none' or @item.dice > 0"
                 },
                 {
                   "type": "rollButton",
                   "roll": "spellEffect",
-                  "label": "button.effect"
+                  "label": "button.effect",
+                  "visibleIf": "@item.dice > 0"
                 }
               ]
             }

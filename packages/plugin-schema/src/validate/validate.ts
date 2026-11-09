@@ -442,9 +442,19 @@ export function validatePlugin(
           ? itemTypeGuard(node.visibleIf)
           : undefined;
       if (row?.itemType !== undefined && guard && !guard.has(row.itemType)) return;
+      // An item's row reads the item's fields and derived values as `@item` (T-1608).
+      const rowItem = row?.itemType !== undefined ? itemTypes[row.itemType] : undefined;
       const nodeScope: FormulaScope =
         row?.itemType !== undefined
-          ? { ...scope, item: true }
+          ? {
+              ...scope,
+              item: rowItem
+                ? {
+                    schema: rowItem.schema,
+                    derived: new Set(Object.keys(rowItem.derived ?? {})),
+                  }
+                : true,
+            }
           : row
             ? { ...scope, row: row.schema ?? 'unchecked' }
             : scope;
@@ -580,8 +590,21 @@ export function validatePlugin(
             } else if (itemSheet !== undefined && !takes) {
               error('item_mismatch', file, [...path, 'roll'], { roll: node.roll, type: itemSheet });
             }
-            // Any actor may hold an item, so its sheet's rolls are checked against them all.
-            const rollers = itemSheet === undefined ? (entry ? [entry] : []) : actorEntries;
+            const forActors = recipe?.actors;
+            if (forActors && entry?.actor && !forActors.includes(entry.name)) {
+              error('actor_mismatch', file, [...path, 'roll'], {
+                roll: node.roll,
+                type: entry.name,
+              });
+            }
+            // Any actor may hold an item, so its sheet's rolls are checked against them all,
+            // or against the actor types the recipe is for.
+            const rollers =
+              itemSheet === undefined
+                ? entry
+                  ? [entry]
+                  : []
+                : actorEntries.filter((roller) => !forActors || forActors.includes(roller.name));
             const users = recipeUsers.get(node.roll) ?? new Set();
             for (const roller of rollers) users.add(roller);
             recipeUsers.set(node.roll, users);
@@ -621,12 +644,22 @@ export function validatePlugin(
   for (const [name, recipe] of Object.entries(rolls)) {
     const file = 'rolls.json';
     useText(recipe.label, file, [name, 'label']);
+    recipe.actors?.forEach((type, index) => {
+      if (!Object.hasOwn(actorTypes, type))
+        error('missing_target', file, [name, 'actors', index], {
+          target: 'actor type',
+          name: type,
+        });
+    });
     if ('handler' in recipe) {
       if (!hasCode)
         error('code_required', file, [name, 'handler'], { feature: `The roll "${name}"` });
       continue;
     }
-    const users = [...(recipeUsers.get(name) ?? [])];
+    // A recipe for some actor types is checked against those, whether or not a sheet rolls it.
+    const users = recipe.actors
+      ? actorEntries.filter((entry) => recipe.actors?.includes(entry.name))
+      : [...(recipeUsers.get(name) ?? [])];
     const rollers: FormulaScope[] = (
       users.length > 0
         ? users.map(typeScope)
@@ -650,16 +683,38 @@ export function validatePlugin(
           })),
         )
       : rollers;
+    // Named values, then the formulas in order; each reads those before it (T-1608).
+    const lets = Object.entries(recipe.let ?? {});
+    const letNames = new Set(lets.map(([letName]) => letName));
+    const formulas =
+      typeof recipe.formula === 'string' ? undefined : Object.entries(recipe.formula);
+    const rollNames = new Set((formulas ?? []).map(([rollName]) => rollName));
+    const rolled = (scope: FormulaScope): FormulaScope => ({
+      ...scope,
+      roll: true,
+      let: letNames,
+      rolls: rollNames,
+    });
     for (const scope of scopes) {
-      formula(recipe.formula, scope, true, file, [name, 'formula']);
+      lets.forEach(([letName, source], index) => {
+        const before = new Set(lets.slice(0, index).map(([earlier]) => earlier));
+        formula(source, { ...scope, let: before }, false, file, [name, 'let', letName]);
+      });
+      if (typeof recipe.formula === 'string') {
+        formula(recipe.formula, { ...scope, let: letNames }, true, file, [name, 'formula']);
+      } else {
+        formulas?.forEach(([rollName, source], index) => {
+          const before = new Set(formulas.slice(0, index).map(([earlier]) => earlier));
+          formula(source, { ...scope, let: letNames, rolls: before }, true, file, [
+            name,
+            'formula',
+            rollName,
+          ]);
+        });
+      }
       recipe.outcomes?.forEach((outcome, index) => {
         if (outcome.when !== undefined)
-          formula(outcome.when, { ...scope, roll: true }, false, file, [
-            name,
-            'outcomes',
-            index,
-            'when',
-          ]);
+          formula(outcome.when, rolled(scope), false, file, [name, 'outcomes', index, 'when']);
       });
     }
     recipe.outcomes?.forEach((outcome, index) => {
@@ -668,7 +723,7 @@ export function validatePlugin(
     if (recipe.card !== undefined) {
       if (!names.card?.has(recipe.card))
         error('missing_target', file, [name, 'card'], { target: 'card', name: recipe.card });
-      cardUsers.set(recipe.card, [...(cardUsers.get(recipe.card) ?? []), ...scopes]);
+      cardUsers.set(recipe.card, [...(cardUsers.get(recipe.card) ?? []), ...scopes.map(rolled)]);
     }
   }
 
