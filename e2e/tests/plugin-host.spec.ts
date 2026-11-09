@@ -8,7 +8,7 @@ import { ADMIN, post, signIn } from './support/api.js';
 // T-0809: its derived `mod` calls a shared function, worked out alike in the browser and on the
 // server, and a handler recipe runs its server code (ADR-047).
 // T-1502: custom nodes and cards run in sandboxed frames, which reach neither the page, its
-// cookies and storage, nor the network (ADR-074).
+// cookies and storage, nor the network (ADR-074); a frame the page reloads starts again.
 test('a system plugin with client code renders sheets and cards', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
   await post(gm, '/plugins/e2e-code/enable', { acknowledgeCode: true });
@@ -57,6 +57,18 @@ test('a system plugin with client code renders sheets and cards', async ({ brows
     await expect(
       sheet.frameLocator('iframe[title="banner"]').getByText('Vitals: Ayla has 7 HP, mod 2'),
     ).toBeVisible();
+  });
+
+  await test.step('the custom node comes back after its tab was hidden', async () => {
+    // dockview detaches a hidden tab, which reloads its frames; the app starts them again.
+    await post(gm, `/tables/${table.id}/actors`, { type: 'hero', name: 'Bren' });
+    await page.getByRole('button', { name: 'Open sheet: Bren' }).click();
+    await expect(page.getByRole('tabpanel', { name: 'Bren' })).toBeVisible();
+    await page.getByRole('tab', { name: 'Ayla' }).click();
+    await expect(
+      sheet.frameLocator('iframe[title="banner"]').getByText('Vitals: Ayla has 7 HP, mod 2'),
+    ).toBeVisible();
+    await expect(sheet.getByText(/failed to show/)).toHaveCount(0);
   });
 
   await test.step('a roll button posts a card the plugin draws', async () => {

@@ -1,8 +1,9 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import type { FrameCode } from '../src/plugin-host/frame-channel.js';
 import type { FrameSheet, HostMessage } from '../src/plugin-host/frame-protocol.js';
+import { RESTART_LIMIT } from '../src/plugin-host/frame-restarts.js';
 import { PluginFrame } from '../src/plugin-host/PluginFrame.js';
 
 // The app's half of the frame bridge (T-1502). jsdom runs no frame scripts, so the test plays
@@ -81,6 +82,7 @@ describe('plugin frames (T-1502)', () => {
 
   it('passes field writes on and sizes itself to its content', () => {
     const { frame, fromFrame, onSet, onAdjust } = setup();
+    fromFrame({ type: 'ready' });
     fromFrame({ type: 'set', path: 'hp', value: 3 });
     fromFrame({ type: 'adjust', path: 'hp', delta: -1 });
     fromFrame({ type: 'height', height: 48 });
@@ -99,6 +101,34 @@ describe('plugin frames (T-1502)', () => {
     fromFrame('set hp');
     expect(onSet).not.toHaveBeenCalled();
     expect(onAdjust).not.toHaveBeenCalled();
+  });
+
+  it('starts a new frame when the page reloads its frame, as dockview does on a hidden tab', () => {
+    const { frame, fromFrame, messages, onSet } = setup();
+    fromFrame({ type: 'ready' });
+    expect(messages().map((message) => message.type)).toEqual(['init']);
+    fireEvent.load(frame);
+    fireEvent.load(frame);
+    // The reloaded document is no longer trusted: a page the code navigated to gets nothing.
+    fromFrame({ type: 'ready' });
+    fromFrame({ type: 'set', path: 'hp', value: 3 });
+    expect(onSet).not.toHaveBeenCalled();
+    expect(messages().map((message) => message.type)).toEqual(['init']);
+    // A new element takes its place, on the frame page, and gets the plugin again.
+    const fresh = screen.getByTitle<HTMLIFrameElement>('hpBar');
+    expect(fresh).not.toBe(frame);
+    expect(fresh.getAttribute('src')).toBe('/plugin-frame.html');
+    expect(screen.queryByText(/failed to show/)).toBeNull();
+  });
+
+  it('gives up on a frame that keeps reloading', () => {
+    setup();
+    for (let restart = 0; restart <= RESTART_LIMIT; restart += 1) {
+      const frame = screen.getByTitle<HTMLIFrameElement>('hpBar');
+      fireEvent.load(frame);
+      fireEvent.load(frame);
+    }
+    expect(screen.getByText('The plugin component “hpBar” failed to show.')).toBeInTheDocument();
   });
 
   it('shows a notice when the component fails', () => {

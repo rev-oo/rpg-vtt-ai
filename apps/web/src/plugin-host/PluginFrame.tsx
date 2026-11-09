@@ -1,4 +1,11 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactElement,
+} from 'react';
 
 import { t } from '../i18n/index.js';
 
@@ -10,6 +17,7 @@ import {
   type FrameSheet,
   type FrameView,
 } from './frame-protocol.js';
+import { useFrameRestarts } from './frame-restarts.js';
 
 // The app's half of the plugin bridge (T-1502, ADR-074): one sandboxed <iframe> per custom
 // node or card. `allow-scripts` alone gives the frame an opaque origin, so it has no cookies,
@@ -43,8 +51,11 @@ export function PluginFrame({
   useLayoutEffect(() => {
     latest.current = { code, view, sheet, onSet, onAdjust };
   });
-  const started = useRef(false);
-  const loads = useRef(0);
+  const giveUp = useCallback(() => {
+    setFailed(true);
+  }, []);
+  const restarts = useFrameRestarts(giveUp);
+  const { begin, live } = restarts;
 
   useEffect(
     () =>
@@ -54,9 +65,8 @@ export function PluginFrame({
           const current = latest.current;
           switch (message.type) {
             case 'ready': {
-              // Only the frame page's first load gets the plugin: see onLoad.
-              if (started.current) return;
-              started.current = true;
+              // Each frame element gets the plugin once: see useFrameRestarts.
+              if (!begin()) return;
               const view =
                 current.view.kind === 'node' && current.sheet
                   ? { ...current.view, sheet: current.sheet }
@@ -71,9 +81,11 @@ export function PluginFrame({
               setHeight(Math.min(message.height, MAX_FRAME_HEIGHT));
               return;
             case 'set':
+              if (!live()) return;
               current.onSet?.(message.path, message.value);
               return;
             case 'adjust':
+              if (!live()) return;
               current.onAdjust?.(message.path, message.delta);
               return;
             case 'failed':
@@ -85,12 +97,12 @@ export function PluginFrame({
           }
         },
       ),
-    [title],
+    [title, begin, live],
   );
 
   useEffect(() => {
-    if (started.current && sheet) send(frame.current, { type: 'sheet', sheet });
-  }, [sheet]);
+    if (live() && sheet) send(frame.current, { type: 'sheet', sheet });
+  }, [sheet, live]);
 
   if (failed) {
     return (
@@ -101,17 +113,14 @@ export function PluginFrame({
   }
   return (
     <iframe
+      key={restarts.generation}
       ref={frame}
       src={FRAME_URL}
       title={title}
       sandbox="allow-scripts"
       className="block w-full border-0 bg-transparent"
       style={{ height }}
-      onLoad={() => {
-        // A frame that navigates away is no longer the plugin's page: stop talking to it.
-        loads.current += 1;
-        if (loads.current > 1) setFailed(true);
-      }}
+      onLoad={restarts.onLoad}
     />
   );
 }
