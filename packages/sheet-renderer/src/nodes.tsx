@@ -1,12 +1,20 @@
 import { useId, useRef, useState, type KeyboardEvent, type ReactElement } from 'react';
 
 import { evaluate, FormulaError, type Value } from '@vtt/formula';
-import { collectionRows, withDefaults } from '@vtt/plugin-engine';
+import {
+  collectionRows,
+  EngineError,
+  optionDefaults,
+  shortcutOptions,
+  withDefaults,
+  type OptionValue,
+} from '@vtt/plugin-engine';
 import type { SheetNode } from '@vtt/plugin-schema';
 import { Button, cn } from '@vtt/ui';
 
 import { formulaScope, useSheet, type RowScope, type SheetEnvironment } from './context.js';
 import { DerivedNode, FieldNode, ImageNode, LongTextNode, resolveField } from './fields.js';
+import { RollOptionsDialog } from './roll-options.js';
 import { fill } from './strings.js';
 
 type NodeOf<T extends SheetNode['type']> = Extract<SheetNode, { type: T }>;
@@ -314,6 +322,7 @@ function RollButtonNode({
   row: RowScope | undefined;
 }): ReactElement {
   const sheet = useSheet();
+  const [asking, setAsking] = useState(false);
   let args: Record<string, Value> | undefined = {};
   let problem: string | undefined;
   for (const [name, arg] of Object.entries(node.args ?? {})) {
@@ -330,7 +339,29 @@ function RollButtonNode({
       break;
     }
   }
+  // A recipe's options are asked for when the button is pressed (T-1609).
+  const recipe =
+    sheet.rolls && Object.hasOwn(sheet.rolls, node.roll) ? sheet.rolls[node.roll] : undefined;
+  const options = recipe && 'formula' in recipe ? recipe.options : undefined;
+  const optionScope = { ...formulaScope(sheet, row), args: args ?? {} };
+  let defaults: Record<string, OptionValue> | undefined;
+  if (options && args) {
+    try {
+      defaults = optionDefaults(options, { scope: optionScope, functions: sheet.functions });
+    } catch (error) {
+      if (!(error instanceof FormulaError || error instanceof EngineError)) throw error;
+      problem = error.message;
+      args = undefined;
+    }
+  }
   const { onRoll } = sheet;
+  const send = (rolled: Readonly<Record<string, Value>>, chosen?: Record<string, OptionValue>) => {
+    if (!onRoll) return;
+    if (chosen) onRoll(node.roll, rolled, sheet.item, chosen);
+    else if (sheet.item) onRoll(node.roll, rolled, sheet.item);
+    else onRoll(node.roll, rolled);
+  };
+  const label = sheet.translate(node.label);
   return (
     <div className={cn('vtt-rollButton', node.class)} data-roll={node.roll}>
       <Button
@@ -338,14 +369,40 @@ function RollButtonNode({
         title={problem}
         // Rolling changes no data: an observer may roll whenever the host passes `onRoll`.
         disabled={!onRoll || !args}
-        onClick={() => {
+        {...(options && { 'aria-haspopup': 'dialog' as const })}
+        onClick={(event) => {
           if (!onRoll || !args) return;
-          if (sheet.item) onRoll(node.roll, args, sheet.item);
-          else onRoll(node.roll, args);
+          if (!options || !defaults) {
+            send(args);
+            return;
+          }
+          // Shift and Ctrl (or ⌘) pick the choice that names them and roll at once.
+          const key = event.shiftKey ? 'shift' : event.ctrlKey || event.metaKey ? 'ctrl' : null;
+          const picked =
+            key &&
+            shortcutOptions(options, key, { scope: optionScope, functions: sheet.functions });
+          if (picked) send(args, picked);
+          else setAsking(true);
         }}
       >
-        {sheet.translate(node.label)}
+        {label}
       </Button>
+      {options && defaults && args && (
+        <RollOptionsDialog
+          open={asking}
+          title={recipe?.label !== undefined ? sheet.translate(recipe.label) : label}
+          options={options}
+          defaults={defaults}
+          scope={optionScope}
+          onRoll={(chosen) => {
+            setAsking(false);
+            send(args, chosen);
+          }}
+          onClose={() => {
+            setAsking(false);
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { Value } from '@vtt/formula';
+import type { OptionValue } from '@vtt/plugin-engine';
 import type { RollRequestInput } from '@vtt/shared/api';
 
 import { api } from '../../api/endpoints.js';
@@ -29,6 +30,7 @@ export function useRecipeRoll(tableId: string): {
     name: string,
     args: Readonly<Record<string, Value>>,
     itemId?: string,
+    options?: Readonly<Record<string, OptionValue>>,
   ) => void;
   status: string | null;
   failure: string | null;
@@ -41,6 +43,7 @@ export function useRecipeRoll(tableId: string): {
     name: string,
     args: Readonly<Record<string, Value>>,
     itemId?: string,
+    options?: Readonly<Record<string, OptionValue>>,
   ) => {
     setStatus(null);
     setFailure(null);
@@ -49,7 +52,12 @@ export function useRecipeRoll(tableId: string): {
       setFailure(t('sheet.badArgs'));
       return;
     }
-    const recipe = { name, args: sent, ...(itemId !== undefined && { itemId }) };
+    const recipe = {
+      name,
+      args: sent,
+      ...(itemId !== undefined && { itemId }),
+      ...(options && { options: { ...options } }),
+    };
     api.roll(tableId, { recipe, actorId }).then(
       () => {
         setStatus(t('sheet.rolled'));

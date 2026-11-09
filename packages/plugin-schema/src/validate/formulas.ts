@@ -23,6 +23,7 @@ export const RESERVED_ROOTS = [
   'item',
   'let',
   'rolls',
+  'options',
 ] as const;
 
 /** What `@roll` and each `@rolls.<name>` hold (T-1608). */
@@ -65,6 +66,8 @@ export interface FormulaScope {
   let?: ReadonlySet<string> | undefined;
   /** `@rolls.<name>.*`: a recipe's formulas rolled so far (T-1608). */
   rolls?: ReadonlySet<string> | undefined;
+  /** `@options.<name>`: what the app asked for when the button was pressed (T-1609). */
+  options?: ReadonlySet<string> | undefined;
   settings: ReadonlySet<string>;
 }
 
@@ -133,6 +136,8 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
     }
     case 'let':
       return onlyName(path, scope.let);
+    case 'options':
+      return onlyName(path, scope.options);
     case 'rolls': {
       const [first, second] = path;
       return (

@@ -141,14 +141,7 @@
             "type": "row",
             "gap": "sm",
             "wrap": true,
-            "children": [
-              {
-                "type": "field",
-                "path": "rollMode",
-                "label": "field.rollMode",
-                "input": "select"
-              }
-            ],
+            "children": [],
             "class": "mode"
           },
           {
@@ -917,12 +910,6 @@
         "children": [
           {
             "type": "field",
-            "path": "rollMode",
-            "label": "field.rollMode",
-            "input": "select"
-          },
-          {
-            "type": "field",
             "path": "critRange",
             "label": "field.critRange",
             "input": "number"
@@ -1017,12 +1004,6 @@
                 "label": "field.concentration"
               }
             ]
-          },
-          {
-            "type": "field",
-            "path": "rollMode",
-            "label": "field.rollMode",
-            "input": "select"
           },
           {
             "type": "section",

@@ -89,6 +89,22 @@ export const PLUGIN: PluginDefinition = {
     },
     plain: { formula: '1d6' },
     monster: { formula: '1d20', actors: ['npc'] },
+    aimed: {
+      options: {
+        mode: {
+          type: 'choice',
+          label: 'Roll',
+          choices: [
+            { value: 'normal', label: 'Normal' },
+            { value: 'advantage', label: 'Advantage', key: 'shift' },
+          ],
+        },
+        level: { type: 'number', label: 'Level', default: '@str - 8', minimum: 1, maximum: '@str' },
+        bonus: { type: 'dice', label: 'Bonus' },
+      },
+      formula:
+        "(@options.mode == 'advantage' ? 2d20kh1 : 1d20) + @options.level + roll(@options.bonus)",
+    },
     lostCard: { label: 'roll.lost', formula: '1d6 + 1', card: 'gone' },
     fate: { formula: '4dF' },
     attack: { handler: 'attack' },

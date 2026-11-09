@@ -82,12 +82,6 @@
         "class": "vitals"
       },
       {
-        "type": "field",
-        "path": "rollMode",
-        "label": "field.rollMode",
-        "input": "select"
-      },
-      {
         "type": "grid",
         "columns": 6,
         "class": "abilities",

@@ -1108,6 +1108,7 @@ Values are numbers, text in single quotes (`'str'`) and `true`/`false`. `@` read
 | `@roll.dice[0].kept[*]`  | The values of a dice term that count, as a list; `.total`, `.formula` | Outcomes and card rows               |
 | `@let.bonus`             | A recipe's [named value](#named-values-and-several-rolls)             | Recipes, their outcomes and cards    |
 | `@rolls.attack.total`    | A [named formula](#named-values-and-several-rolls) rolled earlier     | Recipes, their outcomes and cards    |
+| `@options.mode`          | What the player chose when rolling ([roll options](#roll-options))    | Recipes, their outcomes and cards    |
 
 The validator checks every reference against the type that uses it: `@agilty` is an error that names the type.
 
@@ -1250,6 +1251,41 @@ An attack rolls to hit, then its damage, doubled on a critical hit. One recipe d
 ```
 
 Faces are equally likely. A face is a number, a text label (whose number comes from `values`), or `{ "label": "…", "value": 1 }`. Totals, comparisons and success counting use the numbers, and chat shows the labels.
+
+#### Roll options
+
+Some things are chosen when rolling: Advantage, the slot a spell is cast with, Bless's 1d4. A recipe lists them in `options`, and its button asks for them:
+
+```json
+"cast": {
+  "item": ["spell"],
+  "options": {
+    "mode": {
+      "type": "choice",
+      "label": "option.mode",
+      "choices": [
+        { "value": "normal", "label": "mode.normal" },
+        { "value": "advantage", "label": "mode.advantage", "key": "shift" },
+        { "value": "disadvantage", "label": "mode.disadvantage", "key": "ctrl" }
+      ]
+    },
+    "slot": {
+      "type": "number",
+      "label": "option.slot",
+      "default": "@item.level",
+      "minimum": "@item.level",
+      "maximum": 9
+    },
+    "bonus": { "type": "dice", "label": "option.bonus" }
+  },
+  "formula": "(@options.mode == 'advantage' ? 2d20kh1 : @options.mode == 'disadvantage' ? 2d20kl1 : 1d20) + roll(@options.bonus)"
+}
+```
+
+- **Kinds:** a `choice` of up to 10 values (the first is picked unless `default` names another), a whole `number`, or `dice` such as `1d4` (blank by default, and only numbers, dice and arithmetic). The formulas, named values, outcomes and card read them as `@options.<name>`; `roll(@options.bonus)` rolls the dice, and blank dice add nothing.
+- **Bounds:** a number's `default`, `minimum` and `maximum` are whole numbers or formulas worked out for the roll, so they can read `@item`, `@args` and the actor, but not other options.
+- **Asking:** pressing the button opens a dialog with each option at its default. A choice with `key` is picked by holding that key (`shift`, or `ctrl`, which is also ⌘ on a Mac) while clicking: the roll goes at once, with the other options at their defaults. Each key picks one choice per recipe.
+- **Checks:** the server checks every value against the declaration and refuses the roll otherwise, so a player cannot send a level 12 slot or dice that read the sheet. Recipes without options take none, and handler recipes take none yet.
 
 ### Chat cards
 

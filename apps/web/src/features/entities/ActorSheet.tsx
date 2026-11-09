@@ -76,8 +76,8 @@ function ActorSheet({ table, actor }: { table: TableView; actor: ActorView }): R
             secret={isGmLike(table.role)}
             onRoll={
               mayRoll
-                ? (name, args, item) => {
-                    roll(actor.id, name, args, item?.id);
+                ? (name, args, item, options) => {
+                    roll(actor.id, name, args, item?.id, options);
                   }
                 : undefined
             }

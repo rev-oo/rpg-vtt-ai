@@ -434,6 +434,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | --- | --- | --- | --- |
 | `label` | [text](#text) |  | The roll name in chat; a lang key or literal text. |
 | `let` | map from [identifier](#identifier) to [formula](#formula) |  | Named values worked out before rolling, in order, without dice. The formulas, outcomes and card read them as `@let.<name>`; each reads the ones before it. |
+| `options` | map from [identifier](#identifier) to one of [Choice option](#rolls-choice-option), [Number option](#rolls-number-option), [Dice option](#rolls-dice-option) |  | What the app asks for when the button is pressed: a choice, a whole number or dice. Formulas, named values, outcomes and the card read them as `@options.<name>`; the server checks them. |
 | `formula` | [formula](#formula) or map from [identifier](#identifier) to [formula](#formula) | yes | What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`. Or several formulas by name, rolled in order into one message; each reads those before it as `@rolls.<name>`. |
 | `outcomes` | list of [Outcome](#rolls-outcome) |  | Checked in order; the first whose `when` is true is shown. |
 | `card` | [name](#name) |  | A card in `cards/`, without `.json`, to show the roll with. |
@@ -450,15 +451,58 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | `handler` | [name](#name) | yes | A handler in `code/server`, run on the server when the recipe is rolled. |
 | `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
+<a id="rolls-choice-option"></a>
+
+### Choice option
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `type` | `"choice"` | yes |  |
+| `label` | [text](#text) | yes | What the option asks; a lang key or literal text. |
+| `choices` | list of [`choices`](#rolls-choices) (2–10 items) | yes |  |
+| `default` | [identifier](#identifier) |  | The value picked at first; the first when left out. |
+
+<a id="rolls-number-option"></a>
+
+### Number option
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `type` | `"number"` | yes |  |
+| `label` | [text](#text) | yes | What the option asks; a lang key or literal text. |
+| `default` | number or [formula](#formula) | yes | A whole number, or a formula such as `@item.level`. |
+| `minimum` | number or [formula](#formula) |  | The lowest whole number allowed, or a formula. |
+| `maximum` | number or [formula](#formula) |  | The highest whole number allowed, or a formula. |
+
+<a id="rolls-dice-option"></a>
+
+### Dice option
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `type` | `"dice"` | yes |  |
+| `label` | [text](#text) | yes | What the option asks; a lang key or literal text. |
+| `default` | text (at most 200 characters) |  | Dice such as `1d4`, or nothing (the default). |
+
 <a id="rolls-outcome"></a>
 
 ### Outcome
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
-| `when` | [formula](#formula) |  | A true/false formula that can read `@total`, `@roll`, `@rolls` and `@let`; leave it out for the fallback. |
+| `when` | [formula](#formula) |  | A true/false formula that can read `@total`, `@roll`, `@rolls`, `@let` and `@options`; leave it out for the fallback. |
 | `label` | [text](#text) | yes | Shown with the roll; a lang key or literal text. |
 | `class` | [css classes](#css-classes) |  | A CSS class for the outcome, for `styles/*.css`. |
+
+<a id="rolls-choices"></a>
+
+### `choices`
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `value` | [identifier](#identifier) | yes | Read as `@options.<name>`, such as `'advantage'`. |
+| `label` | [text](#text) | yes | A lang key or literal text. |
+| `key` | one of `"shift"`, `"ctrl"` |  | Holding this key while clicking the button picks this choice and rolls at once, with the other options at their defaults. |
 
 <a id="dice"></a>
 

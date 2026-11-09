@@ -116,8 +116,8 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
             secret={isGmLike(table.role)}
             onRoll={
               mayRoll
-                ? (name, args) => {
-                    roll(owner.id, name, args, item.id);
+                ? (name, args, _item, options) => {
+                    roll(owner.id, name, args, item.id, options);
                   }
                 : undefined
             }

@@ -12,6 +12,7 @@ import { computeDerived, type DerivedValues } from './derived.js';
 import { toCustomDice } from './dice.js';
 import { EngineError } from './errors.js';
 import { documentLayout, type DocumentLayout } from './layout.js';
+import { rollOptions, type OptionValue } from './options.js';
 import { rollRecipe, type RecipeResult } from './recipes.js';
 import { settingValues } from './settings.js';
 
@@ -31,6 +32,8 @@ export interface RollRequest {
   data: Readonly<Record<string, unknown>>;
   /** `@args.*`, from the roll button. */
   args?: Readonly<Record<string, Value>>;
+  /** `@options.*`: what the app asked for, checked against the recipe (T-1609). */
+  options?: Readonly<Record<string, OptionValue>>;
   /** An actor's items, for `@items.*` (ADR-063); none when left out. */
   items?: readonly HeldItem[];
   /** The item the roll is made with, for `@item.*` (ADR-063). */
@@ -150,7 +153,10 @@ export function createRules(
     },
     itemTotals: totalsOf,
     layout: (kind, name) => documentLayout(typeOf(kind, name).schema),
-    roll: (name, { kind = 'actor', type: typeName, data, args = {}, items = [], item, rng }) => {
+    roll: (
+      name,
+      { kind = 'actor', type: typeName, data, args = {}, options = {}, items = [], item, rng },
+    ) => {
       const recipe = Object.hasOwn(plugin.rolls, name) ? plugin.rolls[name] : undefined;
       if (!recipe) throw new EngineError('unknown_recipe', `There is no roll "${name}"`);
       if (!('formula' in recipe)) {
@@ -162,7 +168,14 @@ export function createRules(
           `The roll "${name}" is not for actors of type "${typeName}"`,
         );
       }
-      const scope = scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
+      const entity = scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
+      const asked = recipe.options
+        ? rollOptions(recipe.options, options, { scope: entity, functions })
+        : undefined;
+      if (!asked && Object.keys(options).length > 0) {
+        throw new EngineError('bad_option', `The roll "${name}" has no options`);
+      }
+      const scope = asked ? { ...entity, options: asked } : entity;
       return rollRecipe(name, recipe, { scope, rng, cards: plugin.cards, customDice, functions });
     },
     rollFormula: (

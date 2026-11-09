@@ -1,8 +1,8 @@
 import { createContext, useContext, type ComponentType, type ReactNode } from 'react';
 
 import type { FormulaFunction, Value } from '@vtt/formula';
-import type { DerivedValues } from '@vtt/plugin-engine';
-import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
+import type { DerivedValues, OptionValue } from '@vtt/plugin-engine';
+import type { FieldSchema, Recipe, SheetNode } from '@vtt/plugin-schema';
 
 import type { SheetPresence } from './presence.js';
 import type { FieldPath, SheetStore } from './store.js';
@@ -30,6 +30,8 @@ export type RollHandler = (
   roll: string,
   args: Readonly<Record<string, Value>>,
   item?: SheetItemRef,
+  /** What the viewer chose for the recipe's options (T-1609); none for recipes without. */
+  options?: Readonly<Record<string, OptionValue>>,
 ) => void;
 
 /** What the host's rich text editor receives for a `richText` field (ADR-037). */
@@ -100,6 +102,8 @@ export interface SheetEnvironment {
   translate: (text: string) => string;
   strings: SheetStrings;
   onRoll: RollHandler | undefined;
+  /** The plugin's roll recipes, so roll buttons can ask for their options (T-1609). */
+  rolls: Readonly<Record<string, Recipe>> | undefined;
   nodes: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
   /** Other viewers' focus, on live sheets (FR-SHEET-02). */
   presence: SheetPresence | undefined;
