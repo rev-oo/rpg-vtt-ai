@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 83%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 33%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,9 +29,9 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1606` (interface review)
+- **Next task:** `T-1607` (formulas: readable, with dice and text from data)
 - **Open blockers:** none
-- **Decisions pending:** Q19 (§14); which of T-1604's proposed tasks P1–P7 join M16 ([study](docs/studies/dice-3d.md#proposed-tasks)); which of T-1605's proposed tasks P1–P15 join M16, and its questions Q1–Q4 ([study](docs/studies/dnd5e-srd.md#proposed-tasks))
+- **Decisions pending:** Q19 (§14)
 
 ### 0.3 Change log
 
@@ -61,6 +61,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-09 | T-1604 becomes a study at the user's request, like T-1605: build the 3D dice module with what the plugin format offers, record the gaps in `docs/studies/dice-3d.md` and propose follow-up tasks.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-11-09 | T-1604 done: `plugins/dice-3d` throws three.js dice, simulated with cannon-es before they are drawn, for each roll the viewer sees, and writes the server's result on the face that lands on top. Its code is a workspace package so `pack` bundles its dependencies. `docs/studies/dice-3d.md` records findings F1–F7 (dependencies undocumented, no workers in frames, the bundle loaded per frame, overlays blind to the layout, settings without enum labels or colours, no custom dice for modules, no test kit) and proposes tasks P1–P7.                                                                                                                                          |
 | 2026-11-09 | T-1605 done: `plugins/dnd5e-srd` plays the SRD 5.2 rules (characters, creatures, skills, saves, attacks, spells and slots from the class tables, conditions, death saves, rests, a 58-entry pack) with JSON, shared code for the class tables and server code for rests. Its code is a workspace package, linted as a new `plugin-server-code` element. `docs/studies/dnd5e-srd.md` records findings F1–F18 (dice sizes from data, unreadable resolved formulas, no roll-time options, outcomes blind to the dice, one roll per recipe, server code without items or derived values, recipes checked against every actor type, translation leaks, no targets) and proposes tasks P1–P15. |
+| 2026-11-09 | The studies' proposals join M16 at the user's request, grouped into T-1607 to T-1615: formulas, recipes, roll options, server code with items, value labels and translation, module code, testing kits, attribution and packs, targets and token statuses. Workers in frames and overlay regions (dice-3d P2, P4) go to LATER. `dnd5e-srd` becomes `srd5`; its pt-BR translation waits for value labels.                                                                                                                                                                                                                                                                                 |
 
 ---
 
@@ -804,7 +805,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
 
 ### M16 — Modules, a 5e study and the interface
 
-Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, and a review of the interface before the 1.0 freeze.
+Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1615), and a review of the interface before the 1.0 freeze.
 
 - [x] **T-1601 · Module plugins**
   - **Deps:** none
@@ -830,6 +831,51 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Deps:** none
   - **Do:** Build `plugins/dnd5e-srd` from the System Reference Document 5.2 (CC-BY-4.0, with its attribution): characters and NPCs with abilities, skills, saves, proficiency, attacks, spells and slots, conditions, rests and an SRD pack. Use only what the plugin format offers, and record each gap, workaround and rough edge in `docs/studies/dnd5e-srd.md`. From the findings, propose follow-up tasks; those the user approves join M16.
   - **Done when:** the plugin validates, packs and installs; e2e makes a character, rolls an attack and casts a spell; the study lists its findings and the proposed tasks.
+
+- [ ] **T-1607 · Formulas: readable, with dice and text from data**
+  - **Deps:** none
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P1, P2 and P9. `@roll.resolved` prints only the branch a conditional or `if` took, with its values. A die's size may be a formula (`(@item.dice)d(@item.die)`), and a text field may hold a dice expression that a formula rolls (`roll(@item.damage)`), checked when it is saved. Built-in `text(x)` and `signed(x)`, and `+` joins text with numbers. `srd5` drops its chains of die sizes and its `damage()` and `saveText()` shared functions.
+  - **Done when:** tests cover each; a longsword's damage reads `1d10 + 3` in the chat; e2e rolls damage from a stored dice expression.
+
+- [ ] **T-1608 · Recipes: dice in outcomes, named values, actor types, several rolls**
+  - **Deps:** T-1607
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P4, P5, P7 and P10. Outcomes and cards read the kept dice (`@roll.dice`, `@natural`), and a recipe can name values (`let`) that its formula, outcomes and card share. A recipe may list the actor types it is for; the validator checks it against those only, and the server refuses it for others. A recipe rolls named formulas in order into one card (an attack, then its damage, doubled on a critical). Formulas in an `items` row read the row's item as `@item.<field>`, so `visibleIf` and `args` can depend on it. `srd5` uses them: one attack button rolls attack and damage, and creatures lose the fields that existed only to validate.
+  - **Done when:** tests cover each key; e2e attacks with one button and sees attack, damage and a critical in one card.
+
+- [ ] **T-1609 · Roll options**
+  - **Deps:** T-1608
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P3. A recipe declares options the app asks for when its button is pressed: a choice (Advantage, Normal, Disadvantage), a number (a slot level) or a bonus (`1d4`), read as `@options.<name>`, with defaults and shortcuts (Shift for Advantage, Ctrl for Disadvantage). The server checks the values against the declaration. `srd5` drops its "Next d20 rolls" field and casts spells at a higher slot.
+  - **Done when:** tests cover the declaration and the checks; e2e rolls with Advantage by shortcut and upcasts a spell from the options.
+
+- [ ] **T-1610 · Server code with items, derived values and bounds**
+  - **Deps:** T-1608
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P6 and P11. Handler recipes take `item` like formula recipes; handlers get the item, the actor's derived values and item totals; `ctx.items.adjust` steps an item's counters and `ctx.actors.set` sets a field that is not a counter, with the same rights as the roller. A counter's `minimum` and `maximum` may be formulas (`@hp.max`), checked on every step. `srd5` spends a slot when a spell is cast, recharges features on a rest, and stops healing at the maximum.
+  - **Done when:** tests cover the new `ctx` calls, their rights and the bounds; e2e casts a spell and sees its slot spent.
+
+- [ ] **T-1611 · Labels for values, and translation**
+  - **Deps:** T-1614
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P8, and the [dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P5. `enumLabels` gives a lang key per value for type fields and settings, so stored values stay plain; card rows translate values that are lang keys; server code posts text by lang key with parameters, so each viewer reads it in their language. Settings gain a `colour` format drawn as a colour picker, and plugin code gets typed settings. Then translate `srd5` and `dice-3d` to pt-BR (the 5e study's Q3).
+  - **Done when:** tests cover labels, translated card rows and server messages; e2e shows a pt-BR sheet, card and rest message.
+
+- [ ] **T-1612 · Module code: packaging, declared exports, system dice**
+  - **Deps:** none
+  - **Do:** From the [dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P1, P3 and P6. The guide documents where `vtt-plugin pack` resolves npm imports and which files under `code/` it leaves out, with an example `code/package.json`; `pack` prints each bundle's size and warns above a threshold. A module declares its overlays and panels in its files, so the app needs no probe frame. Module frames get the table system's custom dice (faces, labels, values), and the guide documents die names (`d<sides>`, `d<NAME>`).
+  - **Done when:** tests cover the declaration, the size warning and the dice given to frames; dice-3d loads with no probe frame and throws a system's custom die in e2e.
+
+- [ ] **T-1613 · Testing kits for plugin code**
+  - **Deps:** T-1610, T-1612
+  - **Do:** From the [dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P7, and the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P13. `@vtt/sdk/client/testing` renders an overlay or panel with fake events, settings and actions and records what it asked for; `@vtt/sdk/testing` gives a fake handler `ctx` and a formula harness. The server's test support loads a reference plugin's compiled code. `dice-3d` and `srd5` use the kits in place of their own fakes.
+  - **Done when:** both reference plugins test their components and handlers with the kits; the guide documents them.
+
+- [ ] **T-1614 · Attribution and packs; `srd5`**
+  - **Deps:** none
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P12, and its Q2. A manifest `attribution` (text and a link) shows on the Plugins page and in the Compendium beside each entry from the plugin's packs. Packs accept collections in the stored form (maps by id) as well as lists. Rename `dnd5e-srd` to `srd5` (folder, id, tests and docs), and give it its SRD attribution.
+  - **Done when:** tests cover the attribution and both pack forms; e2e sees the attribution in the Compendium; nothing named `dnd5e-srd` is left.
+
+- [ ] **T-1615 · Targets and token statuses**
+  - **Deps:** T-1608
+  - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P14 and P15. A roll may carry the viewer's selected tokens as targets; recipes read `@target` (such as its AC) and cards offer "apply damage" to the targets, for those who may edit them. An actor type declares boolean fields as statuses with an icon; tokens and the combat tracker show those that are on. `srd5` compares attacks with the target's AC and shows its conditions on tokens.
+  - **Done when:** tests cover targets, their rights and statuses; e2e attacks a selected token, applies damage and sees a condition on the token.
 
 - [ ] **T-1606 · Interface review**
   - **Deps:** none
@@ -880,6 +926,8 @@ Declarative systems built in the browser, for people who do not write plugins by
 - Composition keywords (`$ref`, `oneOf`) in the schema subset
 - Modules that extend a system: new types, sheets or packs for a named system, without replacing it
 - A book-style journal view: entries laid out as pages, with text flowing onto the next page
+- Workers in plugin frames (`worker-src blob:` in the frame page's policy, after a security review), so modules can run heavy work off the main thread ([dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P2)
+- Overlay regions: an overlay draws over a named part such as `map` and follows it as panels move ([dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P4)
 
 ---
 
