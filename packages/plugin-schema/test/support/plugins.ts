@@ -8,7 +8,7 @@ const pluginsDir = fileURLToPath(new URL('../../../../plugins/', import.meta.url
 
 /**
  * Every file of a reference plugin as text, keyed by its path inside the plugin folder, without
- * installed dependencies (`dice-3d/code` installs its own, ADR-078).
+ * installed dependencies (`dice-3d/code` is a workspace package, ADR-078).
  */
 export async function pluginFiles(id: string): Promise<Map<string, string>> {
   const root = `${pluginsDir}${id}`;

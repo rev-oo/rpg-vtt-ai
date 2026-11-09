@@ -24,6 +24,9 @@ export const workspacePackages = {
   'apps/web': { type: 'web', kind: 'web' },
   // Playwright suites drive the built apps over HTTP; they import no workspace code.
   e2e: { type: 'e2e', kind: 'node' },
+  // A reference plugin's client code with npm dependencies to bundle (ADR-078). Like every
+  // plugin's `code/`, it is not linted (see index.mjs); this records what it may import.
+  'plugins/dice-3d/code': { type: 'plugin-dice-3d', kind: 'react' },
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
@@ -71,6 +74,8 @@ const allowedImports = {
   ),
   web: ALL_PACKAGES,
   e2e: [],
+  // Plugin code gets only the client SDK from the app (ADR-025, ADR-074).
+  'plugin-dice-3d': ['sdk-client'],
 };
 
 export const boundaryPolicies = [

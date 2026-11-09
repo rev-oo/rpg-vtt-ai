@@ -18,7 +18,7 @@ _`/r 1d20 + 2d6 + 1d100 + 1d4`, after the dice landed: d20 on 12, both d6 on 3, 
 4. three.js plays the recording back on a transparent canvas over the page, with shadows on an invisible floor the size of the window. After the chosen number of seconds the dice fade out. With `prefers-reduced-motion`, they appear already landed.
 5. The random generator is seeded from the message id, so viewers with windows of the same size see the same throw.
 
-The code is about 950 lines across `code/src/` (shapes, physics, scene, overlay) and is unit tested (shapes are flat and outward, labels and d100 split, the physics comes to rest with a face up). The e2e test (`e2e/tests/dice-3d.spec.ts`) installs the code's dependencies, packs the plugin with the CLI, installs and enables it, rolls from the chat as the GM, checks that the chat shows the roll while the dice still roll, that both the GM's and a player's overlays land on the server's results and fade, and that a player's **Overlays** switch removes the overlay for them only.
+The code is about 950 lines across `code/src/` (shapes, physics, scene, overlay) and is unit tested (shapes are flat and outward, labels and d100 split, the physics comes to rest with a face up). The e2e test (`e2e/tests/dice-3d.spec.ts`) packs the plugin with the CLI, installs and enables it, rolls from the chat as the GM, checks that the chat shows the roll while the dice still roll, that both the GM's and a player's overlays land on the server's results and fade, and that a player's **Overlays** switch removes the overlay for them only.
 
 ## What worked well
 
@@ -34,11 +34,11 @@ Each finding says what was missing or awkward, what the module did about it, and
 
 ### F1. Plugins cannot declare npm dependencies
 
-The format and the guide say nothing about dependencies. `pack` resolves imports from `node_modules` next to the code, so a dependency must be installed beside the plugin, but a `package.json` at the plugin's root is reported as `unknown_file` and packed into the archive. **Workaround:** a `package.json` in `code/`, which `pack` skips with every other `.json` under `code/`, installed on its own with `pnpm install --ignore-workspace --lockfile=false` (ADR-078). Authors outside this repository have to find this out on their own. The guide's advice to keep plugins in `plugins/` "to get type checking" does not hold either: nothing type-checks `tiny-d20`'s code, and `dice-3d`'s is checked only by hand, through its own `tsconfig.json`.
+The format and the guide say nothing about dependencies. `pack` resolves imports from `node_modules` next to the code, so a dependency must be installed beside the plugin, but a `package.json` at the plugin's root is reported as `unknown_file` and packed into the archive. **Workaround:** a `package.json` in `code/`, which `pack` skips with every other `.json` under `code/`, made a workspace package (ADR-078). Authors outside this repository have to find this out on their own. The guide's advice to keep plugins in `plugins/` "to get type checking" does not hold either: nothing type-checks `tiny-d20`'s code. `dice-3d`'s is type-checked and unit-tested in CI through its own `tsconfig.json` and package scripts.
 
 ### F2. `pack` ships whatever else is under `code/`
 
-`pack` leaves out script and JSON files under `code/` but keeps everything else. The first archive held the package's HTML coverage report (10 files, 165 KB). There is no ignore list. A `pnpm-lock.yaml` in `code/` would ship too, and pnpm 12 ignored `lockfile=false` in a `code/.npmrc`. **Workaround:** the package writes no coverage, and is installed with `--lockfile=false`, its dependencies pinned to exact versions.
+`pack` leaves out script and JSON files under `code/` but keeps everything else. The first archive held the package's HTML coverage report (10 files, 165 KB). There is no ignore list; a `pnpm-lock.yaml` in `code/`, as a plugin installed on its own would have, would ship too. **Workaround:** the package writes no coverage, and as a workspace package it uses the repository's lockfile.
 
 ### F3. Code size and delivery
 
@@ -93,7 +93,6 @@ None of these is planned yet. The tasks the user approves join M16; the decision
 | P5  | **Colour settings.** A `colour` format for `string` settings, checked by the validator and the server and shown as a colour input; document that enum options can be lang keys.                                                                             | F10      |
 | P6  | **Overlay layout.** Tell overlays where the named parts (map, chat, header) are on screen, and when that changes, so a module can keep its drawing to one of them.                                                                                          | F11      |
 | P7  | **Plugin code delivery.** Serve plugin code compressed and cacheable under a versioned URL, and load it once per page rather than once for the probe and once per frame.                                                                                    | F3       |
-| P8  | **Check `dice-3d` in CI.** Add its type check and unit tests to the pipeline (the e2e test installs its dependencies and packs it, but nothing else in CI does).                                                                                            | F1       |
 
 Decisions to take before any task:
 

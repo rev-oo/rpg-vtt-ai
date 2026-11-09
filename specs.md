@@ -31,7 +31,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
 - **Next task:** `T-1605` (D&D 5e SRD study)
 - **Open blockers:** none
-- **Decisions pending:** Q19 (§14); the follow-ups P1–P8 and decisions D1–D4 the 3D dice study proposes ([`docs/studies/dice-3d.md`](docs/studies/dice-3d.md))
+- **Decisions pending:** Q19 (§14); the follow-ups P1–P7 and decisions D1–D4 the 3D dice study proposes ([`docs/studies/dice-3d.md`](docs/studies/dice-3d.md))
 
 ### 0.3 Change log
 
@@ -59,7 +59,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-06 | T-1602 done: a module's `theme.json` sets the app's colours (light and dark, panels included), font, corners, border width, density, font files and images in panels and behind the page, per scheme, on the table page; module stylesheets style the page's named parts (`data-vtt-part`), only on tables that use the module; `plugins/parchment-skin` is the example (ADR-076).                                                                                            |
 | 2026-11-07 | T-1603 done: module code draws overlays over the table page and panels in the workspace, each in a sandboxed frame. Frames hear the table events the viewer sees, get the viewer's module settings, and act as the viewer (chat, roll, open sheets and entries, combat), checked by the server and limited per frame. Each member can turn a table's overlays off (ADR-077).                                                                                                  |
 | 2026-11-09 | T-1604 becomes a study at the user's request, like T-1605: build the 3D dice module with what the plugin format offers, record the gaps in `docs/studies/dice-3d.md` and propose follow-up tasks.                                                                                                                                                                                                                                                                             |
-| 2026-11-09 | T-1604 done: `plugins/dice-3d` throws 3D dice (three.js, cannon-es) over the table for each roll the viewer sees and lands them on the server's results; its code's npm dependencies are installed in `code/`, outside the workspace (ADR-078). [`docs/studies/dice-3d.md`](docs/studies/dice-3d.md) lists 12 findings, proposes 8 follow-up tasks and 4 decisions, awaiting the user's choice.                                                                               |
+| 2026-11-09 | T-1604 done: `plugins/dice-3d` throws 3D dice (three.js, cannon-es) over the table for each roll the viewer sees and lands them on the server's results; its code is a workspace package, type-checked and tested in CI (ADR-078). [`docs/studies/dice-3d.md`](docs/studies/dice-3d.md) lists 12 findings, proposes 7 follow-up tasks and 4 decisions, awaiting the user's choice.                                                                                            |
 
 ---
 
@@ -228,7 +228,7 @@ vtt/
 │  ├─ tiny-d20/
 │  ├─ tiny-pool/
 │  ├─ parchment-skin/             example theme module
-│  └─ dice-3d/                    example overlay module; code/ is a package installed on its own (ADR-078)
+│  └─ dice-3d/                    example overlay module; code/ is a workspace package (ADR-078)
 ├─ e2e/                           Playwright suites
 ├─ docker/                        Dockerfile, compose and Caddy examples, smoke test
 ├─ docs/                          plugin authoring guide, plugin file reference, backups, security review, ADRs

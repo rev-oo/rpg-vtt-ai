@@ -3,22 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "The dice-3d module's client code (T-1604). Not a workspace package: install it with `pnpm install --ignore-workspace --lockfile=false` here (versions are exact). vtt-plugin pack bundles code/client.tsx with its dependencies; this file does not ship.",
+  "description": "The dice-3d module's client code (T-1604, ADR-078). vtt-plugin pack bundles code/client.tsx with its dependencies; this file does not ship.",
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run"
   },
   "dependencies": {
-    "cannon-es": "0.20.0",
-    "three": "0.187.0"
+    "cannon-es": "^0.20.0",
+    "three": "^0.187.0"
   },
   "devDependencies": {
-    "@types/react": "19.3.0",
-    "@types/three": "0.187.0",
-    "@vtt/config": "link:../../../packages/config",
-    "@vtt/sdk": "link:../../../packages/sdk",
-    "react": "19.3.1",
-    "typescript": "6.0.3",
-    "vitest": "5.0.5"
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "@vtt/config": "workspace:*",
+    "@vtt/sdk": "workspace:*",
+    "react": "^19.3.1",
+    "vitest": "^5.0.5"
   }
 }

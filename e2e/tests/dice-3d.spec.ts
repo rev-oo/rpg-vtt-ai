@@ -1,4 +1,3 @@
-import { spawnSync } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -18,14 +17,7 @@ const plugin = fileURLToPath(new URL('../../plugins/dice-3d/', import.meta.url))
 
 let temp = '';
 test.beforeAll(async () => {
-  test.setTimeout(180_000);
   temp = await mkdtemp(path.join(tmpdir(), 'vtt-e2e-dice-'));
-  // Its code is a package of its own, outside the workspace (ADR-078): install what pack bundles.
-  const install = spawnSync('pnpm', ['install', '--ignore-workspace', '--lockfile=false'], {
-    cwd: path.join(plugin, 'code'),
-    encoding: 'utf8',
-  });
-  expect(install.status, install.stderr).toBe(0);
 });
 test.afterAll(async () => {
   await rm(temp, { recursive: true, force: true });
