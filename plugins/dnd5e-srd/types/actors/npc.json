@@ -1,0 +1,338 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/actor-type.schema.json",
+  "label": "type.npc",
+  "controlledBy": "gm",
+  "sheet": "npc",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string",
+        "default": "",
+        "maxLength": 120
+      },
+      "cr": {
+        "type": "string",
+        "default": "0",
+        "maxLength": 10
+      },
+      "profBonus": {
+        "type": "integer",
+        "default": 2,
+        "minimum": 2,
+        "maximum": 9
+      },
+      "ac": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 0,
+        "maximum": 30
+      },
+      "spellSaveDc": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 0,
+        "maximum": 30
+      },
+      "spellAttackBonus": {
+        "type": "integer",
+        "default": 0,
+        "minimum": -5,
+        "maximum": 20
+      },
+      "hp": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "integer",
+            "default": 4,
+            "minimum": 0,
+            "maximum": 999,
+            "x-counter": true
+          },
+          "max": {
+            "type": "integer",
+            "default": 4,
+            "minimum": 1,
+            "maximum": 999
+          }
+        }
+      },
+      "hitPoints": {
+        "type": "string",
+        "default": "",
+        "maxLength": 30
+      },
+      "speed": {
+        "type": "string",
+        "default": "30 ft.",
+        "maxLength": 80
+      },
+      "str": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "dex": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "con": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "int": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "wis": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "cha": {
+        "type": "integer",
+        "default": 10,
+        "minimum": 1,
+        "maximum": 30
+      },
+      "saves": {
+        "type": "object",
+        "properties": {
+          "str": {
+            "type": "boolean",
+            "default": false
+          },
+          "dex": {
+            "type": "boolean",
+            "default": false
+          },
+          "con": {
+            "type": "boolean",
+            "default": false
+          },
+          "int": {
+            "type": "boolean",
+            "default": false
+          },
+          "wis": {
+            "type": "boolean",
+            "default": false
+          },
+          "cha": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "rollMode": {
+        "type": "string",
+        "enum": ["mode.normal", "mode.advantage", "mode.disadvantage"],
+        "default": "mode.normal"
+      },
+      "conditions": {
+        "type": "object",
+        "properties": {
+          "blinded": {
+            "type": "boolean",
+            "default": false
+          },
+          "charmed": {
+            "type": "boolean",
+            "default": false
+          },
+          "deafened": {
+            "type": "boolean",
+            "default": false
+          },
+          "frightened": {
+            "type": "boolean",
+            "default": false
+          },
+          "grappled": {
+            "type": "boolean",
+            "default": false
+          },
+          "incapacitated": {
+            "type": "boolean",
+            "default": false
+          },
+          "invisible": {
+            "type": "boolean",
+            "default": false
+          },
+          "paralyzed": {
+            "type": "boolean",
+            "default": false
+          },
+          "petrified": {
+            "type": "boolean",
+            "default": false
+          },
+          "poisoned": {
+            "type": "boolean",
+            "default": false
+          },
+          "prone": {
+            "type": "boolean",
+            "default": false
+          },
+          "restrained": {
+            "type": "boolean",
+            "default": false
+          },
+          "stunned": {
+            "type": "boolean",
+            "default": false
+          },
+          "unconscious": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "exhaustion": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 6,
+        "x-counter": true
+      },
+      "skillsText": {
+        "type": "string",
+        "default": "",
+        "maxLength": 200
+      },
+      "senses": {
+        "type": "string",
+        "default": "",
+        "maxLength": 200
+      },
+      "languages": {
+        "type": "string",
+        "default": "",
+        "maxLength": 200
+      },
+      "defenses": {
+        "type": "string",
+        "default": "",
+        "maxLength": 300
+      },
+      "actions": {
+        "type": "array",
+        "x-kind": "collection",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "default": "",
+              "maxLength": 60
+            },
+            "bonus": {
+              "type": "integer",
+              "default": 0,
+              "minimum": -5,
+              "maximum": 30
+            },
+            "reach": {
+              "type": "string",
+              "default": "",
+              "maxLength": 60
+            },
+            "dice": {
+              "type": "integer",
+              "default": 1,
+              "minimum": 0,
+              "maximum": 20
+            },
+            "die": {
+              "type": "integer",
+              "enum": [4, 6, 8, 10, 12, 20],
+              "default": 6
+            },
+            "damageBonus": {
+              "type": "integer",
+              "default": 0,
+              "minimum": -5,
+              "maximum": 30
+            },
+            "damageType": {
+              "type": "string",
+              "enum": [
+                "acid",
+                "bludgeoning",
+                "cold",
+                "fire",
+                "force",
+                "lightning",
+                "necrotic",
+                "piercing",
+                "poison",
+                "psychic",
+                "radiant",
+                "slashing",
+                "thunder"
+              ],
+              "default": "slashing"
+            },
+            "notes": {
+              "type": "string",
+              "default": "",
+              "maxLength": 300
+            }
+          }
+        }
+      },
+      "traits": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      },
+      "gmNotes": {
+        "type": "string",
+        "x-kind": "longText",
+        "x-layer": "secret",
+        "default": ""
+      }
+    }
+  },
+  "derived": {
+    "strMod": "floor((@str - 10) / 2)",
+    "dexMod": "floor((@dex - 10) / 2)",
+    "conMod": "floor((@con - 10) / 2)",
+    "intMod": "floor((@int - 10) / 2)",
+    "wisMod": "floor((@wis - 10) / 2)",
+    "chaMod": "floor((@cha - 10) / 2)",
+    "prof": "@profBonus",
+    "d20Penalty": "2 * @exhaustion",
+    "strCheck": "@derived.strMod - @derived.d20Penalty",
+    "strSave": "@derived.strMod + (@saves.str ? @derived.prof : 0) - @derived.d20Penalty",
+    "dexCheck": "@derived.dexMod - @derived.d20Penalty",
+    "dexSave": "@derived.dexMod + (@saves.dex ? @derived.prof : 0) - @derived.d20Penalty",
+    "conCheck": "@derived.conMod - @derived.d20Penalty",
+    "conSave": "@derived.conMod + (@saves.con ? @derived.prof : 0) - @derived.d20Penalty",
+    "intCheck": "@derived.intMod - @derived.d20Penalty",
+    "intSave": "@derived.intMod + (@saves.int ? @derived.prof : 0) - @derived.d20Penalty",
+    "wisCheck": "@derived.wisMod - @derived.d20Penalty",
+    "wisSave": "@derived.wisMod + (@saves.wis ? @derived.prof : 0) - @derived.d20Penalty",
+    "chaCheck": "@derived.chaMod - @derived.d20Penalty",
+    "chaSave": "@derived.chaMod + (@saves.cha ? @derived.prof : 0) - @derived.d20Penalty",
+    "initiative": "@derived.dexMod - @derived.d20Penalty",
+    "checkEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned) and not (@rollMode == 'mode.advantage') ? -1 : 0",
+    "saveEdge": "(@rollMode == 'mode.advantage') and not (@rollMode == 'mode.disadvantage') ? 1 : (@rollMode == 'mode.disadvantage') and not (@rollMode == 'mode.advantage') ? -1 : 0",
+    "attackEdge": "(@rollMode == 'mode.advantage' or @conditions.invisible) and not (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) ? 1 : (@rollMode == 'mode.disadvantage' or @conditions.poisoned or @conditions.blinded or @conditions.prone or @conditions.restrained) and not (@rollMode == 'mode.advantage' or @conditions.invisible) ? -1 : 0",
+    "spellMod": "0",
+    "spellAttack": "@spellAttackBonus - @derived.d20Penalty",
+    "spellDc": "@spellSaveDc",
+    "cantripDice": "1"
+  }
+}

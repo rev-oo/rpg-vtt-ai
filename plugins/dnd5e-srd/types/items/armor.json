@@ -1,0 +1,77 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.armor",
+  "labelPlural": "type.armors",
+  "group": "group.gear",
+  "order": 2,
+  "sheet": "armor",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "kind": {
+        "type": "string",
+        "enum": ["armor.light", "armor.medium", "armor.heavy", "armor.shield"],
+        "default": "armor.light"
+      },
+      "base": {
+        "type": "integer",
+        "default": 11,
+        "minimum": 0,
+        "maximum": 30
+      },
+      "magic": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 3
+      },
+      "equipped": {
+        "type": "boolean",
+        "default": false
+      },
+      "strength": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 30
+      },
+      "stealthDisadvantage": {
+        "type": "boolean",
+        "default": false
+      },
+      "weight": {
+        "type": "number",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 1000
+      },
+      "cost": {
+        "type": "string",
+        "default": "",
+        "maxLength": 20
+      }
+    }
+  },
+  "contributes": {
+    "armorBase": {
+      "formula": "@equipped and @kind != 'armor.shield' ? @base + @magic : 0",
+      "combine": "max",
+      "default": 0
+    },
+    "dexCap": {
+      "formula": "@equipped and @kind == 'armor.medium' ? 2 : 99",
+      "combine": "min",
+      "default": 99
+    },
+    "heavyArmor": {
+      "formula": "@equipped and @kind == 'armor.heavy'",
+      "combine": "any"
+    },
+    "shield": {
+      "formula": "@equipped and @kind == 'armor.shield' ? @base + @magic : 0"
+    },
+    "weight": {
+      "formula": "@weight"
+    }
+  }
+}

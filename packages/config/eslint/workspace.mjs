@@ -26,6 +26,8 @@ export const workspacePackages = {
   e2e: { type: 'e2e', kind: 'node' },
   // A plugin's code with npm dependencies to bundle (T-1604); it runs in a plugin frame.
   'plugins/dice-3d/code': { type: 'plugin-code', kind: 'react' },
+  // A plugin's shared and server code (T-1605); it runs in QuickJS, with no Node or DOM.
+  'plugins/dnd5e-srd/code': { type: 'plugin-server-code', kind: 'pure' },
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
@@ -76,6 +78,9 @@ const allowedImports = {
   // Plugin client code gets only the SDK's client hooks from the app (ADR-074). They resolve
   // to the SDK's build, an `sdk` element; restrictedModules keeps it to `@vtt/sdk/client`.
   'plugin-code': ['sdk-client', 'sdk'],
+  // Plugin shared and server code imports `@vtt/sdk` (defineShared, defineServer), which
+  // `vtt-plugin pack` bundles in.
+  'plugin-server-code': ['sdk'],
 };
 
 export const boundaryPolicies = [
@@ -112,6 +117,12 @@ export const restrictedModules = {
     patterns: ['@vtt/sdk/*', '!@vtt/sdk/client'],
     message:
       'Plugin client code may import only @vtt/sdk/client, which the plugin frame provides (ADR-074).',
+  },
+  'plugin-server-code': {
+    paths: ['react', 'react-dom', '@vtt/sdk/client', ...NODE_BUILTINS],
+    patterns: ['react/*', 'react-dom/*', '@vtt/sdk/client/*', 'node:*'],
+    message:
+      'Plugin shared and server code runs in QuickJS: no React, client SDK or Node built-ins (ADR-073).',
   },
   server: {
     paths: ['@vtt/ui', '@vtt/sheet-renderer', '@vtt/sdk/client'],

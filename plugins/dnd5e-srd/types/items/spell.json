@@ -1,0 +1,140 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.spell",
+  "labelPlural": "type.spells",
+  "group": "group.spells",
+  "order": 3,
+  "sheet": "spell",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "level": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 9
+      },
+      "school": {
+        "type": "string",
+        "enum": [
+          "school.abjuration",
+          "school.conjuration",
+          "school.divination",
+          "school.enchantment",
+          "school.evocation",
+          "school.illusion",
+          "school.necromancy",
+          "school.transmutation"
+        ],
+        "default": "school.evocation"
+      },
+      "castingTime": {
+        "type": "string",
+        "default": "Action",
+        "maxLength": 60
+      },
+      "range": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "components": {
+        "type": "string",
+        "default": "",
+        "maxLength": 200
+      },
+      "duration": {
+        "type": "string",
+        "default": "Instantaneous",
+        "maxLength": 60
+      },
+      "concentration": {
+        "type": "boolean",
+        "default": false
+      },
+      "ritual": {
+        "type": "boolean",
+        "default": false
+      },
+      "prepared": {
+        "type": "boolean",
+        "default": false
+      },
+      "attack": {
+        "type": "string",
+        "enum": ["spell.none", "spell.attack", "spell.save"],
+        "default": "spell.none"
+      },
+      "save": {
+        "type": "string",
+        "enum": [
+          "ability.str",
+          "ability.dex",
+          "ability.con",
+          "ability.int",
+          "ability.wis",
+          "ability.cha"
+        ],
+        "default": "ability.dex"
+      },
+      "dice": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 40
+      },
+      "die": {
+        "type": "integer",
+        "enum": [4, 6, 8, 10, 12],
+        "default": 6
+      },
+      "addMod": {
+        "type": "boolean",
+        "default": false
+      },
+      "bonus": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 40
+      },
+      "effectType": {
+        "type": "string",
+        "enum": [
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder",
+          "healing",
+          "none"
+        ],
+        "default": "none"
+      },
+      "higherLevels": {
+        "type": "string",
+        "default": "",
+        "maxLength": 300
+      },
+      "description": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      }
+    }
+  },
+  "contributes": {
+    "preparedSpells": {
+      "formula": "@prepared and @level > 0",
+      "combine": "count"
+    }
+  }
+}

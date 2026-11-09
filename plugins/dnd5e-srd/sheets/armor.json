@@ -1,0 +1,70 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "kind",
+            "label": "field.armorKind",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "base",
+            "label": "field.armorBase",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "magic",
+            "label": "field.magic",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "equipped",
+            "label": "field.equipped",
+            "input": "checkbox"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "strength",
+            "label": "field.strength",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "stealthDisadvantage",
+            "label": "field.stealth",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "weight",
+            "label": "field.weight",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "cost",
+            "label": "field.cost"
+          }
+        ]
+      }
+    ]
+  }
+}

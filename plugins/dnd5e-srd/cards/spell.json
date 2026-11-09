@@ -1,0 +1,32 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/card.schema.json",
+  "title": "card.spell",
+  "rows": [
+    {
+      "label": "card.spellName",
+      "value": "@item.name"
+    },
+    {
+      "label": "card.spellLevel",
+      "value": "@item.level"
+    },
+    {
+      "label": "card.roll",
+      "value": "@roll.resolved"
+    },
+    {
+      "label": "card.total",
+      "value": "@total",
+      "class": "total"
+    },
+    {
+      "label": "card.save",
+      "value": "@item.attack == 'spell.save' ? saveText(@item.save, @derived.spellDc) : '—'"
+    },
+    {
+      "label": "card.damageType",
+      "value": "@item.effectType"
+    }
+  ],
+  "outcome": true
+}

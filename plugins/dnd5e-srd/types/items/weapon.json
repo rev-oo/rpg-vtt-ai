@@ -1,0 +1,109 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.weapon",
+  "labelPlural": "type.weapons",
+  "group": "group.weapons",
+  "order": 1,
+  "sheet": "weapon",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "category": {
+        "type": "string",
+        "enum": ["weapon.simple", "weapon.martial"],
+        "default": "weapon.simple"
+      },
+      "ranged": {
+        "type": "boolean",
+        "default": false
+      },
+      "finesse": {
+        "type": "boolean",
+        "default": false
+      },
+      "dice": {
+        "type": "integer",
+        "default": 1,
+        "minimum": 1,
+        "maximum": 10
+      },
+      "die": {
+        "type": "integer",
+        "enum": [4, 6, 8, 10, 12],
+        "default": 6
+      },
+      "versatileDie": {
+        "type": "integer",
+        "enum": [0, 8, 10, 12],
+        "default": 0
+      },
+      "twoHands": {
+        "type": "boolean",
+        "default": false
+      },
+      "damageType": {
+        "type": "string",
+        "enum": [
+          "acid",
+          "bludgeoning",
+          "cold",
+          "fire",
+          "force",
+          "lightning",
+          "necrotic",
+          "piercing",
+          "poison",
+          "psychic",
+          "radiant",
+          "slashing",
+          "thunder"
+        ],
+        "default": "slashing"
+      },
+      "properties": {
+        "type": "string",
+        "default": "",
+        "maxLength": 200
+      },
+      "mastery": {
+        "type": "string",
+        "default": "",
+        "maxLength": 30
+      },
+      "range": {
+        "type": "string",
+        "default": "",
+        "maxLength": 30
+      },
+      "magic": {
+        "type": "integer",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 3
+      },
+      "proficient": {
+        "type": "boolean",
+        "default": true
+      },
+      "weight": {
+        "type": "number",
+        "default": 0,
+        "minimum": 0,
+        "maximum": 1000
+      },
+      "cost": {
+        "type": "string",
+        "default": "",
+        "maxLength": 20
+      }
+    }
+  },
+  "derived": {
+    "die": "@twoHands and @versatileDie > 0 ? @versatileDie : @die"
+  },
+  "contributes": {
+    "weight": {
+      "formula": "@weight"
+    }
+  }
+}

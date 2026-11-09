@@ -1,0 +1,594 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "md",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "kind",
+            "label": "field.kind"
+          },
+          {
+            "type": "field",
+            "path": "cr",
+            "label": "field.cr"
+          },
+          {
+            "type": "field",
+            "path": "profBonus",
+            "label": "field.profBonus",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "spellSaveDc",
+            "label": "label.spellDc",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "spellAttackBonus",
+            "label": "label.spellAttack",
+            "input": "number"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "ac",
+            "label": "label.ac",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "hp.value",
+            "label": "field.hp",
+            "input": "counter"
+          },
+          {
+            "type": "field",
+            "path": "hp.max",
+            "label": "field.hpMax",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "hitPoints",
+            "label": "field.hitPoints"
+          },
+          {
+            "type": "field",
+            "path": "speed",
+            "label": "field.speed"
+          },
+          {
+            "type": "derived",
+            "key": "initiative",
+            "label": "label.initiative",
+            "format": "signed"
+          }
+        ],
+        "class": "vitals"
+      },
+      {
+        "type": "field",
+        "path": "rollMode",
+        "label": "field.rollMode",
+        "input": "select"
+      },
+      {
+        "type": "grid",
+        "columns": 6,
+        "class": "abilities",
+        "children": [
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "str",
+                "label": "ability.str",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "strMod",
+                "label": "label.mod.str",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_str",
+                "label": "button.check.str"
+              },
+              {
+                "type": "field",
+                "path": "saves.str",
+                "label": "label.saveProf.str",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "strSave",
+                "label": "label.save.str",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_str",
+                "label": "button.save.str"
+              }
+            ],
+            "class": "ability"
+          },
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "dex",
+                "label": "ability.dex",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "dexMod",
+                "label": "label.mod.dex",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_dex",
+                "label": "button.check.dex"
+              },
+              {
+                "type": "field",
+                "path": "saves.dex",
+                "label": "label.saveProf.dex",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "dexSave",
+                "label": "label.save.dex",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_dex",
+                "label": "button.save.dex"
+              }
+            ],
+            "class": "ability"
+          },
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "con",
+                "label": "ability.con",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "conMod",
+                "label": "label.mod.con",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_con",
+                "label": "button.check.con"
+              },
+              {
+                "type": "field",
+                "path": "saves.con",
+                "label": "label.saveProf.con",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "conSave",
+                "label": "label.save.con",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_con",
+                "label": "button.save.con"
+              }
+            ],
+            "class": "ability"
+          },
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "int",
+                "label": "ability.int",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "intMod",
+                "label": "label.mod.int",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_int",
+                "label": "button.check.int"
+              },
+              {
+                "type": "field",
+                "path": "saves.int",
+                "label": "label.saveProf.int",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "intSave",
+                "label": "label.save.int",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_int",
+                "label": "button.save.int"
+              }
+            ],
+            "class": "ability"
+          },
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "wis",
+                "label": "ability.wis",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "wisMod",
+                "label": "label.mod.wis",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_wis",
+                "label": "button.check.wis"
+              },
+              {
+                "type": "field",
+                "path": "saves.wis",
+                "label": "label.saveProf.wis",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "wisSave",
+                "label": "label.save.wis",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_wis",
+                "label": "button.save.wis"
+              }
+            ],
+            "class": "ability"
+          },
+          {
+            "type": "column",
+            "gap": "sm",
+            "children": [
+              {
+                "type": "field",
+                "path": "cha",
+                "label": "ability.cha",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "chaMod",
+                "label": "label.mod.cha",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "check_cha",
+                "label": "button.check.cha"
+              },
+              {
+                "type": "field",
+                "path": "saves.cha",
+                "label": "label.saveProf.cha",
+                "input": "checkbox"
+              },
+              {
+                "type": "derived",
+                "key": "chaSave",
+                "label": "label.save.cha",
+                "format": "signed"
+              },
+              {
+                "type": "rollButton",
+                "roll": "save_cha",
+                "label": "button.save.cha"
+              }
+            ],
+            "class": "ability"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "skillsText",
+            "label": "field.skillsText"
+          },
+          {
+            "type": "field",
+            "path": "senses",
+            "label": "field.senses"
+          },
+          {
+            "type": "field",
+            "path": "languages",
+            "label": "field.languages"
+          },
+          {
+            "type": "field",
+            "path": "defenses",
+            "label": "field.defenses"
+          }
+        ]
+      },
+      {
+        "type": "longText",
+        "path": "traits",
+        "label": "field.traits"
+      },
+      {
+        "type": "section",
+        "title": "section.actions",
+        "children": [
+          {
+            "type": "list",
+            "path": "actions",
+            "addLabel": "add.action",
+            "item": {
+              "type": "column",
+              "gap": "sm",
+              "children": [
+                {
+                  "type": "row",
+                  "gap": "sm",
+                  "wrap": true,
+                  "children": [
+                    {
+                      "type": "field",
+                      "path": "name",
+                      "label": "field.actionName"
+                    },
+                    {
+                      "type": "field",
+                      "path": "bonus",
+                      "label": "field.attackBonus",
+                      "input": "number"
+                    },
+                    {
+                      "type": "field",
+                      "path": "reach",
+                      "label": "field.reach"
+                    },
+                    {
+                      "type": "field",
+                      "path": "dice",
+                      "label": "field.dice",
+                      "input": "number"
+                    },
+                    {
+                      "type": "field",
+                      "path": "die",
+                      "label": "field.die",
+                      "input": "select"
+                    },
+                    {
+                      "type": "field",
+                      "path": "damageBonus",
+                      "label": "field.damageBonus",
+                      "input": "number"
+                    },
+                    {
+                      "type": "field",
+                      "path": "damageType",
+                      "label": "field.damageType",
+                      "input": "select"
+                    }
+                  ]
+                },
+                {
+                  "type": "field",
+                  "path": "notes",
+                  "label": "field.actionNotes"
+                },
+                {
+                  "type": "row",
+                  "gap": "sm",
+                  "wrap": true,
+                  "children": [
+                    {
+                      "type": "rollButton",
+                      "roll": "npcAttack",
+                      "label": "button.attack",
+                      "args": {
+                        "id": "@row.id"
+                      }
+                    },
+                    {
+                      "type": "rollButton",
+                      "roll": "npcDamage",
+                      "label": "button.damage",
+                      "args": {
+                        "id": "@row.id"
+                      }
+                    },
+                    {
+                      "type": "rollButton",
+                      "roll": "npcCrit",
+                      "label": "button.crit",
+                      "args": {
+                        "id": "@row.id"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "title": "section.conditions",
+        "children": [
+          {
+            "type": "grid",
+            "columns": 4,
+            "children": [
+              {
+                "type": "field",
+                "path": "conditions.blinded",
+                "label": "condition.blinded",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.charmed",
+                "label": "condition.charmed",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.deafened",
+                "label": "condition.deafened",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.frightened",
+                "label": "condition.frightened",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.grappled",
+                "label": "condition.grappled",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.incapacitated",
+                "label": "condition.incapacitated",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.invisible",
+                "label": "condition.invisible",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.paralyzed",
+                "label": "condition.paralyzed",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.petrified",
+                "label": "condition.petrified",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.poisoned",
+                "label": "condition.poisoned",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.prone",
+                "label": "condition.prone",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.restrained",
+                "label": "condition.restrained",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.stunned",
+                "label": "condition.stunned",
+                "input": "checkbox"
+              },
+              {
+                "type": "field",
+                "path": "conditions.unconscious",
+                "label": "condition.unconscious",
+                "input": "checkbox"
+              }
+            ]
+          },
+          {
+            "type": "field",
+            "path": "exhaustion",
+            "label": "field.exhaustion",
+            "input": "counter"
+          },
+          {
+            "type": "text",
+            "text": "hint.exhaustion",
+            "visibleIf": "@exhaustion > 0"
+          },
+          {
+            "type": "text",
+            "text": "hint.edge"
+          }
+        ],
+        "collapsible": true
+      },
+      {
+        "type": "longText",
+        "path": "gmNotes",
+        "label": "field.gmNotes"
+      }
+    ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@vtt/plugin-dnd5e-srd",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "//": "The code of plugins/dnd5e-srd (T-1605). A workspace package only so that its code is type-checked, linted and tested; nothing imports it.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@vtt/config": "workspace:*",
+    "@vtt/sdk": "workspace:*",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

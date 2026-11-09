@@ -202,6 +202,27 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     expect(code).not.toMatch(/from"(three|cannon-es)"/);
   });
 
+  it('packs dnd5e-srd with its shared and server code and its licence (T-1605)', async () => {
+    const dir = path.join(REPO, 'plugins', 'dnd5e-srd');
+    expect((await run('validate', dir)).code).toBe(0);
+    const file = path.join(temp, 'dnd5e-srd.vttplugin');
+    expect((await run('pack', dir, '--out', file)).code).toBe(0);
+    const files = readZip(await readFile(file), ARCHIVE_LIMITS);
+    expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual([
+      'code/server.js',
+      'code/shared.js',
+    ]);
+    // The SRD's CC-BY-4.0 attribution travels with the archive.
+    expect(String(files.get('LICENSE.md'))).toContain('System Reference Document 5.2');
+    const shared = path.join(temp, 'dnd5e-shared.mjs');
+    await writeFile(shared, files.get('code/shared.js') ?? '');
+    const { default: definition } = (await import(shared)) as {
+      default: { functions: Record<string, (...args: unknown[]) => unknown> };
+    };
+    expect(definition.functions.slots?.('class.wizard', 5, 3)).toBe(2);
+    expect(definition.functions.damage?.(1, 8, 3)).toBe('1d8 + 3');
+  });
+
   it('packs tiny-d20’s /check command into code that runs on its own (T-0804)', async () => {
     const file = path.join(temp, 'tiny-d20.vttplugin');
     expect((await run('pack', path.join(REPO, 'plugins', 'tiny-d20'), '--out', file)).code).toBe(0);

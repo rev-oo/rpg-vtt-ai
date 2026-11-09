@@ -1,0 +1,149 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "level",
+            "label": "field.spellLevel",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "school",
+            "label": "field.school",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "prepared",
+            "label": "field.prepared",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "concentration",
+            "label": "field.spellConcentration",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "ritual",
+            "label": "field.ritual",
+            "input": "checkbox"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "castingTime",
+            "label": "field.castingTime"
+          },
+          {
+            "type": "field",
+            "path": "range",
+            "label": "field.range"
+          },
+          {
+            "type": "field",
+            "path": "components",
+            "label": "field.components"
+          },
+          {
+            "type": "field",
+            "path": "duration",
+            "label": "field.duration"
+          }
+        ]
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "attack",
+            "label": "field.spellRoll",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "save",
+            "label": "field.spellSave",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "dice",
+            "label": "field.effectDice",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "die",
+            "label": "field.die",
+            "input": "select"
+          },
+          {
+            "type": "field",
+            "path": "addMod",
+            "label": "field.addMod",
+            "input": "checkbox"
+          },
+          {
+            "type": "field",
+            "path": "bonus",
+            "label": "field.effectBonus",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "effectType",
+            "label": "field.effectType",
+            "input": "select"
+          }
+        ]
+      },
+      {
+        "type": "longText",
+        "path": "description",
+        "label": "field.description"
+      },
+      {
+        "type": "field",
+        "path": "higherLevels",
+        "label": "field.higherLevels"
+      },
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "rollButton",
+            "roll": "spellCast",
+            "label": "button.cast"
+          },
+          {
+            "type": "rollButton",
+            "roll": "spellEffect",
+            "label": "button.effect"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,1117 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/pack.schema.json",
+  "label": "pack.srd",
+  "entries": [
+    {
+      "id": "club",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Club",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 4,
+        "damageType": "bludgeoning",
+        "properties": "Light",
+        "mastery": "Slow",
+        "weight": 2,
+        "cost": "1 SP"
+      }
+    },
+    {
+      "id": "dagger",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Dagger",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 4,
+        "damageType": "piercing",
+        "properties": "Finesse, Light, Thrown",
+        "mastery": "Nick",
+        "weight": 1,
+        "cost": "2 GP",
+        "finesse": true,
+        "range": "20/60"
+      }
+    },
+    {
+      "id": "handaxe",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Handaxe",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "slashing",
+        "properties": "Light, Thrown",
+        "mastery": "Vex",
+        "weight": 2,
+        "cost": "5 GP",
+        "range": "20/60"
+      }
+    },
+    {
+      "id": "javelin",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Javelin",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "piercing",
+        "properties": "Thrown",
+        "mastery": "Slow",
+        "weight": 2,
+        "cost": "5 SP",
+        "range": "30/120"
+      }
+    },
+    {
+      "id": "mace",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Mace",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "bludgeoning",
+        "properties": "",
+        "mastery": "Sap",
+        "weight": 4,
+        "cost": "5 GP"
+      }
+    },
+    {
+      "id": "quarterstaff",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Quarterstaff",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "bludgeoning",
+        "properties": "Versatile (1d8)",
+        "mastery": "Topple",
+        "weight": 4,
+        "cost": "2 SP",
+        "versatileDie": 8
+      }
+    },
+    {
+      "id": "spear",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Spear",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "piercing",
+        "properties": "Thrown, Versatile (1d8)",
+        "mastery": "Sap",
+        "weight": 3,
+        "cost": "1 GP",
+        "versatileDie": 8,
+        "range": "20/60"
+      }
+    },
+    {
+      "id": "light-crossbow",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Light Crossbow",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 8,
+        "damageType": "piercing",
+        "properties": "Ammunition, Loading, Two-Handed",
+        "mastery": "Slow",
+        "weight": 5,
+        "cost": "25 GP",
+        "ranged": true,
+        "range": "80/320"
+      }
+    },
+    {
+      "id": "shortbow",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Shortbow",
+      "data": {
+        "category": "weapon.simple",
+        "dice": 1,
+        "die": 6,
+        "damageType": "piercing",
+        "properties": "Ammunition, Two-Handed",
+        "mastery": "Vex",
+        "weight": 2,
+        "cost": "25 GP",
+        "ranged": true,
+        "range": "80/320"
+      }
+    },
+    {
+      "id": "battleaxe",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Battleaxe",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 8,
+        "damageType": "slashing",
+        "properties": "Versatile (1d10)",
+        "mastery": "Topple",
+        "weight": 4,
+        "cost": "10 GP",
+        "versatileDie": 10
+      }
+    },
+    {
+      "id": "greataxe",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Greataxe",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 12,
+        "damageType": "slashing",
+        "properties": "Heavy, Two-Handed",
+        "mastery": "Cleave",
+        "weight": 7,
+        "cost": "30 GP"
+      }
+    },
+    {
+      "id": "greatsword",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Greatsword",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 2,
+        "die": 6,
+        "damageType": "slashing",
+        "properties": "Heavy, Two-Handed",
+        "mastery": "Graze",
+        "weight": 6,
+        "cost": "50 GP"
+      }
+    },
+    {
+      "id": "longsword",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Longsword",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 8,
+        "damageType": "slashing",
+        "properties": "Versatile (1d10)",
+        "mastery": "Sap",
+        "weight": 3,
+        "cost": "15 GP",
+        "versatileDie": 10
+      }
+    },
+    {
+      "id": "maul",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Maul",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 2,
+        "die": 6,
+        "damageType": "bludgeoning",
+        "properties": "Heavy, Two-Handed",
+        "mastery": "Topple",
+        "weight": 10,
+        "cost": "10 GP"
+      }
+    },
+    {
+      "id": "rapier",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Rapier",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 8,
+        "damageType": "piercing",
+        "properties": "Finesse",
+        "mastery": "Vex",
+        "weight": 2,
+        "cost": "25 GP",
+        "finesse": true
+      }
+    },
+    {
+      "id": "scimitar",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Scimitar",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 6,
+        "damageType": "slashing",
+        "properties": "Finesse, Light",
+        "mastery": "Nick",
+        "weight": 3,
+        "cost": "25 GP",
+        "finesse": true
+      }
+    },
+    {
+      "id": "shortsword",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Shortsword",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 6,
+        "damageType": "piercing",
+        "properties": "Finesse, Light",
+        "mastery": "Vex",
+        "weight": 2,
+        "cost": "10 GP",
+        "finesse": true
+      }
+    },
+    {
+      "id": "warhammer",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Warhammer",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 8,
+        "damageType": "bludgeoning",
+        "properties": "Versatile (1d10)",
+        "mastery": "Push",
+        "weight": 5,
+        "cost": "15 GP",
+        "versatileDie": 10
+      }
+    },
+    {
+      "id": "longbow",
+      "kind": "item",
+      "type": "weapon",
+      "name": "Longbow",
+      "data": {
+        "category": "weapon.martial",
+        "dice": 1,
+        "die": 8,
+        "damageType": "piercing",
+        "properties": "Ammunition, Heavy, Two-Handed",
+        "mastery": "Slow",
+        "weight": 2,
+        "cost": "50 GP",
+        "ranged": true,
+        "range": "150/600"
+      }
+    },
+    {
+      "id": "padded",
+      "kind": "item",
+      "type": "armor",
+      "name": "Padded Armor",
+      "data": {
+        "kind": "armor.light",
+        "base": 11,
+        "weight": 8,
+        "cost": "5 GP",
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "leather",
+      "kind": "item",
+      "type": "armor",
+      "name": "Leather Armor",
+      "data": {
+        "kind": "armor.light",
+        "base": 11,
+        "weight": 10,
+        "cost": "10 GP"
+      }
+    },
+    {
+      "id": "studded-leather",
+      "kind": "item",
+      "type": "armor",
+      "name": "Studded Leather Armor",
+      "data": {
+        "kind": "armor.light",
+        "base": 12,
+        "weight": 13,
+        "cost": "45 GP"
+      }
+    },
+    {
+      "id": "hide",
+      "kind": "item",
+      "type": "armor",
+      "name": "Hide Armor",
+      "data": {
+        "kind": "armor.medium",
+        "base": 12,
+        "weight": 12,
+        "cost": "10 GP"
+      }
+    },
+    {
+      "id": "chain-shirt",
+      "kind": "item",
+      "type": "armor",
+      "name": "Chain Shirt",
+      "data": {
+        "kind": "armor.medium",
+        "base": 13,
+        "weight": 20,
+        "cost": "50 GP"
+      }
+    },
+    {
+      "id": "scale-mail",
+      "kind": "item",
+      "type": "armor",
+      "name": "Scale Mail",
+      "data": {
+        "kind": "armor.medium",
+        "base": 14,
+        "weight": 45,
+        "cost": "50 GP",
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "breastplate",
+      "kind": "item",
+      "type": "armor",
+      "name": "Breastplate",
+      "data": {
+        "kind": "armor.medium",
+        "base": 14,
+        "weight": 20,
+        "cost": "400 GP"
+      }
+    },
+    {
+      "id": "half-plate",
+      "kind": "item",
+      "type": "armor",
+      "name": "Half Plate Armor",
+      "data": {
+        "kind": "armor.medium",
+        "base": 15,
+        "weight": 40,
+        "cost": "750 GP",
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "ring-mail",
+      "kind": "item",
+      "type": "armor",
+      "name": "Ring Mail",
+      "data": {
+        "kind": "armor.heavy",
+        "base": 14,
+        "weight": 40,
+        "cost": "30 GP",
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "chain-mail",
+      "kind": "item",
+      "type": "armor",
+      "name": "Chain Mail",
+      "data": {
+        "kind": "armor.heavy",
+        "base": 16,
+        "weight": 55,
+        "cost": "75 GP",
+        "strength": 13,
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "splint",
+      "kind": "item",
+      "type": "armor",
+      "name": "Splint Armor",
+      "data": {
+        "kind": "armor.heavy",
+        "base": 17,
+        "weight": 60,
+        "cost": "200 GP",
+        "strength": 15,
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "plate",
+      "kind": "item",
+      "type": "armor",
+      "name": "Plate Armor",
+      "data": {
+        "kind": "armor.heavy",
+        "base": 18,
+        "weight": 65,
+        "cost": "1,500 GP",
+        "strength": 15,
+        "stealthDisadvantage": true
+      }
+    },
+    {
+      "id": "shield",
+      "kind": "item",
+      "type": "armor",
+      "name": "Shield",
+      "data": {
+        "kind": "armor.shield",
+        "base": 2,
+        "weight": 6,
+        "cost": "10 GP"
+      }
+    },
+    {
+      "id": "backpack",
+      "kind": "item",
+      "type": "gear",
+      "name": "Backpack",
+      "data": {
+        "weight": 5,
+        "cost": "2 GP",
+        "description": "Holds up to 30 pounds within 1 cubic foot."
+      }
+    },
+    {
+      "id": "bedroll",
+      "kind": "item",
+      "type": "gear",
+      "name": "Bedroll",
+      "data": {
+        "weight": 7,
+        "cost": "1 GP",
+        "description": ""
+      }
+    },
+    {
+      "id": "rope",
+      "kind": "item",
+      "type": "gear",
+      "name": "Rope",
+      "data": {
+        "weight": 5,
+        "cost": "1 GP",
+        "description": "50 feet of rope."
+      }
+    },
+    {
+      "id": "torch",
+      "kind": "item",
+      "type": "gear",
+      "name": "Torch",
+      "data": {
+        "weight": 1,
+        "cost": "1 CP",
+        "description": "Burns for 1 hour, giving Bright Light in a 20-foot radius and Dim Light for 20 more feet."
+      }
+    },
+    {
+      "id": "rations",
+      "kind": "item",
+      "type": "gear",
+      "name": "Rations",
+      "data": {
+        "weight": 2,
+        "cost": "5 SP",
+        "description": "Travel-ready food for one day."
+      }
+    },
+    {
+      "id": "healers-kit",
+      "kind": "item",
+      "type": "gear",
+      "name": "Healer's Kit",
+      "data": {
+        "weight": 3,
+        "cost": "5 GP",
+        "description": "Ten uses. As a Utilize action, expend a use to stabilize an Unconscious creature at 0 Hit Points without a Wisdom (Medicine) check."
+      }
+    },
+    {
+      "id": "potion-of-healing",
+      "kind": "item",
+      "type": "gear",
+      "name": "Potion of Healing",
+      "data": {
+        "weight": 0.5,
+        "cost": "50 GP",
+        "description": "As a Bonus Action, drink it or give it to a creature within 5 feet to regain 2d4 + 2 Hit Points."
+      }
+    },
+    {
+      "id": "fire-bolt",
+      "kind": "item",
+      "type": "spell",
+      "name": "Fire Bolt",
+      "data": {
+        "level": 0,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "120 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.attack",
+        "dice": 1,
+        "die": 10,
+        "effectType": "fire",
+        "description": "Make a ranged spell attack against a creature or object within range. On a hit, the target takes 1d10 Fire damage. A flammable object hit by this spell starts burning if it isn’t being worn or carried.",
+        "higherLevels": "Cantrip upgrade: one more die at levels 5 (2d10), 11 (3d10) and 17 (4d10)."
+      }
+    },
+    {
+      "id": "sacred-flame",
+      "kind": "item",
+      "type": "spell",
+      "name": "Sacred Flame",
+      "data": {
+        "level": 0,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "60 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.save",
+        "save": "ability.dex",
+        "dice": 1,
+        "die": 8,
+        "effectType": "radiant",
+        "description": "Flame-like radiance descends on a creature that you can see within range. The target must succeed on a Dexterity saving throw or take 1d8 Radiant damage. The target gains no benefit from Half Cover or Three-Quarters Cover for this save.",
+        "higherLevels": "Cantrip upgrade: one more die at levels 5 (2d8), 11 (3d8) and 17 (4d8)."
+      }
+    },
+    {
+      "id": "ray-of-frost",
+      "kind": "item",
+      "type": "spell",
+      "name": "Ray of Frost",
+      "data": {
+        "level": 0,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "60 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.attack",
+        "dice": 1,
+        "die": 8,
+        "effectType": "cold",
+        "description": "A frigid beam of blue-white light streaks toward a creature within range. Make a ranged spell attack against the target. On a hit, it takes 1d8 Cold damage, and its Speed is reduced by 10 feet until the start of your next turn.",
+        "higherLevels": "Cantrip upgrade: one more die at levels 5 (2d8), 11 (3d8) and 17 (4d8)."
+      }
+    },
+    {
+      "id": "magic-missile",
+      "kind": "item",
+      "type": "spell",
+      "name": "Magic Missile",
+      "data": {
+        "level": 1,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "120 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "dice": 3,
+        "die": 4,
+        "bonus": 3,
+        "effectType": "force",
+        "description": "You create three glowing darts of magical force. Each dart strikes a creature of your choice that you can see within range. A dart deals 1d4 + 1 Force damage to its target. The darts all strike simultaneously. (The effect roll is all three darts at one target.)",
+        "higherLevels": "One more dart for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "cure-wounds",
+      "kind": "item",
+      "type": "spell",
+      "name": "Cure Wounds",
+      "data": {
+        "level": 1,
+        "school": "school.abjuration",
+        "castingTime": "Action",
+        "range": "Touch",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "dice": 2,
+        "die": 8,
+        "addMod": true,
+        "effectType": "healing",
+        "description": "A creature you touch regains a number of Hit Points equal to 2d8 plus your spellcasting ability modifier.",
+        "higherLevels": "The healing increases by 2d8 for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "healing-word",
+      "kind": "item",
+      "type": "spell",
+      "name": "Healing Word",
+      "data": {
+        "level": 1,
+        "school": "school.abjuration",
+        "castingTime": "Bonus Action",
+        "range": "60 feet",
+        "components": "V",
+        "duration": "Instantaneous",
+        "dice": 2,
+        "die": 4,
+        "addMod": true,
+        "effectType": "healing",
+        "description": "A creature of your choice that you can see within range regains Hit Points equal to 2d4 plus your spellcasting ability modifier.",
+        "higherLevels": "The healing increases by 2d4 for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "shield-spell",
+      "kind": "item",
+      "type": "spell",
+      "name": "Shield",
+      "data": {
+        "level": 1,
+        "school": "school.abjuration",
+        "castingTime": "Reaction",
+        "range": "Self",
+        "components": "V, S",
+        "duration": "1 round",
+        "description": "Casting time: a Reaction, which you take when you are hit by an attack roll or targeted by the Magic Missile spell. An imperceptible barrier of magical force protects you. Until the start of your next turn, you have a +5 bonus to AC, including against the triggering attack, and you take no damage from Magic Missile."
+      }
+    },
+    {
+      "id": "burning-hands",
+      "kind": "item",
+      "type": "spell",
+      "name": "Burning Hands",
+      "data": {
+        "level": 1,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "Self (15-foot Cone)",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.save",
+        "save": "ability.dex",
+        "dice": 3,
+        "die": 6,
+        "effectType": "fire",
+        "description": "A thin sheet of flames shoots forth from you. Each creature in a 15-foot Cone makes a Dexterity saving throw, taking 3d6 Fire damage on a failed save or half as much damage on a successful one.",
+        "higherLevels": "The damage increases by 1d6 for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "thunderwave",
+      "kind": "item",
+      "type": "spell",
+      "name": "Thunderwave",
+      "data": {
+        "level": 1,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "Self (15-foot Cube)",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.save",
+        "save": "ability.con",
+        "dice": 2,
+        "die": 8,
+        "effectType": "thunder",
+        "description": "You unleash a wave of thunderous energy. Each creature in a 15-foot Cube originating from you makes a Constitution saving throw. On a failed save, a creature takes 2d8 Thunder damage and is pushed 10 feet away from you. On a successful save, a creature takes half as much damage only.",
+        "higherLevels": "The damage increases by 1d8 for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "bless",
+      "kind": "item",
+      "type": "spell",
+      "name": "Bless",
+      "data": {
+        "level": 1,
+        "school": "school.enchantment",
+        "castingTime": "Action",
+        "range": "30 feet",
+        "components": "V, S, M (a Holy Symbol worth 5+ GP)",
+        "duration": "Concentration, up to 1 minute",
+        "concentration": true,
+        "description": "You bless up to three creatures within range. Whenever a target makes an attack roll or a saving throw before the spell ends, the target adds 1d4 to the attack roll or save.",
+        "higherLevels": "You can target one additional creature for each spell slot level above 1."
+      }
+    },
+    {
+      "id": "scorching-ray",
+      "kind": "item",
+      "type": "spell",
+      "name": "Scorching Ray",
+      "data": {
+        "level": 2,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "120 feet",
+        "components": "V, S",
+        "duration": "Instantaneous",
+        "attack": "spell.attack",
+        "dice": 2,
+        "die": 6,
+        "effectType": "fire",
+        "description": "You hurl three fiery rays. You can hurl them at one target within range or at several. Make a ranged spell attack for each ray. On a hit, the target takes 2d6 Fire damage.",
+        "higherLevels": "You create one additional ray for each spell slot level above 2."
+      }
+    },
+    {
+      "id": "fireball",
+      "kind": "item",
+      "type": "spell",
+      "name": "Fireball",
+      "data": {
+        "level": 3,
+        "school": "school.evocation",
+        "castingTime": "Action",
+        "range": "150 feet",
+        "components": "V, S, M (a ball of bat guano and sulfur)",
+        "duration": "Instantaneous",
+        "attack": "spell.save",
+        "save": "ability.dex",
+        "dice": 8,
+        "die": 6,
+        "effectType": "fire",
+        "description": "A bright streak flashes from you to a point you choose within range and then blossoms with a low roar into a fiery explosion. Each creature in a 20-foot-radius Sphere centered on that point makes a Dexterity saving throw, taking 8d6 Fire damage on a failed save or half as much damage on a successful one.",
+        "higherLevels": "The damage increases by 1d6 for each spell slot level above 3."
+      }
+    },
+    {
+      "id": "goblin-warrior",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Goblin Warrior",
+      "data": {
+        "kind": "Small Fey (Goblinoid), Chaotic Neutral",
+        "cr": "1/4",
+        "ac": 15,
+        "hp": {
+          "value": 10,
+          "max": 10
+        },
+        "hitPoints": "3d6",
+        "speed": "30 ft.",
+        "str": 8,
+        "dex": 15,
+        "con": 10,
+        "int": 10,
+        "wis": 8,
+        "cha": 8,
+        "skillsText": "Stealth +6",
+        "senses": "Darkvision 60 ft.; Passive Perception 9",
+        "languages": "Common, Goblin",
+        "traits": "Nimble Escape (Bonus Action). The goblin takes the Disengage or Hide action.",
+        "actions": [
+          {
+            "name": "Scimitar",
+            "bonus": 4,
+            "reach": "Reach 5 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 2,
+            "damageType": "slashing",
+            "notes": "Plus 2 (1d4) Slashing damage if the attack roll had Advantage."
+          },
+          {
+            "name": "Shortbow",
+            "bonus": 4,
+            "reach": "Range 80/320 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 2,
+            "damageType": "piercing",
+            "notes": "Plus 2 (1d4) Piercing damage if the attack roll had Advantage."
+          }
+        ]
+      }
+    },
+    {
+      "id": "skeleton",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Skeleton",
+      "data": {
+        "kind": "Medium Undead, Lawful Evil",
+        "cr": "1/4",
+        "ac": 14,
+        "hp": {
+          "value": 13,
+          "max": 13
+        },
+        "hitPoints": "2d8 + 4",
+        "speed": "30 ft.",
+        "str": 10,
+        "dex": 16,
+        "con": 15,
+        "int": 6,
+        "wis": 8,
+        "cha": 5,
+        "senses": "Darkvision 60 ft.; Passive Perception 9",
+        "languages": "Understands the languages it knew in life but can’t speak",
+        "defenses": "Vulnerabilities Bludgeoning; Immunities Poison; Exhaustion, Poisoned",
+        "actions": [
+          {
+            "name": "Shortsword",
+            "bonus": 5,
+            "reach": "Reach 5 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 3,
+            "damageType": "piercing",
+            "notes": ""
+          },
+          {
+            "name": "Shortbow",
+            "bonus": 5,
+            "reach": "Range 80/320 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 3,
+            "damageType": "piercing",
+            "notes": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "zombie",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Zombie",
+      "data": {
+        "kind": "Medium Undead, Neutral Evil",
+        "cr": "1/4",
+        "ac": 8,
+        "hp": {
+          "value": 15,
+          "max": 15
+        },
+        "hitPoints": "2d8 + 6",
+        "speed": "20 ft.",
+        "str": 13,
+        "dex": 6,
+        "con": 16,
+        "int": 3,
+        "wis": 6,
+        "cha": 5,
+        "saves": {
+          "wis": true
+        },
+        "senses": "Darkvision 60 ft.; Passive Perception 8",
+        "languages": "Understands the languages it knew in life but can’t speak",
+        "defenses": "Immunities Poison; Exhaustion, Poisoned",
+        "traits": "Undead Fortitude. If damage reduces the zombie to 0 Hit Points, it makes a Constitution saving throw (DC 5 plus the damage taken) unless the damage is Radiant or from a Critical Hit. On a successful save, the zombie drops to 1 Hit Point instead.",
+        "actions": [
+          {
+            "name": "Slam",
+            "bonus": 3,
+            "reach": "Reach 5 ft.",
+            "dice": 1,
+            "die": 8,
+            "damageBonus": 1,
+            "damageType": "bludgeoning",
+            "notes": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "wolf",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Wolf",
+      "data": {
+        "kind": "Medium Beast, Unaligned",
+        "cr": "1/4",
+        "ac": 12,
+        "hp": {
+          "value": 11,
+          "max": 11
+        },
+        "hitPoints": "2d8 + 2",
+        "speed": "40 ft.",
+        "str": 14,
+        "dex": 15,
+        "con": 12,
+        "int": 3,
+        "wis": 12,
+        "cha": 6,
+        "skillsText": "Perception +5, Stealth +4",
+        "senses": "Darkvision 60 ft.; Passive Perception 15",
+        "traits": "Pack Tactics. The wolf has Advantage on an attack roll against a creature if at least one of the wolf’s allies is within 5 feet of the creature and the ally doesn’t have the Incapacitated condition.",
+        "actions": [
+          {
+            "name": "Bite",
+            "bonus": 4,
+            "reach": "Reach 5 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 2,
+            "damageType": "piercing",
+            "notes": "If the target is Medium or smaller, it has the Prone condition."
+          }
+        ]
+      }
+    },
+    {
+      "id": "bandit",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Bandit",
+      "data": {
+        "kind": "Medium or Small Humanoid, Neutral",
+        "cr": "1/8",
+        "ac": 12,
+        "hp": {
+          "value": 11,
+          "max": 11
+        },
+        "hitPoints": "2d8 + 2",
+        "speed": "30 ft.",
+        "str": 11,
+        "dex": 12,
+        "con": 12,
+        "int": 10,
+        "wis": 10,
+        "cha": 10,
+        "senses": "Passive Perception 10",
+        "languages": "Common, Thieves’ Cant",
+        "actions": [
+          {
+            "name": "Scimitar",
+            "bonus": 3,
+            "reach": "Reach 5 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 1,
+            "damageType": "slashing",
+            "notes": ""
+          },
+          {
+            "name": "Light Crossbow",
+            "bonus": 3,
+            "reach": "Range 80/320 ft.",
+            "dice": 1,
+            "die": 8,
+            "damageBonus": 1,
+            "damageType": "piercing",
+            "notes": ""
+          }
+        ]
+      }
+    },
+    {
+      "id": "guard",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Guard",
+      "data": {
+        "kind": "Medium or Small Humanoid, Neutral",
+        "cr": "1/8",
+        "ac": 16,
+        "hp": {
+          "value": 11,
+          "max": 11
+        },
+        "hitPoints": "2d8 + 2",
+        "speed": "30 ft.",
+        "str": 13,
+        "dex": 12,
+        "con": 12,
+        "int": 10,
+        "wis": 11,
+        "cha": 10,
+        "skillsText": "Perception +2",
+        "senses": "Passive Perception 12",
+        "languages": "Common",
+        "actions": [
+          {
+            "name": "Spear",
+            "bonus": 3,
+            "reach": "Reach 5 ft. or range 20/60 ft.",
+            "dice": 1,
+            "die": 6,
+            "damageBonus": 1,
+            "damageType": "piercing",
+            "notes": "Or 5 (1d8 + 1) Piercing damage used with two hands."
+          }
+        ]
+      }
+    },
+    {
+      "id": "ogre",
+      "kind": "actor",
+      "type": "npc",
+      "name": "Ogre",
+      "data": {
+        "kind": "Large Giant, Chaotic Evil",
+        "cr": "2",
+        "ac": 11,
+        "hp": {
+          "value": 68,
+          "max": 68
+        },
+        "hitPoints": "8d10 + 24",
+        "speed": "40 ft.",
+        "str": 19,
+        "dex": 8,
+        "con": 16,
+        "int": 5,
+        "wis": 7,
+        "cha": 7,
+        "senses": "Darkvision 60 ft.; Passive Perception 8",
+        "languages": "Common, Giant",
+        "actions": [
+          {
+            "name": "Greatclub",
+            "bonus": 6,
+            "reach": "Reach 5 ft.",
+            "dice": 2,
+            "die": 8,
+            "damageBonus": 4,
+            "damageType": "bludgeoning",
+            "notes": ""
+          },
+          {
+            "name": "Javelin",
+            "bonus": 6,
+            "reach": "Reach 5 ft. or range 30/120 ft.",
+            "dice": 2,
+            "die": 6,
+            "damageBonus": 4,
+            "damageType": "piercing",
+            "notes": ""
+          }
+        ]
+      }
+    }
+  ]
+}

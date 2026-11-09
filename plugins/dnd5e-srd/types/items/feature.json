@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../../packages/plugin-schema/schemas/item-type.schema.json",
+  "label": "type.feature",
+  "labelPlural": "type.features",
+  "group": "group.features",
+  "order": 4,
+  "sheet": "feature",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "source": {
+        "type": "string",
+        "default": "",
+        "maxLength": 60
+      },
+      "uses": {
+        "type": "object",
+        "properties": {
+          "used": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 20,
+            "x-counter": true
+          },
+          "max": {
+            "type": "integer",
+            "default": 0,
+            "minimum": 0,
+            "maximum": 20
+          }
+        }
+      },
+      "recharge": {
+        "type": "string",
+        "enum": ["recharge.none", "recharge.short", "recharge.long"],
+        "default": "recharge.none"
+      },
+      "description": {
+        "type": "string",
+        "x-kind": "longText",
+        "default": ""
+      }
+    }
+  }
+}

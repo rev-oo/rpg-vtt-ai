@@ -1,0 +1,44 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "column",
+    "gap": "sm",
+    "children": [
+      {
+        "type": "row",
+        "gap": "sm",
+        "wrap": true,
+        "children": [
+          {
+            "type": "field",
+            "path": "source",
+            "label": "field.source"
+          },
+          {
+            "type": "field",
+            "path": "uses.used",
+            "label": "field.usesUsed",
+            "input": "counter"
+          },
+          {
+            "type": "field",
+            "path": "uses.max",
+            "label": "field.usesMax",
+            "input": "number"
+          },
+          {
+            "type": "field",
+            "path": "recharge",
+            "label": "field.recharge",
+            "input": "select"
+          }
+        ]
+      },
+      {
+        "type": "longText",
+        "path": "description",
+        "label": "field.description"
+      }
+    ]
+  }
+}

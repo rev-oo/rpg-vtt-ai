@@ -1,0 +1,1539 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/sheet.schema.json",
+  "layout": {
+    "type": "tabs",
+    "tabs": [
+      {
+        "label": "tab.main",
+        "children": [
+          {
+            "type": "row",
+            "gap": "sm",
+            "wrap": true,
+            "children": [
+              {
+                "type": "field",
+                "path": "class",
+                "label": "field.class",
+                "input": "select"
+              },
+              {
+                "type": "field",
+                "path": "subclass",
+                "label": "field.subclass"
+              },
+              {
+                "type": "field",
+                "path": "level",
+                "label": "field.level",
+                "input": "number"
+              },
+              {
+                "type": "field",
+                "path": "species",
+                "label": "field.species"
+              },
+              {
+                "type": "field",
+                "path": "background",
+                "label": "field.background"
+              },
+              {
+                "type": "field",
+                "path": "xp",
+                "label": "field.xp",
+                "input": "number"
+              }
+            ]
+          },
+          {
+            "type": "row",
+            "gap": "sm",
+            "wrap": true,
+            "children": [
+              {
+                "type": "field",
+                "path": "hp.value",
+                "label": "field.hp",
+                "input": "counter"
+              },
+              {
+                "type": "field",
+                "path": "hp.max",
+                "label": "field.hpMax",
+                "input": "number"
+              },
+              {
+                "type": "field",
+                "path": "hp.temp",
+                "label": "field.hpTemp",
+                "input": "counter"
+              },
+              {
+                "type": "derived",
+                "key": "ac",
+                "label": "label.ac"
+              },
+              {
+                "type": "derived",
+                "key": "initiative",
+                "label": "label.initiative",
+                "format": "signed"
+              },
+              {
+                "type": "field",
+                "path": "speed",
+                "label": "field.speed",
+                "input": "number"
+              },
+              {
+                "type": "derived",
+                "key": "prof",
+                "label": "label.prof",
+                "format": "signed"
+              },
+              {
+                "type": "field",
+                "path": "inspiration",
+                "label": "field.inspiration",
+                "input": "checkbox"
+              }
+            ],
+            "class": "vitals"
+          },
+          {
+            "type": "section",
+            "title": "section.dying",
+            "children": [
+              {
+                "type": "text",
+                "text": "hint.dying"
+              },
+              {
+                "type": "row",
+                "gap": "sm",
+                "wrap": true,
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "deathSaves.successes",
+                    "label": "field.deathSuccesses",
+                    "input": "counter"
+                  },
+                  {
+                    "type": "field",
+                    "path": "deathSaves.failures",
+                    "label": "field.deathFailures",
+                    "input": "counter"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "deathSave",
+                    "label": "roll.deathSave"
+                  }
+                ]
+              }
+            ],
+            "visibleIf": "@hp.value <= 0",
+            "class": "dying"
+          },
+          {
+            "type": "row",
+            "gap": "sm",
+            "wrap": true,
+            "children": [
+              {
+                "type": "field",
+                "path": "rollMode",
+                "label": "field.rollMode",
+                "input": "select"
+              }
+            ],
+            "class": "mode"
+          },
+          {
+            "type": "grid",
+            "columns": 6,
+            "class": "abilities",
+            "children": [
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "str",
+                    "label": "ability.str",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "strMod",
+                    "label": "label.mod.str",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_str",
+                    "label": "button.check.str"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.str",
+                    "label": "label.saveProf.str",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "strSave",
+                    "label": "label.save.str",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_str",
+                    "label": "button.save.str"
+                  }
+                ],
+                "class": "ability"
+              },
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "dex",
+                    "label": "ability.dex",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "dexMod",
+                    "label": "label.mod.dex",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_dex",
+                    "label": "button.check.dex"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.dex",
+                    "label": "label.saveProf.dex",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "dexSave",
+                    "label": "label.save.dex",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_dex",
+                    "label": "button.save.dex"
+                  }
+                ],
+                "class": "ability"
+              },
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "con",
+                    "label": "ability.con",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "conMod",
+                    "label": "label.mod.con",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_con",
+                    "label": "button.check.con"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.con",
+                    "label": "label.saveProf.con",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "conSave",
+                    "label": "label.save.con",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_con",
+                    "label": "button.save.con"
+                  }
+                ],
+                "class": "ability"
+              },
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "int",
+                    "label": "ability.int",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "intMod",
+                    "label": "label.mod.int",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_int",
+                    "label": "button.check.int"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.int",
+                    "label": "label.saveProf.int",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "intSave",
+                    "label": "label.save.int",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_int",
+                    "label": "button.save.int"
+                  }
+                ],
+                "class": "ability"
+              },
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "wis",
+                    "label": "ability.wis",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "wisMod",
+                    "label": "label.mod.wis",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_wis",
+                    "label": "button.check.wis"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.wis",
+                    "label": "label.saveProf.wis",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "wisSave",
+                    "label": "label.save.wis",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_wis",
+                    "label": "button.save.wis"
+                  }
+                ],
+                "class": "ability"
+              },
+              {
+                "type": "column",
+                "gap": "sm",
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "cha",
+                    "label": "ability.cha",
+                    "input": "number"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "chaMod",
+                    "label": "label.mod.cha",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "check_cha",
+                    "label": "button.check.cha"
+                  },
+                  {
+                    "type": "field",
+                    "path": "saves.cha",
+                    "label": "label.saveProf.cha",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "chaSave",
+                    "label": "label.save.cha",
+                    "format": "signed"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "save_cha",
+                    "label": "button.save.cha"
+                  }
+                ],
+                "class": "ability"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "title": "section.skills",
+            "children": [
+              {
+                "type": "grid",
+                "columns": 3,
+                "children": [
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.acrobatics",
+                        "label": "skill.acrobatics",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "acrobatics",
+                        "label": "label.skill.acrobatics",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_acrobatics",
+                        "label": "button.skill.acrobatics"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.animalHandling",
+                        "label": "skill.animalHandling",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "animalHandling",
+                        "label": "label.skill.animalHandling",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_animalHandling",
+                        "label": "button.skill.animalHandling"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.arcana",
+                        "label": "skill.arcana",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "arcana",
+                        "label": "label.skill.arcana",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_arcana",
+                        "label": "button.skill.arcana"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.athletics",
+                        "label": "skill.athletics",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "athletics",
+                        "label": "label.skill.athletics",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_athletics",
+                        "label": "button.skill.athletics"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.deception",
+                        "label": "skill.deception",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "deception",
+                        "label": "label.skill.deception",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_deception",
+                        "label": "button.skill.deception"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.history",
+                        "label": "skill.history",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "history",
+                        "label": "label.skill.history",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_history",
+                        "label": "button.skill.history"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.insight",
+                        "label": "skill.insight",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "insight",
+                        "label": "label.skill.insight",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_insight",
+                        "label": "button.skill.insight"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.intimidation",
+                        "label": "skill.intimidation",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "intimidation",
+                        "label": "label.skill.intimidation",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_intimidation",
+                        "label": "button.skill.intimidation"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.investigation",
+                        "label": "skill.investigation",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "investigation",
+                        "label": "label.skill.investigation",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_investigation",
+                        "label": "button.skill.investigation"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.medicine",
+                        "label": "skill.medicine",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "medicine",
+                        "label": "label.skill.medicine",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_medicine",
+                        "label": "button.skill.medicine"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.nature",
+                        "label": "skill.nature",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "nature",
+                        "label": "label.skill.nature",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_nature",
+                        "label": "button.skill.nature"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.perception",
+                        "label": "skill.perception",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "perception",
+                        "label": "label.skill.perception",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_perception",
+                        "label": "button.skill.perception"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.performance",
+                        "label": "skill.performance",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "performance",
+                        "label": "label.skill.performance",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_performance",
+                        "label": "button.skill.performance"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.persuasion",
+                        "label": "skill.persuasion",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "persuasion",
+                        "label": "label.skill.persuasion",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_persuasion",
+                        "label": "button.skill.persuasion"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.religion",
+                        "label": "skill.religion",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "religion",
+                        "label": "label.skill.religion",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_religion",
+                        "label": "button.skill.religion"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.sleightOfHand",
+                        "label": "skill.sleightOfHand",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "sleightOfHand",
+                        "label": "label.skill.sleightOfHand",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_sleightOfHand",
+                        "label": "button.skill.sleightOfHand"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.stealth",
+                        "label": "skill.stealth",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "stealth",
+                        "label": "label.skill.stealth",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_stealth",
+                        "label": "button.skill.stealth"
+                      }
+                    ],
+                    "class": "skill"
+                  },
+                  {
+                    "type": "row",
+                    "gap": "sm",
+                    "wrap": true,
+                    "children": [
+                      {
+                        "type": "field",
+                        "path": "skills.survival",
+                        "label": "skill.survival",
+                        "input": "select"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "survival",
+                        "label": "label.skill.survival",
+                        "format": "signed"
+                      },
+                      {
+                        "type": "rollButton",
+                        "roll": "skill_survival",
+                        "label": "button.skill.survival"
+                      }
+                    ],
+                    "class": "skill"
+                  }
+                ]
+              },
+              {
+                "type": "derived",
+                "key": "passivePerception",
+                "label": "label.passivePerception"
+              }
+            ]
+          },
+          {
+            "type": "section",
+            "title": "section.rests",
+            "children": [
+              {
+                "type": "row",
+                "gap": "sm",
+                "wrap": true,
+                "children": [
+                  {
+                    "type": "derived",
+                    "key": "hitDie",
+                    "label": "label.hitDie"
+                  },
+                  {
+                    "type": "derived",
+                    "key": "hitDiceLeft",
+                    "label": "label.hitDiceLeft"
+                  },
+                  {
+                    "type": "field",
+                    "path": "hitDiceUsed",
+                    "label": "field.hitDiceUsed",
+                    "input": "counter"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "shortRest",
+                    "label": "roll.shortRest"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "longRest",
+                    "label": "roll.longRest"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "tab.attacks",
+        "children": [
+          {
+            "type": "field",
+            "path": "rollMode",
+            "label": "field.rollMode",
+            "input": "select"
+          },
+          {
+            "type": "items",
+            "itemTypes": ["weapon"],
+            "addLabel": "add.weapon",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "wrap": true,
+              "children": [
+                {
+                  "type": "field",
+                  "path": "twoHands",
+                  "label": "field.twoHands",
+                  "input": "checkbox"
+                },
+                {
+                  "type": "rollButton",
+                  "roll": "weaponAttack",
+                  "label": "button.attack"
+                },
+                {
+                  "type": "rollButton",
+                  "roll": "weaponDamage",
+                  "label": "button.damage"
+                },
+                {
+                  "type": "rollButton",
+                  "roll": "weaponCrit",
+                  "label": "button.crit"
+                }
+              ]
+            }
+          },
+          {
+            "type": "section",
+            "title": "section.unarmed",
+            "children": [
+              {
+                "type": "row",
+                "gap": "sm",
+                "wrap": true,
+                "children": [
+                  {
+                    "type": "rollButton",
+                    "roll": "unarmedAttack",
+                    "label": "button.attack"
+                  },
+                  {
+                    "type": "rollButton",
+                    "roll": "unarmedDamage",
+                    "label": "button.damage"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "tab.spells",
+        "children": [
+          {
+            "type": "row",
+            "gap": "sm",
+            "wrap": true,
+            "children": [
+              {
+                "type": "derived",
+                "key": "spellMod",
+                "label": "label.spellMod",
+                "format": "signed"
+              },
+              {
+                "type": "derived",
+                "key": "spellAttack",
+                "label": "label.spellAttack",
+                "format": "signed"
+              },
+              {
+                "type": "derived",
+                "key": "spellDc",
+                "label": "label.spellDc"
+              },
+              {
+                "type": "derived",
+                "key": "preparedSpells",
+                "label": "label.prepared"
+              },
+              {
+                "type": "field",
+                "path": "concentration",
+                "label": "field.concentration"
+              }
+            ]
+          },
+          {
+            "type": "field",
+            "path": "rollMode",
+            "label": "field.rollMode",
+            "input": "select"
+          },
+          {
+            "type": "section",
+            "title": "section.slots",
+            "children": [
+              {
+                "type": "grid",
+                "columns": 9,
+                "class": "slots",
+                "children": [
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft1",
+                        "label": "label.slotsLeft1"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots1",
+                        "label": "label.slots1"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l1",
+                        "label": "field.slotsUsed1",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots1 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft2",
+                        "label": "label.slotsLeft2"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots2",
+                        "label": "label.slots2"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l2",
+                        "label": "field.slotsUsed2",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots2 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft3",
+                        "label": "label.slotsLeft3"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots3",
+                        "label": "label.slots3"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l3",
+                        "label": "field.slotsUsed3",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots3 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft4",
+                        "label": "label.slotsLeft4"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots4",
+                        "label": "label.slots4"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l4",
+                        "label": "field.slotsUsed4",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots4 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft5",
+                        "label": "label.slotsLeft5"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots5",
+                        "label": "label.slots5"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l5",
+                        "label": "field.slotsUsed5",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots5 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft6",
+                        "label": "label.slotsLeft6"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots6",
+                        "label": "label.slots6"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l6",
+                        "label": "field.slotsUsed6",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots6 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft7",
+                        "label": "label.slotsLeft7"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots7",
+                        "label": "label.slots7"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l7",
+                        "label": "field.slotsUsed7",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots7 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft8",
+                        "label": "label.slotsLeft8"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots8",
+                        "label": "label.slots8"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l8",
+                        "label": "field.slotsUsed8",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots8 > 0"
+                  },
+                  {
+                    "type": "column",
+                    "gap": "sm",
+                    "children": [
+                      {
+                        "type": "derived",
+                        "key": "slotsLeft9",
+                        "label": "label.slotsLeft9"
+                      },
+                      {
+                        "type": "derived",
+                        "key": "slots9",
+                        "label": "label.slots9"
+                      },
+                      {
+                        "type": "field",
+                        "path": "slotsUsed.l9",
+                        "label": "field.slotsUsed9",
+                        "input": "counter"
+                      }
+                    ],
+                    "visibleIf": "@derived.slots9 > 0"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "items",
+            "itemTypes": ["spell"],
+            "addLabel": "add.spell",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "wrap": true,
+              "children": [
+                {
+                  "type": "field",
+                  "path": "prepared",
+                  "label": "field.prepared",
+                  "input": "checkbox"
+                },
+                {
+                  "type": "rollButton",
+                  "roll": "spellCast",
+                  "label": "button.cast"
+                },
+                {
+                  "type": "rollButton",
+                  "roll": "spellEffect",
+                  "label": "button.effect"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "label": "tab.inventory",
+        "children": [
+          {
+            "type": "row",
+            "gap": "sm",
+            "wrap": true,
+            "children": [
+              {
+                "type": "derived",
+                "key": "load",
+                "label": "label.load",
+                "format": "decimal"
+              },
+              {
+                "type": "derived",
+                "key": "capacity",
+                "label": "label.capacity"
+              }
+            ]
+          },
+          {
+            "type": "items",
+            "itemTypes": ["armor"],
+            "addLabel": "add.armor",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "wrap": true,
+              "children": [
+                {
+                  "type": "field",
+                  "path": "equipped",
+                  "label": "field.equipped",
+                  "input": "checkbox"
+                }
+              ]
+            }
+          },
+          {
+            "type": "items",
+            "itemTypes": ["gear"],
+            "addLabel": "add.gear",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "wrap": true,
+              "children": [
+                {
+                  "type": "field",
+                  "path": "quantity",
+                  "label": "field.quantity",
+                  "input": "number"
+                }
+              ]
+            }
+          },
+          {
+            "type": "section",
+            "title": "section.coins",
+            "children": [
+              {
+                "type": "row",
+                "gap": "sm",
+                "wrap": true,
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "coins.cp",
+                    "label": "coin.cp",
+                    "input": "number"
+                  },
+                  {
+                    "type": "field",
+                    "path": "coins.sp",
+                    "label": "coin.sp",
+                    "input": "number"
+                  },
+                  {
+                    "type": "field",
+                    "path": "coins.ep",
+                    "label": "coin.ep",
+                    "input": "number"
+                  },
+                  {
+                    "type": "field",
+                    "path": "coins.gp",
+                    "label": "coin.gp",
+                    "input": "number"
+                  },
+                  {
+                    "type": "field",
+                    "path": "coins.pp",
+                    "label": "coin.pp",
+                    "input": "number"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "label": "tab.features",
+        "children": [
+          {
+            "type": "items",
+            "itemTypes": ["feature"],
+            "addLabel": "add.feature",
+            "item": {
+              "type": "row",
+              "gap": "sm",
+              "wrap": true,
+              "children": [
+                {
+                  "type": "field",
+                  "path": "uses.used",
+                  "label": "field.usesUsed",
+                  "input": "counter"
+                }
+              ]
+            }
+          },
+          {
+            "type": "section",
+            "title": "section.conditions",
+            "children": [
+              {
+                "type": "grid",
+                "columns": 4,
+                "children": [
+                  {
+                    "type": "field",
+                    "path": "conditions.blinded",
+                    "label": "condition.blinded",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.charmed",
+                    "label": "condition.charmed",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.deafened",
+                    "label": "condition.deafened",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.frightened",
+                    "label": "condition.frightened",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.grappled",
+                    "label": "condition.grappled",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.incapacitated",
+                    "label": "condition.incapacitated",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.invisible",
+                    "label": "condition.invisible",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.paralyzed",
+                    "label": "condition.paralyzed",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.petrified",
+                    "label": "condition.petrified",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.poisoned",
+                    "label": "condition.poisoned",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.prone",
+                    "label": "condition.prone",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.restrained",
+                    "label": "condition.restrained",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.stunned",
+                    "label": "condition.stunned",
+                    "input": "checkbox"
+                  },
+                  {
+                    "type": "field",
+                    "path": "conditions.unconscious",
+                    "label": "condition.unconscious",
+                    "input": "checkbox"
+                  }
+                ]
+              },
+              {
+                "type": "field",
+                "path": "exhaustion",
+                "label": "field.exhaustion",
+                "input": "counter"
+              },
+              {
+                "type": "text",
+                "text": "hint.exhaustion",
+                "visibleIf": "@exhaustion > 0"
+              },
+              {
+                "type": "text",
+                "text": "hint.edge"
+              }
+            ],
+            "collapsible": true
+          }
+        ]
+      },
+      {
+        "label": "tab.notes",
+        "children": [
+          {
+            "type": "image",
+            "path": "portrait",
+            "size": "md"
+          },
+          {
+            "type": "longText",
+            "path": "biography",
+            "label": "field.biography"
+          },
+          {
+            "type": "longText",
+            "path": "notes",
+            "label": "field.notes"
+          },
+          {
+            "type": "longText",
+            "path": "gmNotes",
+            "label": "field.gmNotes"
+          }
+        ]
+      }
+    ]
+  }
+}
