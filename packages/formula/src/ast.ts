@@ -94,12 +94,18 @@ export type DiceModifier =
   | { kind: 'explode' }
   | { kind: 'reroll' | 'success' | 'failure'; comparison: DieComparison };
 
-/** `d20`, `4d6kh3`, `(@pool)d6cs>=5`, `4dF` (FR-DICE-01, 03). */
+/** The die of a dice term: `d6`, `dF`, or a size worked out by a formula, `d(@die)`. */
+export type Die =
+  | { kind: 'standard'; sides: number }
+  | { kind: 'custom'; name: string }
+  | { kind: 'sized'; sides: Expression };
+
+/** `d20`, `4d6kh3`, `(@pool)d6cs>=5`, `4dF`, `(@n)d(@die)` (FR-DICE-01, 03). */
 export interface Dice {
   kind: 'dice';
   /** A literal count, an expression in parentheses, or null for a single die. */
   count: Expression | null;
-  die: { kind: 'standard'; sides: number } | { kind: 'custom'; name: string };
+  die: Die;
   modifiers: DiceModifier[];
   span: Span;
 }
@@ -129,7 +135,10 @@ export function childrenOf(node: Expression): Expression[] {
     case 'call':
       return node.args;
     case 'dice':
-      return node.count ? [node.count] : [];
+      return [
+        ...(node.count ? [node.count] : []),
+        ...(node.die.kind === 'sized' ? [node.die.sides] : []),
+      ];
     default:
       return [];
   }

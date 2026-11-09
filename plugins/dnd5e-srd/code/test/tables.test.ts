@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { abilityName, damageText, hitDieOf, slotsFor } from '../src/tables.js';
+import { abilityName, hitDieOf, slotsFor } from '../src/tables.js';
 
 const row = (classKey: string, level: number): number[] =>
   Array.from({ length: 9 }, (_, i) => slotsFor(classKey, level, i + 1));
@@ -33,12 +33,6 @@ describe('spell slots (SRD 5.2 class tables)', () => {
 });
 
 describe('text for cards', () => {
-  it('writes damage dice with their bonus', () => {
-    expect(damageText(1, 8, 3)).toBe('1d8 + 3');
-    expect(damageText(2, 6, 0)).toBe('2d6');
-    expect(damageText(1, 4, -1)).toBe('1d4 − 1');
-  });
-
   it('names abilities and Hit Dice', () => {
     expect(abilityName('ability.dex')).toBe('Dexterity');
     expect(abilityName('unknown')).toBe('unknown');

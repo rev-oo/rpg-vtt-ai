@@ -62,6 +62,19 @@ describe('<Sheet>', () => {
     expect(store.getSnapshot().name).toBe('Long name ');
   });
 
+  it('stores only dice in a dice field (T-1607)', async () => {
+    const { store } = renderSheet({ type: 'field', path: 'damage', label: 'Damage' });
+    const user = userEvent.setup();
+    const damage = screen.getByLabelText('Damage');
+    await user.type(damage, '2d6 + @str');
+    expect(screen.getByText('Enter dice, such as 2d6 + 3.')).toBeInTheDocument();
+    expect(damage).toHaveAttribute('aria-invalid', 'true');
+    // The last dice it held on the way: `2d6 +` does not parse, `2d6 ` does.
+    expect(store.getSnapshot().damage).toBe('2d6 ');
+    await user.clear(damage);
+    expect(store.getSnapshot().damage).toBe('');
+  });
+
   it('infers inputs from the schema and writes checkboxes and selects', async () => {
     const { store } = renderSheet(
       {

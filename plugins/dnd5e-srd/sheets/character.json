@@ -937,6 +937,11 @@
                   "input": "checkbox"
                 },
                 {
+                  "type": "field",
+                  "path": "extraDamage",
+                  "label": "field.extraDamage"
+                },
+                {
                   "type": "rollButton",
                   "roll": "weaponAttack",
                   "label": "button.attack"

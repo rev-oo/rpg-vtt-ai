@@ -154,13 +154,13 @@
   },
   "weaponDamage": {
     "label": "roll.weaponDamage",
-    "formula": "(@item.derived.die == 4 ? (@item.dice)d4 : @item.derived.die == 6 ? (@item.dice)d6 : @item.derived.die == 8 ? (@item.dice)d8 : @item.derived.die == 10 ? (@item.dice)d10 : @item.derived.die == 12 ? (@item.dice)d12 : (@item.dice)d20) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic",
+    "formula": "(@item.dice)d(@item.derived.die) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic + roll(@item.extraDamage)",
     "card": "damage",
     "item": ["weapon"]
   },
   "weaponCrit": {
     "label": "roll.weaponCrit",
-    "formula": "(@item.derived.die == 4 ? (@item.dice * 2)d4 : @item.derived.die == 6 ? (@item.dice * 2)d6 : @item.derived.die == 8 ? (@item.dice * 2)d8 : @item.derived.die == 10 ? (@item.dice * 2)d10 : @item.derived.die == 12 ? (@item.dice * 2)d12 : (@item.dice * 2)d20) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic",
+    "formula": "(@item.dice * 2)d(@item.derived.die) + (@item.ranged ? @derived.dexMod : @item.finesse ? max(@derived.strMod, @derived.dexMod) : @derived.strMod) + @item.magic + roll(@item.extraDamage, 2)",
     "card": "damage",
     "item": ["weapon"]
   },
@@ -186,7 +186,7 @@
   },
   "spellCast": {
     "label": "roll.spellCast",
-    "formula": "@item.attack == 'spell.attack' ? (@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack : (@item.die == 4 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d4 : @item.die == 6 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d6 : @item.die == 8 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d8 : @item.die == 10 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d10 : @item.die == 12 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d12 : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d20) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "formula": "@item.attack == 'spell.attack' ? (@derived.attackEdge == 0 ? 1d20 : @derived.attackEdge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
     "outcomes": [
       {
         "when": "@item.attack == 'spell.attack' and @total - @derived.spellAttack == 20",
@@ -204,7 +204,7 @@
   },
   "spellEffect": {
     "label": "roll.spellEffect",
-    "formula": "(@item.die == 4 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d4 : @item.die == 6 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d6 : @item.die == 8 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d8 : @item.die == 10 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d10 : @item.die == 12 ? ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d12 : ((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d20) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
+    "formula": "((@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice))d(@item.die) + (@item.addMod ? @derived.spellMod : 0) + @item.bonus",
     "card": "spell",
     "item": ["spell"]
   },
@@ -239,12 +239,12 @@
   },
   "npcDamage": {
     "label": "roll.npcDamage",
-    "formula": "(@actions[@args.id].die == 4 ? (@actions[@args.id].dice)d4 : @actions[@args.id].die == 6 ? (@actions[@args.id].dice)d6 : @actions[@args.id].die == 8 ? (@actions[@args.id].dice)d8 : @actions[@args.id].die == 10 ? (@actions[@args.id].dice)d10 : @actions[@args.id].die == 12 ? (@actions[@args.id].dice)d12 : (@actions[@args.id].dice)d20) + @actions[@args.id].damageBonus",
+    "formula": "(@actions[@args.id].dice)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage)",
     "card": "npcDamage"
   },
   "npcCrit": {
     "label": "roll.npcCrit",
-    "formula": "(@actions[@args.id].die == 4 ? (@actions[@args.id].dice * 2)d4 : @actions[@args.id].die == 6 ? (@actions[@args.id].dice * 2)d6 : @actions[@args.id].die == 8 ? (@actions[@args.id].dice * 2)d8 : @actions[@args.id].die == 10 ? (@actions[@args.id].dice * 2)d10 : @actions[@args.id].die == 12 ? (@actions[@args.id].dice * 2)d12 : (@actions[@args.id].dice * 2)d20) + @actions[@args.id].damageBonus",
+    "formula": "(@actions[@args.id].dice * 2)d(@actions[@args.id].die) + @actions[@args.id].damageBonus + roll(@actions[@args.id].extraDamage, 2)",
     "card": "npcDamage"
   }
 }

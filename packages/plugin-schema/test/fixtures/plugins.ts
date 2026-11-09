@@ -700,6 +700,14 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'roll() outside rolls (T-1607)',
+    change: (f: PluginFixture): void => {
+      at(f, 'types/actors/hero.json', 'derived').mod = "roll('1d6')";
+      skill(f).formula = '(@str)d(@str + 2) + roll(@notes, 2) + signed(@str)';
+    },
+    issues: ['error dice_not_allowed types/actors/hero.json $.derived.mod'],
+  },
+  {
     name: 'derived values that depend on each other',
     change: (f: PluginFixture): void => {
       hero(f).derived = { a: '@derived.b + 1', b: '@derived.a', mod: '@str' };
@@ -772,6 +780,10 @@ export const CASES: FixtureCase[] = [
         bag: { type: 'object', properties: {}, default: [] },
         nick: { type: 'string', default: 'a', minLength: 2 },
         ready: { type: 'boolean', default: true },
+        damage: { type: 'string', format: 'dice', default: '1d8 + 2' },
+        blank: { type: 'string', format: 'dice', default: '' },
+        bad: { type: 'string', format: 'dice', default: '1d8 + @str' },
+        level: { type: 'integer', format: 'dice' },
       });
     },
     issues: [
@@ -785,6 +797,8 @@ export const CASES: FixtureCase[] = [
       'error invalid_default types/actors/hero.json $.schema.properties.tags.default',
       'error invalid_default types/actors/hero.json $.schema.properties.bag.default',
       'error invalid_default types/actors/hero.json $.schema.properties.nick.default',
+      'error invalid_default types/actors/hero.json $.schema.properties.bad.default',
+      'error invalid_annotation types/actors/hero.json $.schema.properties.level.format',
     ],
   },
   {

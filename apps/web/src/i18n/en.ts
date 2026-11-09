@@ -670,6 +670,7 @@ export const en = {
   'validation.required': 'Required.',
   'validation.tooShort': 'Must be at least {min} characters.',
   'validation.tooLong': 'Must be at most {max} characters.',
+  'validation.notDice': 'Enter dice, such as 2d6 + 3.',
   'validation.username': 'Not a valid username.',
   'validation.url': 'Must be a web address starting with http:// or https://.',
   'validation.notNumber': 'Enter a number.',

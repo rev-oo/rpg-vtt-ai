@@ -154,7 +154,7 @@ test('tiny-d20 equips armour, prepares a spell and attacks with a weapon', async
     await expect(card.getByText('Attack', { exact: true })).toBeVisible();
     // The card's rows: the weapon, the resolved roll, the total and the weapon's damage.
     await expect(card.locator('dd').nth(0)).toHaveText('Longsword');
-    await expect(card.locator('dd').nth(1)).toHaveText('1d20 + 3 + 0');
+    await expect(card.locator('dd').nth(1)).toHaveText('1d20 + 3');
     await expect(card.locator('dd').nth(3)).toHaveText('1d6');
   });
 

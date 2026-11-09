@@ -72,6 +72,16 @@ describe('valueIssue', () => {
     expect(check('alive', 'yes')).toBe('type');
     expect(check('notes', 'x'.repeat(11))).toBe('maxLength');
   });
+
+  it('checks a dice expression kept as text (T-1607)', () => {
+    const dice = { type: 'string', format: 'dice', maxLength: 12 } as const;
+    expect(valueIssue(dice, '2d6 + 3')).toBeUndefined();
+    expect(valueIssue(dice, '')).toBeUndefined();
+    expect(valueIssue(dice, '1d6 + @str')).toBe('format');
+    expect(valueIssue(dice, '1d6 +')).toBe('format');
+    expect(valueIssue(dice, '1d6 + 1d6 + 1d6')).toBe('maxLength');
+    expect(valueIssue(dice, 3)).toBe('type');
+  });
 });
 
 describe('repairLayer (specs §9.7)', () => {

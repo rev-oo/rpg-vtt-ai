@@ -9,6 +9,7 @@ export const TYPE: Pick<ActorType, 'schema' | 'derived'> = {
     type: 'object',
     properties: {
       name: { type: 'string', maxLength: 10 },
+      damage: { type: 'string', format: 'dice', default: '' },
       str: { type: 'integer', default: 14, minimum: 1, maximum: 30 },
       speed: { type: 'number', default: 1.5 },
       alive: { type: 'boolean', default: true },

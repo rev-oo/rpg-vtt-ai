@@ -681,6 +681,7 @@ export const ptBR: Messages = {
   'validation.required': 'Obrigatório.',
   'validation.tooShort': 'Precisa ter pelo menos {min} caracteres.',
   'validation.tooLong': 'Precisa ter no máximo {max} caracteres.',
+  'validation.notDice': 'Digite dados, como 2d6 + 3.',
   'validation.username': 'Não é um nome de usuário válido.',
   'validation.url': 'Precisa ser um endereço web começando com http:// ou https://.',
   'validation.notNumber': 'Digite um número.',

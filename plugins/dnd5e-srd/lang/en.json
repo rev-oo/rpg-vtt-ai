@@ -370,5 +370,6 @@
   "type.weapon": "Weapon",
   "type.weapons": "Weapons",
   "weapon.martial": "Martial",
-  "weapon.simple": "Simple"
+  "weapon.simple": "Simple",
+  "field.extraDamage": "Extra damage"
 }

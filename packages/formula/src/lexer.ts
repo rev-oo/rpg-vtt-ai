@@ -24,12 +24,23 @@ export const PUNCTUATION = [
 ] as const;
 export type Punctuation = (typeof PUNCTUATION)[number];
 
-/** A dice term as the lexer reads it; the parser may still attach a `(count)` before it. */
+/**
+ * A dice term as the lexer reads it; the parser may still attach a `(count)` before it. A
+ * `sized` die (`d(`) is followed by the tokens of its size, the closing `)`, and then a
+ * `modifiers` token with what comes after that parenthesis.
+ */
 export interface DiceToken {
   kind: 'dice';
   count: number | null;
   countRaw: string | null;
-  die: Dice['die'];
+  die: Exclude<Dice['die'], { kind: 'sized' }> | { kind: 'sized' };
+  modifiers: DiceModifier[];
+  span: Span;
+}
+
+/** The modifiers after the `)` that closes a die's size: `d(@die)kh1`. */
+export interface ModifiersToken {
+  kind: 'modifiers';
   modifiers: DiceModifier[];
   span: Span;
 }
@@ -41,6 +52,7 @@ export type Token =
   | { kind: 'reference'; name: string; span: Span }
   | { kind: 'punctuation'; value: Punctuation; span: Span }
   | DiceToken
+  | ModifiersToken
   | { kind: 'end'; span: Span };
 
 const WHITESPACE = /[ \t\r\n]+/y;
@@ -48,7 +60,8 @@ const NUMBER = /\d+(?:\.\d+)?/y;
 const IDENTIFIER = /[A-Za-z_][A-Za-z0-9_]*/y;
 // Custom dice are `d` plus uppercase letters and digits (`dF`), so the lowercase modifiers
 // after them stay unambiguous: `4dFcs>=1`.
-const DICE = /(\d+)?d(?:(\d+)|([A-Z][A-Z0-9]*))/y;
+// `d(` starts a die whose size is a formula: `(@n)d(@die)`.
+const DICE = /(\d+)?d(?:(\d+)|([A-Z][A-Z0-9]*)|(\())/y;
 const KEEP_DROP = /(kh|kl|dh|dl)(\d+)?/y;
 // `!=` after a die is a comparison, not an explosion: `2d6!=7`.
 const EXPLODE = /!(?!=)/y;
@@ -113,6 +126,8 @@ function readModifiers(source: string, at: number): { modifiers: DiceModifier[];
 /** Splits a formula into tokens. The last token is always `end`. */
 export function tokenize(source: string): Token[] {
   const tokens: Token[] = [];
+  /** One entry per open parenthesis: whether it opened a die's size. */
+  const open: boolean[] = [];
   let at = 0;
   while (at < source.length) {
     let match: RegExpExecArray | null;
@@ -127,11 +142,26 @@ export function tokenize(source: string): Token[] {
     const mayBeDice = at === 0 || (previous !== '.' && !IDENTIFIER_CHAR.test(previous));
 
     if (mayBeDice && (match = matchAt(DICE, source, at))) {
-      const [text, countRaw, sides, custom] = match;
+      const [text, countRaw, sides, custom, sized] = match;
+      const count = countRaw === undefined ? null : Number(countRaw);
+      if (sized !== undefined) {
+        // The size and its modifiers follow; see `ModifiersToken`.
+        at += text.length;
+        open.push(true);
+        tokens.push({
+          kind: 'dice',
+          count,
+          countRaw: countRaw ?? null,
+          die: { kind: 'sized' },
+          modifiers: [],
+          span: { start, end: at },
+        });
+        continue;
+      }
       const { modifiers, end } = readModifiers(source, at + text.length);
       tokens.push({
         kind: 'dice',
-        count: countRaw === undefined ? null : Number(countRaw),
+        count,
         countRaw: countRaw ?? null,
         die:
           custom === undefined
@@ -179,6 +209,12 @@ export function tokenize(source: string): Token[] {
       }
       at += punctuation.length;
       tokens.push({ kind: 'punctuation', value: punctuation, span: { start, end: at } });
+      if (punctuation === '(') open.push(false);
+      if (punctuation === ')' && open.pop() === true) {
+        const { modifiers, end } = readModifiers(source, at);
+        tokens.push({ kind: 'modifiers', modifiers, span: { start: at, end } });
+        at = end;
+      }
     }
   }
   tokens.push({ kind: 'end', span: { start: source.length, end: source.length } });

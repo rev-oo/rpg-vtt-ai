@@ -25,7 +25,9 @@ export type FormulaErrorCode =
   // Rolling (T-0303)
   | 'unknown_die'
   | 'invalid_dice'
-  | 'too_many_dice';
+  | 'too_many_dice'
+  // Dice expressions stored as text (T-1607)
+  | 'not_dice';
 
 /** A 1-based line and column in the formula source. */
 export interface SourcePosition {

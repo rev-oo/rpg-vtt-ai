@@ -102,6 +102,7 @@ The entity's data: an object whose properties are fields.
 | `maximum` | number |  |  |
 | `minLength` | integer, at least 0 |  |  |
 | `maxLength` | integer, at least 0 |  |  |
+| `format` | `"dice"` |  | For a `string`: the text must be a dice expression, such as `2d6 + 3` (numbers, dice and + - * / only), or blank. Formulas roll it with `roll(@field)`. |
 | `required` | list of [identifier](#identifier) |  |  |
 | `properties` | map from [identifier](#identifier) to [Field](#actor-type-field) |  | The fields of an `object`, by name. |
 | `items` | [Field](#actor-type-field) |  | The rows of an `array`; an `object` for a collection. |
@@ -164,6 +165,7 @@ The entity's data: an object whose properties are fields.
 | `maximum` | number |  |  |
 | `minLength` | integer, at least 0 |  |  |
 | `maxLength` | integer, at least 0 |  |  |
+| `format` | `"dice"` |  | For a `string`: the text must be a dice expression, such as `2d6 + 3` (numbers, dice and + - * / only), or blank. Formulas roll it with `roll(@field)`. |
 | `required` | list of [identifier](#identifier) |  |  |
 | `properties` | map from [identifier](#identifier) to [Field](#item-type-field) |  | The fields of an `object`, by name. |
 | `items` | [Field](#item-type-field) |  | The rows of an `array`; an `object` for a collection. |

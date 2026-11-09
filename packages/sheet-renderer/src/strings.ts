@@ -16,6 +16,7 @@ export interface SheetStrings {
   tooSmall: string;
   tooBig: string;
   tooLong: string;
+  notDice: string;
 }
 
 /** English defaults. `{name}` placeholders are filled by the renderer. */
@@ -37,6 +38,7 @@ export const DEFAULT_STRINGS: SheetStrings = {
   tooSmall: 'Must be at least {min}.',
   tooBig: 'Must be at most {max}.',
   tooLong: 'Must be at most {max} characters.',
+  notDice: 'Enter dice, such as 2d6 + 3.',
 };
 
 export const fill = (text: string, params: Readonly<Record<string, string | number>>): string =>
