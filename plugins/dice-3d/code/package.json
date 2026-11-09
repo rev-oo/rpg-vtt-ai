@@ -1,0 +1,25 @@
+{
+  "name": "@vtt/plugin-dice-3d",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "//": "The code of plugins/dice-3d (T-1604). A workspace package only so that `vtt-plugin pack` finds three and cannon-es to bundle, and so its tests run; nothing imports it.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "cannon-es": "^0.20.0",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.187.0",
+    "@vtt/config": "workspace:*",
+    "@vtt/sdk": "workspace:*",
+    "react": "^19.3.1",
+    "typescript": "~6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

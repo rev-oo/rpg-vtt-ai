@@ -24,6 +24,8 @@ export const workspacePackages = {
   'apps/web': { type: 'web', kind: 'web' },
   // Playwright suites drive the built apps over HTTP; they import no workspace code.
   e2e: { type: 'e2e', kind: 'node' },
+  // A plugin's code with npm dependencies to bundle (T-1604); it runs in a plugin frame.
+  'plugins/dice-3d/code': { type: 'plugin-code', kind: 'react' },
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
@@ -71,6 +73,9 @@ const allowedImports = {
   ),
   web: ALL_PACKAGES,
   e2e: [],
+  // Plugin client code gets only the SDK's client hooks from the app (ADR-074). They resolve
+  // to the SDK's build, an `sdk` element; restrictedModules keeps it to `@vtt/sdk/client`.
+  'plugin-code': ['sdk-client', 'sdk'],
 };
 
 export const boundaryPolicies = [
@@ -102,6 +107,12 @@ export const restrictedModules = {
       },
     ]),
   ),
+  'plugin-code': {
+    paths: ['@vtt/sdk'],
+    patterns: ['@vtt/sdk/*', '!@vtt/sdk/client'],
+    message:
+      'Plugin client code may import only @vtt/sdk/client, which the plugin frame provides (ADR-074).',
+  },
   server: {
     paths: ['@vtt/ui', '@vtt/sheet-renderer', '@vtt/sdk/client'],
     patterns: ['@vtt/ui/*', '@vtt/sheet-renderer/*', '@vtt/sdk/client/*'],

@@ -187,6 +187,21 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     );
   });
 
+  it('packs dice-3d with three and cannon-es bundled, and none of its tooling (T-1604)', async () => {
+    const dir = path.join(REPO, 'plugins', 'dice-3d');
+    expect((await run('validate', dir)).code).toBe(0);
+    const file = path.join(temp, 'dice-3d.vttplugin');
+    expect((await run('pack', dir, '--out', file)).code).toBe(0);
+    const files = readZip(await readFile(file), ARCHIVE_LIMITS);
+    // Its sources, tests, package.json and node_modules stay behind.
+    expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual([
+      'code/client.js',
+    ]);
+    const code = String(files.get('code/client.js'));
+    expect(code).toContain('from"@vtt/sdk/client"');
+    expect(code).not.toMatch(/from"(three|cannon-es)"/);
+  });
+
   it('packs tiny-d20’s /check command into code that runs on its own (T-0804)', async () => {
     const file = path.join(temp, 'tiny-d20.vttplugin');
     expect((await run('pack', path.join(REPO, 'plugins', 'tiny-d20'), '--out', file)).code).toBe(0);

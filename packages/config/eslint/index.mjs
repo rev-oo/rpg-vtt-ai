@@ -130,6 +130,9 @@ export function defineVttConfig() {
       // through the import map of the app's plugin frame (ADR-025, ADR-074).
       'e2e/fixtures/plugins/*/code/',
       'plugins/*/code/',
+      // …except plugin code that is a workspace package, with its own tsconfig (workspace.mjs).
+      '!plugins/dice-3d/code/',
+      'plugins/dice-3d/code/node_modules/',
       // Server data directories (git-ignored), with their installed plugins.
       'e2e/.data/',
       'apps/server/data/',
