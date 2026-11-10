@@ -5,6 +5,7 @@ import { Button, cn } from '@vtt/ui';
 
 import { t } from '../../i18n/index.js';
 import { ICON } from '../../icons.js';
+import { useSystemText } from '../../plugin-host/system-context.js';
 
 import { stepCell, type Cell } from './geometry.js';
 
@@ -16,6 +17,10 @@ export interface TokenListProps {
   manages: boolean;
   /** The actors the member may open, by id. */
   canOpen: (token: TokenView) => boolean;
+  /** Whether the member targets the token (T-1615). */
+  targeted?: (token: TokenView) => boolean;
+  /** Targets a token of an actor, or stops targeting it. */
+  onTarget?: (token: TokenView) => void;
   /** A token picked, or `null` when the selected one is picked again. */
   onSelect: (token: TokenView | null) => void;
   onMove: (token: TokenView, cell: Cell) => void;
@@ -37,12 +42,15 @@ export function TokenList({
   selectedId,
   manages,
   canOpen,
+  targeted = () => false,
+  onTarget,
   onSelect,
   onMove,
   onOpen,
   onHide,
   onRemove,
 }: TokenListProps): ReactElement | null {
+  const translate = useSystemText();
   if (tokens.length === 0) return null;
   const selected = tokens.find((token) => token.id === selectedId);
 
@@ -80,6 +88,15 @@ export function TokenList({
                 row: place(token.row),
               })}
               {token.hidden && ` · ${t('tokens.hidden')}`}
+              {targeted(token) && ` · ${t('tokens.targeted')}`}
+              {token.statuses.length > 0 && (
+                <span className="text-muted">
+                  {' · '}
+                  {t('tokens.statuses', {
+                    statuses: token.statuses.map((status) => translate(status.label)).join(', '),
+                  })}
+                </span>
+              )}
             </button>
           </li>
         ))}
@@ -87,6 +104,19 @@ export function TokenList({
       {selected && (
         <div className="flex flex-wrap items-center gap-1">
           {selected.movable && <p className="mr-2 text-sm text-muted">{t('tokens.moveHint')}</p>}
+          {selected.actorId && onTarget && (
+            <Button
+              variant="ghost"
+              aria-pressed={targeted(selected)}
+              onClick={() => {
+                onTarget(selected);
+              }}
+            >
+              {t(targeted(selected) ? 'tokens.untarget' : 'tokens.target', {
+                name: selected.name,
+              })}
+            </Button>
+          )}
           {canOpen(selected) && (
             <Button
               icon={<ICON.open />}

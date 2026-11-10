@@ -14,6 +14,20 @@ const cell = z
   .min(0)
   .max(MAX_SCENE_CELLS - 1);
 
+/**
+ * A status of the token's actor that is on (T-1615): a true/false field its system shows on
+ * tokens and in the combat tracker, such as a condition.
+ */
+export const actorStatusSchema = z.object({
+  /** The field, such as `conditions.poisoned`. */
+  field: z.string(),
+  /** A lang key of the system, or literal text. */
+  label: z.string(),
+  /** Where the system serves its icon: `/plugins/<id>/<file>`. */
+  iconUrl: z.string(),
+});
+export type ActorStatus = z.infer<typeof actorStatusSchema>;
+
 export const tokenSchema = z.object({
   id: z.string(),
   sceneId: z.string(),
@@ -31,6 +45,8 @@ export const tokenSchema = z.object({
   hidden: z.boolean(),
   /** Whether the caller may move it. */
   movable: z.boolean(),
+  /** Its actor's statuses that are on, as the caller may see them; none for a token alone. */
+  statuses: z.array(actorStatusSchema),
 });
 export type TokenView = z.infer<typeof tokenSchema>;
 

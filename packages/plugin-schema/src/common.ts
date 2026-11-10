@@ -34,5 +34,11 @@ export const text = z.string().min(1).max(500).meta({ title: 'Text' });
 /** Extra CSS classes; plugin CSS is scoped (specs §8.6). */
 export const cssClass = z.string().max(200).meta({ title: 'CSS classes' });
 
+/** A file of the plugin, relative to its folder, without `..`. */
+export const PLUGIN_FILE = /^(?!.*(?:^|\/)\.\.?(?:\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$/;
+
+/** Images a plugin's files may be for its themes and statuses. */
+export const IMAGE_FILE = /\.(?:png|jpe?g|gif|webp|avif)$/i;
+
 /** Lets editors find the JSON Schema of a file. */
 export const schemaUrl = { $schema: z.string().optional() };

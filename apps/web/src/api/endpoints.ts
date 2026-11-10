@@ -89,6 +89,7 @@ import {
   type CompendiumQuery,
   type EncounterView,
   type RollRequestInput,
+  type CardApplyInput,
   type CreateTableInput,
   type GameSystem,
   type SystemDefinition,
@@ -347,6 +348,10 @@ export const api = {
     (await request('PATCH', `/messages/${messageId}`, chatMessageResponseSchema, { text })).message,
   deleteChat: (messageId: string): Promise<void> =>
     requestNoContent('DELETE', `/messages/${messageId}`),
+  /** Does one of a card's actions to one of its targets (T-1615), such as applying damage. */
+  applyCardAction: async (messageId: string, input: CardApplyInput): Promise<ChatMessage> =>
+    (await request('POST', `/messages/${messageId}/apply`, chatMessageResponseSchema, input))
+      .message,
   /** The actor's sheet history the caller may restore, newest first (FR-SHEET-11). */
   actorHistory: async (actorId: string): Promise<ActorSnapshot[]> =>
     (await request('GET', `/actors/${actorId}/history`, actorHistoryResponseSchema)).snapshots,

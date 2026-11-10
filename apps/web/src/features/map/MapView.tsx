@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react';
 
 import { canManageScenes } from '@vtt/shared';
 import type { ActorView, FogInput, SceneView, TableView, TokenView } from '@vtt/shared/api';
@@ -11,6 +11,7 @@ import { ICON } from '../../icons.js';
 
 import { AddTokenDialog } from './AddTokenDialog.js';
 import type { Cell } from './geometry.js';
+import { useTargets } from './targets.js';
 import { TokenList } from './TokenList.js';
 import type { MenuAction } from './TokenMenu.js';
 import { useScenes } from './use-scenes.js';
@@ -109,6 +110,18 @@ interface SceneStageProps {
 function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStageProps): ReactElement {
   const { tokens, error, move, change } = useTokens(table.id, scene.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const targets = useTargets();
+  const { keep } = targets;
+  // Tokens that left the scene, or that the member no longer sees, are no longer targets.
+  const tokenKey = tokens.map((token) => token.id).join(',');
+  useEffect(() => {
+    keep(tokenKey.split(','));
+  }, [keep, tokenKey]);
+  /** Targets a token of an actor, or stops targeting it (T-1615). */
+  const target = (token: TokenView) => {
+    if (token.actorId) targets.toggle(token.id);
+  };
+  const targeted = (token: TokenView) => targets.ids.includes(token.id);
   const [adding, setAdding] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   /** GMs and assistants reveal and hide areas; `scene.updated` brings the new fog (ADR-070). */
@@ -151,6 +164,16 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   };
   /** The token list's actions, for a token's menu on the map (ADR-069). */
   const actionsFor = (token: TokenView): MenuAction[] => [
+    ...(token.actorId
+      ? [
+          {
+            label: t(targeted(token) ? 'tokens.untarget' : 'tokens.target', { name: token.name }),
+            run: () => {
+              target(token);
+            },
+          },
+        ]
+      : []),
     ...(actorOf(token)
       ? [
           {
@@ -205,6 +228,8 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
             selectedId={selectedId}
             onDropActor={manages ? place : undefined}
             actionsFor={actionsFor}
+            targetIds={targets.ids}
+            onTarget={target}
             onFog={manages ? changeFog : undefined}
             select={select}
             deselect={() => {
@@ -223,6 +248,8 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
         selectedId={selectedId}
         manages={manages}
         canOpen={(token) => actorOf(token) !== undefined}
+        targeted={targeted}
+        onTarget={target}
         onSelect={select}
         onMove={(token, { column, row }) => {
           move(token, column, row);

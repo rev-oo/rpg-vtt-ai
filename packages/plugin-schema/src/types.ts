@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { formula, identifier, name, schemaUrl, text } from './common.js';
+import { formula, identifier, name, PLUGIN_FILE, schemaUrl, text } from './common.js';
 
 export const FIELD_TYPES = ['string', 'integer', 'number', 'boolean', 'object', 'array'] as const;
 export const FIELD_KINDS = ['longText', 'collection', 'richText', 'image'] as const;
@@ -132,6 +132,31 @@ const typeBase = {
     ),
 };
 
+/** The most statuses one actor type declares (T-1615). */
+export const MAX_STATUSES = 32;
+
+/** Icons of statuses: the plugin's own images, SVG included (T-1615). */
+export const STATUS_ICON_FILE = /\.(?:svg|png|jpe?g|gif|webp|avif)$/i;
+
+/** A true/false field shown on the actor's tokens and in the combat tracker while on (T-1615). */
+export const statusSchema = z
+  .strictObject({
+    field: z
+      .string()
+      .min(1)
+      .max(200)
+      .describe(
+        'The path of a true/false field of the type, such as `conditions.poisoned`: the status is on while the field is true. Not inside a list.',
+      ),
+    label: text.describe('The status name, shown with its icon; a lang key or literal text.'),
+    icon: z
+      .string()
+      .regex(PLUGIN_FILE)
+      .describe('An image of the plugin, such as `icons/poisoned.svg`.'),
+  })
+  .meta({ title: 'Status' });
+export type Status = z.infer<typeof statusSchema>;
+
 /** `types/actors/<type>.json` (specs §8.4). */
 export const actorTypeSchema = z
   .strictObject({
@@ -140,6 +165,13 @@ export const actorTypeSchema = z
     controlledBy: z
       .enum(['player', 'gm'])
       .describe('Who may create actors of the type: players too, or only the GM.'),
+    statuses: z
+      .array(statusSchema)
+      .max(MAX_STATUSES)
+      .optional()
+      .describe(
+        'True/false fields shown on the actor’s tokens and in the combat tracker while they are on, such as conditions, in this order. Secret fields show only to the GM.',
+      ),
   })
   .describe('An actor type, such as a character or an NPC.');
 export type ActorType = z.infer<typeof actorTypeSchema>;

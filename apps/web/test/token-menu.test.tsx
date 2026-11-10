@@ -18,6 +18,7 @@ const ayla: TokenView = {
   column: 2,
   row: 3,
   hidden: false,
+  statuses: [],
   movable: true,
 };
 

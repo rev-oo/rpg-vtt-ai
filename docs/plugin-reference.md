@@ -114,6 +114,7 @@ An actor type, such as a character or an NPC.
 | `schema` | [Data schema](#actor-type-data-schema) | yes | The entity's data: an object whose properties are fields. |
 | `derived` | map from [identifier](#identifier) to [formula](#formula) |  | Values computed from the data and never stored, by name. Formulas read them as `@derived.<name>`. |
 | `controlledBy` | one of `"player"`, `"gm"` | yes | Who may create actors of the type: players too, or only the GM. |
+| `statuses` | list of [Status](#actor-type-status) (at most 32 items) |  | True/false fields shown on the actor’s tokens and in the combat tracker while they are on, such as conditions, in this order. Secret fields show only to the GM. |
 
 <a id="actor-type-data-schema"></a>
 
@@ -127,6 +128,16 @@ The entity's data: an object whose properties are fields.
 | `properties` | map from [identifier](#identifier) to [Field](#actor-type-field) | yes |  |
 | `required` | list of [identifier](#identifier) |  |  |
 | `description` | text (at most 2000 characters) |  |  |
+
+<a id="actor-type-status"></a>
+
+### Status
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `field` | text (1–200 characters) | yes | The path of a true/false field of the type, such as `conditions.poisoned`: the status is on while the field is true. Not inside a list. |
+| `label` | [text](#text) | yes | The status name, shown with its icon; a lang key or literal text. |
+| `icon` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) | yes | An image of the plugin, such as `icons/poisoned.svg`. |
 
 <a id="actor-type-field"></a>
 
@@ -481,6 +492,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | `outcomes` | list of [Outcome](#rolls-outcome) |  | Checked in order; the first whose `when` is true is shown. |
 | `card` | [name](#name) |  | A card in `cards/`, without `.json`, to show the roll with. |
 | `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`. |
+| `target` | list of [name](#name) (at least 1 item) |  | Actor types the roll may target: it then carries the tokens the roller targets. Its formulas, outcomes and card read the first target as `@target` (its fields, `derived`, `id`, `name` and `type`) and how many there are as `@targets`; `@target` exists only when `@targets > 0`. |
 | `then` | [name](#name) |  | A handler in `code/server`, run after the roll is posted. It gets the result, the item and the options, and can step counters, such as spending a spell slot. |
 | `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
@@ -590,6 +602,7 @@ How a recipe roll shows in chat.
 | `$schema` | text |  | The URL or path of this JSON Schema, so editors check the file. |
 | `title` | [text](#text) | yes | A lang key or literal text. |
 | `rows` | list of [Card row](#card-card-row) | yes |  |
+| `apply` | list of [Card action](#card-card-action) (at most 4 items) |  | Buttons the card shows by each target of the roll, for those who may edit it; each steps a counter of the target once. Only for recipes with `target`. |
 | `outcome` | true or false |  | Shows the recipe's outcome. |
 
 <a id="card-card-row"></a>
@@ -601,6 +614,16 @@ How a recipe roll shows in chat.
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `value` | [formula](#formula) | yes | Reads `@total`, `@roll` (`expression`, `resolved`, `total`, `natural`, `dice`), the recipe's `@rolls` and `@let`, and the entity's data. It cannot roll dice. |
 | `class` | [css classes](#css-classes) |  |  |
+
+<a id="card-card-action"></a>
+
+### Card action
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `label` | [text](#text) | yes | The button, such as "Apply damage"; a lang key or literal text. |
+| `field` | text (1–200 characters) | yes | The path of a counter (`x-counter`) of each type the recipe targets, such as `hp.value`. |
+| `amount` | [formula](#formula) | yes | How much to step the counter by, worked out when the roll is made: negative lowers it, such as `-@rolls.damage.total`. It reads what rows read. |
 
 <a id="settings"></a>
 

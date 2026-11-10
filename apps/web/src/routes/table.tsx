@@ -8,6 +8,7 @@ import { Alert } from '@vtt/ui';
 import { ApiError } from '../api/client.js';
 import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
+import { TargetsContext, useTargetState } from '../features/map/targets.js';
 import { upgradeAvailable } from '../features/settings/system-version.js';
 import type { TableData, TableLoaderData } from '../features/table/table-data.js';
 import { OpenButton } from '../features/workspace/OpenButton.js';
@@ -88,6 +89,7 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
   const revalidator = useRevalidator();
   const system = useTableSystem(table);
   const modules = useTableModules(table);
+  const targets = useTargetState();
   useModuleLook(modules.state);
   // Other members' changes refresh the lists (FR-ENT-07); so does a reconnection, which may
   // have missed some.
@@ -127,7 +129,9 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
   return (
     <TableSystemContext value={system}>
       <TableModulesContext value={modules}>
-        <Workspace data={data} userId={userId} notices={notices} />
+        <TargetsContext value={targets}>
+          <Workspace data={data} userId={userId} notices={notices} />
+        </TargetsContext>
       </TableModulesContext>
     </TableSystemContext>
   );

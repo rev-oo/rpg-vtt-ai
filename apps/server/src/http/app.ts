@@ -14,6 +14,7 @@ import { RateLimit } from '../domain/auth/rate-limit.js';
 import { SessionService } from '../domain/auth/sessions.js';
 import { instanceDefaults, readInstanceSettings } from '../domain/instance.js';
 import { secureRng } from '../domain/rolls.js';
+import { statusChange } from '../domain/statuses.js';
 import { AppError } from '../errors.js';
 import { PluginRegistry } from '../plugins/registry.js';
 import {
@@ -24,6 +25,7 @@ import {
 } from '../realtime/collab.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
+import { publishStatusChange } from '../realtime/notify.js';
 
 import { registerAuth } from './auth.js';
 import { scheduleBackups } from './backups.js';
@@ -152,14 +154,20 @@ export async function buildApp({
     now,
   });
   registerAuth(app, sessions);
+  const definition = (id: string) => plugins.definition(id);
   const collab = registerCollab(app, {
     db,
     sessions,
-    definition: (id) => plugins.definition(id),
+    definition,
     now,
     timing: collabTiming,
     code: (id) => plugins.code(id),
+    // A status turned on or off: those who see the actor's tokens and combatant refetch them.
+    onActorStored: (stored) => {
+      publishStatusChange(events, stored.actor.tableId, statusChange(db, definition, stored));
+    },
   });
+  // After the collab server, which closes its sockets first on shutdown.
   const events = await registerEvents(app, { db, sessions });
 
   const context: AppContext = {

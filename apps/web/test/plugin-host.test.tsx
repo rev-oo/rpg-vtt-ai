@@ -182,6 +182,14 @@ function openTable(
     system = SYSTEM,
     messages = [CARD_MESSAGE],
     dataVersion = HERO.dataVersion,
+    handlers = {},
+  }: {
+    role?: string;
+    systemAvailable?: boolean;
+    system?: typeof SYSTEM;
+    messages?: ChatMessage[];
+    dataVersion?: string;
+    handlers?: Parameters<typeof fakeApi>[0];
   } = {},
 ) {
   fakeWebSocket();
@@ -210,6 +218,7 @@ function openTable(
       },
     },
     'POST /actors/a1/history/s1/restore': { status: 204 },
+    ...handlers,
   });
   renderApp(path);
   return api;
@@ -391,6 +400,47 @@ describe('plugin host (T-0409)', () => {
     expect(card).toHaveTextContent('TotalFire');
     // Text that is not a key shows as it is.
     expect(card).toHaveTextContent('Totaldamage.fire and more');
+  });
+
+  it('offers a card’s actions on the targets the member may edit (T-1615)', async () => {
+    const recipe = CARD_MESSAGE.card;
+    if (!recipe?.card) throw new Error('The fixture has a card.');
+    const apply = [
+      { label: 'Apply damage', field: 'hp.value', amount: -4 },
+      { label: 'Broken', field: 'hp.value', amount: 0, error: 'Expected a whole number' },
+    ];
+    const targets = [
+      { tokenId: 'k1', actorId: HERO.id, name: 'Goblin King', applied: [] },
+      { tokenId: 'k2', actorId: 'a9', name: 'Imp', applied: [] },
+    ];
+    const message = {
+      ...CARD_MESSAGE,
+      card: { ...recipe, card: { ...recipe.card, apply }, targets },
+    };
+    const done = {
+      ...message,
+      card: { ...message.card, targets: [{ ...targets[0], applied: [0] }] },
+    };
+    const api = openTable('/tables/t1', {
+      messages: [message],
+      handlers: { 'POST /messages/m1/apply': { body: { message: done } } },
+    });
+    const card = await within(await log()).findByText('Targets');
+    const box = card.closest('.vtt-card-targets');
+    if (!(box instanceof HTMLElement)) throw new Error('The card lists its targets.');
+    expect(box).toHaveTextContent('Goblin King');
+    expect(box).toHaveTextContent('Imp');
+    // Only the actor the member may edit, and only actions that worked out.
+    expect(within(box).getAllByRole('button')).toHaveLength(1);
+    await userEvent
+      .setup()
+      .click(within(box).getByRole('button', { name: 'Apply damage: Goblin King' }));
+    await waitFor(() => {
+      expect(api.calls.find((call) => call.path === '/messages/m1/apply')?.body).toEqual({
+        target: 0,
+        action: 0,
+      });
+    });
   });
 
   it("shows text plugin code posted by lang key in the viewer's language (T-1611)", async () => {

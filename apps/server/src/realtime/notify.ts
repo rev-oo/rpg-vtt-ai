@@ -121,3 +121,21 @@ export function publishJournalChanged(
       (previous !== undefined && canViewJournal(subject, previous)),
   );
 }
+
+/**
+ * Tells the table an actor's statuses changed (T-1615): the scenes with its tokens and the
+ * encounter, if it fights in it, are fetched again. Who may see what is filtered there.
+ */
+export function publishStatusChange(
+  hub: EventHub,
+  tableId: string,
+  change: { sceneIds: readonly string[]; inCombat: boolean } | undefined,
+): void {
+  if (!change) return;
+  for (const sceneId of change.sceneIds) {
+    hub.publish(tableId, { type: 'token.updated', tableId, payload: { sceneId } }, () => true);
+  }
+  if (change.inCombat) {
+    hub.publish(tableId, { type: 'combat.updated', tableId, payload: {} }, () => true);
+  }
+}

@@ -19,6 +19,7 @@ import { conflict, forbidden, notFound, unprocessable } from '../errors.js';
 import { requireTableImage } from './assets.js';
 import { generateId } from './auth/tokens.js';
 import type { Scene } from './scenes.js';
+import type { StatusReader } from './statuses.js';
 
 // Tokens on a scene (FR-MAP-03, ADR-068). Players see the tokens of the active scene that
 // are neither hidden nor in its fog of war (FR-MAP-04, ADR-070), save their own, and move the
@@ -39,7 +40,12 @@ const facts = ({ token, actor }: Placed, scene: Scene) => ({
   actorOwnership: actor?.ownership ?? null,
 });
 
-export function toTokenView(placed: Placed, scene: Scene, subject: Subject): TokenView {
+export function toTokenView(
+  placed: Placed,
+  scene: Scene,
+  subject: Subject,
+  statuses: StatusReader,
+): TokenView {
   const { token, actor } = placed;
   return {
     id: token.id,
@@ -51,6 +57,7 @@ export function toTokenView(placed: Placed, scene: Scene, subject: Subject): Tok
     row: token.row,
     hidden: token.hidden,
     movable: canMoveToken(subject, facts(placed, scene)),
+    statuses: statuses(actor),
   };
 }
 
@@ -62,7 +69,12 @@ export const visibleTo = (subject: Subject, placed: Placed, scene: Scene): boole
   canSeeToken(subject, facts(placed, scene));
 
 /** The scene's tokens the member may see. Tokens of actors in the trash are left out. */
-export function listTokens(db: DbOrTx, scene: Scene, subject: Subject): TokenView[] {
+export function listTokens(
+  db: DbOrTx,
+  scene: Scene,
+  subject: Subject,
+  statuses: StatusReader,
+): TokenView[] {
   return db
     .select({ token: tokens, actor: actors })
     .from(tokens)
@@ -71,7 +83,7 @@ export function listTokens(db: DbOrTx, scene: Scene, subject: Subject): TokenVie
     .all()
     .map(({ token, actor }) => ({ token, actor: actor ?? undefined }))
     .filter((placed) => visibleTo(subject, placed, scene))
-    .map((placed) => toTokenView(placed, scene, subject));
+    .map((placed) => toTokenView(placed, scene, subject, statuses));
 }
 
 export function findToken(db: DbOrTx, id: string): Token | undefined {

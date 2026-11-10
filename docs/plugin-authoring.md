@@ -1018,6 +1018,21 @@ A counter's `minimum` and `maximum` may be [formulas](#formulas) instead of numb
 }
 ```
 
+#### Statuses
+
+An actor type may show true/false fields on its tokens and in the combat tracker while they are on, such as conditions (T-1615):
+
+```json
+"statuses": [
+  { "field": "conditions.prone", "label": "condition.prone", "icon": "icons/prone.svg" },
+  { "field": "conditions.poisoned", "label": "condition.poisoned", "icon": "icons/poisoned.svg" }
+]
+```
+
+- `field` is the path of a `boolean` field, not inside a list. `label` names the status in the token list, the combat tracker and the icon's tooltip. `icon` is an image of the plugin: SVG, PNG, JPEG, GIF, WebP or AVIF. Give it its own background: it shows on the map and on light panels alike.
+- Tokens show up to four icons, in the listed order, and a count of the rest. A secret field's status shows only to the GM and assistants.
+- Statuses follow the sheet once its changes are stored, within a few seconds.
+
 #### Item contributions
 
 An item can change its holder's numbers: worn armour raises defense, a prepared spell counts toward a limit. The item type declares what it **contributes**, and actor formulas read the totals over the actor's items as `@items.<name>`:
@@ -1265,6 +1280,29 @@ An attack rolls to hit, then its damage, doubled on a critical hit. One recipe d
 - `@roll.natural` is the die that counts of the first d20 term, so a natural 20 is `@roll.natural == 20` whatever the bonus. A roll without a d20 has none, and reading it is an error.
 - `actors` lists the actor types a recipe is for. The validator checks the recipe against those types only, refuses its buttons on sheets of other actor types, and the server refuses it for other actors. Handler recipes take `actors` too.
 
+#### Targets
+
+Members target tokens on the map: a token's menu and the token list offer **Target**, and T targets the selected token. A formula recipe that lists the actor types it may target sends the member's targets with the roll (T-1615):
+
+```json
+"attack": {
+  "target": ["character", "npc"],
+  "formula": { "attack": "1d20 + @derived.toHit", "damage": "1d8 + @derived.strMod" },
+  "outcomes": [
+    { "when": "@rolls.attack.natural == 20", "label": "outcome.crit" },
+    { "when": "@targets > 0 and @rolls.attack.total >= @target.derived.ac", "label": "outcome.hit" },
+    { "when": "@targets > 0", "label": "outcome.miss" }
+  ],
+  "card": "attack"
+}
+```
+
+- `@target` is the first target: its fields, `@target.derived.*`, `id`, `name` and `type`. `@targets` is how many there are, up to 20. The formulas, named values, outcomes and card read both.
+- Without targets, `@target` does not exist. Guard it with `@targets > 0`: `?:`, `and` and `or` read only the side they need.
+- Rolls never read a target's secret fields, nor derived values that read them, whoever rolls. The validator checks `@target` against each type in `target` without them.
+- The server takes only tokens of actors that the roller sees on the map, of a listed type, and refuses targets for recipes without `target`. Handler recipes take no targets.
+- A roll against several targets compares with the first only: roll again for each creature attacked. A card's [actions](#chat-cards) work on all of them.
+
 ### Custom dice
 
 `dice.json` declares dice that formulas use by name. Names are `d` followed by capitals or digits, such as `dF` or `dB2`:
@@ -1334,6 +1372,19 @@ A card in `cards/<name>.json` lays out a recipe's roll in chat:
 ```
 
 Each row's `value` is a formula that can read the roll (`@total`, `@roll.*`), the entity's data and `@args`. `outcome: true` shows the recipe's outcome. A component of the same name in `code/client` replaces the card's rendering.
+
+A card of a recipe that [targets](#targets) can offer **actions** on the targets, such as applying damage (T-1615):
+
+```json
+"apply": [
+  { "label": "card.applyDamage", "field": "hp.value", "amount": "-@rolls.damage.total" },
+  { "label": "card.applyHalf", "field": "hp.value", "amount": "-floor(@rolls.damage.total / 2)" }
+]
+```
+
+- `field` is a counter (`x-counter`) of each targeted type, not secret. `amount` is a formula, read like rows when the roll is made, that must give a whole number: negative lowers the counter. An action whose amount fails is not offered.
+- The card lists the targets, each with its actions for members who may edit that actor. An action steps the counter within its bounds, once per target, and the card then shows it done to everyone.
+- A card with actions may only be shown by recipes with `target`; at most 4 actions.
 
 A value that is a lang key is translated, like labels (T-1611). Build the key in the formula to show a stored value in the viewer's language: `{ "label": "card.damageType", "value": "'damage.' + @item.damageType" }` shows "Fire" from `"damage.fire": "Fire"`. Only a whole value is translated: in `@roll.resolved + ' ' + @item.damageType`, the type stays as stored, so give it a row of its own.
 

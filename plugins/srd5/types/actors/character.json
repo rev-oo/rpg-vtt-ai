@@ -3,6 +3,78 @@
   "label": "type.character",
   "controlledBy": "player",
   "sheet": "character",
+  "statuses": [
+    {
+      "field": "conditions.blinded",
+      "label": "condition.blinded",
+      "icon": "icons/blinded.svg"
+    },
+    {
+      "field": "conditions.charmed",
+      "label": "condition.charmed",
+      "icon": "icons/charmed.svg"
+    },
+    {
+      "field": "conditions.deafened",
+      "label": "condition.deafened",
+      "icon": "icons/deafened.svg"
+    },
+    {
+      "field": "conditions.frightened",
+      "label": "condition.frightened",
+      "icon": "icons/frightened.svg"
+    },
+    {
+      "field": "conditions.grappled",
+      "label": "condition.grappled",
+      "icon": "icons/grappled.svg"
+    },
+    {
+      "field": "conditions.incapacitated",
+      "label": "condition.incapacitated",
+      "icon": "icons/incapacitated.svg"
+    },
+    {
+      "field": "conditions.invisible",
+      "label": "condition.invisible",
+      "icon": "icons/invisible.svg"
+    },
+    {
+      "field": "conditions.paralyzed",
+      "label": "condition.paralyzed",
+      "icon": "icons/paralyzed.svg"
+    },
+    {
+      "field": "conditions.petrified",
+      "label": "condition.petrified",
+      "icon": "icons/petrified.svg"
+    },
+    {
+      "field": "conditions.poisoned",
+      "label": "condition.poisoned",
+      "icon": "icons/poisoned.svg"
+    },
+    {
+      "field": "conditions.prone",
+      "label": "condition.prone",
+      "icon": "icons/prone.svg"
+    },
+    {
+      "field": "conditions.restrained",
+      "label": "condition.restrained",
+      "icon": "icons/restrained.svg"
+    },
+    {
+      "field": "conditions.stunned",
+      "label": "condition.stunned",
+      "icon": "icons/stunned.svg"
+    },
+    {
+      "field": "conditions.unconscious",
+      "label": "condition.unconscious",
+      "icon": "icons/unconscious.svg"
+    }
+  ],
   "schema": {
     "type": "object",
     "properties": {

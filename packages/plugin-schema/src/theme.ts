@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { schemaUrl } from './common.js';
+import { PLUGIN_FILE, schemaUrl } from './common.js';
 
 // A module's `theme.json` (T-1602, ADR-076): the app's design tokens on the table page while
 // the module is on. Values are checked here, so the CSS built from them cannot break out of
@@ -32,14 +32,10 @@ const COLOR =
 const FONT_LIST = /^[A-Za-z0-9 ,'"_-]{1,200}$/;
 const FONT_NAME = /^[A-Za-z0-9 _-]{1,60}$/;
 const LENGTH = /^(?:0|\d{1,3}(?:\.\d{1,3})?(?:px|rem|em))$/;
-/** A file of the module, relative to its folder, without `..`. */
-const FILE = /^(?!.*(?:^|\/)\.\.?(?:\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$/;
-
-export const IMAGE_FILE = /\.(?:png|jpe?g|gif|webp|avif)$/i;
 export const FONT_FILE = /\.(?:woff2?|ttf|otf)$/i;
 
 const color = z.string().regex(COLOR).meta({ title: 'Colour' });
-const file = z.string().regex(FILE).meta({ title: 'Module file' });
+const file = z.string().regex(PLUGIN_FILE).meta({ title: 'Module file' });
 const length = z.string().regex(LENGTH).meta({ title: 'Length' });
 
 /**

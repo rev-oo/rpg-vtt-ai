@@ -13,10 +13,11 @@ import { withDefaults } from './data.js';
 import { computeDerived, type DerivedValues } from './derived.js';
 import { toCustomDice } from './dice.js';
 import { EngineError } from './errors.js';
-import { documentLayout, type DocumentLayout } from './layout.js';
+import { documentLayout, withoutSecrets, type DocumentLayout } from './layout.js';
 import { rollOptions, type OptionValue } from './options.js';
 import { rollRecipe, type RecipeResult } from './recipes.js';
 import { settingValues } from './settings.js';
+import { splitLayers } from './ydoc.js';
 
 export type EntityKind = 'actor' | 'item';
 
@@ -40,7 +41,22 @@ export interface RollRequest {
   items?: readonly HeldItem[];
   /** The item the roll is made with, for `@item.*` (ADR-063). */
   item?: RolledItem | undefined;
+  /** The actors the roll targets, in order: the first reads as `@target.*` (T-1615). */
+  targets?: readonly RolledTarget[];
   rng: Rng;
+}
+
+/**
+ * An actor a roll targets (T-1615): its data reads as `@target.<field>`, with its derived
+ * values, but never its secret fields, whoever rolls.
+ */
+export interface RolledTarget {
+  id: string;
+  name: string;
+  type: string;
+  data: Readonly<Record<string, unknown>>;
+  /** What it holds, for its derived values. */
+  items?: readonly HeldItem[];
 }
 
 /** An item a roll is made with: its data reads as `@item.<field>`, with its derived values. */
@@ -136,6 +152,22 @@ export function createRules(
     return { ...filled, derived, id, name, type: typeName };
   };
 
+  /**
+   * `@target` (T-1615): the actor's main fields with defaults, its derived values (those that
+   * read secret fields fail and are left out), and its id, name and type.
+   */
+  const targetScope = ({ id, name, type: typeName, data, items = [] }: RolledTarget) => {
+    const type = typeOf('actor', typeName);
+    const main = splitLayers(documentLayout(type.schema), data).main;
+    const filled = withDefaults(withoutSecrets(type.schema), main);
+    const derived = computeDerived(type.derived ?? {}, filled, {
+      settings,
+      items: totalsOf(items),
+      functions,
+    }).values;
+    return { ...filled, derived, id, name, type: typeName };
+  };
+
   const scopeOf = (
     kind: EntityKind,
     type: ActorType | ItemType,
@@ -177,7 +209,17 @@ export function createRules(
     },
     roll: (
       name,
-      { kind = 'actor', type: typeName, data, args = {}, options = {}, items = [], item, rng },
+      {
+        kind = 'actor',
+        type: typeName,
+        data,
+        args = {},
+        options = {},
+        items = [],
+        item,
+        targets = [],
+        rng,
+      },
     ) => {
       const recipe = Object.hasOwn(plugin.rolls, name) ? plugin.rolls[name] : undefined;
       if (!recipe) throw new EngineError('unknown_recipe', `There is no roll "${name}"`);
@@ -190,7 +232,19 @@ export function createRules(
           `The roll "${name}" is not for actors of type "${typeName}"`,
         );
       }
-      const entity = scopeOf(kind, typeOf(kind, typeName), data, args, items, item);
+      const aimed = recipe.target;
+      if (!aimed && targets.length > 0) {
+        throw new EngineError('bad_target', `The roll "${name}" takes no targets`);
+      }
+      const wrong = targets.find((target) => !aimed?.includes(target.type));
+      if (wrong) {
+        throw new EngineError('bad_target', `The roll "${name}" cannot target ${wrong.name}`);
+      }
+      const [first] = targets;
+      const entity = {
+        ...scopeOf(kind, typeOf(kind, typeName), data, args, items, item),
+        ...(aimed && { targets: targets.length, ...(first && { target: targetScope(first) }) }),
+      };
       const asked = recipe.options
         ? rollOptions(recipe.options, options, { scope: entity, functions })
         : undefined;

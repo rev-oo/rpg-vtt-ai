@@ -46,6 +46,43 @@
         "title": "Card row"
       }
     },
+    "apply": {
+      "description": "Buttons the card shows by each target of the roll, for those who may edit it; each steps a counter of the target once. Only for recipes with `target`.",
+      "maxItems": 4,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "title": "Text",
+            "description": "The button, such as \"Apply damage\"; a lang key or literal text."
+          },
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "The path of a counter (`x-counter`) of each type the recipe targets, such as `hp.value`."
+          },
+          "amount": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "title": "Formula",
+            "description": "How much to step the counter by, worked out when the roll is made: negative lowers it, such as `-@rolls.damage.total`. It reads what rows read."
+          }
+        },
+        "required": [
+          "label",
+          "field",
+          "amount"
+        ],
+        "additionalProperties": false,
+        "title": "Card action"
+      }
+    },
     "outcome": {
       "description": "Shows the recipe's outcome.",
       "type": "boolean"

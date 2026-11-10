@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 88%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 94%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1615` (targets and token statuses)
+- **Next task:** `T-1606` (interface review)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -72,6 +72,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-10 | T-1613 done (ADR-080): `@vtt/sdk/testing` gives handlers a fake `ctx` (`fakeHandler`: scripted or real rolls, bounded counters, recorded posts and steps) and loads a system's files for its rules (`loadTestSystem`); `@vtt/sdk/client/testing` renders overlays and panels in a test frame (`createTestFrame`) that sends events and records actions. Lint allows the kits only in plugin tests. Server tests can load a reference plugin's code packed by the CLI (`packedReferencePlugin`), which becomes a server dev dependency. dnd5e-srd and dice-3d test with the kits; rolling real formulas found that the death save had failed since T-1609 (`@derived.saveEdge`), so it now rolls `1d20 - @derived.d20Penalty`. |
 | 2026-11-10 | T-1614 done: a manifest `attribution` (text and an optional `http(s)` link) shows on the Plugins page and in each compendium entry's preview; the admin plugin view and compendium packs return it. Pack entries accept collections as rows keyed by id (the stored form), keeping row ids and sort keys. `dnd5e-srd` is renamed `srd5` (folder, id, package, tests, docs; the study answers Q2), and its SRD credit moves from the description to its attribution.                                                                                                                                                                                                                                                           |
 | 2026-11-10 | T-1611 done (ADR-081): `enumLabels` gives type fields and settings a lang key per value, so stored values stay plain; card rows translate values that are lang keys; server code posts by lang key with parameters (`ctx.chat.post({ key, params })`), each viewer reading it in their language while the message stores the English (`chat_messages.translation`). String settings may be colours (`"format": "colour"`, a colour picker), and `vtt-plugin types` writes typed settings for plugin code. srd5 drops `saveText()`, posts its rest and death save messages by key and ships pt-BR; dice-3d labels its colours and reads its settings typed.                                                                    |
+| 2026-11-10 | T-1615 done (ADR-082): members target tokens on the map (token menu, token list, T); a formula recipe that lists the actor types it `target`s sends them, reads the first as `@target` (never its secret fields) and counts them as `@targets`, and its card offers actions such as applying damage (`apply`), once per target, to members who may edit it. Actor types show true/false fields as `statuses` with icons on tokens and in the combat tracker. srd5 attacks show Hit or Miss against the target's AC, apply damage or half, and its conditions show on tokens.                                                                                                                                                  |
 
 ---
 
@@ -514,7 +515,7 @@ The manifest names the plugin (`id`, `name`, `version`), declares the core API r
 
 ### 8.4 Actor and item types
 
-A type file declares the entity's data as a subset of JSON Schema, derived values (formulas without dice, never stored), its sheet, for actors who may create it (`controlledBy`), and for items the group that item lists show them under (`group`, `labelPlural`, `order`, ADR-061). `x-` annotations choose how the core stores each field, which is what the live document model (§9) builds on: `x-kind` (`longText`, `richText`, `collection`, `image`), `x-counter` (§9.5) and `x-layer: "secret"` (§9.3). `enumLabels` gives each `enum` value a lang key to show, so stored values stay plain (ADR-081). Rules: [guide, Actor and item types](docs/plugin-authoring.md#actor-and-item-types); keys: [reference, Actor type](docs/plugin-reference.md#actor-type) and [Item type](docs/plugin-reference.md#item-type).
+A type file declares the entity's data as a subset of JSON Schema, derived values (formulas without dice, never stored), its sheet, for actors who may create it (`controlledBy`), and for items the group that item lists show them under (`group`, `labelPlural`, `order`, ADR-061). `x-` annotations choose how the core stores each field, which is what the live document model (§9) builds on: `x-kind` (`longText`, `richText`, `collection`, `image`), `x-counter` (§9.5) and `x-layer: "secret"` (§9.3). `enumLabels` gives each `enum` value a lang key to show, so stored values stay plain (ADR-081). An actor type may list true/false fields as `statuses`, each with an icon, shown on its tokens and in the combat tracker while on (ADR-082). Rules: [guide, Actor and item types](docs/plugin-authoring.md#actor-and-item-types); keys: [reference, Actor type](docs/plugin-reference.md#actor-type) and [Item type](docs/plugin-reference.md#item-type).
 
 ### 8.5 Sheets (layout JSON)
 
@@ -526,7 +527,7 @@ The server scopes plugin stylesheets with PostCSS (in `plugin-schema`, ADR-021) 
 
 ### 8.7 Rolls
 
-`rolls.json` holds recipes: a formula rolled on the server against the entity's current data, ordered outcomes, and an optional chat card. Buttons pass arguments as `@args.*`. A `handler` recipe calls a function in `code/server` instead (§8.10, ADR-047). Rules: [guide, Rolls](docs/plugin-authoring.md#rolls); keys: [reference, Roll recipes](docs/plugin-reference.md#rolls).
+`rolls.json` holds recipes: a formula rolled on the server against the entity's current data, ordered outcomes, and an optional chat card. Buttons pass arguments as `@args.*`. A `handler` recipe calls a function in `code/server` instead (§8.10, ADR-047). A formula recipe may list the actor types it `target`s: it then carries the tokens the roller targets on the map, and reads the first as `@target` and their count as `@targets`, never their secret fields (ADR-082). Rules: [guide, Rolls](docs/plugin-authoring.md#rolls); keys: [reference, Roll recipes](docs/plugin-reference.md#rolls).
 
 ### 8.8 Custom dice
 
@@ -559,7 +560,7 @@ Rules:
 
 ### 8.11 Chat cards
 
-A card lays out a recipe's roll in chat with formula rows that read the roll; a client component of the same name replaces it. A row value that is a lang key is translated, as labels are (ADR-081). [Guide, Chat cards](docs/plugin-authoring.md#chat-cards); [reference, Chat card](docs/plugin-reference.md#card).
+A card lays out a recipe's roll in chat with formula rows that read the roll; a client component of the same name replaces it. A row value that is a lang key is translated, as labels are (ADR-081). A card of a recipe that targets may offer actions (`apply`) that step a counter of each target, such as applying damage, once per target and only for members who may edit it (ADR-082). [Guide, Chat cards](docs/plugin-authoring.md#chat-cards); [reference, Chat card](docs/plugin-reference.md#card).
 
 ### 8.12 Settings
 
@@ -888,7 +889,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P12, and its Q2. A manifest `attribution` (text and a link) shows on the Plugins page and in the Compendium beside each entry from the plugin's packs. Packs accept collections in the stored form (maps by id) as well as lists. Rename `dnd5e-srd` to `srd5` (folder, id, tests and docs), and give it its SRD attribution.
   - **Done when:** tests cover the attribution and both pack forms; e2e sees the attribution in the Compendium; nothing named `dnd5e-srd` is left.
 
-- [ ] **T-1615 · Targets and token statuses**
+- [x] **T-1615 · Targets and token statuses**
   - **Deps:** T-1608
   - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14 and P15. A roll may carry the viewer's selected tokens as targets; recipes read `@target` (such as its AC) and cards offer "apply damage" to the targets, for those who may edit them. An actor type declares boolean fields as statuses with an icon; tokens and the combat tracker show those that are on. `srd5` compares attacks with the target's AC and shows its conditions on tokens.
   - **Done when:** tests cover targets, their rights and statuses; e2e attacks a selected token, applies damage and sees a condition on the token.
@@ -1104,6 +1105,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-079 | [Declared module frames and system dice](docs/adr/ADR-079-declared-module-frames.md)                                                            | Accepted                                   |
 | ADR-080 | [Testing kits for plugin code](docs/adr/ADR-080-plugin-testing-kits.md)                                                                         | Accepted                                   |
 | ADR-081 | [Labels for values, and translated plugin texts](docs/adr/ADR-081-value-labels-and-translation.md)                                              | Accepted                                   |
+| ADR-082 | [Targets and token statuses](docs/adr/ADR-082-targets-and-token-statuses.md)                                                                    | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

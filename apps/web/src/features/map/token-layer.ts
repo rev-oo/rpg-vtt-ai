@@ -19,7 +19,29 @@ export interface TokenHandlers {
 
 const COLORS = [0xb45309, 0x15803d, 0x1d4ed8, 0x7e22ce, 0xbe123c, 0x0f766e];
 const SELECTED = 0xfacc15;
+/** The ring and ticks around a token the member targets (T-1615). */
+const TARGETED = 0xdc2626;
+/** Status icons shown on a token at most; more show as a count. */
+const MAX_STATUS_ICONS = 4;
 const DOUBLE_TAP_MS = 350;
+
+/** A ring with four ticks around a targeted token, outside its border (T-1615). */
+function targetMark(radius: number): Graphics {
+  const ring = radius + 5;
+  const mark = new Graphics().circle(0, 0, ring).stroke({ width: 3, color: TARGETED });
+  for (const [x, y] of [
+    [1, 0],
+    [-1, 0],
+    [0, 1],
+    [0, -1],
+  ] as const) {
+    mark
+      .moveTo(x * (ring - 4), y * (ring - 4))
+      .lineTo(x * (ring + 6), y * (ring + 6))
+      .stroke({ width: 3, color: TARGETED });
+  }
+  return mark;
+}
 
 /** A colour that stays with a token across redraws. */
 function colorOf(id: string): number {
@@ -51,6 +73,8 @@ export class TokenLayer {
     area: Size,
     selectedId: string | null,
     handlers: TokenHandlers,
+    /** The tokens the member targets (T-1615). */
+    targets: ReadonlySet<string> = new Set(),
   ): void {
     for (const child of this.container.removeChildren()) child.destroy({ children: true });
     const radius = grid.gridSize * 0.42;
@@ -68,6 +92,7 @@ export class TokenLayer {
             color: token.id === selectedId ? SELECTED : 0xffffff,
           }),
       );
+      if (targets.has(token.id)) piece.addChild(targetMark(radius));
       if (token.imageUrl) this.addImage(piece, token.imageUrl, radius);
       else {
         const initial = new Text({
@@ -88,6 +113,7 @@ export class TokenLayer {
       label.anchor.set(0.5, 0);
       label.y = radius + 2;
       piece.addChild(label);
+      this.addStatuses(piece, token, radius);
       this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
@@ -101,7 +127,7 @@ export class TokenLayer {
     }
   }
 
-  private addImage(piece: Container, url: string, radius: number): void {
+  private texture(url: string): Promise<Texture | null> {
     let texture = this.textures.get(url);
     if (!texture) {
       texture = loadImage(url).then(
@@ -110,7 +136,52 @@ export class TokenLayer {
       );
       this.textures.set(url, texture);
     }
-    void texture.then((loaded) => {
+    return texture;
+  }
+
+  /**
+   * The actor's statuses that are on (T-1615): small icons along the token's top edge, the
+   * first few with a count of the rest. The token list names them for screen readers.
+   */
+  private addStatuses(piece: Container, token: TokenView, radius: number): void {
+    const shown = token.statuses.slice(0, MAX_STATUS_ICONS);
+    if (shown.length === 0) return;
+    const size = Math.max(10, radius * 0.5);
+    const extra = token.statuses.length - shown.length;
+    const count = shown.length + (extra > 0 ? 1 : 0);
+    const left = -((count - 1) * size) / 2;
+    shown.forEach((status, index) => {
+      const slot = new Container();
+      slot.position.set(left + index * size, -radius);
+      slot.addChild(
+        new Graphics()
+          .circle(0, 0, size / 2)
+          .fill(0x111827)
+          .stroke({ width: 1, color: 0xffffff }),
+      );
+      piece.addChild(slot);
+      void this.texture(status.iconUrl).then((loaded) => {
+        if (!loaded || slot.destroyed || this.destroyed) return;
+        const icon = new Sprite(loaded);
+        icon.scale.set((size * 0.75) / Math.max(loaded.width, loaded.height));
+        icon.anchor.set(0.5);
+        slot.addChild(icon);
+        this.viewport.dirty = true;
+      });
+    });
+    if (extra > 0) {
+      const more = new Text({
+        text: `+${String(extra)}`,
+        style: { fill: 0xffffff, fontSize: size * 0.6, stroke: { color: 0x111827, width: 3 } },
+      });
+      more.anchor.set(0.5);
+      more.position.set(left + shown.length * size, -radius);
+      piece.addChild(more);
+    }
+  }
+
+  private addImage(piece: Container, url: string, radius: number): void {
+    void this.texture(url).then((loaded) => {
       if (!loaded || piece.destroyed || this.destroyed) return;
       const sprite = new Sprite(loaded);
       const scale = (radius * 2) / Math.min(loaded.width, loaded.height);

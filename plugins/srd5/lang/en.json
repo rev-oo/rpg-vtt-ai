@@ -394,5 +394,10 @@
   "type.weapon": "Weapon",
   "type.weapons": "Weapons",
   "weapon.martial": "Martial",
-  "weapon.simple": "Simple"
+  "weapon.simple": "Simple",
+  "outcome.hit": "Hit",
+  "outcome.miss": "Miss",
+  "card.applyDamage": "Apply damage",
+  "card.applyHalf": "Apply half",
+  "card.applyEffect": "Apply"
 }

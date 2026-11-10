@@ -518,6 +518,7 @@ const token = (id: string, name: string, fields: Partial<TokenView> = {}): Token
   row: 3,
   hidden: false,
   movable: false,
+  statuses: [],
   ...fields,
 });
 
@@ -565,6 +566,29 @@ describe('tokens on the map (FR-MAP-03)', () => {
       serverEvent({ type: 'token.updated', tableId: 't1', payload: { sceneId: 's1' } }),
     );
     expect(await tokenButton(/^Guard/)).toBeInTheDocument();
+  });
+
+  it('lets members target tokens of actors, and names the statuses that are on (T-1615)', async () => {
+    const prone = { field: 'prone', label: 'Prone', iconUrl: '/plugins/tiny-d20/icons/prone.svg' };
+    const tokens = [
+      token('k1', 'Goblin', { actorId: 'a2', statuses: [prone] }),
+      token('k2', 'Boulder', { column: 0, row: 0 }),
+    ];
+    openTable('player', () => [scene('s1', 'Cave', true)], {
+      'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
+    });
+    const user = userEvent.setup();
+    const goblin = await tokenButton(/^Goblin/);
+    expect(goblin).toHaveTextContent('Statuses: Prone');
+    await user.click(goblin);
+    const target = screen.getByRole('button', { name: 'Target Goblin' });
+    await user.click(target);
+    expect(await tokenButton(/^Goblin .* · targeted/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Stop targeting Goblin' }));
+    expect(goblin).not.toHaveTextContent('targeted');
+    // A token alone has no actor to target.
+    await user.click(await tokenButton(/^Boulder/));
+    expect(screen.queryByRole('button', { name: 'Target Boulder' })).toBeNull();
   });
 
   it('lets the GM place, hide and remove tokens and open their actors', async () => {

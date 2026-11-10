@@ -1,6 +1,7 @@
 import { and, desc, eq, lt, or, sql } from 'drizzle-orm';
 
 import { isGmLike, type Subject } from '@vtt/shared';
+import type { RecipeCard } from '@vtt/shared/api';
 
 import { generateId } from '../../domain/auth/tokens.js';
 import type { DbOrTx } from '../client.js';
@@ -82,6 +83,15 @@ export function updateChatMessageText(
       .returning()
       .get()
   );
+}
+
+/** Replaces a card message's card, as when one of its actions was done (T-1615). */
+export function updateChatMessageCard(
+  db: DbOrTx,
+  id: string,
+  card: RecipeCard,
+): ChatMessageRow | undefined {
+  return db.update(chatMessages).set({ card }).where(eq(chatMessages.id, id)).returning().get();
 }
 
 /** Removes a message for good. */

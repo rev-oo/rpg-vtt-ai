@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- Members can target tokens on the map: from a token's menu, the token list, or T on the selected token (T-1615). A system's attacks can then compare with the target, such as its Armor Class, and their chat cards offer buttons such as **Apply damage** to members who may change the target. Systems can show conditions as icons on tokens and in the combat tracker. The D&D 5e SRD system shows Hit or Miss, applies damage or half of it, and shows its 14 conditions.
+
 - Plugins can be translated end to end (T-1611). A field or setting's choices show labels in the viewer's language (`enumLabels`) while the stored values stay as they are; chat card rows translate values that are lang keys; and plugin server code can post messages by lang key, so each member reads them in their own language. Settings can be colours, picked with a colour picker, and `vtt-plugin types` gives plugin code its settings typed. The `srd5` system is now in Portuguese (Brazil) too, and `dice-3d` names its colours in both languages.
 
 - Plugins can credit their content: a manifest `attribution` (text and a link) shows on the Plugins page and with each of the plugin's entries in the Compendium. The `srd5` system shows the SRD 5.2's credit there. Compendium packs may give collections as rows keyed by id, as stored data has them, as well as lists (T-1614).

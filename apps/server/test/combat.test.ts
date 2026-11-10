@@ -139,6 +139,7 @@ describe('encounters (T-0801)', () => {
         name: 'Shadow',
         initiative: 10,
         hidden: false,
+        statuses: [],
       },
     ]);
     // The hidden combatant has the turn, so players do not learn whose it is.

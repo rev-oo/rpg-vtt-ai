@@ -7,6 +7,7 @@ import {
   MAX_CHAT_PAGE_SIZE,
   MAX_CHAT_TEXT,
   MAX_FORMULA_LENGTH,
+  MAX_ROLL_TARGETS,
   MAX_WHISPER_RECIPIENTS,
 } from './constants.js';
 import { rollSchema } from './rolls.js';
@@ -60,6 +61,11 @@ export const rollRequestBody = z
         options: z
           .record(z.string().max(64), z.union([z.number(), z.string().max(200)]))
           .default({}),
+        /**
+         * The tokens the roller targets (T-1615), for a recipe that targets actors: the first is
+         * `@target`. Each must be a token of an actor the roller can see on the map.
+         */
+        targets: z.array(z.uuid()).max(MAX_ROLL_TARGETS).default([]),
       })
       .optional(),
     ...messageTarget,
@@ -100,6 +106,25 @@ export const cardRowSchema = z.object({
   error: z.string().optional(),
 });
 
+/** A card's action, worked out when it was rolled (T-1615): steps `field` of each target. */
+export const cardActionSchema = z.object({
+  label: z.string(),
+  field: z.string(),
+  amount: z.number(),
+  /** Why the amount could not be worked out; the action is not offered. */
+  error: z.string().optional(),
+});
+
+/** An actor a roll targeted (T-1615), as it was when it was rolled. */
+export const cardTargetSchema = z.object({
+  tokenId: z.string(),
+  actorId: z.string(),
+  name: z.string(),
+  /** The card's actions done to it, by their index. */
+  applied: z.array(z.number().int()),
+});
+export type CardTarget = z.infer<typeof cardTargetSchema>;
+
 /**
  * The `card` of a recipe roll message: what the plugin engine resolved when it rolled.
  * Texts are the plugin's lang keys; `text` of the message is the plain-text fallback
@@ -119,8 +144,11 @@ export const recipeCardSchema = z.object({
       title: z.string(),
       rows: z.array(cardRowSchema),
       outcome: z.boolean(),
+      apply: z.array(cardActionSchema).optional(),
     })
     .nullable(),
+  /** The actors the roll targeted, in order; absent on rolls from before T-1615. */
+  targets: z.array(cardTargetSchema).optional(),
 });
 export type RecipeCard = z.infer<typeof recipeCardSchema>;
 
@@ -177,6 +205,20 @@ export type ChatMessage = z.infer<typeof chatMessageSchema>;
 /** `PATCH /messages/:id`: the author's new text (FR-CHAT-09). */
 export const chatEditBody = z.object({ text: z.string().trim().min(1).max(MAX_CHAT_TEXT) });
 export type ChatEditInput = z.input<typeof chatEditBody>;
+
+/**
+ * `POST /messages/:id/apply`: does one of a card's actions to one of its targets (T-1615), once,
+ * for a member who may edit that target.
+ */
+export const cardApplyBody = z.object({
+  target: z
+    .number()
+    .int()
+    .min(0)
+    .max(MAX_ROLL_TARGETS - 1),
+  action: z.number().int().min(0).max(9),
+});
+export type CardApplyInput = z.input<typeof cardApplyBody>;
 
 export const chatMessageResponseSchema = z.object({ message: chatMessageSchema });
 export const chatHistoryResponseSchema = z.object({

@@ -36,6 +36,15 @@ const item = z
     'Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`.',
   );
 
+/** The actor types a recipe may target (T-1615). */
+const target = z
+  .array(name)
+  .min(1)
+  .optional()
+  .describe(
+    'Actor types the roll may target: it then carries the tokens the roller targets. Its formulas, outcomes and card read the first target as `@target` (its fields, `derived`, `id`, `name` and `type`) and how many there are as `@targets`; `@target` exists only when `@targets > 0`.',
+  );
+
 /** The most options one recipe asks for, and choices one option offers (T-1609). */
 export const MAX_ROLL_OPTIONS = 10;
 
@@ -140,6 +149,7 @@ export const formulaRecipeSchema = z
     /** A file in `cards/`, without `.json`. */
     card: name.optional().describe('A card in `cards/`, without `.json`, to show the roll with.'),
     item,
+    target,
     then: name
       .optional()
       .describe(

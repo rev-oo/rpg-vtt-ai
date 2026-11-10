@@ -43,6 +43,7 @@ import {
   repairDocument,
   storeDocument,
   type DefinitionOf,
+  type StoredActor,
 } from '../domain/documents.js';
 import { isTableWritable } from '../domain/entities.js';
 import { decodeSnapshot, recordSnapshot, type SnapshotRow } from '../domain/history.js';
@@ -175,6 +176,8 @@ interface CollabOptions {
   timing?: CollabTiming | undefined;
   /** The system's plugin code, whose shared functions counter bounds may call (T-1610). */
   code?: ((systemId: string) => Promise<LoadedCode | undefined>) | undefined;
+  /** After an actor's document is stored: its tokens may show other statuses (T-1615). */
+  onActorStored?: ((stored: StoredActor) => void) | undefined;
 }
 
 /** The Yjs document server and the sockets connected to it. */
@@ -194,7 +197,7 @@ export const RECHECK_INTERVAL_MS = 30_000;
  * Read access opens the document read-only: Hocuspocus then drops the client's updates.
  */
 function createHocuspocus(
-  { db, sessions, definition, now, timing = COLLAB_TIMING, code }: CollabOptions,
+  { db, sessions, definition, now, timing = COLLAB_TIMING, code, onActorStored }: CollabOptions,
   logger: FastifyBaseLogger,
   unloads: DelayedUnloads,
 ): { hocuspocus: Hocuspocus<CollabContext>; recheck: () => void } {
@@ -278,11 +281,12 @@ function createHocuspocus(
         }
       }
       editors.delete(document);
-      storeDocument(db, ref, document, {
+      const stored = storeDocument(db, ref, document, {
         definition,
         live: (name) => instance.documents.get(name),
         now: now(),
       });
+      if (stored) onActorStored?.(stored);
       return Promise.resolve();
     },
     connected: ({ documentName }) => {

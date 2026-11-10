@@ -24,6 +24,8 @@ export const RESERVED_ROOTS = [
   'let',
   'rolls',
   'options',
+  'target',
+  'targets',
 ] as const;
 
 /** What `@roll` and each `@rolls.<name>` hold (T-1608). */
@@ -37,6 +39,12 @@ export const ROLL_KEYS: ReadonlySet<string> = new Set([
 
 /** What `@item` names in a row of an `items` node (ADR-063). */
 export const ITEM_KEYS: ReadonlySet<string> = new Set(['id', 'name', 'type']);
+
+/** An entity's fields and derived names, for `@item` and `@target`. */
+export interface EntityShape {
+  schema: FieldSchema;
+  derived: ReadonlySet<string>;
+}
 
 /** What `@` references may name in one place a formula appears. */
 export interface FormulaScope {
@@ -55,7 +63,7 @@ export interface FormulaScope {
    * `@item`: in a row of an `items` node, its `id`, `name` and `type` (`true`); in a recipe
    * made with an item, also that item type's fields and `@item.derived.*`.
    */
-  item?: true | { schema: FieldSchema; derived: ReadonlySet<string> } | undefined;
+  item?: true | EntityShape | undefined;
   /** The row schema of the enclosing `list` (`@row.*`); `unchecked` when it is unknown. */
   row?: FieldSchema | 'unchecked' | undefined;
   /** `@args.*`: any key, since arguments come from roll buttons. */
@@ -68,6 +76,11 @@ export interface FormulaScope {
   rolls?: ReadonlySet<string> | undefined;
   /** `@options.<name>`: what the app asked for when the button was pressed (T-1609). */
   options?: ReadonlySet<string> | undefined;
+  /**
+   * `@target`: in a recipe that targets actors, one target type's fields, `@target.derived.*`,
+   * `id`, `name` and `type`; and `@targets`, how many there are (T-1615).
+   */
+  target?: EntityShape | undefined;
   settings: ReadonlySet<string>;
 }
 
@@ -105,6 +118,14 @@ function resolvesIn(schema: FieldSchema, segments: readonly PathSegment[], isRow
 const onlyName = (path: readonly PathSegment[], names: ReadonlySet<string> | undefined): boolean =>
   path.length === 1 && path[0]?.kind === 'field' && names?.has(path[0].name) === true;
 
+/** `@item.<…>` or `@target.<…>`: its `id`, `name` or `type`, a derived value, or a field of the entity. */
+function inEntity(shape: EntityShape, path: readonly PathSegment[]): boolean {
+  if (onlyName(path, ITEM_KEYS)) return true;
+  const [first, ...rest] = path;
+  if (first?.kind === 'field' && first.name === 'derived') return onlyName(rest, shape.derived);
+  return resolvesIn(shape.schema, path);
+}
+
 function referenceExists(name: string, path: readonly PathSegment[], scope: FormulaScope): boolean {
   switch (name) {
     case 'derived':
@@ -115,13 +136,13 @@ function referenceExists(name: string, path: readonly PathSegment[], scope: Form
       return scope.data === undefined || onlyName(path, scope.items);
     case 'item': {
       if (scope.item === undefined) return false;
-      if (onlyName(path, ITEM_KEYS)) return true;
-      if (scope.item === true) return false;
-      const [first, ...rest] = path;
-      if (first?.kind === 'field' && first.name === 'derived')
-        return onlyName(rest, scope.item.derived);
-      return resolvesIn(scope.item.schema, path);
+      if (scope.item === true) return onlyName(path, ITEM_KEYS);
+      return inEntity(scope.item, path);
     }
+    case 'target':
+      return scope.target !== undefined && inEntity(scope.target, path);
+    case 'targets':
+      return scope.target !== undefined && path.length === 0;
     case 'args':
       return scope.args === true && path.length > 0;
     case 'row':

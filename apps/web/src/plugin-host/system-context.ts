@@ -63,6 +63,12 @@ export const TableSystemContext = createContext<TableSystem>({ status: 'loading'
 
 export const useSystem = (): TableSystem => useContext(TableSystemContext);
 
+/** The system's texts in the member's language; texts as they are until it is ready. */
+export function useSystemText(): (text: string) => string {
+  const system = useSystem();
+  return system.status === 'ready' ? system.translate : (text) => text;
+}
+
 /** The table system's custom dice, as module frames get them (T-1612): none until it loads. */
 export function systemDice(system: TableSystem): Record<string, SystemDie> {
   if (system.status !== 'ready') return {};

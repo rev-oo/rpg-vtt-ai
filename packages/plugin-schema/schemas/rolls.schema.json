@@ -286,6 +286,16 @@
               "title": "Name"
             }
           },
+          "target": {
+            "description": "Actor types the roll may target: it then carries the tokens the roller targets. Its formulas, outcomes and card read the first target as `@target` (its fields, `derived`, `id`, `name` and `type`) and how many there are as `@targets`; `@target` exists only when `@targets > 0`.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+              "title": "Name"
+            }
+          },
           "then": {
             "description": "A handler in `code/server`, run after the roll is posted. It gets the result, the item and the options, and can step counters, such as spending a spell slot.",
             "type": "string",

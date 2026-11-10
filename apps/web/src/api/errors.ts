@@ -16,6 +16,8 @@ const MESSAGES: Partial<Record<string, MessageKey>> = {
   asset_too_large: 'assets.tooLarge',
   asset_quota_exceeded: 'assets.quota',
   unknown_asset: 'assets.unknown',
+  unknown_target: 'targets.unknown',
+  already_applied: 'targets.alreadyApplied',
 };
 
 /** A user-facing message for a failed request. */

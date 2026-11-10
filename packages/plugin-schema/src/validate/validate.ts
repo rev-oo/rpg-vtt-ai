@@ -4,7 +4,7 @@ import { CORE_API_VERSION } from '@vtt/shared';
 
 import type { Card } from '../cards.js';
 import type { Combat } from '../combat.js';
-import { DIE_NAME, IDENTIFIER, LOCALE, NAME } from '../common.js';
+import { DIE_NAME, IDENTIFIER, IMAGE_FILE, LOCALE, NAME } from '../common.js';
 import { scopeCss } from '../css/scope.js';
 import type { Die } from '../dice.js';
 import { PLUGIN_FILES, type PluginFileKind, pluginFileKind } from '../json-schema.js';
@@ -15,8 +15,8 @@ import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
 import { COLOUR, settingsOfScope, type Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
-import { FONT_FILE, IMAGE_FILE, type Theme } from '../theme.js';
-import type { ActorType, FieldSchema, ItemType } from '../types.js';
+import { FONT_FILE, type Theme } from '../theme.js';
+import { STATUS_ICON_FILE, type ActorType, type FieldSchema, type ItemType } from '../types.js';
 
 import {
   checkData,
@@ -35,6 +35,17 @@ import {
 } from './formulas.js';
 import type { JsonPath, PluginIssue, PluginIssueCode } from './issues.js';
 import { shapeIssues } from './shape.js';
+
+/** A type's data without its secret fields: what other actors' rolls read of it (T-1615). */
+function mainLayer(schema: FieldSchema): FieldSchema {
+  if (schema.properties) {
+    const kept = Object.entries(schema.properties)
+      .filter(([, field]) => field['x-layer'] !== 'secret')
+      .map(([key, field]) => [key, mainLayer(field)] as const);
+    return { ...schema, properties: Object.fromEntries(kept) };
+  }
+  return schema.items ? { ...schema, items: mainLayer(schema.items) } : schema;
+}
 
 /** Every file of a plugin, parsed and checked; what the registry and the engine use. */
 export interface PluginDefinition {
@@ -367,6 +378,33 @@ export function validatePlugin(
     }
   };
 
+  /** An actor type's statuses (T-1615): true/false fields, each once, with an image. */
+  const checkStatuses = (entry: TypeEntry, type: ActorType) => {
+    const fields = new Set<string>();
+    type.statuses?.forEach((status, index) => {
+      const at = ['statuses', index];
+      useText(status.label, entry.file, [...at, 'label']);
+      const field = fieldAt(type.schema, status.field, false);
+      if (!field)
+        error('unknown_field', entry.file, [...at, 'field'], {
+          field: status.field,
+          scope: entry.label,
+        });
+      else if (field.type !== 'boolean')
+        error('field_mismatch', entry.file, [...at, 'field'], {
+          field: status.field,
+          expected: 'a true/false field',
+        });
+      if (fields.has(status.field))
+        error('duplicate_id', entry.file, [...at, 'field'], { id: status.field });
+      fields.add(status.field);
+      if (!files.has(status.icon))
+        error('missing_file', entry.file, [...at, 'icon'], { file: status.icon });
+      else if (!STATUS_ICON_FILE.test(status.icon))
+        error('theme_file', entry.file, [...at, 'icon'], { file: status.icon, expected: 'image' });
+    });
+  };
+
   // 2. Types: data schemas, derived values and their order.
   const types: TypeEntry[] = [
     ...Object.entries(actorTypes).map(([name, type]) => ({
@@ -431,7 +469,8 @@ export function validatePlugin(
       error('derived_cycle', file, ['derived', cycle[0]], { cycle: cycle.join(' → ') });
     if (!names.sheet?.has(type.sheet))
       error('missing_target', file, ['sheet'], { target: 'sheet', name: type.sheet });
-    if (!('controlledBy' in type)) checkContributions(entry, type);
+    if ('controlledBy' in type) checkStatuses(entry, type);
+    else checkContributions(entry, type);
   }
 
   // 3. Sheets, checked against every type that uses them.
@@ -659,6 +698,21 @@ export function validatePlugin(
 
   // 4. Roll recipes, checked against the types whose sheets roll them.
   const cardUsers = new Map<string, FormulaScope[]>();
+  /** The recipes that show each card, with the actor types they target, if they target. */
+  const cardTargets = new Map<string, { recipe: string; types: string[] | undefined }[]>();
+  /** What `@target` reads of an actor type: its main fields and the derived values of those. */
+  const targetShape = (type: string) => {
+    const declared = actorTypes[type];
+    const schema = declared ? mainLayer(declared.schema) : { type: 'object' as const };
+    const derived = Object.entries(declared?.derived ?? {})
+      .filter(
+        ([, source]) =>
+          declared !== undefined &&
+          secretReads(source, declared.schema, declared.derived ?? {}).length === 0,
+      )
+      .map(([derivedName]) => derivedName);
+    return { schema, derived: new Set(derived) };
+  };
   for (const [name, recipe] of Object.entries(rolls)) {
     const file = 'rolls.json';
     useText(recipe.label, file, [name, 'label']);
@@ -680,6 +734,13 @@ export function validatePlugin(
     }
     if (recipe.then !== undefined && !hasCode)
       error('code_required', file, [name, 'then'], { feature: `The roll "${name}"` });
+    recipe.target?.forEach((type, index) => {
+      if (!Object.hasOwn(actorTypes, type))
+        error('missing_target', file, [name, 'target', index], {
+          target: 'actor type',
+          name: type,
+        });
+    });
     // A recipe for some actor types is checked against those, whether or not a sheet rolls it.
     const users = recipe.actors
       ? actorEntries.filter((entry) => recipe.actors?.includes(entry.name))
@@ -691,7 +752,7 @@ export function validatePlugin(
     ).map((scope) => ({ ...scope, args: true }));
     // A roll made with an item reads it as `@item`, checked against each of its types.
     const held = (recipe.item ?? []).filter((type) => Object.hasOwn(itemTypes, type));
-    const scopes = recipe.item
+    const made = recipe.item
       ? rollers.flatMap((scope) =>
           held.map((type) => ({
             ...scope,
@@ -703,6 +764,23 @@ export function validatePlugin(
           })),
         )
       : rollers;
+    // A roll that targets actors reads the first as `@target`, checked against each type
+    // without its secret fields, which rolls never read (T-1615).
+    const aimed = (recipe.target ?? []).filter((type) => Object.hasOwn(actorTypes, type));
+    const scopes = recipe.target
+      ? made.flatMap((scope) =>
+          aimed.map((type) => ({
+            ...scope,
+            label: `${scope.label} targeting actor type "${type}"`,
+            target: targetShape(type),
+          })),
+        )
+      : made;
+    if (recipe.card !== undefined)
+      cardTargets.set(recipe.card, [
+        ...(cardTargets.get(recipe.card) ?? []),
+        { recipe: name, types: recipe.target ? aimed : undefined },
+      ]);
     // What the app asks for when the button is pressed (T-1609).
     const options = Object.entries(recipe.options ?? {});
     const optionNames = new Set(options.map(([optionName]) => optionName));
@@ -794,6 +872,35 @@ export function validatePlugin(
       useText(row.label, file, ['rows', index, 'label']);
       for (const scope of scopes)
         formula(row.value, { ...scope, roll: true }, false, file, ['rows', index, 'value']);
+    });
+    // Actions step a counter of each target (T-1615): the recipes showing the card target.
+    const shownBy = card.apply ? (cardTargets.get(name) ?? []) : [];
+    for (const { recipe, types } of shownBy) {
+      if (!types) error('missing_key', 'rolls.json', [recipe], { key: 'target' });
+    }
+    const targetTypes = new Set(shownBy.flatMap(({ types }) => types ?? []));
+    card.apply?.forEach((action, index) => {
+      const at = ['apply', index];
+      useText(action.label, file, [...at, 'label']);
+      for (const scope of scopes)
+        formula(action.amount, { ...scope, roll: true }, false, file, [...at, 'amount']);
+      for (const type of targetTypes) {
+        const field = fieldAt(
+          mainLayer(actorTypes[type]?.schema ?? { type: 'object' }),
+          action.field,
+          false,
+        );
+        if (!field)
+          error('unknown_field', file, [...at, 'field'], {
+            field: action.field,
+            scope: `actor type "${type}"`,
+          });
+        else if (field['x-counter'] !== true)
+          error('field_mismatch', file, [...at, 'field'], {
+            field: action.field,
+            expected: 'a counter (x-counter)',
+          });
+      }
     });
   }
   for (const [name, die] of Object.entries(dice)) useText(die.label, 'dice.json', [name, 'label']);

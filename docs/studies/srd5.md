@@ -91,9 +91,13 @@ The plugin is English only for now (see Q3).
 
 An attack cannot compare to the target's AC, a save spell cannot ask the targets to save, and damage cannot be applied to a creature's Hit Points. The card says "On a hit: 1d8 + 3 slashing" and the GM does the rest. Tokens on the map can be selected, but recipes cannot read a selection.
 
+**Since T-1615 (ADR-082):** weapon, unarmed and creature attacks target the tokens the player targets and show Hit or Miss against `@target.derived.ac`; their cards apply the damage, or half, to each target. Saving throws for the targets and temporary Hit Points stay with the players.
+
 ### F14. Conditions stay on the sheet (gap)
 
 Conditions are booleans that change the actor's own rolls (through the edges). Nothing shows them on the actor's token or in the combat tracker, and a condition cannot change other actors' rolls (Advantage on attacks against a Paralyzed creature).
+
+**Since T-1615 (ADR-082):** both actor types show their conditions on tokens and in the combat tracker, with the plugin's own icons. Formulas can read a target's conditions (`@target.conditions.paralyzed`), so Advantage against a Paralyzed creature is now possible; the plugin does not use it yet.
 
 ### F15. Rows in an items list cannot vary by item (rough edge)
 

@@ -1053,9 +1053,20 @@
         "when": "@rolls.attack.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
+      },
+      {
+        "when": "@targets > 0 and @rolls.attack.total >= @target.derived.ac",
+        "label": "outcome.hit",
+        "class": "hit"
+      },
+      {
+        "when": "@targets > 0",
+        "label": "outcome.miss",
+        "class": "miss"
       }
     ],
-    "card": "attack"
+    "card": "attack",
+    "target": ["character", "npc"]
   },
   "unarmedAttack": {
     "label": "roll.unarmedAttack",
@@ -1099,9 +1110,20 @@
         "when": "@roll.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
+      },
+      {
+        "when": "@targets > 0 and @total >= @target.derived.ac",
+        "label": "outcome.hit",
+        "class": "hit"
+      },
+      {
+        "when": "@targets > 0",
+        "label": "outcome.miss",
+        "class": "miss"
       }
     ],
-    "actors": ["character"]
+    "actors": ["character"],
+    "target": ["character", "npc"]
   },
   "unarmedDamage": {
     "label": "roll.unarmedDamage",
@@ -1183,8 +1205,9 @@
       "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)"
     },
     "formula": "(@let.dice)d(@item.die) + @let.plus",
-    "card": "spell",
-    "item": ["spell"]
+    "card": "spellEffect",
+    "item": ["spell"],
+    "target": ["character", "npc"]
   },
   "deathSave": {
     "label": "roll.deathSave",
@@ -1244,8 +1267,19 @@
         "when": "@rolls.attack.natural == 1",
         "label": "outcome.fumble",
         "class": "fail"
+      },
+      {
+        "when": "@targets > 0 and @rolls.attack.total >= @target.derived.ac",
+        "label": "outcome.hit",
+        "class": "hit"
+      },
+      {
+        "when": "@targets > 0",
+        "label": "outcome.miss",
+        "class": "miss"
       }
     ],
-    "card": "npcAttack"
+    "card": "npcAttack",
+    "target": ["character", "npc"]
   }
 }

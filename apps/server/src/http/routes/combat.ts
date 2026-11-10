@@ -25,6 +25,7 @@ import {
   updateCombatant,
 } from '../../domain/combat.js';
 import { requireWritableTable } from '../../domain/entities.js';
+import { statusReader } from '../../domain/statuses.js';
 import { publishChatMessage } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
@@ -40,8 +41,15 @@ const combatantParams = z.object({ id: z.uuid(), combatantId: z.string().min(1).
  * members refetch, so what they receive is always filtered here.
  */
 export function combatRoutes(context: AppContext): void {
-  const { app, db, events, now } = context;
+  const { app, db, events, now, plugins } = context;
   const options = rollOptions(context);
+  /** The encounter as a member sees it, with its actors' statuses (T-1615). */
+  const view = (tableId: string, subject: { userId: string; role: TableRole }) => {
+    const encounter = findEncounter(db, tableId);
+    if (!encounter) return null;
+    const statuses = statusReader(db, (id) => plugins.definition(id), tableId, subject.role);
+    return toEncounterView(db, encounter, subject, statuses);
+  };
   const base = '/api/v1/tables/:id/encounter';
 
   /** The GM's request: checks the role and that the table can be changed. */
@@ -66,15 +74,13 @@ export function combatRoutes(context: AppContext): void {
     if (turn) messages.push(...(await startTurn(db, runner, options)));
     for (const row of messages) publishChatMessage(events, row);
     events.publish(tableId, { type: 'combat.updated', tableId, payload: {} }, () => true);
-    const encounter = findEncounter(db, tableId);
-    return { encounter: encounter ? toEncounterView(db, encounter, runner) : null };
+    return { encounter: view(tableId, runner) };
   };
 
   app.get(base, (request): EncounterResponse => {
     const { id } = parseInput(idParams, request.params);
     const { membership } = requireMember(db, request, id);
-    const encounter = findEncounter(db, id);
-    return { encounter: encounter ? toEncounterView(db, encounter, membership) : null };
+    return { encounter: view(id, membership) };
   });
 
   app.post(base, async (request, reply) => {

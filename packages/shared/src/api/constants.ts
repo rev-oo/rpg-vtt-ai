@@ -21,6 +21,8 @@ export const MAX_FORMULA_LENGTH = 500;
 /** Items one actor may hold, so `@items` totals stay cheap (ADR-063). */
 export const MAX_ACTOR_ITEMS = 500;
 export const MAX_WHISPER_RECIPIENTS = 20;
+/** The most tokens one roll targets (T-1615). */
+export const MAX_ROLL_TARGETS = 20;
 /** Chat history page size (FR-CHAT-07). */
 export const CHAT_PAGE_SIZE = 50;
 export const MAX_CHAT_PAGE_SIZE = 100;

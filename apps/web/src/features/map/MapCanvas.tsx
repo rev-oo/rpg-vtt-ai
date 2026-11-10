@@ -70,6 +70,10 @@ export interface MapCanvasProps extends Omit<TokenHandlers, 'menu'> {
   onDropActor?: ((actorId: string, cell: Cell) => void) | undefined;
   /** What the member may do with a token, for its menu; none, and it has no menu. */
   actionsFor: (token: TokenView) => MenuAction[];
+  /** The tokens the member targets (T-1615), marked on the map. */
+  targetIds?: readonly string[];
+  /** T targets the selected token, or stops targeting it; only tokens of actors. */
+  onTarget?: ((token: TokenView) => void) | undefined;
   /**
    * For GMs and assistants: changes the fog of war (ADR-070). They see the fog as a tint;
    * without it, the fog is opaque and has no tools.
@@ -141,6 +145,8 @@ export default function MapCanvas({
   onDropActor,
   actionsFor,
   onFog,
+  targetIds = [],
+  onTarget,
   ...handlers
 }: MapCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
@@ -358,14 +364,17 @@ export default function MapCanvas({
     setMenu({ token, at: menuPosition(at, screenOf(stage.viewport), actions.length) });
   };
   const menuOf = useEffectEvent(openMenu);
+  const targetKey = targetIds.join(',');
   useEffect(() => {
-    stage?.tokens.draw(tokens, { columns, rows, gridType, gridSize }, content, selectedId, {
-      select,
-      open,
-      move,
-      menu: menuOf,
-    });
-  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content]);
+    stage?.tokens.draw(
+      tokens,
+      { columns, rows, gridType, gridSize },
+      content,
+      selectedId,
+      { select, open, move, menu: menuOf },
+      new Set(targetKey.split(',')),
+    );
+  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content, targetKey]);
 
   // The ruler measures a path (ADR-069). A click or press starts it, each click adds a point and
   // a drag adds the point it ends on; until it ends, a last leg follows the pointer. Enter or a
@@ -633,6 +642,12 @@ export default function MapCanvas({
             const grid = { columns, rows, gridType, gridSize };
             const at = stage.viewport.toScreen(cellCentre(grid, selected));
             openMenu(selected, { x: at.x, y: at.y });
+            return;
+          }
+          // T targets the selected token, or stops targeting it (T-1615).
+          if (selected?.actorId && onTarget && event.key.toLowerCase() === 't') {
+            event.preventDefault();
+            onTarget(selected);
             return;
           }
           // Keys for the ruler's path, while it has one.

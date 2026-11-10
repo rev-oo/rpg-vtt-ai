@@ -368,9 +368,9 @@ export function storeDocument(
     live,
     now,
   }: { definition: DefinitionOf; live: (name: string) => Y.Doc | undefined; now: Date },
-): void {
+): StoredActor | undefined {
   const name = documentName(ref);
-  db.transaction((tx) => {
+  return db.transaction((tx): StoredActor | undefined => {
     const owner = ref.kind === 'journal' ? undefined : findEntity(tx, ref.kind, ref.id);
     // An entity purged meanwhile has nothing to store.
     if (ref.kind !== 'journal' && !owner) return;
@@ -392,9 +392,21 @@ export function storeDocument(
     );
     if (ref.kind === 'item') {
       tx.update(items).set({ system, updatedAt: now }).where(eq(items.id, ref.id)).run();
-      return;
+      return undefined;
     }
     recordSnapshot(tx, { actorId: owner.id, layer: ref.layer }, doc.getMap(DATA_MAP), now);
-    tx.update(actors).set({ system, updatedAt: now }).where(eq(actors.id, ref.id)).run();
+    const stored = tx
+      .update(actors)
+      .set({ system, updatedAt: now })
+      .where(eq(actors.id, ref.id))
+      .returning()
+      .get();
+    return { before: owner.system, actor: stored };
   });
+}
+
+/** An actor's projection as it was before a store, and the actor after it (T-1615). */
+export interface StoredActor {
+  before: Record<string, unknown>;
+  actor: Actor;
 }

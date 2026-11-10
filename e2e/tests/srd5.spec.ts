@@ -16,6 +16,8 @@ import { showPanel } from './support/workspace.js';
 // T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
 // T-1611: a Portuguese player reads the sheet, cards and server messages in pt-BR.
+// T-1615: a player targets a creature's token and attacks it; the GM applies the damage from
+// the card, and the creature's condition shows on its token.
 
 const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
@@ -302,4 +304,113 @@ test('a Portuguese player reads the SRD sheet, cards and rest messages in pt-BR'
 
   expect(errors).toEqual([]);
   await context.close();
+});
+
+test('a player attacks a targeted goblin; the GM applies the damage and knocks it prone', async ({
+  browser,
+}) => {
+  const gm = await signIn(browser, ADMIN);
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5-targets.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
+  const player = await createPlayer(browser, gm, 'tamsin', 'Tamsin');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Goblin Ambush',
+    systemId: 'srd5',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor: hero } = await post<{ actor: { id: string } }>(
+    player,
+    `/tables/${table.id}/actors`,
+    { type: 'character', name: 'Bram' },
+  );
+  setActorData(hero.id, { class: 'class.fighter', level: 3, str: 16, hp: { value: 28, max: 28 } });
+  await post(player, `/tables/${table.id}/compendium/copy`, {
+    refs: ['srd5:srd:longsword'],
+    actorId: hero.id,
+  });
+  const { actor: goblin } = await post<{ actor: { id: string } }>(
+    gm,
+    `/tables/${table.id}/actors`,
+    { type: 'npc', name: 'Goblin' },
+  );
+  // Armor Class 1: every attack hits, but for a natural 1.
+  setActorData(goblin.id, { ac: 1, hp: { value: 30, max: 30 }, str: 8, dex: 14 });
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Road',
+    columns: 8,
+    rows: 6,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: hero.id, column: 1, row: 1 });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: goblin.id, column: 4, row: 2 });
+
+  const page = await player.context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`/tables/${table.id}`);
+  await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  const tokens = page.getByRole('list', { name: 'Tokens' });
+  const log = page.getByRole('log', { name: 'Messages' });
+
+  await test.step('the player targets the goblin from the token list', async () => {
+    await tokens.getByRole('button', { name: /^Goblin/ }).click();
+    const target = page.getByRole('button', { name: 'Target Goblin' });
+    await target.click();
+    await expect(page.getByRole('button', { name: 'Stop targeting Goblin' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await expect(tokens.getByRole('button', { name: /^Goblin/ })).toContainText('targeted');
+  });
+
+  const card = log.locator('[data-plugin="srd5"]').last();
+  await test.step('an attack on it reads its Armor Class and lists it on the card', async () => {
+    await page.getByRole('button', { name: 'Open sheet: Bram' }).click();
+    const sheet = page.locator('[data-plugin="srd5"]').first();
+    await sheet.getByRole('tab', { name: 'Attacks' }).click();
+    const sword = sheet.getByRole('listitem', { name: 'Longsword' });
+    await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Shift'] });
+    await expect(card.getByText('Weapon attack')).toBeVisible();
+    await expect(card.getByText(/^(Hit|Critical hit!|Natural 1: a miss)$/)).toBeVisible();
+    await expect(card.getByText('Targets')).toBeVisible();
+    await expect(card.getByText('Goblin', { exact: true })).toBeVisible();
+    // The player may not change the goblin, so the card offers them no actions.
+    await expect(card.getByRole('button', { name: /Apply/ })).toHaveCount(0);
+  });
+
+  const gmPage = await gm.context.newPage();
+  await gmPage.setViewportSize({ width: 1280, height: 800 });
+  await gmPage.goto(`/tables/${table.id}`);
+  await expect(gmPage.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  await gmPage.getByRole('button', { name: 'Open sheet: Goblin' }).click();
+  const goblinSheet = gmPage.locator('[data-plugin="srd5"]').first();
+  const hp = goblinSheet.getByRole('textbox', { name: 'Hit Points', exact: true });
+  await expect(hp).toHaveValue('30');
+
+  await test.step('the GM applies the damage to the goblin, once', async () => {
+    const gmCard = gmPage
+      .getByRole('log', { name: 'Messages' })
+      .locator('[data-plugin="srd5"]')
+      .last();
+    await gmCard.getByRole('button', { name: 'Apply damage: Goblin' }).click();
+    await expect(
+      gmCard.getByRole('button', { name: 'Apply damage: Goblin (done)' }),
+    ).toBeDisabled();
+    await expect(hp).not.toHaveValue('30');
+  });
+
+  await test.step('the goblin falls prone, and the player sees it on its token', async () => {
+    await goblinSheet.getByRole('checkbox', { name: 'Prone' }).check();
+    await page.getByRole('tab', { name: 'Map', exact: true }).click();
+    // Statuses follow the sheet once it is stored, after a short wait.
+    await expect(tokens.getByRole('button', { name: /^Goblin/ })).toContainText('Statuses: Prone', {
+      timeout: 15_000,
+    });
+  });
+
+  expect(errors).toEqual([]);
 });

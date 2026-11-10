@@ -55,6 +55,7 @@ import {
   type DataFilter,
 } from './entities.js';
 import { findTable } from './tables.js';
+import { rollTargets } from './targets.js';
 
 export type RollRequest = z.output<typeof rollRequestBody>;
 export type CommandRequest = z.output<typeof commandRequestBody>;
@@ -249,7 +250,7 @@ export async function sendRollMessages(
       : undefined;
 
   if (input.recipe) {
-    const { name, args, itemId, options: asked } = input.recipe;
+    const { name, args, itemId, options: asked, targets: targeted } = input.recipe;
     if (!system)
       throw unprocessable('system_unavailable', 'The table’s system cannot roll recipes.');
     if (!actor) throw unprocessable('actor_required', 'Choose an actor to roll for.');
@@ -261,8 +262,21 @@ export async function sendRollMessages(
     if (isHandler(system.plugin, name)) {
       if (Object.keys(asked).length > 0)
         throw unprocessable('bad_option', `The roll "${name}" has no options.`);
+      if (targeted.length > 0)
+        throw unprocessable('bad_target', `The roll "${name}" takes no targets.`);
       return runHandler(db, prepared, { name, args, item, code, functions }, options);
     }
+    // The tokens the roller targets, for a recipe that targets actors (T-1615).
+    const targets =
+      targeted.length > 0
+        ? rollTargets(
+            db,
+            { tableId: sender.tableId, subject: prepared.subject },
+            targeted,
+            system.plugin,
+            options,
+          )
+        : { rolled: [], card: [] };
     const result = rolling(() =>
       system.rules.roll(name, {
         kind: 'actor',
@@ -272,6 +286,7 @@ export async function sendRollMessages(
         options: asked,
         items: prepared.items,
         item,
+        targets: targets.rolled,
         rng,
       }),
     );
@@ -285,6 +300,7 @@ export async function sendRollMessages(
       label: result.label ?? null,
       outcome: result.outcome,
       card: result.card ?? null,
+      ...(recipe && 'target' in recipe && recipe.target && { targets: targets.card }),
     };
     const row = db.transaction((tx) =>
       createChatMessage(

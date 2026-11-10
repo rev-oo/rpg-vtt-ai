@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { chatEditBody, chatHistoryQuery, chatSendBody } from '@vtt/shared/api';
+import { cardApplyBody, chatEditBody, chatHistoryQuery, chatSendBody } from '@vtt/shared/api';
 
 import { findChatMessage, listChatMessages } from '../../db/repositories/index.js';
 import {
@@ -13,6 +13,7 @@ import {
   toChatMessage,
 } from '../../domain/chat.js';
 import { requireUnarchived } from '../../domain/entities.js';
+import { applyCardAction } from '../../domain/targets.js';
 import { notFound } from '../../errors.js';
 import {
   publishChatDeleted,
@@ -21,15 +22,18 @@ import {
 } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
+import { rollOptions } from '../roll-options.js';
 import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
 
 /**
- * Chat history, posting, editing and deleting (FR-CHAT-01, 02, 07, 09). The socket's
- * `chat.send` posts too.
+ * Chat history, posting, editing and deleting (FR-CHAT-01, 02, 07, 09), and card actions
+ * (T-1615). The socket's `chat.send` posts too.
  */
-export function chatRoutes({ app, db, events, now }: AppContext): void {
+export function chatRoutes(context: AppContext): void {
+  const { app, db, events, now } = context;
+  const options = rollOptions(context);
   app.get('/api/v1/tables/:id/messages', (request) => {
     const { id } = parseInput(idParams, request.params);
     const { membership } = requireMember(db, request, id);
@@ -81,6 +85,19 @@ export function chatRoutes({ app, db, events, now }: AppContext): void {
     const edited = editChatMessage(db, subject, row, text, now());
     publishChatUpdated(events, edited);
     return { message: toChatMessage(edited) };
+  });
+
+  /**
+   * Does one of a card's actions to one of the roll's targets (T-1615), such as applying its
+   * damage; the card then shows it done to everyone who sees it.
+   */
+  app.post('/api/v1/messages/:id/apply', async (request) => {
+    const { id } = parseInput(idParams, request.params);
+    const { subject, row } = messageOf(request, id);
+    const body = parseInput(cardApplyBody, request.body);
+    const applied = await applyCardAction(db, subject, row, body, options);
+    publishChatUpdated(events, applied);
+    return { message: toChatMessage(applied) };
   });
 
   app.delete('/api/v1/messages/:id', (request, reply) => {

@@ -186,6 +186,7 @@ export function ChatPanel({
               names={names}
               subject={subject}
               now={now}
+              canEditActor={(actorId) => speakers.some((actor) => actor.id === actorId)}
               onEdited={(edited) => {
                 setMessages((current) => replaceMessage(current, edited));
               }}
@@ -249,6 +250,8 @@ interface MessageItemProps {
   /** The viewer, or `null` when they are not a member. */
   subject: Subject | null;
   now: number;
+  /** Whether the viewer may edit an actor, for a card's actions on its targets (T-1615). */
+  canEditActor: (actorId: string) => boolean;
   onEdited: (message: ChatMessage) => void;
   onDeleted: (id: string) => void;
   onError: (error: string | null) => void;
@@ -259,6 +262,7 @@ function MessageItem({
   names,
   subject,
   now,
+  canEditActor,
   onEdited,
   onDeleted,
   onError,
@@ -397,7 +401,7 @@ function MessageItem({
           </span>
         </form>
       ) : message.kind === 'card' ? (
-        <CardMessage message={message} />
+        <CardMessage message={message} canEdit={canEditActor} />
       ) : message.kind === 'roll' && message.rolls.length > 0 ? (
         <>
           {/* A typed roll's text is its formula, which the roll shows; plugin code may add more. */}

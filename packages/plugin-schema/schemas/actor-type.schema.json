@@ -81,6 +81,41 @@
         "gm"
       ],
       "description": "Who may create actors of the type: players too, or only the GM."
+    },
+    "statuses": {
+      "description": "True/false fields shown on the actor’s tokens and in the combat tracker while they are on, such as conditions, in this order. Secret fields show only to the GM.",
+      "maxItems": 32,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "The path of a true/false field of the type, such as `conditions.poisoned`: the status is on while the field is true. Not inside a list."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "title": "Text",
+            "description": "The status name, shown with its icon; a lang key or literal text."
+          },
+          "icon": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+            "description": "An image of the plugin, such as `icons/poisoned.svg`."
+          }
+        },
+        "required": [
+          "field",
+          "label",
+          "icon"
+        ],
+        "additionalProperties": false,
+        "title": "Status"
+      }
     }
   },
   "required": [

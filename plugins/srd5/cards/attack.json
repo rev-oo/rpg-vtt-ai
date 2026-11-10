@@ -29,5 +29,17 @@
       "value": "'damage.' + @item.damageType"
     }
   ],
-  "outcome": true
+  "outcome": true,
+  "apply": [
+    {
+      "label": "card.applyDamage",
+      "field": "hp.value",
+      "amount": "-@rolls.damage.total"
+    },
+    {
+      "label": "card.applyHalf",
+      "field": "hp.value",
+      "amount": "-floor(@rolls.damage.total / 2)"
+    }
+  ]
 }

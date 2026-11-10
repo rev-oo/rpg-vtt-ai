@@ -1,9 +1,12 @@
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 
 import type { ChatMessage, RecipeCard } from '@vtt/shared/api';
-import { cn } from '@vtt/ui';
+import { Button, cn } from '@vtt/ui';
 
+import { api } from '../api/endpoints.js';
+import { errorMessage } from '../api/errors.js';
 import { RollView } from '../features/chat/RollView.js';
+import { t } from '../i18n/index.js';
 
 import { PluginFrame } from './PluginFrame.js';
 import { useSystem } from './system-context.js';
@@ -40,11 +43,94 @@ function CoreCard({
 }
 
 /**
+ * The actors a roll targeted (T-1615), each with the card's actions, such as applying damage,
+ * for members who may edit it. An action is done once per target; the card then shows it done
+ * to everyone, through the message's update.
+ */
+function CardTargets({
+  messageId,
+  recipe,
+  translate,
+  canEdit,
+}: {
+  messageId: string;
+  recipe: RecipeCard;
+  translate: (text: string) => string;
+  canEdit: (actorId: string) => boolean;
+}): ReactElement | null {
+  const [busy, setBusy] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const targets = recipe.targets ?? [];
+  if (targets.length === 0) return null;
+  const actions = (recipe.card?.apply ?? [])
+    .map((action, index) => ({ ...action, index }))
+    .filter((action) => action.error === undefined);
+  const apply = (target: number, action: number) => {
+    setBusy(true);
+    setFailure(null);
+    api
+      .applyCardAction(messageId, { target, action })
+      .catch((error: unknown) => {
+        setFailure(errorMessage(error));
+      })
+      .finally(() => {
+        setBusy(false);
+      });
+  };
+  return (
+    <div className="vtt-card-targets flex flex-col gap-1 text-sm">
+      <p className="text-muted">{t('card.targets')}</p>
+      <ul className="flex flex-col gap-1">
+        {targets.map((target, index) => (
+          <li key={target.tokenId} className="flex flex-wrap items-center gap-1">
+            <span className="font-medium">{target.name}</span>
+            {canEdit(target.actorId) &&
+              actions.map((action) => {
+                const done = target.applied.includes(action.index);
+                const label = translate(action.label);
+                return (
+                  <Button
+                    key={action.index}
+                    variant="secondary"
+                    className="px-2 py-0.5 text-xs"
+                    disabled={done || busy}
+                    aria-label={t(done ? 'card.applied' : 'card.apply', {
+                      action: label,
+                      name: target.name,
+                    })}
+                    onClick={() => {
+                      apply(index, action.index);
+                    }}
+                  >
+                    {done ? `${label} ✓` : label}
+                  </Button>
+                );
+              })}
+          </li>
+        ))}
+      </ul>
+      {failure && (
+        <p role="alert" className="text-danger">
+          {failure}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
  * A recipe roll in the chat (FR-CHAT-06): the plugin's custom card component, else the core
  * card, while the table's system has the card; otherwise the message's plain-text fallback
  * and its dice.
  */
-export function CardMessage({ message }: { message: ChatMessage }): ReactElement {
+export function CardMessage({
+  message,
+  canEdit = () => false,
+}: {
+  message: ChatMessage;
+  /** Whether the member may edit an actor, so the card offers its actions on it (T-1615). */
+  canEdit?: (actorId: string) => boolean;
+}): ReactElement {
   const host = useSystem();
   const recipe = message.card;
   const card = recipe?.card;
@@ -81,6 +167,7 @@ export function CardMessage({ message }: { message: ChatMessage }): ReactElement
       ) : (
         <CoreCard card={card} outcome={recipe.outcome} translate={translate} />
       )}
+      <CardTargets messageId={message.id} recipe={recipe} translate={translate} canEdit={canEdit} />
       {message.rolls.map((roll, index) => (
         <RollView key={index} roll={roll} />
       ))}

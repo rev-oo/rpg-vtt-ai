@@ -361,6 +361,82 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'targets, card actions and statuses (T-1615)',
+    change: (f: PluginFixture): void => {
+      heroFields(f).ac = { type: 'integer', default: 10 };
+      heroFields(f).prone = { type: 'boolean', default: false };
+      heroFields(f).grudge = { type: 'string', default: '', 'x-layer': 'secret' };
+      hero(f).statuses = [{ field: 'prone', label: 'status.prone', icon: 'icons/prone.svg' }];
+      f['icons/prone.svg'] = '<svg xmlns="http://www.w3.org/2000/svg"/>';
+      at(f, 'rolls.json').strike = {
+        formula: '1d20 + @derived.mod',
+        target: ['hero'],
+        outcomes: [
+          { when: '@targets > 0 and @total >= @target.ac + @target.derived.mod', label: 'Hit' },
+        ],
+        card: 'strike',
+      };
+      f['cards/strike.json'] = {
+        title: 'Strike',
+        rows: [{ label: 'Target', value: "@targets > 0 ? @target.name : '—'" }],
+        apply: [{ label: 'Apply', field: 'hp.value', amount: '-@total' }],
+      };
+      f['lang/en.json'] = { ...LANG, 'status.prone': 'Prone' };
+      f['lang/pt-BR.json'] = { ...LANG, 'status.prone': 'Caído' };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'targets of unknown types, secret target fields, actions without targets, bad statuses',
+    change: (f: PluginFixture): void => {
+      heroFields(f).prone = { type: 'boolean', default: false };
+      heroFields(f).grudge = { type: 'string', default: '', 'x-layer': 'secret' };
+      hero(f).statuses = [
+        { field: 'str', label: 'S', icon: 'icons/s.svg' },
+        { field: 'gone', label: 'G', icon: 'styles/sheet.css' },
+        { field: 'prone', label: 'P', icon: 'icons/p.png' },
+        { field: 'prone', label: 'P', icon: 'icons/p.png' },
+      ];
+      f['icons/p.png'] = '';
+      at(f, 'rolls.json').strike = {
+        formula: '1d20 + @target.grudge',
+        target: ['hero', 'ghost'],
+        card: 'strike',
+      };
+      at(f, 'rolls.json').shove = { formula: '1d6 + @targets', card: 'shove' };
+      f['cards/strike.json'] = {
+        title: 'Strike',
+        rows: [],
+        apply: [
+          { label: 'A', field: 'str', amount: '-@total' },
+          { label: 'B', field: 'gone', amount: '@target.ac' },
+        ],
+      };
+      f['cards/shove.json'] = {
+        title: 'Shove',
+        rows: [],
+        apply: [{ label: 'C', field: 'hp.value', amount: '-@total' }],
+      };
+    },
+    issues: [
+      'error field_mismatch types/actors/hero.json $.statuses[0].field',
+      'error missing_file types/actors/hero.json $.statuses[0].icon',
+      'error unknown_field types/actors/hero.json $.statuses[1].field',
+      'error theme_file types/actors/hero.json $.statuses[1].icon',
+      'error duplicate_id types/actors/hero.json $.statuses[3].field',
+      'error missing_target rolls.json $.strike.target[1]',
+      // Rolls never read a target's secret fields.
+      'error unknown_reference rolls.json $.strike.formula',
+      // `@targets` and card actions belong to recipes that target.
+      'error unknown_reference rolls.json $.shove.formula',
+      'error missing_key rolls.json $.shove',
+      'error field_mismatch cards/strike.json $.apply[0].field',
+      'error unknown_field cards/strike.json $.apply[1].field',
+      'error unknown_reference cards/strike.json $.apply[1].amount',
+    ],
+  },
+  {
     name: 'item groups and plural labels in the plugin language (T-1203)',
     change: (f: PluginFixture): void => {
       f['sheets/item.json'] = { layout: { type: 'column', children: [] } };

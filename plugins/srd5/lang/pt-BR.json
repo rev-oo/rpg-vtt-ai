@@ -394,5 +394,10 @@
   "type.weapon": "Arma",
   "type.weapons": "Armas",
   "weapon.martial": "Marcial",
-  "weapon.simple": "Simples"
+  "weapon.simple": "Simples",
+  "outcome.hit": "Acerto",
+  "outcome.miss": "Erro",
+  "card.applyDamage": "Aplicar dano",
+  "card.applyHalf": "Aplicar metade",
+  "card.applyEffect": "Aplicar"
 }
