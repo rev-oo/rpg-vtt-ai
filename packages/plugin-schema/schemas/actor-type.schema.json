@@ -124,6 +124,19 @@
             ]
           }
         },
+        "enumLabels": {
+          "description": "What a `select` shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value; values without a label show as they are.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "title": "Text"
+          }
+        },
         "minimum": {
           "description": "The lowest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step.",
           "anyOf": [

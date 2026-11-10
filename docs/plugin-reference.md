@@ -138,6 +138,7 @@ The entity's data: an object whose properties are fields.
 | `description` | text (at most 2000 characters) |  |  |
 | `default` | any JSON value |  | The value new entities start with; it must fit the field. |
 | `enum` | list of text or number (at least 1 item) |  | The allowed values; a `select` input offers them. |
+| `enumLabels` | map from text to [text](#text) |  | What a `select` shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value; values without a label show as they are. |
 | `minimum` | number or [formula](#formula) |  | The lowest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `maximum` | number or [formula](#formula) |  | The highest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `minLength` | integer, at least 0 |  |  |
@@ -201,6 +202,7 @@ The entity's data: an object whose properties are fields.
 | `description` | text (at most 2000 characters) |  |  |
 | `default` | any JSON value |  | The value new entities start with; it must fit the field. |
 | `enum` | list of text or number (at least 1 item) |  | The allowed values; a `select` input offers them. |
+| `enumLabels` | map from text to [text](#text) |  | What a `select` shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value; values without a label show as they are. |
 | `minimum` | number or [formula](#formula) |  | The lowest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `maximum` | number or [formula](#formula) |  | The highest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `minLength` | integer, at least 0 |  |  |
@@ -621,7 +623,7 @@ One of:
 - [Setting `boolean`](#settings-setting-boolean): A checkbox.
 - [Setting `integer`](#settings-setting-integer): A whole number.
 - [Setting `number`](#settings-setting-number): A number.
-- [Setting `string`](#settings-setting-string): Text, or a choice with `enum`.
+- [Setting `string`](#settings-setting-string): Text, a choice with `enum`, or a colour with `format`.
 
 <a id="settings-setting-boolean"></a>
 
@@ -673,7 +675,7 @@ A number.
 
 ### Setting `string`
 
-Text, or a choice with `enum`.
+Text, a choice with `enum`, or a colour with `format`.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
@@ -683,6 +685,8 @@ Text, or a choice with `enum`.
 | `type` | `"string"` | yes |  |
 | `default` | text | yes |  |
 | `enum` | list of text (at least 1 item) |  | Offers these values to pick from. |
+| `enumLabels` | map from text to [text](#text) |  | What the form shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value. |
+| `format` | `"colour"` |  | A colour, written `#rrggbb` and picked with a colour picker; it cannot have an `enum`. |
 | `maxLength` | integer, at least 1 |  |  |
 
 <a id="combat"></a>

@@ -2,7 +2,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 
 import type { DiceRoll, FormulaFunction, Rng, Value } from '@vtt/formula';
-import { createRules, type Rules } from '@vtt/plugin-engine';
+import { createRules, langText, type Rules } from '@vtt/plugin-engine';
 import { validatePlugin, type PluginDefinition } from '@vtt/plugin-schema';
 
 import type {
@@ -104,6 +104,12 @@ export interface FakeHandler {
   logs: { message: string; data?: Readonly<Record<string, unknown>> }[];
   /** A counter's value now, after the code's steps: the actor's, or an item's or actor's by id. */
   counter: (path: string, id?: string) => number;
+  /**
+   * The posts' texts as a viewer reads them in `locale` (T-1611): a post by lang key is filled
+   * in from the `system`'s lang files, English where the locale has no text; without a system
+   * it shows its key. Posts with only rolls give `''`.
+   */
+  texts: (locale?: string) => string[];
 }
 
 /** Thrown by a fake `ctx.fail`, with the message the caller would see. */
@@ -263,6 +269,18 @@ export function fakeHandler(options: FakeHandlerOptions = {}): FakeHandler {
     logs,
     counter: (counterPath, id = actor.id) =>
       counter(dataOf('item', id) === undefined ? 'actor' : 'item', id, counterPath),
+    texts: (locale = 'en') => {
+      const langs = options.system?.plugin.lang ?? {};
+      const translate = (text: string) => {
+        for (const lang of [langs[locale], langs.en]) {
+          if (lang && Object.hasOwn(lang, text)) return lang[text] ?? text;
+        }
+        return text;
+      };
+      return posts.map((post) =>
+        post.key === undefined ? (post.text ?? '') : langText(translate, post.key, post.params),
+      );
+    },
   };
 }
 

@@ -4,5 +4,10 @@
   "setting.secondsHint": "Depois que param de rolar.",
   "setting.maxDice": "Máximo de dados num lançamento",
   "setting.maxDiceHint": "Rolagens maiores lançam só os primeiros dados.",
-  "setting.showOthers": "Lançar também as rolagens dos outros"
+  "setting.showOthers": "Lançar também as rolagens dos outros",
+  "colour.ivory": "Marfim",
+  "colour.crimson": "Carmim",
+  "colour.sapphire": "Safira",
+  "colour.emerald": "Esmeralda",
+  "colour.onyx": "Ônix"
 }

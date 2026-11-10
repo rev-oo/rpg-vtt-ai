@@ -52,6 +52,7 @@ const rolled = (terms: Rolled, senderId = 'user-1'): TableEvent => ({
       },
     ],
     card: null,
+    translation: null,
     createdAt: '2026-11-10T12:00:00.000Z',
     editedAt: null,
   },

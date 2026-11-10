@@ -1,5 +1,5 @@
 import type { Value } from '@vtt/formula';
-import { settingScope, type Setting, type SettingScope } from '@vtt/plugin-schema';
+import { COLOUR, settingScope, type Setting, type SettingScope } from '@vtt/plugin-schema';
 import type { DataIssueReason } from '@vtt/shared/api';
 
 const isNumber = (value: unknown): value is number =>
@@ -21,6 +21,7 @@ export function settingIssue(setting: Setting, value: unknown): DataIssueReason 
     case 'string':
       if (typeof value !== 'string') return 'type';
       if (setting.enum !== undefined && !setting.enum.includes(value)) return 'enum';
+      if (setting.format === 'colour' && !COLOUR.test(value)) return 'format';
       if (setting.maxLength !== undefined && value.length > setting.maxLength) return 'maxLength';
       return undefined;
   }

@@ -29,6 +29,7 @@ const message = (total: number): ChatMessage => ({
   text: '',
   rolls: [{ expression: '1d20', resolved: '1d20', total, dice: [] }],
   card: null,
+  translation: null,
   createdAt: '2026-11-10T12:00:00.000Z',
   editedAt: null,
 });

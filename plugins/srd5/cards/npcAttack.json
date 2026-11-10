@@ -17,12 +17,16 @@
     },
     {
       "label": "card.damage",
-      "value": "@rolls.damage.resolved + ' ' + @actions[@args.id].damageType"
+      "value": "@rolls.damage.resolved"
     },
     {
       "label": "card.damageTotal",
       "value": "@rolls.damage.total",
       "class": "total"
+    },
+    {
+      "label": "card.damageType",
+      "value": "'damage.' + @actions[@args.id].damageType"
     }
   ],
   "outcome": true

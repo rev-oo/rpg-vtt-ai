@@ -13,12 +13,18 @@ import type { Manifest } from '../manifest.js';
 import { isMigrationVersion, type Migration } from '../migrations.js';
 import type { Pack } from '../packs.js';
 import type { Recipe } from '../rolls.js';
-import { settingsOfScope, type Setting } from '../settings.js';
+import { COLOUR, settingsOfScope, type Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
 import { FONT_FILE, IMAGE_FILE, type Theme } from '../theme.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
-import { checkData, checkDataSchema, formulaBounds } from './data.js';
+import {
+  checkData,
+  checkDataSchema,
+  checkEnumLabels,
+  enumLabelsOf,
+  formulaBounds,
+} from './data.js';
 import {
   checkFormula,
   findCycle,
@@ -27,7 +33,7 @@ import {
   type FormulaRules,
   type FormulaScope,
 } from './formulas.js';
-import type { JsonPath, PluginIssue } from './issues.js';
+import type { JsonPath, PluginIssue, PluginIssueCode } from './issues.js';
 import { shapeIssues } from './shape.js';
 
 /** Every file of a plugin, parsed and checked; what the registry and the engine use. */
@@ -410,6 +416,7 @@ export function validatePlugin(
     checkDataSchema(type.schema, (code, path, params) => {
       error(code, file, path, params);
     });
+    for (const [label, path] of enumLabelsOf(type.schema, ['schema'])) useText(label, file, path);
     const graph = new Map<string, string[]>();
     for (const [name, source] of Object.entries(type.derived ?? {})) {
       const scope = typeScope(entry);
@@ -793,6 +800,23 @@ export function validatePlugin(
   for (const [name, setting] of Object.entries(settings)) {
     useText(setting.label, 'settings.json', [name, 'label']);
     useText(setting.description, 'settings.json', [name, 'description']);
+    if (setting.type !== 'string') continue;
+    const report = (code: PluginIssueCode, path: JsonPath, params?: PluginIssue['params']) => {
+      error(code, 'settings.json', [name, ...path], params);
+    };
+    checkEnumLabels(setting.enum, setting.enumLabels, [], report);
+    for (const [value, label] of Object.entries(setting.enumLabels ?? {}))
+      useText(label, 'settings.json', [name, 'enumLabels', value]);
+    if (setting.enum !== undefined && !setting.enum.includes(setting.default))
+      report('invalid_default', ['default'], {
+        reason: `"${setting.default}" is not one of the enum values`,
+      });
+    if (setting.format === 'colour') {
+      if (setting.enum !== undefined)
+        report('invalid_annotation', ['format'], { key: 'format "colour"', type: 'enum' });
+      if (!COLOUR.test(setting.default))
+        report('invalid_default', ['default'], { reason: 'a colour is written #rrggbb' });
+    }
   }
   if (combat?.initiative !== undefined) {
     const actors = types.filter((entry) => entry.actor);

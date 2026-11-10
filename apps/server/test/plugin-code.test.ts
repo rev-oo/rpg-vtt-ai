@@ -173,7 +173,11 @@ const CODED = {
     hasCode: true,
     locales: ['en'],
   }),
-  'lang/en.json': JSON.stringify({ 'type.hero': 'Hero' }),
+  'lang/en.json': JSON.stringify({
+    'type.hero': 'Hero',
+    'chat.heals': '{name} heals {hp} with {how}.',
+    'how.potion': 'a potion',
+  }),
   'types/actors/hero.json': JSON.stringify({
     label: 'type.hero',
     controlledBy: 'player',
@@ -200,6 +204,9 @@ const CODED = {
     hang: { handler: 'hang' },
     heal: { handler: 'heal' },
     forge: { handler: 'forge' },
+    say: { handler: 'say' },
+    mixed: { handler: 'mixed' },
+    unknownKey: { handler: 'unknownKey' },
   }),
   'code/shared.js': `export default { functions: { twice: (x) => x * 2 } };`,
   'code/server.js': `export default {
@@ -222,6 +229,15 @@ const CODED = {
     },
     forge: async ({ ctx }) => {
       await ctx.chat.post({ rolls: [{ ref: 1, total: 999 }] });
+    },
+    say: async ({ ctx, actor }) => {
+      await ctx.chat.post({ key: 'chat.heals', params: { name: actor.name, hp: 3, how: 'how.potion' } });
+    },
+    mixed: async ({ ctx }) => {
+      await ctx.chat.post({ text: 'hi', key: 'chat.heals' });
+    },
+    unknownKey: async ({ ctx }) => {
+      await ctx.chat.post({ key: 'chat.missing' });
     },
   },
   commands: {
@@ -375,7 +391,7 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
     await app.app.close();
   });
 
-  const call = (client: Client, method: 'GET' | 'POST', url: string, payload?: object) =>
+  const call = (client: Client, method: 'GET' | 'POST' | 'PATCH', url: string, payload?: object) =>
     app.app.inject({
       method,
       url: `/api/v1${url}`,
@@ -429,6 +445,39 @@ describe('plugin code through the API (T-0809, ADR-047)', () => {
   it('adjusts counters of actors the roller owns', async () => {
     const res = await recipe('heal');
     expect(res.json<{ message: ChatMessage }>().message.text).toBe('hp 9');
+  });
+
+  it('posts text by lang key, kept for viewers to translate (T-1611)', async () => {
+    const res = await recipe('say');
+    expect(res.statusCode, res.body).toBe(201);
+    const { message } = res.json<{ message: ChatMessage }>();
+    // The stored text is the English, with its parameters, for exports and a disabled plugin.
+    expect(message).toMatchObject({
+      kind: 'text',
+      text: 'Bo heals 3 with a potion.',
+      translation: {
+        plugin: 'coded',
+        key: 'chat.heals',
+        params: { name: 'Bo', hp: 3, how: 'how.potion' },
+      },
+    });
+    // The author's own words replace it.
+    const edited = await call(bob.client, 'PATCH', `/messages/${message.id}`, {
+      text: 'Bo drinks',
+    });
+    expect(edited.json<{ message: ChatMessage }>().message).toMatchObject({
+      text: 'Bo drinks',
+      translation: null,
+    });
+  });
+
+  it('refuses a post with text and a key, or a key without English text', async () => {
+    for (const name of ['mixed', 'unknownKey']) {
+      const res = await recipe(name);
+      expect(res.statusCode).toBe(422);
+      expect(res.json<{ error: { code: string } }>().error.code).toBe('handler_failed');
+    }
+    expect(await history()).toEqual([]);
   });
 
   it('refuses rolls a handler did not make', async () => {

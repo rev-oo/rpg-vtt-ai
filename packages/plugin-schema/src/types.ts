@@ -32,6 +32,8 @@ export interface FieldSchema {
   description?: string | undefined;
   default?: unknown;
   enum?: (string | number)[] | undefined;
+  /** A lang key or text per `enum` value, shown instead of the value (T-1611). */
+  enumLabels?: Record<string, string> | undefined;
   /** A number, or on a counter a formula such as `@hp.max` (T-1610). */
   minimum?: number | string | undefined;
   maximum?: number | string | undefined;
@@ -60,6 +62,12 @@ export const fieldSchema: z.ZodType<FieldSchema> = z.lazy(() =>
         .min(1)
         .optional()
         .describe('The allowed values; a `select` input offers them.'),
+      enumLabels: z
+        .record(z.string(), text)
+        .optional()
+        .describe(
+          'What a `select` shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value; values without a label show as they are.',
+        ),
       minimum: bound.optional().describe(COUNTER_BOUND('lowest')),
       maximum: bound.optional().describe(COUNTER_BOUND('highest')),
       minLength: z.int().min(0).optional(),

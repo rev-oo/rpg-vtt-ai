@@ -13,7 +13,13 @@ export const TYPE: Pick<ActorType, 'schema' | 'derived'> = {
       str: { type: 'integer', default: 14, minimum: 1, maximum: 30 },
       speed: { type: 'number', default: 1.5 },
       alive: { type: 'boolean', default: true },
-      size: { type: 'string', enum: ['small', 'large'], default: 'small' },
+      size: {
+        type: 'string',
+        enum: ['small', 'large'],
+        default: 'small',
+        // Labels by value (T-1611): the stored value stays `small`.
+        enumLabels: { small: 'size.small', large: 'size.large' },
+      },
       hp: {
         type: 'object',
         properties: {
@@ -45,8 +51,8 @@ export const TEXTS: Record<string, string> = {
   'section.vitals': 'Vitals',
   'roll.skill': 'Roll skill',
   'skill.add': 'Add skill',
-  small: 'Small',
-  large: 'Large',
+  'size.small': 'Small',
+  'size.large': 'Large',
 };
 export const translate = (text: string): string => TEXTS[text] ?? text;
 

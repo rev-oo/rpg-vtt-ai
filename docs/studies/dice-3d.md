@@ -44,6 +44,8 @@ Overlays fill the window above the workspace (`ModuleOverlays`: `fixed inset-0 z
 
 `colour` is a `string` setting with an `enum`. The settings form shows each value through `translate(option)` (`apps/web/src/features/settings/SettingFields.tsx`), so a value is translated only if it is itself a lang key: pt-BR members see "crimson". The workaround would be values such as `colour.crimson`, which leak into the stored data. There is also no colour type, so a free choice of colour would be a text field. `useModuleSettings` returns untyped `Value`s, so the client checks each setting by hand (`isColour`, `number()`).
 
+**Since T-1611 (ADR-081):** the colours have `enumLabels`, settings may be colours (`"format": "colour"`), and the overlay reads its settings through `readSettings` from `vtt-plugin types`.
+
 ### F6. Modules do not know the system's custom dice (gap)
 
 A roll's results carry the face's `label` for custom dice (`dF` and the like), but a module cannot see the system's `dice.json`, so it does not know the other faces or how many there are. dice-3d leaves custom dice out. Die names follow `d<sides>` for standard dice and `d<NAME>` for custom ones (`packages/formula/src/dice.ts`); the guide documents the second but not the first. `d100` is an ordinary 100-sided die to the formula engine; the module chooses to show it as two d10s.

@@ -127,6 +127,9 @@ const DEFINITION: PluginDefinition = {
       'card.attack': 'Attack roll',
       'card.total': 'Total',
       'outcome.hit': 'Hit',
+      'damage.fire': 'Fire',
+      'chat.heals': '{name} heals {hp} with {how}.',
+      'how.potion': 'a potion',
     },
   },
   styles: ['styles/sheet.css'],
@@ -166,6 +169,7 @@ const CARD_MESSAGE: ChatMessage = {
       rows: [{ label: 'card.total', value: '15' }],
     },
   },
+  translation: null,
   createdAt: '2026-10-20T12:00:00.000Z',
   editedAt: null,
 };
@@ -371,5 +375,46 @@ describe('plugin host (T-0409)', () => {
     expect(await within(messages).findByText('Ayla strikes')).toBeInTheDocument();
     // A typed roll's text is its formula, shown once by the roll itself.
     expect(within(messages).getAllByText('1d1 + 2')).toHaveLength(2);
+  });
+
+  it('translates card values that are lang keys (T-1611)', async () => {
+    const rows = [
+      { label: 'card.total', value: 'damage.fire' },
+      { label: 'card.total', value: 'damage.fire and more' },
+    ];
+    const recipe = CARD_MESSAGE.card;
+    if (!recipe?.card) throw new Error('The fixture has a card.');
+    openTable('/tables/t1', {
+      messages: [{ ...CARD_MESSAGE, card: { ...recipe, card: { ...recipe.card, rows } } }],
+    });
+    const card = (await within(await log()).findByText('Attack roll')).closest('[data-plugin]');
+    expect(card).toHaveTextContent('TotalFire');
+    // Text that is not a key shows as it is.
+    expect(card).toHaveTextContent('Totaldamage.fire and more');
+  });
+
+  it("shows text plugin code posted by lang key in the viewer's language (T-1611)", async () => {
+    const translation = {
+      plugin: 'tiny-d20',
+      key: 'chat.heals',
+      params: { name: 'Ayla', hp: 3, how: 'how.potion' },
+    };
+    const posted = { ...CARD_MESSAGE, kind: 'text' as const, card: null, rolls: [] };
+    openTable('/tables/t1', {
+      messages: [
+        { ...posted, id: 'm2', text: 'The stored English', translation },
+        // Posted by another plugin than the table's system: its stored text.
+        {
+          ...posted,
+          id: 'm3',
+          text: 'Stored text',
+          translation: { ...translation, plugin: 'other' },
+        },
+      ],
+    });
+    const messages = await log();
+    expect(await within(messages).findByText('Ayla heals 3 with a potion.')).toBeInTheDocument();
+    expect(within(messages).getByText('Stored text')).toBeInTheDocument();
+    expect(within(messages).queryByText('The stored English')).not.toBeInTheDocument();
   });
 });

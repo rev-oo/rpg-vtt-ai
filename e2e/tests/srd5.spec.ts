@@ -15,6 +15,7 @@ import { showPanel } from './support/workspace.js';
 // T-1609: d20 rolls ask for Advantage (or take Shift and Ctrl), and spells for their slot.
 // T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
+// T-1611: a Portuguese player reads the sheet, cards and server messages in pt-BR.
 
 const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
@@ -111,7 +112,9 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await expect(card.locator('dd').nth(1)).toHaveText(/^2d20kh1 \+ \d+$/);
     // Only the branches the formula took, with their values (T-1607); a natural 20 doubles
     // the dice.
-    await expect(card.locator('dd').nth(3)).toHaveText(/^[12]d8 \+ 3 slashing$/);
+    await expect(card.locator('dd').nth(3)).toHaveText(/^[12]d8 \+ 3$/);
+    // The damage type is a lang key the card translates (T-1611).
+    await expect(card.locator('dd').nth(5)).toHaveText('Slashing');
     await expect(card.getByRole('list', { name: /Dice of [12]d8/ })).toBeVisible();
 
     // Versatile: with two hands the longsword deals 1d10. Only versatile weapons ask.
@@ -123,7 +126,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await options.getByRole('button', { name: 'Roll' }).click();
     await expect(options).toBeHidden();
     const versatile = log.locator('[data-plugin="srd5"]').last();
-    await expect(versatile.locator('dd').nth(3)).toHaveText(/^[12]d10 \+ 3 slashing$/);
+    await expect(versatile.locator('dd').nth(3)).toHaveText(/^[12]d10 \+ 3$/);
   });
 
   await test.step('a critical hit doubles every die, extra damage too', async () => {
@@ -140,7 +143,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Control'] });
     const crit = log.locator('[data-plugin="srd5"]').last();
     await expect(crit.getByText('Critical hit!')).toBeVisible();
-    await expect(crit.locator('dd').nth(3)).toHaveText('2d10 + 3 + 2d6 slashing');
+    await expect(crit.locator('dd').nth(3)).toHaveText('2d10 + 3 + 2d6');
     await expect(crit.getByRole('list', { name: 'Dice of 2d6' })).toBeVisible();
   });
 
@@ -162,7 +165,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
       .click();
     const effect = log.locator('[data-plugin="srd5"]').last();
     await expect(effect.locator('dd').nth(2)).toContainText('2d10');
-    await expect(effect.locator('dd').nth(5)).toHaveText('fire');
+    await expect(effect.locator('dd').nth(6)).toHaveText('Fire');
   });
 
   await test.step('Magic Missile cast with a level 3 slot fires two more darts (T-1609)', async () => {
@@ -225,4 +228,78 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
   });
 
   expect(errors).toEqual([]);
+});
+
+test('a Portuguese player reads the SRD sheet, cards and rest messages in pt-BR', async ({
+  browser,
+}) => {
+  const gm = await signIn(browser, ADMIN);
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5-pt.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
+  const player = await createPlayer(browser, gm, 'ana', 'Ana');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Quinta Edição',
+    systemId: 'srd5',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor } = await post<{ actor: { id: string } }>(player, `/tables/${table.id}/actors`, {
+    type: 'character',
+    name: 'Lia',
+  });
+  setActorData(actor.id, {
+    class: 'class.fighter',
+    level: 3,
+    str: 16,
+    hp: { value: 10, max: 28, temp: 0 },
+  });
+  await post(player, `/tables/${table.id}/compendium/copy`, {
+    refs: ['srd5:srd:longsword'],
+    actorId: actor.id,
+  });
+
+  // The same account, in a Portuguese browser.
+  const context = await browser.newContext({
+    locale: 'pt-BR',
+    storageState: await player.context.storageState(),
+  });
+  const page = await context.newPage();
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto(`/tables/${table.id}`);
+  await expect(page.getByText(/Conectando|Reconectando/)).toBeHidden();
+  await page.getByRole('button', { name: 'Abrir ficha: Lia' }).click();
+  const sheet = page.locator('[data-plugin="srd5"]');
+  const log = page.getByRole('log', { name: 'Mensagens' });
+
+  await test.step('the sheet is in Portuguese, its values stored as they are', async () => {
+    await expect(sheet.getByRole('status', { name: 'Bônus de Proficiência' })).toHaveText('+2');
+    const klass = sheet.getByRole('combobox', { name: 'Classe' });
+    await expect(klass).toHaveValue('class.fighter');
+    await expect(klass.locator('option:checked')).toHaveText('Guerreiro');
+  });
+
+  await test.step('the attack card names its rows and damage type in Portuguese', async () => {
+    await sheet.getByRole('tab', { name: 'Ataques' }).click();
+    const sword = sheet.getByRole('listitem', { name: 'Longsword' });
+    await sword.getByRole('button', { name: 'Atacar' }).click({ modifiers: ['Shift'] });
+    const card = log.locator('[data-plugin="srd5"]').last();
+    await expect(card.getByText('Ataque com arma')).toBeVisible();
+    await expect(card.getByText('Tipo', { exact: true })).toBeVisible();
+    await expect(card.locator('dd').nth(5)).toHaveText('Cortante');
+  });
+
+  await test.step("the server code's rest message is in Portuguese", async () => {
+    await sheet.getByRole('tab', { name: 'Principal' }).click();
+    await sheet.getByRole('button', { name: 'Descanso Longo' }).click();
+    await expect(log.getByText('Lia termina um Descanso Longo')).toBeVisible();
+    await expect(sheet.getByRole('textbox', { name: 'Pontos de Vida', exact: true })).toHaveValue(
+      '28',
+    );
+  });
+
+  expect(errors).toEqual([]);
+  await context.close();
 });

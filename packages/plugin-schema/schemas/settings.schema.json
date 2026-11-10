@@ -194,6 +194,24 @@
               "type": "string"
             }
           },
+          "enumLabels": {
+            "description": "What the form shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value.",
+            "type": "object",
+            "propertyNames": {
+              "type": "string"
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 500,
+              "title": "Text"
+            }
+          },
+          "format": {
+            "description": "A colour, written `#rrggbb` and picked with a colour picker; it cannot have an `enum`.",
+            "type": "string",
+            "const": "colour"
+          },
           "maxLength": {
             "type": "integer",
             "minimum": 1,
@@ -206,7 +224,7 @@
           "default"
         ],
         "additionalProperties": false,
-        "description": "Text, or a choice with `enum`."
+        "description": "Text, a choice with `enum`, or a colour with `format`."
       }
     ],
     "title": "Setting"

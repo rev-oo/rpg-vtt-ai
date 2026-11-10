@@ -5,6 +5,7 @@ export * from './data.js';
 export * from './derived.js';
 export * from './dice.js';
 export * from './errors.js';
+export * from './lang.js';
 export * from './layout.js';
 export * from './migrate.js';
 export * from './options.js';

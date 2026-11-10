@@ -43,9 +43,21 @@ export interface HandlerItem {
   derived: Record<string, Value>;
 }
 
-/** A message posted by a handler, as the roll's speaker and to the roll's audience. */
+/**
+ * A message posted by a handler, as the roll's speaker and to the roll's audience: `text`, or a
+ * lang `key` with `params` (T-1611), and the rolls it shows.
+ */
 export interface HandlerPost {
+  /** Text everyone reads as written. */
   text?: string;
+  /**
+   * A key of the plugin's lang files, instead of `text`: each viewer reads it in their
+   * language, `{name}` filled from `params`. It needs an English text, which the message keeps
+   * for everything else (exports, a disabled plugin).
+   */
+  key?: string;
+  /** The key's parameters; a string that is a lang key (`ability.dex`) is translated too. */
+  params?: Readonly<Record<string, string | number>>;
   rolls?: readonly HandlerRoll[];
 }
 

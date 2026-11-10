@@ -48,6 +48,43 @@ function defaultProblem(field: FieldSchema, value: unknown): PluginIssue['params
   return undefined;
 }
 
+/**
+ * Checks `enumLabels` against the `enum` it labels (T-1611): it needs one, and labels only its
+ * values (numbers by their text, `"6"`).
+ */
+export function checkEnumLabels(
+  values: readonly (string | number)[] | undefined,
+  labels: Readonly<Record<string, string>> | undefined,
+  path: JsonPath,
+  add: Add,
+): void {
+  if (labels === undefined) return;
+  if (values === undefined) {
+    add('missing_key', path, { key: 'enum' });
+    return;
+  }
+  const known = values.map(String);
+  for (const value of Object.keys(labels)) {
+    if (!known.includes(value))
+      add('invalid_value', [...path, 'enumLabels', value], {
+        reason: 'enum',
+        values: known.map((each) => JSON.stringify(each)).join(', '),
+      });
+  }
+}
+
+/** The labels of a type's `enumLabels`, with where each is, for the lang checks (T-1611). */
+export function* enumLabelsOf(
+  field: FieldSchema,
+  path: JsonPath,
+): Generator<[label: string, path: JsonPath]> {
+  for (const [value, label] of Object.entries(field.enumLabels ?? {}))
+    yield [label, [...path, 'enumLabels', value]];
+  for (const [name, child] of Object.entries(field.properties ?? {}))
+    yield* enumLabelsOf(child, [...path, 'properties', name]);
+  if (field.items) yield* enumLabelsOf(field.items, [...path, 'items']);
+}
+
 function checkField(field: FieldSchema, path: JsonPath, add: Add): void {
   if (field.default !== undefined) {
     const problem = defaultProblem(field, field.default);
@@ -67,6 +104,7 @@ function checkField(field: FieldSchema, path: JsonPath, add: Add): void {
   if (field.format !== undefined && field.type !== 'string') {
     add('invalid_annotation', [...path, 'format'], { key: 'format', type: field.type });
   }
+  checkEnumLabels(field.enum, field.enumLabels, path, add);
   if (field['x-counter'] === true && field.type !== 'integer' && field.type !== 'number') {
     add('invalid_annotation', [...path, 'x-counter'], { key: 'x-counter', type: field.type });
   }

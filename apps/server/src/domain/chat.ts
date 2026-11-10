@@ -42,6 +42,7 @@ export function toChatMessage(row: ChatMessageRow): ChatMessage {
     text: row.text,
     rolls: row.rolls,
     card: row.card ?? null,
+    translation: row.translation ?? null,
     createdAt: row.createdAt.toISOString(),
     editedAt: row.editedAt?.toISOString() ?? null,
   };

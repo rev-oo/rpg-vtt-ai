@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -218,11 +218,27 @@ describe('module plugins and instance settings (T-1601)', () => {
         type: 'string',
         default: 'high',
         enum: ['low', 'high'],
+        // Labels by value (T-1611): the stored value stays `low`.
+        enumLabels: { low: 'quality.low', high: 'quality.high' },
         label: 'setting.quality',
         scope: 'instance',
       },
+      tint: {
+        type: 'string',
+        default: '#f4efe1',
+        format: 'colour',
+        label: 'setting.tint',
+        scope: 'instance',
+      },
     },
-    lang: { en: { 'setting.quality': 'Dice quality' } },
+    lang: {
+      en: {
+        'setting.quality': 'Dice quality',
+        'setting.tint': 'Dice tint',
+        'quality.low': 'Fast',
+        'quality.high': 'Pretty',
+      },
+    },
     defaultLocale: 'en',
   };
 
@@ -244,13 +260,23 @@ describe('module plugins and instance settings (T-1601)', () => {
     const user = userEvent.setup();
     await user.click(card('Glow').getByText('Settings for every table'));
     const quality = await card('Glow').findByLabelText('Dice quality');
-    await user.selectOptions(quality, 'low');
+    expect(
+      within(quality)
+        .getAllByRole('option')
+        .map((option) => option.textContent),
+    ).toEqual(['Fast', 'Pretty']);
+    await user.selectOptions(quality, 'Fast');
+    // A colour setting is a colour picker (T-1611).
+    const tint = card('Glow').getByLabelText('Dice tint');
+    expect(tint).toHaveAttribute('type', 'color');
+    expect(tint).toHaveValue('#f4efe1');
+    fireEvent.change(tint, { target: { value: '#aa3322' } });
     await user.click(card('Glow').getByRole('button', { name: 'Save settings' }));
 
     expect(await card('Glow').findByText('The settings were saved.')).toBeInTheDocument();
     expect(calls.find((c) => c.method === 'PATCH')).toMatchObject({
       path: '/plugins/glow/settings',
-      body: { values: { quality: 'low' } },
+      body: { values: { quality: 'low', tint: '#aa3322' } },
     });
   });
 });

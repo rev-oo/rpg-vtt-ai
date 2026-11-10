@@ -47,12 +47,27 @@ export const settingSchema = z
         type: z.literal('string'),
         default: z.string(),
         enum: z.array(z.string()).min(1).optional().describe('Offers these values to pick from.'),
+        enumLabels: z
+          .record(z.string(), text)
+          .optional()
+          .describe(
+            'What the form shows for each `enum` value: a lang key or text, by value. The stored value stays the plain value.',
+          ),
+        format: z
+          .literal('colour')
+          .optional()
+          .describe(
+            'A colour, written `#rrggbb` and picked with a colour picker; it cannot have an `enum`.',
+          ),
         maxLength: z.int().min(1).optional(),
       })
-      .describe('Text, or a choice with `enum`.'),
+      .describe('Text, a choice with `enum`, or a colour with `format`.'),
   ])
   .meta({ title: 'Setting' });
 export type Setting = z.infer<typeof settingSchema>;
+
+/** A colour as a `colour` setting stores it: `#rrggbb` (T-1611). */
+export const COLOUR = /^#[0-9a-f]{6}$/i;
 
 /** A setting's scope; `table` when it declares none. */
 export const settingScope = (setting: Pick<Setting, 'scope'>): SettingScope =>
