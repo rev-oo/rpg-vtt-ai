@@ -13,6 +13,7 @@ import { showPanel } from './support/workspace.js';
 // gets its numbers from the class tables, copies a sword and a cantrip from the SRD pack,
 // attacks, casts, spends a slot and takes a Long Rest through the plugin's server code.
 // T-1609: d20 rolls ask for Advantage (or take Shift and Ctrl), and spells for their slot.
+// T-1616: a player who turns the asking off at the table rolls with a click.
 
 const plugin = fileURLToPath(new URL('../../plugins/dnd5e-srd', import.meta.url));
 
@@ -181,6 +182,22 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await expect(sheet.getByRole('textbox', { name: 'Hit Points', exact: true })).toHaveValue('27');
     await sheet.getByRole('tab', { name: 'Spells' }).click();
     await expect(spent).toHaveValue('0');
+  });
+
+  await test.step('without asking for options, a click rolls a Normal check (T-1616)', async () => {
+    // The preference is the member's own, at this table.
+    await showPanel(page, 'Members');
+    const ask = page.getByRole('checkbox', { name: 'Ask for roll options' });
+    await expect(ask).toBeChecked();
+    await ask.uncheck();
+    await expect(page.getByText('Roll buttons roll at once at this table')).toBeVisible();
+
+    await openSheet(page, table.id, 'Elowen');
+    const check = sheet.getByRole('button', { name: 'Strength check' });
+    await expect(check).toHaveAttribute('title', 'Alt-click to choose the options.');
+    await check.click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+    await expect(log.getByText(/Strength check: 1d20 \+ 3 = \d+/)).toBeVisible();
   });
 
   expect(errors).toEqual([]);

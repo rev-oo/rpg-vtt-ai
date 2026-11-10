@@ -174,6 +174,8 @@ export const members = sqliteTable(
     role: text('role', { enum: TABLE_ROLES }).notNull(),
     /** Default character for this table (FR-TABLE-05); actors arrive in M2, so no FK yet. */
     defaultCharacterId: text('default_character_id'),
+    /** Roll buttons ask for a recipe's options before rolling, at this table (T-1616). */
+    askRollOptions: integer('ask_roll_options', { mode: 'boolean' }).notNull().default(true),
     joinedAt: timestamp('joined_at')
       .notNull()
       .$defaultFn(() => new Date()),

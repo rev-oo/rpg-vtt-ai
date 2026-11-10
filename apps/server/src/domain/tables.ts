@@ -26,7 +26,8 @@ export function findTable(db: DbOrTx, tableId: string): GameTable | undefined {
 export function toTableView(
   db: DbOrTx,
   table: GameTable,
-  role: TableRole,
+  /** The caller's membership: their role, and their own preferences at the table. */
+  member: { role: TableRole; askRollOptions?: boolean },
   /** Entities an upgrade would migrate (ADR-072), when the caller counted them. */
   outdatedEntities = 0,
 ): TableView {
@@ -56,6 +57,7 @@ export function toTableView(
     systemAvailable: plugin ? isAvailable(plugin) : false,
     createdAt: table.createdAt.toISOString(),
     archivedAt: table.archivedAt?.toISOString() ?? null,
-    role,
+    role: member.role,
+    askRollOptions: member.askRollOptions ?? true,
   };
 }

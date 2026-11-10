@@ -20,6 +20,8 @@ export interface SheetStrings {
   /** The roll options dialog's buttons (T-1609). */
   roll: string;
   cancel: string;
+  /** A roll button's tooltip when clicks roll at once (T-1616). */
+  optionsHint: string;
 }
 
 /** English defaults. `{name}` placeholders are filled by the renderer. */
@@ -44,6 +46,7 @@ export const DEFAULT_STRINGS: SheetStrings = {
   notDice: 'Enter dice, such as 2d6 + 3.',
   roll: 'Roll',
   cancel: 'Cancel',
+  optionsHint: 'Alt-click to choose the options.',
 };
 
 export const fill = (text: string, params: Readonly<Record<string, string | number>>): string =>

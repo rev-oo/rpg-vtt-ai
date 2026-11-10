@@ -127,6 +127,13 @@
       "when": 1793985908744,
       "tag": "0017_module_plugins",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1794307507556,
+      "tag": "0018_member_ask_roll_options",
+      "breakpoints": true
     }
   ]
 }

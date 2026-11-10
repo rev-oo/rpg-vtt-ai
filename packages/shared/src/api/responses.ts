@@ -60,6 +60,8 @@ export const tableSchema = z.object({
   /** When the table was archived; archived tables are read-only (FR-TABLE-06). */
   archivedAt: z.string().nullable(),
   role: z.enum(TABLE_ROLES),
+  /** The caller's own preference at this table: roll buttons ask for options (T-1616). */
+  askRollOptions: z.boolean(),
 });
 export type TableView = z.infer<typeof tableSchema>;
 
@@ -85,7 +87,9 @@ export type MemberView = z.infer<typeof memberSchema>;
 export const membersResponseSchema = z.object({ members: z.array(memberSchema) });
 /** `PATCH /tables/:id/members/:userId`. */
 export const memberUpdateResponseSchema = z.object({
-  member: memberSchema.pick({ userId: true, role: true, defaultCharacterId: true }),
+  member: memberSchema
+    .pick({ userId: true, role: true, defaultCharacterId: true })
+    .extend({ askRollOptions: z.boolean() }),
 });
 
 export const INVITE_STATUSES = ['active', 'expired', 'revoked'] as const;

@@ -1,0 +1,1 @@
+ALTER TABLE `members` ADD `ask_roll_options` integer DEFAULT true NOT NULL;

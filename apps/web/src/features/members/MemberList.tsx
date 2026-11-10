@@ -22,6 +22,8 @@ export function MemberList({ data, userId }: { data: TableData; userId: string }
   const [failure, setFailure] = useState<string | null>(null);
   const manages = canManageMembers(table.role);
   const ownCharacters = actors.filter((actor) => actor.access === 'owner');
+  // Shown at once; the table's data catches up when the change is saved (T-1616).
+  const [askRollOptions, setAskRollOptions] = useState(table.askRollOptions);
 
   const run = async (action: () => Promise<string>) => {
     setFailure(null);
@@ -110,6 +112,28 @@ export function MemberList({ data, userId }: { data: TableData; userId: string }
                     </option>
                   ))}
                 </Select>
+              )}
+              {self && (
+                <label className="flex items-center gap-2 self-center text-sm">
+                  <input
+                    type="checkbox"
+                    checked={askRollOptions}
+                    onChange={(e) => {
+                      const ask = e.target.checked;
+                      setAskRollOptions(ask);
+                      void run(async () => {
+                        try {
+                          await api.updateMember(table.id, userId, { askRollOptions: ask });
+                        } catch (caught) {
+                          setAskRollOptions(!ask);
+                          throw caught;
+                        }
+                        return t(ask ? 'members.askRollOptionsOn' : 'members.askRollOptionsOff');
+                      });
+                    }}
+                  />
+                  {t('members.askRollOptions')}
+                </label>
               )}
               {self ? (
                 <Button onClick={() => void leave()}>{t('members.leave')}</Button>

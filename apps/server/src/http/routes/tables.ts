@@ -55,13 +55,13 @@ export function tableRoutes(context: AppContext): void {
   app.get('/api/v1/tables', (request) => {
     const session = requireSession(request);
     const rows = db
-      .select({ table: gameTables, role: members.role })
+      .select({ table: gameTables, role: members.role, askRollOptions: members.askRollOptions })
       .from(members)
       .innerJoin(gameTables, eq(gameTables.id, members.tableId))
       .where(eq(members.userId, session.user.id))
       .orderBy(asc(gameTables.name), asc(gameTables.createdAt))
       .all();
-    return { tables: rows.map(({ table, role }) => toTableView(db, table, role)) };
+    return { tables: rows.map(({ table, ...member }) => toTableView(db, table, member)) };
   });
 
   app.post('/api/v1/tables', (request, reply) => {
@@ -95,7 +95,7 @@ export function tableRoutes(context: AppContext): void {
       return created;
     });
 
-    return reply.code(201).send({ table: toTableView(db, table, 'gm') });
+    return reply.code(201).send({ table: toTableView(db, table, { role: 'gm' }) });
   });
 
   app.get('/api/v1/tables/:id/types', (request) => {
@@ -166,7 +166,7 @@ export function tableRoutes(context: AppContext): void {
     const outdated = canUpgradeTableSystem(membership.role)
       ? countOutdated(db, table, (systemId) => registry.definition(systemId))
       : 0;
-    return { table: toTableView(db, table, membership.role, outdated) };
+    return { table: toTableView(db, table, membership, outdated) };
   });
 
   app.patch('/api/v1/tables/:id', (request) => {
@@ -206,7 +206,7 @@ export function tableRoutes(context: AppContext): void {
       .get();
     // Open sheets compute derived values from the settings (§8.12).
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
-    return { table: toTableView(db, updated, membership.role) };
+    return { table: toTableView(db, updated, membership) };
   });
 
   /**
@@ -224,7 +224,7 @@ export function tableRoutes(context: AppContext): void {
       .returning()
       .get();
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
-    return { table: toTableView(db, updated, membership.role) };
+    return { table: toTableView(db, updated, membership) };
   };
   app.post('/api/v1/tables/:id/archive', setArchived(true));
   app.post('/api/v1/tables/:id/unarchive', setArchived(false));
@@ -271,7 +271,7 @@ export function tableRoutes(context: AppContext): void {
     events.publish(id, { type: 'table.updated', tableId: id, payload: {} }, () => true);
     const outdated = countOutdated(db, updated, definition);
     const response: UpgradeSystemResponse = {
-      table: toTableView(db, updated, membership.role, outdated),
+      table: toTableView(db, updated, membership, outdated),
       migration,
     };
     return response;

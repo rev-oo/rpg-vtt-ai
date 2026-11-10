@@ -120,6 +120,8 @@ export const updateMemberBody = z
     role: z.enum(TABLE_ROLES),
     /** Validated against the table's actors once they exist (M2). */
     defaultCharacterId: z.uuid().nullable(),
+    /** Your own preference at the table: roll buttons ask for options (T-1616). */
+    askRollOptions: z.boolean(),
   })
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);

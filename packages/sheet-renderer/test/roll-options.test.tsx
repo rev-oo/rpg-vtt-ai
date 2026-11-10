@@ -33,7 +33,7 @@ const ROLLS: Record<string, Recipe> = {
   },
 };
 
-function sheet() {
+function sheet(askRollOptions?: boolean) {
   const rolls: unknown[][] = [];
   renderSheet(
     {
@@ -46,6 +46,7 @@ function sheet() {
     },
     {
       rolls: ROLLS,
+      ...(askRollOptions !== undefined && { askRollOptions }),
       onRoll: (...call) => {
         rolls.push(call);
       },
@@ -114,5 +115,28 @@ describe('roll options (T-1609)', () => {
       'title',
       'The default of the option "level" is not a whole number',
     );
+  });
+
+  it('rolls at the defaults without asking, and asks on Alt-click (T-1616)', async () => {
+    const rolls = sheet(false);
+    const user = userEvent.setup();
+    const aim = screen.getByRole('button', { name: 'Aim' });
+    expect(aim).toHaveAttribute('title', 'Alt-click to choose the options.');
+    expect(screen.getByRole('button', { name: 'Plain' })).not.toHaveAttribute('title');
+    await user.click(aim);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    await user.keyboard('{Shift>}');
+    await user.click(aim);
+    await user.keyboard('{/Shift}{Alt>}');
+    await user.click(aim);
+    await user.keyboard('{/Alt}');
+    const dialog = screen.getByRole('dialog', { name: 'Aimed shot' });
+    await user.click(within(dialog).getByRole('radio', { name: 'Disadvantage' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Roll' }));
+    expect(rolls).toEqual([
+      ['aimed', { base: 2 }, undefined, { mode: 'normal', level: 2, bonus: '' }],
+      ['aimed', { base: 2 }, undefined, { mode: 'advantage', level: 2, bonus: '' }],
+      ['aimed', { base: 2 }, undefined, { mode: 'disadvantage', level: 2, bonus: '' }],
+    ]);
   });
 });
