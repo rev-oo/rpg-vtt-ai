@@ -45,11 +45,17 @@ jobs:
       - name: Build
         run: pnpm build
 
-      # The download has hung on some runners; failing fast lets the run be retried.
+      # The download has hung on some runners, and the apt mirror is sometimes slow: each try
+      # stops after 5 minutes, and the next keeps the packages apt already downloaded.
       - name: Install Playwright browsers
-        timeout-minutes: 5
+        timeout-minutes: 17
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/v')
-        run: pnpm --filter @vtt/e2e exec playwright install --with-deps chromium firefox webkit
+        run: |
+          for try in 1 2 3; do
+            timeout 5m pnpm --filter @vtt/e2e exec playwright install --with-deps chromium firefox webkit && exit 0
+            echo "::warning::Installing the Playwright browsers failed or took too long (try $try of 3)."
+          done
+          exit 1
 
       - name: E2E
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/v')
