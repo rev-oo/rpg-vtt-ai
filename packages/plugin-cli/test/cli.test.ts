@@ -225,10 +225,10 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     expect(code).not.toMatch(/from"(three|cannon-es)"/);
   });
 
-  it('packs dnd5e-srd with its shared and server code and its licence (T-1605)', async () => {
-    const dir = path.join(REPO, 'plugins', 'dnd5e-srd');
+  it('packs srd5 with its shared and server code and its licence (T-1605)', async () => {
+    const dir = path.join(REPO, 'plugins', 'srd5');
     expect((await run('validate', dir)).code).toBe(0);
-    const file = path.join(temp, 'dnd5e-srd.vttplugin');
+    const file = path.join(temp, 'srd5.vttplugin');
     expect((await run('pack', dir, '--out', file)).code).toBe(0);
     const files = readZip(await readFile(file), ARCHIVE_LIMITS);
     expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual([

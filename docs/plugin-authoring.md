@@ -918,6 +918,16 @@ Names of types, sheets, cards and recipes are [names](plugin-reference.md#name):
 - **`hasCode`** must be `true` exactly when there is a `code/` folder. Admins must acknowledge code before enabling a plugin that has it.
 - **`locales`** lists the languages in `lang/`; each needs its file, and `en` is always required once there is any. **`defaultLocale`** is the language shown when the viewer's lacks a text.
 - **`frames`** declares a module's overlays and panels (see [Overlays and panels](#overlays-and-panels)); a system cannot have it, and a module needs code for it.
+- **`attribution`** credits the plugin's content, as a licence such as CC-BY asks: its `text`, shown exactly as written in every language, and an optional `url` (`http` or `https`) the text links to. Admins see it on the Plugins page, and members see it with each entry of the plugin's [packs](#compendium-packs) in the Compendium panel:
+
+  ```json
+  {
+    "attribution": {
+      "text": "This work includes material from the System Reference Document 5.2 (\"SRD 5.2\") by Wizards of the Coast LLC…",
+      "url": "https://www.dndbeyond.com/srd"
+    }
+  }
+  ```
 
 ### Actor and item types
 
@@ -1347,7 +1357,14 @@ A pack holds ready-made actors and items of the plugin's own types. Every member
 
 - **`id`** is a [name](plugin-reference.md#name), unique in the pack. Keep it the same across versions: copies remember it, so the Compendium panel marks the entries a table already has. Copies are not changed when a later version changes the entry.
 - **`kind`** is `actor` or `item`, and **`type`** one of the plugin's types of that kind.
-- **`data`** is checked against the type's schema, like defaults; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.
+- **`data`** is checked against the type's schema, like defaults; what it leaves out takes the defaults. A collection is a list of rows, as in defaults, or rows keyed by id, as stored data has them (in a `migrate` hook, say). Rows keyed by id keep their ids in the copies, and their `sort` keys if they have them; rows without one come after the others, in the order written:
+
+  ```json
+  { "skills": { "climb": { "name": "Climb", "rank": 2 }, "swim": { "name": "Swim" } } }
+  ```
+
+  Row ids are letters, digits, `_` and `-`.
+
 - **`label`** names the pack in the panel's pack filter; a lang key or text.
 
 Copied actors belong to whoever copies them, so players see a GM's copies only once the GM shares them. Items copied into the table go to its library. Players see every entry in the panel, but not its secret fields: keep surprises in GM-only fields. A pack may hold 1,000 entries.

@@ -8,9 +8,9 @@
 
 ## Context
 
-The 5e study (`docs/studies/dnd5e-srd.md`, F18) and the dice-3d study (`docs/studies/dice-3d.md`, F7) found that plugin code is hard to test outside a running table:
+The 5e study (`docs/studies/srd5.md`, F18) and the dice-3d study (`docs/studies/dice-3d.md`, F7) found that plugin code is hard to test outside a running table:
 
-- The SDK had no fake `ctx`, so dnd5e-srd built its own to test its handlers. That fake took any formula, so a handler's formula was only ever checked on a server.
+- The SDK had no fake `ctx`, so srd5 built its own to test its handlers. That fake took any formula, so a handler's formula was only ever checked on a server.
 - The server tests copied reference plugins without their code, because the server loads only compiled code (ADR-026).
 - Nothing could render a module's overlay or panel outside a frame, so dice-3d tested its overlay only end to end.
 
@@ -37,7 +37,7 @@ The 5e study (`docs/studies/dnd5e-srd.md`, F18) and the dice-3d study (`docs/stu
 
 ## Consequences
 
-- dnd5e-srd's handler tests use `fakeHandler`. Two of them roll the real formulas, and they found that the death save had failed on every roll since T-1609 (`@derived.saveEdge does not exist`). The death save now rolls `1d20 - @derived.d20Penalty`. A server test rolls it with the packed code.
+- srd5's handler tests use `fakeHandler`. Two of them roll the real formulas, and they found that the death save had failed on every roll since T-1609 (`@derived.saveEdge does not exist`). The death save now rolls `1d20 - @derived.d20Penalty`. A server test rolls it with the packed code.
 - dice-3d's overlay is tested in a test frame. jsdom has no WebGL, so the throws run unseen and the tests read the landed faces from the overlay's data attributes.
 - The Docker image's build also builds `@vtt/plugin-cli`, because turbo follows dev dependencies. It is a `tsc` build of a package whose dependencies the web app builds anyway.
 - The kits are part of the SDK that T-1701 freezes for 1.x.

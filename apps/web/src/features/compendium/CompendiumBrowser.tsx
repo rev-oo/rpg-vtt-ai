@@ -15,6 +15,7 @@ import { GroupedList } from '../entities/GroupedList.js';
 import { groupItems, useItemTypes, type OtherRows } from '../entities/item-groups.js';
 import { LoadMore } from '../entities/LoadMore.js';
 import { LIST_PAGE, usePagedList } from '../entities/paging.js';
+import { Attribution } from '../plugins/Attribution.js';
 import { useTableData } from '../table/table-data.js';
 import { usePanelList } from '../workspace/use-panel-list.js';
 
@@ -91,8 +92,9 @@ export function CompendiumBrowser(): ReactElement {
     }
   };
 
+  const packOf = (name: string) => packs.find((candidate) => candidate.name === name);
   const packLabel = (name: string) => {
-    const pack = packs.find((candidate) => candidate.name === name);
+    const pack = packOf(name);
     return pack ? translate(pack.label) : name;
   };
 
@@ -180,6 +182,7 @@ export function CompendiumBrowser(): ReactElement {
                   <p className="text-sm text-muted">{t('compendium.noPreview')}</p>
                 )}
               </div>
+              <PackAttribution pack={packOf(entry.pack)} />
             </details>
           </EntityRow>
         )}
@@ -187,6 +190,12 @@ export function CompendiumBrowser(): ReactElement {
       {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
     </div>
   );
+}
+
+/** The credit a pack's plugin needs, beside the entry it credits (T-1614). */
+function PackAttribution({ pack }: { pack: CompendiumPack | undefined }): ReactElement | null {
+  if (!pack?.attribution) return null;
+  return <Attribution attribution={pack.attribution} className="mt-2 text-xs text-muted" />;
 }
 
 /** Pack actors come before the item groups, under one heading (ADR-061). */

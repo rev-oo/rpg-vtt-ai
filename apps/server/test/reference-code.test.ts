@@ -19,7 +19,7 @@ import {
 } from './support/app.js';
 import { copyReferencePlugin, packedReferencePlugin } from './support/reference.js';
 
-// A reference plugin's compiled code on the server (T-1613): dnd5e-srd, packed by the CLI as
+// A reference plugin's compiled code on the server (T-1613): srd5, packed by the CLI as
 // its author ships it, runs its handlers in QuickJS against a real table.
 
 let dir: string;
@@ -30,7 +30,7 @@ let rolls: number[];
 
 beforeAll(async () => {
   dir = await mkdtemp(path.join(tmpdir(), 'vtt-reference-code-'));
-  await copyReferencePlugin('dnd5e-srd', path.join(dir, 'plugins', 'dnd5e-srd'), { code: true });
+  await copyReferencePlugin('srd5', path.join(dir, 'plugins', 'srd5'), { code: true });
   rolls = [];
   t = await createTestApp({
     env: { DATA_DIR: dir },
@@ -41,12 +41,12 @@ beforeAll(async () => {
   await t.app.inject({ method: 'POST', url: '/api/v1/plugins/rescan', headers });
   const enabled = await t.app.inject({
     method: 'POST',
-    url: '/api/v1/plugins/dnd5e-srd/enable',
+    url: '/api/v1/plugins/srd5/enable',
     headers,
     payload: { acknowledgeCode: true },
   });
   expect(enabled.statusCode, enabled.body).toBe(200);
-  tableId = (await createTable(t.app, gm, { systemId: 'dnd5e-srd' })).id;
+  tableId = (await createTable(t.app, gm, { systemId: 'srd5' })).id;
 }, 60_000);
 
 afterAll(async () => {
@@ -69,7 +69,7 @@ const stored = (id: string) =>
 
 describe('a reference plugin with its compiled code (T-1613)', () => {
   it('packs the code as the CLI would', async () => {
-    const files = await packedReferencePlugin('dnd5e-srd');
+    const files = await packedReferencePlugin('srd5');
     expect([...files.keys()].filter((file) => file.startsWith('code/')).sort()).toEqual([
       'code/server.js',
       'code/shared.js',

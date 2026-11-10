@@ -123,9 +123,36 @@ export function collectionRows(value: unknown): CollectionRow[] {
 }
 
 /**
+ * Rows keyed by id, as a pack may give them (T-1614): each keeps its id and its `sort` key, and
+ * rows without one get keys after the others, in the order written.
+ */
+function packRows(
+  items: FieldSchema | undefined,
+  rows: Readonly<Record<string, unknown>>,
+): CollectionValue {
+  const sorts = Object.values(rows)
+    .map((row) => (isRecord(row) && typeof row.sort === 'string' ? row.sort : null))
+    .filter((sort) => sort !== null)
+    .sort();
+  let last = sorts.at(-1) ?? null;
+  const stored: CollectionValue = {};
+  for (const [id, row] of Object.entries(rows)) {
+    const fields = isRecord(row) ? row : {};
+    let sort = typeof fields.sort === 'string' ? fields.sort : null;
+    if (sort === null) {
+      sort = sortKeyBetween(last, null);
+      last = sort;
+    }
+    stored[id] = { ...packData(items, fields), sort };
+  }
+  return stored;
+}
+
+/**
  * A pack entry's data as an entity stores it (ADR-051): collections written as lists of rows
- * become rows keyed `p0`, `p1`… with sort keys, at every depth. Other values are kept; the
- * defaults fill in the rest when the entity's document loads.
+ * become rows keyed `p0`, `p1`… with sort keys, at every depth. Collections given as rows keyed
+ * by id, as stored, keep their ids (T-1614). Other values are kept; the defaults fill in the
+ * rest when the entity's document loads.
  */
 export function packData(
   field: FieldSchema | undefined,
@@ -142,6 +169,8 @@ export function packData(
           { ...(isRecord(row) ? packData(child.items, row) : {}), sort: keys[index] ?? '' },
         ]),
       );
+    } else if (child && isCollection(child) && isRecord(current)) {
+      data[name] = packRows(child.items, current);
     } else if (child?.type === 'object' && isRecord(current)) {
       data[name] = packData(child, current);
     } else {

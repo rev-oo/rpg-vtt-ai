@@ -46,7 +46,7 @@
             "description": "The name it gets in the table."
           },
           "data": {
-            "description": "Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.",
+            "description": "Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults, or rows keyed by id, as stored data has them.",
             "type": "object",
             "propertyNames": {
               "type": "string"

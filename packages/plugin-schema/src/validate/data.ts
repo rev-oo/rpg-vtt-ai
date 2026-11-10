@@ -113,6 +113,12 @@ export function checkData(field: FieldSchema, value: unknown, path: JsonPath, ad
     return;
   }
   if (field.type === 'array') {
+    // A collection may also come in the stored form: rows keyed by id, each with a `sort` key
+    // or none (T-1614).
+    if (field['x-kind'] === 'collection' && isRecord(value)) {
+      checkRows(field, value, path, add);
+      return;
+    }
     if (!Array.isArray(value)) {
       add('invalid_value', path, { reason: 'type', expected: 'array' });
       return;
@@ -127,6 +133,33 @@ export function checkData(field: FieldSchema, value: unknown, path: JsonPath, ad
   }
   const problem = defaultProblem(field, value);
   if (problem) add('invalid_value', path, problem);
+}
+
+/** A row id in stored data: letters, digits, `_` and `-`. */
+const ROW_ID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** A collection's rows keyed by id: each row fits the row schema, plus an optional `sort`. */
+function checkRows(
+  field: FieldSchema,
+  rows: Readonly<Record<string, unknown>>,
+  path: JsonPath,
+  add: Add,
+): void {
+  for (const [id, row] of Object.entries(rows)) {
+    if (!ROW_ID.test(id)) {
+      add('invalid_value', [...path, id], { reason: 'invalid_format' });
+      continue;
+    }
+    if (!isRecord(row)) {
+      add('invalid_value', [...path, id], { reason: 'type', expected: 'object' });
+      continue;
+    }
+    const { sort, ...fields } = row;
+    if (sort !== undefined && typeof sort !== 'string') {
+      add('invalid_value', [...path, id, 'sort'], { reason: 'type', expected: 'string' });
+    }
+    if (field.items) checkData(field.items, fields, [...path, id], add);
+  }
 }
 
 /** A counter's formula bounds (T-1610), with their paths in the type file. */

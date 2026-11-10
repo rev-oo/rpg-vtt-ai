@@ -56,10 +56,22 @@ The plugin manifest. Every plugin has one, at the root of its folder.
 | `description` | text (at most 2000 characters) |  | Shown on the plugin admin page. |
 | `author` | text (at most 200 characters) |  |  |
 | `license` | text (at most 100 characters) |  |  |
+| `attribution` | [`attribution`](#plugin-attribution) |  | Credit for the plugin's content, such as a CC-BY licence asks for. Shown on the Plugins page and with each compendium entry from its packs. |
 | `hasCode` | true or false | yes | True exactly when the plugin has a `code/` folder. Admins must acknowledge code before enabling the plugin. |
 | `locales` | list of [locale](#locale) (at least 1 item) |  | The languages in `lang/`. Each needs its `lang/<locale>.json`. |
 | `defaultLocale` | [locale](#locale) |  | The language whose text shows when the viewer's language lacks a key; one of `locales`. Defaults to the first of `locales`, then `en`. |
 | `frames` | [Module frames](#plugin-module-frames) |  | A module's overlays and panels. Each must be exported by `code/client` under the same name; only modules with code have them. |
+
+<a id="plugin-attribution"></a>
+
+### `attribution`
+
+Credit for the plugin's content, such as a CC-BY licence asks for. Shown on the Plugins page and with each compendium entry from its packs.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `text` | text (1–500 characters) | yes | The credit, as it must read; shown as written, in every language. |
+| `url` | text (at most 500 characters, matching `^https?:\/\/[^\s/?#]+[^\s]*$`) |  | A web page for the source or its licence, linked from the credit. |
 
 <a id="plugin-module-frames"></a>
 
@@ -709,7 +721,7 @@ A compendium entry.
 | `kind` | one of `"actor"`, `"item"` | yes | An actor or an item. |
 | `type` | [name](#name) | yes | An actor or item type of this plugin. |
 | `name` | text (1–100 characters) | yes | The name it gets in the table. |
-| `data` | map from text to any JSON value |  | Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults. |
+| `data` | map from text to any JSON value |  | Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults, or rows keyed by id, as stored data has them. |
 
 <a id="migration"></a>
 

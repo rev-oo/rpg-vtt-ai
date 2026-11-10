@@ -1,18 +1,20 @@
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   compendiumCopyResponseSchema,
   compendiumPageSchema,
+  pluginsResponseSchema,
   type ActorView,
   type CompendiumCopyInput,
   type ItemView,
 } from '@vtt/shared/api';
 
-import { members } from '../src/db/schema.js';
+import { actors, members } from '../src/db/schema.js';
 
 import {
   authHeaders,
@@ -113,7 +115,7 @@ async function bobsCharacter() {
 describe('compendium browser (T-1202)', () => {
   it('lists every pack entry by name for every member, without their secret fields', async () => {
     const page = await browse();
-    expect(page.packs).toEqual([{ name: 'bestiary', label: 'pack.bestiary' }]);
+    expect(page.packs).toEqual([{ name: 'bestiary', label: 'pack.bestiary', attribution: null }]);
     expect(names(page)).toEqual([
       'Chain mail',
       'Goblin',
@@ -249,5 +251,54 @@ describe('compendium browser (T-1202)', () => {
     const { definition } = res.json<{ system: { definition: Record<string, unknown> } }>().system;
     expect(definition).not.toHaveProperty('packs');
     expect(res.body).not.toContain('Hates bright light');
+  });
+});
+
+describe('attribution and packs in the stored form (T-1614)', () => {
+  const ATTRIBUTION = {
+    text: 'Includes material from the Tiny Reference Document, CC-BY-4.0.',
+    url: 'https://example.com/tiny',
+  };
+
+  beforeEach(async () => {
+    const dir = path.join(dataDir, 'plugins', 'tiny-d20');
+    const manifest = JSON.parse(await readFile(path.join(dir, 'plugin.json'), 'utf8')) as object;
+    await writeFile(
+      path.join(dir, 'plugin.json'),
+      JSON.stringify({ ...manifest, attribution: ATTRIBUTION }),
+    );
+    // Rows keyed by id, as stored data has them, with and without a sort key.
+    const skills = { climb: { name: 'Climb', rank: 2 }, swim: { name: 'Swim', sort: 'a0' } };
+    await writeFile(
+      path.join(dir, 'packs', 'heroes.json'),
+      JSON.stringify({
+        label: 'Heroes',
+        entries: [{ id: 'ayla', kind: 'actor', type: 'character', name: 'Ayla', data: { skills } }],
+      }),
+    );
+    const res = await call(gm, 'POST', '/plugins/rescan');
+    expect(res.statusCode, res.body).toBe(200);
+  });
+
+  it("shows the manifest's attribution with the plugin and with each of its packs", async () => {
+    const { plugins } = pluginsResponseSchema.parse((await call(gm, 'GET', '/plugins')).json());
+    expect(plugins.find((plugin) => plugin.id === 'tiny-d20')?.attribution).toEqual(ATTRIBUTION);
+    const page = await browse(bob.client);
+    expect(page.packs).toEqual([
+      { name: 'bestiary', label: 'pack.bestiary', attribution: ATTRIBUTION },
+      { name: 'heroes', label: 'Heroes', attribution: ATTRIBUTION },
+    ]);
+  });
+
+  it('copies collections given as rows keyed by id, keeping the ids', async () => {
+    const { actors: made } = await copied(gm, { refs: ['tiny-d20:heroes:ayla'] });
+    const id = made[0]?.id ?? '';
+    const stored = t.db.select().from(actors).where(eq(actors.id, id)).get()?.system;
+    expect(stored).toMatchObject({
+      skills: {
+        climb: { name: 'Climb', rank: 2, sort: expect.any(String) as unknown },
+        swim: { name: 'Swim', sort: 'a0' },
+      },
+    });
   });
 });

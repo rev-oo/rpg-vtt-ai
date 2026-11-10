@@ -158,7 +158,7 @@ function openTable() {
     },
     'GET /tables/t1/compendium?limit=50': {
       body: {
-        packs: [{ name: 'bestiary', label: 'Bestiary' }],
+        packs: [{ name: 'bestiary', label: 'Bestiary', attribution: null }],
         entries: [
           entry('spark', 'item', 'spell', 'Spark'),
           entry('ogre', 'actor', 'npc', 'Ogre'),

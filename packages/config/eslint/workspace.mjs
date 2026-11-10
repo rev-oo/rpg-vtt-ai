@@ -27,7 +27,7 @@ export const workspacePackages = {
   // A plugin's code with npm dependencies to bundle (T-1604); it runs in a plugin frame.
   'plugins/dice-3d/code': { type: 'plugin-code', kind: 'react' },
   // A plugin's shared and server code (T-1605); it runs in QuickJS, with no Node or DOM.
-  'plugins/dnd5e-srd/code': { type: 'plugin-server-code', kind: 'pure' },
+  'plugins/srd5/code': { type: 'plugin-server-code', kind: 'pure' },
 };
 
 const PURE_CHAIN = ['shared', 'formula', 'plugin-schema', 'plugin-engine'];
