@@ -30,9 +30,6 @@ const textAt = (data: Readonly<Record<string, unknown>>, path: string): string =
   return typeof value === 'string' ? value : '';
 };
 
-/** The d20 a saving throw rolls, with the actor's Advantage or Disadvantage (`saveEdge`). */
-const SAVE_D20 = '(@derived.saveEdge == 0 ? 1d20 : @derived.saveEdge > 0 ? 2d20kh1 : 2d20kl1)';
-
 /** The d20 the roll kept: the first die term's active result. */
 export function naturalOf(roll: HandlerRoll): number {
   const kept = roll.dice[0]?.results.find((result) => result.active);
@@ -45,7 +42,7 @@ export function naturalOf(roll: HandlerRoll): number {
  */
 export async function deathSave({ ctx, actor }: HandlerInput): Promise<void> {
   if (numberAt(actor.data, 'hp.value') > 0) ctx.fail(`${actor.name} is not dying.`);
-  const roll = await ctx.roll(`${SAVE_D20} - @derived.d20Penalty`);
+  const roll = await ctx.roll('1d20 - @derived.d20Penalty');
   const natural = naturalOf(roll);
   const successes = numberAt(actor.data, 'deathSaves.successes');
   const failures = numberAt(actor.data, 'deathSaves.failures');
