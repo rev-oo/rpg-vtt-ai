@@ -340,6 +340,8 @@ export const ptBR: Messages = {
   'pluginIssue.actor_mismatch':
     'A rolagem “{roll}” não é para atores do tipo “{type}”; liste-o em actors da rolagem.',
   'pluginIssue.invalid_default': 'O valor padrão não serve para o campo: {reason}',
+  'pluginIssue.formula_bound':
+    'Só um contador (x-counter) pode ter uma fórmula como mínimo ou máximo.',
   'pluginIssue.invalid_annotation': '{key} não pode ser usado em um campo do tipo {type}.',
   'pluginIssue.reserved_name': '“{name}” é reservado para fórmulas e não pode nomear um campo.',
   'pluginIssue.invalid_formula': 'Fórmula inválida: {detail} (linha {line}, coluna {column}).',

@@ -62,6 +62,21 @@ describe('<Sheet>', () => {
     expect(store.getSnapshot().name).toBe('Long name ');
   });
 
+  it("works out a counter's formula bounds against the sheet (T-1610)", async () => {
+    const { store } = renderSheet(
+      { type: 'field', path: 'hp.value', label: 'field.hp' },
+      { data: { hp: { value: 4, max: 6 } } },
+    );
+    const user = userEvent.setup();
+    const hp = screen.getByLabelText('Hit points');
+    await user.clear(hp);
+    await user.type(hp, '7');
+    expect(screen.getByText('Must be at most 6.')).toBeInTheDocument();
+    await user.clear(hp);
+    await user.type(hp, '6');
+    expect(store.getSnapshot()).toMatchObject({ hp: { value: 6 } });
+  });
+
   it('stores only dice in a dice field (T-1607)', async () => {
     const { store } = renderSheet({ type: 'field', path: 'damage', label: 'Damage' });
     const user = userEvent.setup();

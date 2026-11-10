@@ -1,20 +1,26 @@
 import { eq } from 'drizzle-orm';
 import * as Y from 'yjs';
 
+import type { FormulaFunction } from '@vtt/formula';
 import {
   adjustCounter,
+  createRules,
   documentLayout,
   ensureContainers,
   layerSchemas,
   mergeLayers,
   readLayer,
   repairLayer,
+  setField,
   splitLayers,
+  staticBounds,
   withDefaults,
   writeLayer,
+  type Bounds,
   type DocumentLayout,
   type HeldItem,
   type LayerData,
+  type SetFieldProblem,
 } from '@vtt/plugin-engine';
 import type { FieldSchema, PluginDefinition } from '@vtt/plugin-schema';
 import { documentName, type DocumentRef } from '@vtt/shared';
@@ -99,20 +105,88 @@ export function repairDocument(
   return doc.transact(() => repairLayer(doc.getMap(DATA_MAP), schema), origin);
 }
 
+/** What working out a counter's formula bounds needs (T-1610). */
+export interface BoundsContext {
+  /** Loaded documents by name, so bounds read edits not stored yet. */
+  live: (name: string) => Y.Doc | undefined;
+  /** The system's shared functions, which bound formulas may call. */
+  functions?: Readonly<Record<string, FormulaFunction>>;
+}
+
+/**
+ * Works out the bounds of an entity's counters (T-1610): formula bounds read both layers of
+ * its data, its derived values, `@items` for an actor, and the table's settings. The data is
+ * read once, on the first formula bound; number bounds need none of it.
+ */
+function counterBoundsOf(
+  db: DbOrTx,
+  ref: DocumentRef,
+  definition: DefinitionOf,
+  { live, functions = {} }: BoundsContext,
+): (field: FieldSchema) => Bounds {
+  let resolve: ((field: FieldSchema) => Bounds) | undefined;
+  const formulas = (field: FieldSchema): Bounds => {
+    if (ref.kind === 'journal') return staticBounds(field);
+    const entity = findEntity(db, ref.kind, ref.id);
+    const table = entity && findTable(db, entity.tableId);
+    const plugin = table && definition(table.systemId);
+    if (!entity || !table || !plugin) return staticBounds(field);
+    const types = ref.kind === 'actor' ? plugin.actorTypes : plugin.itemTypes;
+    if (!Object.hasOwn(types, entity.type)) return staticBounds(field);
+    resolve = createRules(plugin, { settings: table.settings, functions }).counterBounds(
+      ref.kind,
+      entity.type,
+      joinLayers(db, ref.kind, entity, definition, live),
+      ref.kind === 'actor' ? liveHeldItems(db, entity, definition, live) : [],
+    );
+    return resolve(field);
+  };
+  return (field) => {
+    if (typeof field.minimum !== 'string' && typeof field.maximum !== 'string')
+      return staticBounds(field);
+    return resolve ? resolve(field) : formulas(field);
+  };
+}
+
 /**
  * Adds `delta` to a counter of the document (specs §9.5) in one transaction on the server's
- * copy, so concurrent adjustments add up. `undefined` when the path names no counter.
+ * copy, so concurrent adjustments add up. With `bounds`, formula bounds hold too (T-1610).
+ * `undefined` when the path names no counter.
  */
 export function adjustDocument(
   db: DbOrTx,
   ref: DocumentRef,
   doc: Y.Doc,
   { path, delta }: { path: FieldPath; delta: number },
-  { definition, origin }: { definition: DefinitionOf; origin: unknown },
+  {
+    definition,
+    origin,
+    bounds,
+  }: { definition: DefinitionOf; origin: unknown; bounds?: BoundsContext | undefined },
 ): { value: number; clamped: boolean } | undefined {
   const schema = layerSchema(db, ref, definition);
   if (!schema) return undefined;
-  return doc.transact(() => adjustCounter(doc.getMap(DATA_MAP), schema, path, delta), origin);
+  const boundsOf = bounds && counterBoundsOf(db, ref, definition, bounds);
+  return doc.transact(
+    () => adjustCounter(doc.getMap(DATA_MAP), schema, path, delta, boundsOf),
+    origin,
+  );
+}
+
+/**
+ * Sets a plain field of the document (T-1610) in one transaction on the server's copy. Returns
+ * why it could not, or `undefined` once set.
+ */
+export function setDocumentField(
+  db: DbOrTx,
+  ref: DocumentRef,
+  doc: Y.Doc,
+  { path, value }: { path: FieldPath; value: unknown },
+  { definition, origin }: { definition: DefinitionOf; origin: unknown },
+): SetFieldProblem | undefined {
+  const schema = layerSchema(db, ref, definition);
+  if (!schema) return 'not_a_field';
+  return doc.transact(() => setField(doc.getMap(DATA_MAP), schema, path, value), origin);
 }
 
 /** The fields of one layer; without a layout every value is plain. */
@@ -244,7 +318,7 @@ export type LiveHeldItem = HeldItem & { id: string; name: string };
  */
 export function liveHeldItems(
   db: DbOrTx,
-  actor: Actor,
+  actor: Pick<Actor, 'id' | 'tableId'>,
   definition: DefinitionOf,
   live: (name: string) => Y.Doc | undefined,
 ): LiveHeldItem[] {

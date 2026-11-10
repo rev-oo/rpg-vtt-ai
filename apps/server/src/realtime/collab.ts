@@ -7,7 +7,9 @@ import {
 } from '@hocuspocus/server';
 import type { FastifyBaseLogger, FastifyInstance } from 'fastify';
 import type { RawData, WebSocket } from 'ws';
+import type * as Y from 'yjs';
 
+import type { FormulaFunction } from '@vtt/formula';
 import { copyInto } from '@vtt/plugin-engine';
 import {
   actorLayerAccess,
@@ -31,6 +33,7 @@ import type { Actor } from '../db/repositories/index.js';
 import type { SessionService } from '../domain/auth/sessions.js';
 import {
   adjustDocument,
+  setDocumentField,
   DATA_MAP,
   hasSecretLayer,
   liveActorData,
@@ -43,10 +46,11 @@ import {
 } from '../domain/documents.js';
 import { isTableWritable } from '../domain/entities.js';
 import { decodeSnapshot, recordSnapshot, type SnapshotRow } from '../domain/history.js';
-import type { AdjustCounter } from '../domain/rolls.js';
+import type { AdjustCounter, SetEntityField } from '../domain/rolls.js';
 import { findMembership, findTable } from '../domain/tables.js';
 import type { AppContext } from '../http/app.js';
 import { SESSION_COOKIE } from '../http/cookies.js';
+import type { LoadedCode } from '../plugins/code-runtime.js';
 
 import { upgradeGuard } from './upgrade.js';
 
@@ -169,6 +173,8 @@ interface CollabOptions {
   definition: DefinitionOf;
   now: () => Date;
   timing?: CollabTiming | undefined;
+  /** The system's plugin code, whose shared functions counter bounds may call (T-1610). */
+  code?: ((systemId: string) => Promise<LoadedCode | undefined>) | undefined;
 }
 
 /** The Yjs document server and the sockets connected to it. */
@@ -188,7 +194,7 @@ export const RECHECK_INTERVAL_MS = 30_000;
  * Read access opens the document read-only: Hocuspocus then drops the client's updates.
  */
 function createHocuspocus(
-  { db, sessions, definition, now, timing = COLLAB_TIMING }: CollabOptions,
+  { db, sessions, definition, now, timing = COLLAB_TIMING, code }: CollabOptions,
   logger: FastifyBaseLogger,
   unloads: DelayedUnloads,
 ): { hocuspocus: Hocuspocus<CollabContext>; recheck: () => void } {
@@ -224,6 +230,25 @@ function createHocuspocus(
     const ref = parseDocumentName(documentName);
     if (!ref) throw new Error(`Not a document name: ${documentName}`);
     return ref;
+  }
+
+  /** The shared functions of the system a document's entity belongs to, for bound formulas. */
+  async function functionsFor(
+    ref: DocumentRef,
+  ): Promise<Readonly<Record<string, FormulaFunction>>> {
+    if (!code || ref.kind === 'journal') return {};
+    const entity =
+      ref.kind === 'actor'
+        ? findActor(db, ref.id, { includeDeleted: true })
+        : findItem(db, ref.id, { includeDeleted: true });
+    const table = entity && findTable(db, entity.tableId);
+    if (!table || !definition(table.systemId)?.manifest.hasCode) return {};
+    try {
+      return (await code(table.systemId))?.functions ?? {};
+    } catch (error) {
+      logger.warn({ err: error, plugin: table.systemId }, 'plugin code unavailable');
+      return {};
+    }
   }
 
   /** Who changed each document since it was last stored: they hear about repairs. */
@@ -277,7 +302,7 @@ function createHocuspocus(
       connectionConfig.readOnly = access === 'read';
       return Promise.resolve();
     },
-    onStateless: ({ connection, documentName, document, payload }) => {
+    onStateless: async ({ connection, documentName, document, payload }) => {
       const message = parseClientMessage(payload);
       if (!message) {
         send(connection, { type: 'error', id: null, code: 'invalid_message' });
@@ -285,9 +310,12 @@ function createHocuspocus(
         send(connection, { type: 'error', id: message.id, code: 'read_only' });
       } else {
         const origin: TransactionOrigin = { source: 'connection', connection };
-        const result = adjustDocument(db, refOf(documentName), document, message, {
+        const ref = refOf(documentName);
+        const functions = await functionsFor(ref);
+        const result = adjustDocument(db, ref, document, message, {
           definition,
           origin,
+          bounds: { live: (name) => hocuspocus.documents.get(name), functions },
         });
         send(
           connection,
@@ -296,7 +324,6 @@ function createHocuspocus(
             : { type: 'error', id: message.id, code: 'not_a_counter' },
         );
       }
-      return Promise.resolve();
     },
     beforeHandleMessage: ({ context, documentName, connection }) => {
       enforce(connection, context, documentName);
@@ -450,28 +477,67 @@ export function heldItemsOf(
     liveHeldItems(db, actor, definition, (name) => collab.hocuspocus.documents.get(name));
 }
 
+/** Runs `change` on an entity's document through a direct connection, so open sheets see it. */
+async function changeDocument<T>(
+  { collab }: Pick<AppContext, 'collab'>,
+  ref: DocumentRef,
+  change: (document: Y.Doc, origin: TransactionOrigin) => T,
+): Promise<T | undefined> {
+  const connection = await collab.hocuspocus.openDirectConnection(documentName(ref));
+  try {
+    let result: T | undefined;
+    await connection.transact((document) => {
+      result = change(document, { source: 'local' });
+    });
+    return result;
+  } finally {
+    await connection.disconnect();
+  }
+}
+
 /**
- * Steps a counter of an actor's document for plugin server code (ADR-047), through a direct
- * connection, so open sheets see the change at once. The caller checks who may do it.
+ * Steps a counter of an actor's or item's document for plugin server code (ADR-047, T-1610),
+ * within its bounds, formulas included. The caller checks who may do it.
  */
-export function adjustActorCounter(
-  { collab, db }: Pick<AppContext, 'collab' | 'db'>,
+export function adjustEntityCounter(
+  context: Pick<AppContext, 'collab' | 'db'>,
   definition: DefinitionOf,
 ): AdjustCounter {
-  return async (actor, layer, path, delta) => {
-    if (layer === 'secret' && !hasSecretLayer(db, actor, definition)) return undefined;
-    const ref: DocumentRef = { kind: 'actor', id: actor.id, layer };
-    const connection = await collab.hocuspocus.openDirectConnection(documentName(ref));
-    try {
-      let value: number | undefined;
-      await connection.transact((document) => {
-        const origin: TransactionOrigin = { source: 'local' };
-        value = adjustDocument(db, ref, document, { path, delta }, { definition, origin })?.value;
-      });
-      return value;
-    } finally {
-      await connection.disconnect();
-    }
+  const { collab, db } = context;
+  const live = (name: string) => collab.hocuspocus.documents.get(name);
+  return async ({ kind, entity }, layer, path, delta, functions) => {
+    if (layer === 'secret' && !hasSecretLayer(db, entity, definition, kind)) return undefined;
+    const ref: DocumentRef = { kind, id: entity.id, layer };
+    return changeDocument(
+      context,
+      ref,
+      (document, origin) =>
+        adjustDocument(
+          db,
+          ref,
+          document,
+          { path, delta },
+          { definition, origin, bounds: { live, functions } },
+        )?.value,
+    );
+  };
+}
+
+/** Sets a plain field of an actor's document for plugin server code (T-1610). */
+export function setEntityField(
+  context: Pick<AppContext, 'collab' | 'db'>,
+  definition: DefinitionOf,
+): SetEntityField {
+  const { db } = context;
+  return async ({ kind, entity }, layer, path, value) => {
+    if (layer === 'secret' && !hasSecretLayer(db, entity, definition, kind)) return 'not_a_field';
+    const ref: DocumentRef = { kind, id: entity.id, layer };
+    const problem = await changeDocument(context, ref, (document, origin) => {
+      const refused = setDocumentField(db, ref, document, { path, value }, { definition, origin });
+      // `undefined` from a transaction means set; keep it apart from a connection that ran nothing.
+      return refused ?? 'set';
+    });
+    return problem === 'set' ? undefined : (problem ?? 'not_a_field');
   };
 }
 

@@ -1163,7 +1163,8 @@
       }
     ],
     "card": "spell",
-    "item": ["spell"]
+    "item": ["spell"],
+    "then": "spendSlot"
   },
   "spellEffect": {
     "label": "roll.spellEffect",

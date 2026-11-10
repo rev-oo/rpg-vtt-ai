@@ -334,6 +334,8 @@ export const en = {
   'pluginIssue.actor_mismatch':
     'The roll “{roll}” is not for actors of type “{type}”; list it in the roll’s actors.',
   'pluginIssue.invalid_default': 'The default does not fit the field: {reason}',
+  'pluginIssue.formula_bound':
+    'Only a counter (x-counter) may have a formula as its minimum or maximum.',
   'pluginIssue.invalid_annotation': '{key} cannot be used on a field of type {type}.',
   'pluginIssue.reserved_name': '“{name}” is reserved for formulas and cannot name a field.',
   'pluginIssue.invalid_formula': 'Invalid formula: {detail} (line {line}, column {column}).',

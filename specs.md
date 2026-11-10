@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 56%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 63%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1610` (server code with items, derived values and bounds)
+- **Next task:** `T-1612` (module code: packaging, declared exports, system dice)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -67,6 +67,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-09 | T-1609 done: recipes declare `options` (a choice, a whole number or dice) that the roll button asks for in a dialog, or picks by Shift or Ctrl, read as `@options.<name>` and checked by the server (`bad_option`). Number bounds may be formulas, such as `@item.level`. Handler recipes take no options yet. `srd5` is still `dnd5e-srd` until T-1614: its d20 rolls ask for Advantage and bonus dice instead of the "Next d20 rolls" field, and spells for the slot level, with per-slot dice and bonus fields.                                                                                                                                                                       |
 | 2026-11-09 | T-1616 joins M16 at the user's request: a personal preference to roll at once with default options, Alt-click opening the dialog.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-11-10 | T-1616 done: "Ask for roll options" is kept per table member, at the user's request (`members.ask_roll_options`, returned with the caller's table view and changed by the member alone through `PATCH /tables/:id/members/:userId`), on by default. Turned off, a roll button rolls at the options' defaults, Alt-click asks, and Shift and Ctrl still pick their choices.                                                                                                                                                                                                                                                                                                               |
+| 2026-11-10 | T-1610 done (ADR-078): a counter's `minimum` and `maximum` may be formulas (`@hp.max`), worked out on every step from sheets and server code. Handler recipes take `item`; handlers get the item, the actor's derived values, item totals and held items; `ctx.items.adjust` steps item counters and `ctx.actors.set` sets plain actor fields, with the roller's rights. A formula recipe's `then` runs a handler after its card is posted, at the user's choice over handlers that roll recipes. `dnd5e-srd` spends the slot a spell is cast with, recharges features on a Long Rest, and bounds Hit Points, slots and Hit Dice.                                                        |
 
 ---
 
@@ -542,7 +543,7 @@ Syntax, references, operators, functions and dice: [guide, Formulas](docs/plugin
 
 Three entries, each optional: `code/shared` (`defineShared`: formula functions), `code/client` (`defineClient`: sheet nodes and chat cards) and `code/server` (`defineServer`: handler recipes, slash commands and combat hooks). Working examples: [guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
-**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025), each custom node and card in a sandboxed frame of its own (ADR-074). `code/shared` and `code/server` run on the server in a QuickJS engine inside a worker thread per plugin, with time and memory limits (ADR-047, ADR-073); the browser runs `code/shared` in QuickJS too, for sheets (ADR-074). Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050), and table upgrades call `migrate`, which gets no `ctx` (ADR-072). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
+**Status:** `code/client` runs in the browser with `defineClient` and the hooks of `@vtt/sdk/client` (ADR-025), each custom node and card in a sandboxed frame of its own (ADR-074). `code/shared` and `code/server` run on the server in a QuickJS engine inside a worker thread per plugin, with time and memory limits (ADR-047, ADR-073); the browser runs `code/shared` in QuickJS too, for sheets (ADR-074). Combat calls the hooks `onTurnStart` and `orderCombatants` (ADR-050), and table upgrades call `migrate`, which gets no `ctx` (ADR-072). In handlers, `ctx.roll(formula)` rolls against the recipe's actor, and `ctx.chat.post` posts `roll` or `text` messages rather than cards (ADR-047). Handlers get the recipe's item, the actor's derived values, item totals and items, step item counters (`ctx.items.adjust`) and set plain actor fields (`ctx.actors.set`); a formula recipe's `then` runs a handler after its card is posted (ADR-078). [Guide, Plugin code](docs/plugin-authoring.md#plugin-code).
 
 Rules:
 
@@ -628,6 +629,7 @@ Notes:
 ### 9.5 Counters
 
 - Fields with `x-counter` are updated with `adjust(path, delta)`. The server applies deltas in a transaction on its copy of the doc and broadcasts the result.
+- A counter's `minimum` and `maximum` may be formulas, such as `@hp.max`, worked out against the entity on every step (ADR-078).
 - Plain `set` is still allowed for explicit values (for example editing max HP).
 
 ### 9.6 Persistence
@@ -857,7 +859,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** A personal preference, "Ask for roll options", on by default and kept with each table membership, so a player can choose differently at each table. Turned off, pressing a roll button whose recipe has options rolls at once with every option at its default, and Alt-click opens the dialog. Shift and Ctrl keep picking their choices either way.
   - **Done when:** tests cover both settings and the Alt key; e2e turns the preference off and rolls a 5e check without the dialog.
 
-- [ ] **T-1610 · Server code with items, derived values and bounds**
+- [x] **T-1610 · Server code with items, derived values and bounds**
   - **Deps:** T-1608
   - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P6 and P11. Handler recipes take `item` like formula recipes; handlers get the item, the actor's derived values and item totals; `ctx.items.adjust` steps an item's counters and `ctx.actors.set` sets a field that is not a counter, with the same rights as the roller. A counter's `minimum` and `maximum` may be formulas (`@hp.max`), checked on every step. `srd5` spends a slot when a spell is cast, recharges features on a rest, and stops healing at the maximum.
   - **Done when:** tests cover the new `ctx` calls, their rights and the bounds; e2e casts a spell and sees its slot spent.
@@ -1094,6 +1096,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-075 | [Module plugins, and plugin settings by scope](docs/adr/ADR-075-module-plugins.md)                                                              | Accepted                                   |
 | ADR-076 | [Module themes and named parts of the table page](docs/adr/ADR-076-module-themes-and-parts.md)                                                  | Accepted                                   |
 | ADR-077 | [Module overlays and panels](docs/adr/ADR-077-module-overlays-and-panels.md)                                                                    | Accepted                                   |
+| ADR-078 | [Server code with items, formula bounds and `then`](docs/adr/ADR-078-server-code-with-items.md)                                                 | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

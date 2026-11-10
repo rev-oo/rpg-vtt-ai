@@ -980,6 +980,8 @@ Annotations change how the core stores and edits a field:
 
 Annotations combine: `{ "type": "string", "x-kind": "longText", "x-layer": "secret" }` is shared text only the GM and assistants see. Other fields are plain values: the last write wins.
 
+A counter's `minimum` and `maximum` may be [formulas](#formulas) instead of numbers, such as `"maximum": "@hp.max"`, so healing stops at the maximum and spent slots at the slots a character has. They read the entity's fields, `@derived`, `@items` (on actors) and `@settings`, and are worked out on every step: from the sheet, from server code, and when someone types a value. A field inside a collection row reads the entity, not its row. A formula that fails bounds nothing. Only counters take formula bounds; the validator refuses them elsewhere.
+
 #### Derived values
 
 `derived` maps names to [formulas](#formulas) without dice. They are computed on every change, shown by `derived` nodes, and read elsewhere as `@derived.<name>`. A derived value may use others; the validator refuses cycles.
@@ -1191,6 +1193,7 @@ A formula is at most 2,000 characters and is checked when the plugin is validate
 - `outcomes` are checked in order. The first whose `when` is true wins, and one without `when` always matches. `class` styles the outcome in chat.
 - `card` shows the roll with a [chat card](#chat-cards).
 - A recipe can instead name a handler, `{ "handler": "attack" }`, which [server code](#server-code) runs.
+- `then` names a handler that runs after the roll is posted, such as one that spends the spell slot a spell was cast with. See [What a roll does next](#what-a-roll-does-next).
 - A `rollButton` passes `args`, each a formula, number or `true`/`false`. The recipe reads them as `@args.<name>`. The validator cannot tell which arguments a recipe needs, so it does not check them: a button that leaves one out, or misspells it, validates, and its roll fails with an error naming the missing reference. Give every button of a recipe the same argument names.
 
 #### Rolls made with an item
@@ -1209,6 +1212,7 @@ An attack with a sword reads the sword. A recipe that lists item types in `item`
 - Its buttons go in an [`items` row](#items-on-actor-sheets) of a listed type, or on the sheet of a listed item type. Either way the actor holding the item rolls. The validator refuses its buttons anywhere else, and a button on an item sheet whose recipe takes no item.
 - An item sheet's buttons are checked against every actor type, since any actor may hold the item. A library item has no holder, so its sheet rolls nothing.
 - The server checks that the actor holds the item and that the recipe takes its type. It reads the item as its sheet shows it, live, and never its secret fields.
+- Handler recipes take `item` too. The handler then gets the item as `item`.
 
 #### Named values and several rolls
 
@@ -1622,16 +1626,34 @@ export default defineServer({
 });
 ```
 
-It gets the rolling `actor` (`id`, `name`, `type`, `data`), the button's `args`, and `ctx`:
+It gets:
 
-| `ctx`                            | Does                                                                                                                                  |
-| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `roll(formula)`                  | Rolls against the actor, as a typed roll would, with the plugin's functions, dice and `@args`                                         |
-| `chat.post({ text, rolls })`     | Posts a message as the roll's speaker, to its audience. `rolls` must come from `ctx.roll` in the same handler. At most 10 per handler |
-| `actors.get(id)`                 | An actor of the table, as the roller may see it, or `null`                                                                            |
-| `actors.adjust(id, path, delta)` | Adds `delta` to a counter (`x-counter`) of an actor the roller owns, within its bounds, and returns the new value                     |
-| `log(message, data?)`            | Writes to the server log                                                                                                              |
-| `fail(message)`                  | Stops the code and shows `message` to the person who rolled, for instance to say what is missing                                      |
+| Input     | Holds                                                                                                               |
+| --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `actor`   | The rolling actor: `id`, `name`, `type` and `data`                                                                  |
+| `derived` | The actor's derived values, as `@derived` reads them                                                                |
+| `totals`  | The actor's item totals, as `@items` reads them                                                                     |
+| `items`   | The items the actor holds: `id`, `name`, `type`, `data` and `derived` each                                          |
+| `item`    | The item the roll is made with, when the recipe lists item types in `item`                                          |
+| `args`    | The button's `args`                                                                                                 |
+| `options` | The [roll options](#roll-options), for `then`; empty for a handler recipe                                           |
+| `result`  | For `then`: the posted roll, with `total`, `outcome` (the label of the outcome that matched, or `null`) and `rolls` |
+| `ctx`     | What the code can do, below                                                                                         |
+
+Everything comes as the roller may see it: players' code never gets secret fields, and derived values and totals are worked out without them.
+
+| `ctx`                            | Does                                                                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `roll(formula)`                  | Rolls against the actor, as a typed roll would, with the plugin's functions, dice and `@args`                                          |
+| `chat.post({ text, rolls })`     | Posts a message as the roll's speaker, to its audience. `rolls` must come from `ctx.roll` in the same handler. At most 10 per handler  |
+| `actors.get(id)`                 | An actor of the table, as the roller may see it, or `null`                                                                             |
+| `actors.adjust(id, path, delta)` | Adds `delta` to a counter (`x-counter`) of an actor the roller owns, within its bounds, formulas included, and returns the new value   |
+| `actors.set(id, path, value)`    | Sets a text, number or true/false field that is not a counter, of an actor the roller owns. A value that does not fit the field throws |
+| `items.adjust(id, path, delta)`  | Adds `delta` to a counter of an item the roller may edit: one held by an actor they own, or a library item for GMs and assistants      |
+| `log(message, data?)`            | Writes to the server log                                                                                                               |
+| `fail(message)`                  | Stops the code and shows `message` to the person who rolled, for instance to say what is missing                                       |
+
+A `path` is the field's names joined by dots, `hp.value`; a field in a collection row names the row by its id, `features.<id>.uses`. Only GMs and assistants reach secret fields.
 
 Rules:
 
@@ -1640,6 +1662,33 @@ Rules:
 - **Errors.** A handler that throws fails its roll. Players see only that the plugin code failed; the error is in the server log. Use `ctx.fail` for a message players should read.
 - **Isolation.** Each plugin's shared and server code runs in a JavaScript engine of its own (QuickJS) inside a worker thread. It has the language and its built-ins (`Math`, `JSON`, `Date`, promises…) and `console`, which writes to the server log. It has no Node APIs: no `require` or `import`, `process`, files, network or timers. What it imports must be bundled, as `vtt-plugin pack` does. Values pass in and out as JSON. A crash or a loop stops that worker, never the server; the next roll starts a new one.
 - **Memory.** The engine may use 32 MB. Code that needs more fails, and the plugin keeps working.
+
+#### What a roll does next
+
+A formula recipe's `then` names a handler that runs after its roll is posted. The roll keeps its card, outcomes and options, and the code changes what the roll spent:
+
+```json
+"cast": {
+  "formula": "(@options.slot)d4",
+  "options": { "slot": { "type": "number", "label": "option.slot", "default": "@item.level", "minimum": "@item.level", "maximum": 9 } },
+  "item": ["spell"],
+  "card": "spell",
+  "then": "spendSlot"
+}
+```
+
+```ts
+spendSlot: async ({ ctx, actor, options }) => {
+  const level = String(options.slot);
+  // The counter's maximum is a formula, the slots the character has, so it stops there.
+  const used = await ctx.actors.adjust(actor.id, `slotsUsed.l${level}`, 1);
+  await ctx.chat.post({ text: `${actor.name} has spent ${String(used)} level ${level} slots.` });
+},
+```
+
+- It gets the same input as a handler, with `options` (those asked for, the others at their defaults) and `result`.
+- It may post nothing. What it posts follows the roll in chat.
+- The roll is posted first and stays posted. If the code fails, players see nothing more; if it calls `ctx.fail`, its message is posted as text after the roll. A system's code without the handler leaves the roll alone and logs a warning.
 
 #### Slash commands
 

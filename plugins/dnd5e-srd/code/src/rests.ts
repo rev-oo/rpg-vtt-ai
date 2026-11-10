@@ -1,8 +1,7 @@
-// Death saving throws and rests (SRD 5.2): handlers that roll and then step the actor's
-// counters, which formula recipes cannot do. Text is English: server code has no lang files.
+// Death saving throws, rests and spell slots (SRD 5.2): handlers that roll and then step the
+// actor's counters, which formula recipes cannot do. Text is English: server code has no lang
+// files.
 import type { HandlerInput, HandlerRoll } from '@vtt/sdk';
-
-import { hitDieOf } from './tables.js';
 
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -72,30 +71,34 @@ export async function deathSave({ ctx, actor }: HandlerInput): Promise<void> {
   await ctx.chat.post({ text, rolls: [roll] });
 }
 
-/** Spends one Hit Die: roll it plus the Constitution modifier, and regain that many Hit Points. */
-export async function spendHitDie({ ctx, actor }: HandlerInput): Promise<void> {
+/**
+ * Spends one Hit Die: roll it plus the Constitution modifier, and regain that many Hit Points.
+ * The Hit Point counter stops at the maximum (`@hp.max`), so the healing does too.
+ */
+export async function spendHitDie({ ctx, actor, derived }: HandlerInput): Promise<void> {
   const level = numberAt(actor.data, 'level', 1);
   const used = numberAt(actor.data, 'hitDiceUsed');
   if (used >= level) ctx.fail(`${actor.name} has no Hit Dice left.`);
-  const die = hitDieOf(textAt(actor.data, 'class'));
+  const die = typeof derived.hitDie === 'number' ? derived.hitDie : 8;
   const roll = await ctx.roll(`1d${String(die)} + @derived.conMod`);
-  const value = numberAt(actor.data, 'hp.value');
-  const max = numberAt(actor.data, 'hp.max', 1);
-  const healed = Math.max(0, Math.min(Math.max(1, roll.total), max - value));
-  if (healed > 0) await ctx.actors.adjust(actor.id, 'hp.value', healed);
+  const before = numberAt(actor.data, 'hp.value');
+  const after = await ctx.actors.adjust(actor.id, 'hp.value', Math.max(1, roll.total));
   await ctx.actors.adjust(actor.id, 'hitDiceUsed', 1);
   await ctx.chat.post({
-    text: `${actor.name} spends a Hit Die (d${String(die)}) and regains ${String(healed)} Hit Points.`,
+    text: `${actor.name} spends a Hit Die (d${String(die)}) and regains ${String(after - before)} Hit Points.`,
     rolls: [roll],
   });
 }
 
+/** Feature uses a rest recharges: short-rest features recharge on a Long Rest too. */
+const RECHARGED = new Set(['recharge.short', 'recharge.long']);
+
 /**
  * A Long Rest: all Hit Points, all spent Hit Dice and spell slots back, temporary Hit Points
- * gone, Exhaustion down by 1, death saves cleared. Feature uses live on items, which server
- * code cannot change, so they are left to the player.
+ * gone, Exhaustion down by 1, death saves cleared, and features that recharge get their uses
+ * back.
  */
-export async function longRest({ ctx, actor }: HandlerInput): Promise<void> {
+export async function longRest({ ctx, actor, items }: HandlerInput): Promise<void> {
   const data = actor.data;
   const steps: [string, number][] = [
     ['hp.value', numberAt(data, 'hp.max', 1) - numberAt(data, 'hp.value')],
@@ -111,7 +114,27 @@ export async function longRest({ ctx, actor }: HandlerInput): Promise<void> {
   for (const [path, delta] of steps) {
     if (delta !== 0) await ctx.actors.adjust(actor.id, path, delta);
   }
+  for (const item of items) {
+    const used = numberAt(item.data, 'uses.used');
+    if (item.type === 'feature' && RECHARGED.has(textAt(item.data, 'recharge')) && used > 0) {
+      await ctx.items.adjust(item.id, 'uses.used', -used);
+    }
+  }
   await ctx.chat.post({
-    text: `${actor.name} finishes a Long Rest: Hit Points, Hit Dice and spell slots are restored.`,
+    text: `${actor.name} finishes a Long Rest: Hit Points, Hit Dice, spell slots and features are restored.`,
   });
+}
+
+/**
+ * Spends the spell slot a spell was cast with (`then` of the Cast roll): the slot level chosen
+ * in the roll options. Cantrips spend none. The slot counter stops at the slots the character
+ * has (`@derived.slots<level>`), so a cast without one left says so; the roll stays posted.
+ */
+export async function spendSlot({ ctx, actor, options }: HandlerInput): Promise<void> {
+  const slot = typeof options.slot === 'number' ? options.slot : 0;
+  if (slot < 1 || slot > 9) return;
+  const path = `slotsUsed.l${String(slot)}`;
+  const before = numberAt(actor.data, path);
+  const after = await ctx.actors.adjust(actor.id, path, 1);
+  if (after === before) ctx.fail(`${actor.name} has no level ${String(slot)} spell slots left.`);
 }

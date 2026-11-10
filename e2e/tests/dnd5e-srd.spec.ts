@@ -13,6 +13,7 @@ import { showPanel } from './support/workspace.js';
 // gets its numbers from the class tables, copies a sword and a cantrip from the SRD pack,
 // attacks, casts, spends a slot and takes a Long Rest through the plugin's server code.
 // T-1609: d20 rolls ask for Advantage (or take Shift and Ctrl), and spells for their slot.
+// T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
 
 const plugin = fileURLToPath(new URL('../../plugins/dnd5e-srd', import.meta.url));
@@ -170,12 +171,19 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await expect(effect.locator('dd').nth(2)).toHaveText('5d4 + 5');
   });
 
-  await test.step('a Long Rest restores Hit Points and spent slots', async () => {
-    const spent = sheet.getByRole('textbox', { name: 'Level 1 slots spent' });
-    await sheet.getByRole('button', { name: 'Increase Level 1 slots spent' }).click();
+  const spent = sheet.getByRole('textbox', { name: 'Level 1 slots spent' });
+  await test.step('casting Magic Missile spends a level 1 slot (T-1610)', async () => {
+    await expect(spent).toHaveValue('0');
+    const missile = sheet.getByRole('listitem', { name: 'Magic Missile' });
+    await missile.getByRole('button', { name: 'Cast' }).click();
+    const options = page.getByRole('dialog', { name: 'Cast' });
+    await expect(options.getByRole('spinbutton', { name: 'Spell slot level' })).toHaveValue('1');
+    await options.getByRole('button', { name: 'Roll' }).click();
     await expect(spent).toHaveValue('1');
     await expect(sheet.getByRole('status', { name: 'Level 1 slots left' })).toHaveText('3');
+  });
 
+  await test.step('a Long Rest restores Hit Points and spent slots', async () => {
     await sheet.getByRole('tab', { name: 'Main' }).click();
     await sheet.getByRole('button', { name: 'Long Rest' }).click();
     await expect(log.getByText('Elowen finishes a Long Rest')).toBeVisible();

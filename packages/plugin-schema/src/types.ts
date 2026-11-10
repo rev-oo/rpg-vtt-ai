@@ -21,14 +21,20 @@ export const UNSUPPORTED_KEYWORDS = [
   'else',
 ] as const;
 
+/** A field's bound: a number, or on a counter a formula worked out on every step (T-1610). */
+const bound = z.union([z.number(), formula]);
+const COUNTER_BOUND = (end: string) =>
+  `The ${end} value allowed. On a counter (\`x-counter\`) it may be a formula, such as \`@hp.max\`, worked out against the entity on every step.`;
+
 /** One field of an actor or item schema: the JSON Schema subset of specs §8.4. */
 export interface FieldSchema {
   type: (typeof FIELD_TYPES)[number];
   description?: string | undefined;
   default?: unknown;
   enum?: (string | number)[] | undefined;
-  minimum?: number | undefined;
-  maximum?: number | undefined;
+  /** A number, or on a counter a formula such as `@hp.max` (T-1610). */
+  minimum?: number | string | undefined;
+  maximum?: number | string | undefined;
   minLength?: number | undefined;
   maxLength?: number | undefined;
   format?: 'dice' | undefined;
@@ -54,8 +60,8 @@ export const fieldSchema: z.ZodType<FieldSchema> = z.lazy(() =>
         .min(1)
         .optional()
         .describe('The allowed values; a `select` input offers them.'),
-      minimum: z.number().optional(),
-      maximum: z.number().optional(),
+      minimum: bound.optional().describe(COUNTER_BOUND('lowest')),
+      maximum: bound.optional().describe(COUNTER_BOUND('highest')),
       minLength: z.int().min(0).optional(),
       maxLength: z.int().min(0).optional(),
       format: z

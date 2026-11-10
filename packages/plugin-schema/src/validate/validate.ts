@@ -18,7 +18,7 @@ import type { Sheet, SheetNode } from '../sheet.js';
 import { FONT_FILE, IMAGE_FILE, type Theme } from '../theme.js';
 import type { ActorType, FieldSchema, ItemType } from '../types.js';
 
-import { checkData, checkDataSchema } from './data.js';
+import { checkData, checkDataSchema, formulaBounds } from './data.js';
 import {
   checkFormula,
   findCycle,
@@ -408,6 +408,10 @@ export function validatePlugin(
       const scope = typeScope(entry);
       graph.set(name, formula(source, scope, false, file, ['derived', name]) ?? []);
     }
+    // A counter's bounds read the entity, its derived values and totals, like derived values.
+    for (const bound of formulaBounds(type.schema)) {
+      formula(bound.source, typeScope(entry), false, file, bound.path);
+    }
     const cycle = findCycle(graph);
     if (cycle?.[0] !== undefined)
       error('derived_cycle', file, ['derived', cycle[0]], { cycle: cycle.join(' → ') });
@@ -582,7 +586,7 @@ export function validatePlugin(
             // The item a button rolls with: its row's, or the item whose sheet it is on.
             const itemSheet = entry && !entry.actor ? entry.name : undefined;
             const held = row?.itemType ?? itemSheet;
-            const takes = recipe && 'formula' in recipe ? recipe.item : undefined;
+            const takes = recipe?.item;
             if (takes && held === undefined && entry) {
               error('item_required', file, [...path, 'roll'], { roll: node.roll });
             } else if (held !== undefined && (takes ?? []).length > 0 && !takes?.includes(held)) {
@@ -651,11 +655,17 @@ export function validatePlugin(
           name: type,
         });
     });
+    recipe.item?.forEach((type, index) => {
+      if (!Object.hasOwn(itemTypes, type))
+        error('missing_target', file, [name, 'item', index], { target: 'item type', name: type });
+    });
     if ('handler' in recipe) {
       if (!hasCode)
         error('code_required', file, [name, 'handler'], { feature: `The roll "${name}"` });
       continue;
     }
+    if (recipe.then !== undefined && !hasCode)
+      error('code_required', file, [name, 'then'], { feature: `The roll "${name}"` });
     // A recipe for some actor types is checked against those, whether or not a sheet rolls it.
     const users = recipe.actors
       ? actorEntries.filter((entry) => recipe.actors?.includes(entry.name))
@@ -666,10 +676,6 @@ export function validatePlugin(
         : [{ label: `roll "${name}"`, settings: settingNames }]
     ).map((scope) => ({ ...scope, args: true }));
     // A roll made with an item reads it as `@item`, checked against each of its types.
-    recipe.item?.forEach((type, index) => {
-      if (!Object.hasOwn(itemTypes, type))
-        error('missing_target', file, [name, 'item', index], { target: 'item type', name: type });
-    });
     const held = (recipe.item ?? []).filter((type) => Object.hasOwn(itemTypes, type));
     const scopes = recipe.item
       ? rollers.flatMap((scope) =>

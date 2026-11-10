@@ -13,6 +13,7 @@ import type { Card, Recipe } from '@vtt/plugin-schema';
 import { resolveCard, type ResolvedCard } from './cards.js';
 import type { FormulaFailure } from './derived.js';
 import { EngineError } from './errors.js';
+import type { OptionValue } from './options.js';
 import { formatValue } from './values.js';
 
 export interface RecipeOutcome {
@@ -41,6 +42,8 @@ export interface RecipeResult {
   /** The resolved card; absent when the recipe has none or names one the plugin lacks. */
   card?: ResolvedCard;
   problems: RecipeProblem[];
+  /** What `@options` read: the options asked for, the rest at their defaults (T-1609). */
+  options?: Record<string, OptionValue>;
 }
 
 export interface RecipeContext {

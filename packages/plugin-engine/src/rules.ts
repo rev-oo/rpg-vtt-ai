@@ -2,10 +2,12 @@ import { roll, type FormulaFunction, type Rng, type RollResult, type Value } fro
 import {
   settingsOfScope,
   type ActorType,
+  type FieldSchema,
   type ItemType,
   type PluginDefinition,
 } from '@vtt/plugin-schema';
 
+import { fieldBounds, type Bounds } from './check.js';
 import { itemTotals, type HeldItem } from './contributions.js';
 import { withDefaults } from './data.js';
 import { computeDerived, type DerivedValues } from './derived.js';
@@ -65,6 +67,16 @@ export interface Rules {
   itemTotals(items: readonly HeldItem[]): Record<string, Value>;
   /** How an entity of `type` maps onto its live documents (specs §9.2). */
   layout(kind: EntityKind, type: string): DocumentLayout;
+  /**
+   * Works out a counter's bounds against an entity (T-1610): formula bounds read its data,
+   * `@derived`, `@items` (actors) and `@settings`. Give it the data of both layers.
+   */
+  counterBounds(
+    kind: EntityKind,
+    type: string,
+    data: Readonly<Record<string, unknown>>,
+    items?: readonly HeldItem[],
+  ): (field: FieldSchema) => Bounds;
   /**
    * Rolls the recipe `name` (specs §8.7). Throws `EngineError` for an unknown recipe or a
    * `handler` one, which the server runs through plugin code instead, and `FormulaError`
@@ -153,6 +165,16 @@ export function createRules(
     },
     itemTotals: totalsOf,
     layout: (kind, name) => documentLayout(typeOf(kind, name).schema),
+    counterBounds: (kind, name, data, items = []) => {
+      let scope: Record<string, unknown> | undefined;
+      return (field) => {
+        if (typeof field.minimum !== 'string' && typeof field.maximum !== 'string')
+          return fieldBounds(field, {});
+        // Worked out once, on the first formula bound.
+        scope ??= scopeOf(kind, typeOf(kind, name), data, {}, items, undefined);
+        return fieldBounds(field, scope, functions);
+      };
+    },
     roll: (
       name,
       { kind = 'actor', type: typeName, data, args = {}, options = {}, items = [], item, rng },
@@ -176,7 +198,14 @@ export function createRules(
         throw new EngineError('bad_option', `The roll "${name}" has no options`);
       }
       const scope = asked ? { ...entity, options: asked } : entity;
-      return rollRecipe(name, recipe, { scope, rng, cards: plugin.cards, customDice, functions });
+      const result = rollRecipe(name, recipe, {
+        scope,
+        rng,
+        cards: plugin.cards,
+        customDice,
+        functions,
+      });
+      return asked ? { ...result, options: asked } : result;
     },
     rollFormula: (
       formula,

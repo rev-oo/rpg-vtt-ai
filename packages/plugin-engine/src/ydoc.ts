@@ -3,7 +3,7 @@ import * as Y from 'yjs';
 import type { FieldSchema } from '@vtt/plugin-schema';
 import type { DataIssue, DataIssueReason, FieldPath } from '@vtt/shared/api';
 
-import { clampValue, valueIssue } from './check.js';
+import { clampValue, valueIssue, type Bounds } from './check.js';
 import { defaultValue, isCollection } from './data.js';
 import { fieldLayout, type DocumentLayout, type FieldLayout } from './layout.js';
 
@@ -298,14 +298,16 @@ function counterAt(
 
 /**
  * Adds `delta` to an `x-counter` field of a document's `data` map (specs §9.5), within the
- * field's bounds. A missing or invalid current value counts as the field's default. Returns
- * `undefined` when the path does not name a counter. Call it inside a transaction.
+ * field's bounds: `boundsOf` works out formula bounds (T-1610), else only number bounds hold.
+ * A missing or invalid current value counts as the field's default. Returns `undefined` when
+ * the path does not name a counter. Call it inside a transaction.
  */
 export function adjustCounter(
   map: Y.Map<unknown>,
   schema: FieldSchema,
   path: FieldPath,
   delta: number,
+  boundsOf?: (field: FieldSchema) => Bounds,
 ): { value: number; clamped: boolean } | undefined {
   const target = counterAt(map, schema, path);
   if (!target?.field['x-counter']) return undefined;
@@ -316,9 +318,40 @@ export function adjustCounter(
     typeof current === 'number' && !valueIssue(field, current)
       ? current
       : Number(defaultValue(field));
-  const value = clampValue(field, start + delta);
+  const value = clampValue(field, start + delta, boundsOf?.(field));
   parent.set(key, value);
   return { value, clamped: value !== start + delta };
+}
+
+/** Why `setField` refused a value. */
+export type SetFieldProblem = 'not_a_field' | 'counter' | 'not_plain' | DataIssueReason;
+
+/**
+ * Sets a plain field of a document's `data` map (T-1610): a text, number or true/false that is
+ * not a counter, which takes steps instead, nor shared text. `value` must fit the field. Returns
+ * why it did not, or `undefined` once set. Call it inside a transaction.
+ */
+export function setField(
+  map: Y.Map<unknown>,
+  schema: FieldSchema,
+  path: FieldPath,
+  value: unknown,
+): SetFieldProblem | undefined {
+  const target = counterAt(map, schema, path);
+  if (!target) return 'not_a_field';
+  const { parent, key, field } = target;
+  if (field['x-counter']) return 'counter';
+  const plain =
+    field['x-kind'] === undefined &&
+    (field.type === 'string' ||
+      field.type === 'integer' ||
+      field.type === 'number' ||
+      field.type === 'boolean');
+  if (!plain) return 'not_plain';
+  const issue = valueIssue(field, value);
+  if (issue) return issue;
+  parent.set(key, value);
+  return undefined;
 }
 
 /** Whether two plain values hold the same JSON. */

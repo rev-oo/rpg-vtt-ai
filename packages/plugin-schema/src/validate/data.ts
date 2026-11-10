@@ -30,8 +30,13 @@ function defaultProblem(field: FieldSchema, value: unknown): PluginIssue['params
   }
   const size =
     typeof value === 'string' ? value.length : typeof value === 'number' ? value : undefined;
+  // A counter's formula bounds are worked out against the entity on every step (T-1610).
+  const number = (bound: number | string | undefined) =>
+    typeof bound === 'number' ? bound : undefined;
   const [low, high] =
-    typeof value === 'string' ? [field.minLength, field.maxLength] : [field.minimum, field.maximum];
+    typeof value === 'string'
+      ? [field.minLength, field.maxLength]
+      : [number(field.minimum), number(field.maximum)];
   const origin = typeof value === 'string' ? 'string' : 'number';
   if (size !== undefined && low !== undefined && size < low)
     return { reason: 'too_small', origin, minimum: low };
@@ -64,6 +69,10 @@ function checkField(field: FieldSchema, path: JsonPath, add: Add): void {
   }
   if (field['x-counter'] === true && field.type !== 'integer' && field.type !== 'number') {
     add('invalid_annotation', [...path, 'x-counter'], { key: 'x-counter', type: field.type });
+  }
+  for (const key of ['minimum', 'maximum'] as const) {
+    if (typeof field[key] === 'string' && field['x-counter'] !== true)
+      add('formula_bound', [...path, key]);
   }
   for (const [name, child] of Object.entries(field.properties ?? {})) {
     checkField(child, [...path, 'properties', name], add);
@@ -118,4 +127,23 @@ export function checkData(field: FieldSchema, value: unknown, path: JsonPath, ad
   }
   const problem = defaultProblem(field, value);
   if (problem) add('invalid_value', path, problem);
+}
+
+/** A counter's formula bounds (T-1610), with their paths in the type file. */
+export function formulaBounds(
+  field: FieldSchema,
+  path: JsonPath = ['schema'],
+): { path: JsonPath; source: string }[] {
+  const found: { path: JsonPath; source: string }[] = [];
+  if (field['x-counter'] === true) {
+    for (const key of ['minimum', 'maximum'] as const) {
+      const source = field[key];
+      if (typeof source === 'string') found.push({ path: [...path, key], source });
+    }
+  }
+  for (const [name, child] of Object.entries(field.properties ?? {})) {
+    found.push(...formulaBounds(child, [...path, 'properties', name]));
+  }
+  if (field.items) found.push(...formulaBounds(field.items, [...path, 'items']));
+  return found;
 }
