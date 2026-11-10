@@ -88,6 +88,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     }
     await showPanel(page, 'Actors');
     await page.getByRole('button', { name: 'Open sheet: Elowen' }).click();
+    await sheet.getByRole('tab', { name: 'Main' }).click();
   });
 
   await test.step('one Attack button rolls the attack and its damage (T-1608)', async () => {
@@ -200,7 +201,13 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await ask.uncheck();
     await expect(page.getByText('Roll buttons roll at once at this table')).toBeVisible();
 
-    await openSheet(page, table.id, 'Elowen');
+    // Kept on the server. The page is not reloaded to show it: the change makes the page load
+    // its lists again, and WebKit reports requests a reload cuts short as page errors.
+    const response = await player.context.request.get(`/api/v1/tables/${table.id}`);
+    const { table: kept } = (await response.json()) as { table: { askRollOptions: boolean } };
+    expect(kept.askRollOptions).toBe(false);
+    await page.getByRole('button', { name: 'Open sheet: Elowen' }).click();
+    await sheet.getByRole('tab', { name: 'Main' }).click();
     const check = sheet.getByRole('button', { name: 'Strength check' });
     await expect(check).toHaveAttribute('title', 'Alt-click to choose the options.');
     await check.click();
