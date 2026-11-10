@@ -24,6 +24,18 @@ const SHARED = /^(?:react|react-dom|@vtt\/sdk)(?:\/.*)?$/;
  */
 const SDK = createRequire(import.meta.url).resolve('@vtt/sdk');
 const STYLESHEET = /^styles\/[^/]+\.css$/;
+/**
+ * Above this, `pack` warns about a code bundle (T-1612): every frame of a plugin loads and
+ * parses its whole `code/client.js`, and the server's worker its whole `code/server.js`.
+ */
+export const BUNDLE_WARNING_BYTES = 1024 * 1024;
+
+/** A size for people: bytes, KiB or MiB. */
+export function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${String(bytes)} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KiB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
+}
 
 /** Compiles one code entry into a single ES module. */
 async function compile(dir: string, file: string): Promise<Buffer> {
@@ -114,5 +126,14 @@ export async function packCommand(
   output.out(
     `Packed ${id} ${version}: ${String(packed.size)} files, ${String(zip.length)} bytes → ${file}`,
   );
+  for (const [name, data] of packed) {
+    if (!name.startsWith('code/')) continue;
+    output.out(`  ${name}: ${formatSize(data.length)}`);
+    if (data.length > BUNDLE_WARNING_BYTES) {
+      output.err(
+        `Warning: ${name} is ${formatSize(data.length)}, over ${formatSize(BUNDLE_WARNING_BYTES)}. Each frame loads the whole bundle; leave out dependencies the code does not need.`,
+      );
+    }
+  }
   return 0;
 }

@@ -101,6 +101,41 @@ describe('validatePlugin', () => {
     expect(valid.plugin?.theme).toEqual({ light: { canvas: '#fff' } });
   });
 
+  it("checks a module's declared overlays and panels (T-1612)", () => {
+    const fixture = miniModule();
+    const manifest = fixture['plugin.json'] as Record<string, unknown>;
+    manifest.frames = {
+      overlays: { tray: { interactive: true }, glow: {} },
+      panels: { log: { title: 'panel.log' }, notes: { title: 'Notes' } },
+    };
+    const { issues, plugin } = validatePlugin(toFiles(fixture));
+    expect(issues.map(summary)).toEqual([
+      'error missing_lang_key plugin.json $.frames.panels.log.title',
+    ]);
+    fixture['lang/en.json'] = { 'setting.glow': 'Glow', 'panel.log': 'Log' };
+    expect(validatePlugin(toFiles(fixture)).plugin?.manifest.frames).toEqual(manifest.frames);
+    expect(plugin).toBeUndefined();
+
+    manifest.frames = { overlays: { '1st': {} }, panels: { log: {} } };
+    expect(validatePlugin(toFiles(fixture)).issues.map(summary)).toEqual([
+      expect.stringMatching(/^error \w+ plugin\.json \$\.frames\.overlays/),
+      expect.stringMatching(/^error \w+ plugin\.json \$\.frames\.panels\.log\.title$/),
+    ]);
+
+    // Overlays and panels are module code.
+    manifest.frames = { overlays: { tray: {} } };
+    manifest.hasCode = false;
+    delete fixture['code/client.js'];
+    expect(validatePlugin(toFiles(fixture)).issues.map(summary)).toEqual([
+      'error code_required plugin.json $.frames',
+    ]);
+    const system = mini();
+    (system['plugin.json'] as Record<string, unknown>).frames = { overlays: { tray: {} } };
+    expect(validatePlugin(toFiles(system)).issues.map(summary)).toContain(
+      'error module_key plugin.json $.frames',
+    );
+  });
+
   it('refuses a theme in a system', () => {
     const fixture = mini();
     fixture['theme.json'] = {};

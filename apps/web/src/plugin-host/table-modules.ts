@@ -8,7 +8,7 @@ import { api } from '../api/endpoints.js';
 import { errorMessage } from '../api/errors.js';
 import { LOCALE } from '../i18n/index.js';
 
-import { probeClient, type ClientExports, type FrameCode } from './frame-channel.js';
+import type { DeclaredFrames, FrameCode } from './frame-channel.js';
 import { fetchText, systemLang, systemTranslator } from './load.js';
 
 // A table's module plugins (T-1601, ADR-075), as its members load them with the table, and
@@ -25,20 +25,30 @@ export interface LoadedModule {
   /** URLs of its scoped stylesheets and of `code/client.js`. */
   styles: readonly string[];
   client: string | null;
-  /** Its client code for frames, with the overlays and panels it exports (ADR-077). */
+  /** Its client code for frames, with the overlays and panels it declares (ADR-077, T-1612). */
   frames: ModuleFrames | null;
   /** Why the client code did not load; its overlays and panels then do not show. */
   clientError: string | null;
 }
 
-export interface ModuleFrames {
+export interface ModuleFrames extends DeclaredFrames {
   code: FrameCode;
-  overlays: ClientExports['overlays'];
-  panels: ClientExports['panels'];
 }
 
-/** Each module version's client code, probed once per page. */
+/** Each module version's client code, fetched once per page. */
 const loadedFrames = new Map<string, Promise<ModuleFrames>>();
+
+/** The overlays and panels a module declares in `plugin.json`: no code runs to list them. */
+export function declaredFrames(definition: PluginDefinition): DeclaredFrames {
+  const { overlays = {}, panels = {} } = definition.manifest.frames ?? {};
+  return {
+    overlays: Object.entries(overlays).map(([name, { interactive = false }]) => ({
+      name,
+      interactive,
+    })),
+    panels: Object.entries(panels).map(([name, { title }]) => ({ name, title })),
+  };
+}
 
 function moduleFrames(
   id: string,
@@ -56,8 +66,7 @@ function moduleFrames(
         code: await fetchText(`${url}?v=${encodeURIComponent(version)}`),
         lang: systemLang(definition, LOCALE),
       };
-      const { overlays, panels } = await probeClient(code);
-      return { code, overlays, panels };
+      return { code, ...declaredFrames(definition) };
     })();
     // A failure is not kept: the next load tries again.
     frames.catch(() => loadedFrames.delete(key));

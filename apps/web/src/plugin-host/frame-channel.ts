@@ -50,19 +50,23 @@ export function listen(
 /** How long a probe may take to load the code and list what it exports. */
 const PROBE_TIME_LIMIT_MS = 10_000;
 
-/**
- * Runs a plugin's client code once in a hidden frame and lists the components it exports,
- * so the app knows what to render in frames. Rejects when the code fails to load.
- */
-/** What a plugin's client code exports. */
+/** What a system's client code exports. */
 export interface ClientExports {
   nodes: string[];
   cards: string[];
-  /** A module's overlays and panels (ADR-077). */
+}
+
+/** A module's overlays and panels, as its manifest declares them (ADR-077, T-1612). */
+export interface DeclaredFrames {
   overlays: { name: string; interactive: boolean }[];
   panels: { name: string; title: string }[];
 }
 
+/**
+ * Runs a system's client code once in a hidden frame and lists the components it exports,
+ * so the app knows what to render in frames. Rejects when the code fails to load. Modules
+ * declare theirs instead.
+ */
 export function probeClient(code: FrameCode): Promise<ClientExports> {
   const frame = document.createElement('iframe');
   frame.setAttribute('sandbox', 'allow-scripts');
@@ -92,12 +96,7 @@ export function probeClient(code: FrameCode): Promise<ClientExports> {
           });
         } else if (message.type === 'exports') {
           done();
-          resolve({
-            nodes: message.nodes,
-            cards: message.cards,
-            overlays: message.overlays,
-            panels: message.panels,
-          });
+          resolve({ nodes: message.nodes, cards: message.cards });
         } else if (message.type === 'failed') {
           fail(new Error(message.message));
         }

@@ -70,6 +70,58 @@
       "type": "string",
       "pattern": "^[a-z]{2,3}(?:-[A-Z]{2})?$",
       "title": "Locale"
+    },
+    "frames": {
+      "description": "A module's overlays and panels. Each must be exported by `code/client` under the same name; only modules with code have them.",
+      "type": "object",
+      "properties": {
+        "overlays": {
+          "description": "Overlays over the table page, by the name `code/client` exports them under.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+            "title": "Frame name"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "interactive": {
+                "description": "True when the overlay takes the pointer; otherwise clicks pass through it.",
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "panels": {
+          "description": "Panels in the table workspace, by the name `code/client` exports them under.",
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_-]{0,63}$",
+            "title": "Frame name"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "title": "Text",
+                "description": "The panel's title: a lang key or literal text."
+              }
+            },
+            "required": [
+              "title"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false,
+      "title": "Module frames"
     }
   },
   "required": [

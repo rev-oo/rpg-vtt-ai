@@ -58,6 +58,22 @@ export function diceFor(die: string, value: number, active: boolean): Die[] {
   return [{ shape, top: String(value), labels: range(sides, (i) => String(i + 1)), active }];
 }
 
+/** A system's custom die, as `useSystemDice` gives it: the text of each face. */
+export interface CustomDie {
+  faces: readonly { label: string }[];
+}
+
+/**
+ * The physical die that shows one result of a system's custom die (T-1612): a die with as
+ * many faces, labelled as the system labels them, or none if no shape has that many.
+ */
+export function customDieFor(die: CustomDie, label: string, active: boolean): Die[] {
+  const shape = STANDARD[`d${String(die.faces.length)}`];
+  const labels = die.faces.map((face) => face.label);
+  if (!shape || !labels.includes(label)) return [];
+  return [{ shape, top: label, labels, active }];
+}
+
 export interface Choice {
   /** Who views the table. */
   viewerId: string;
@@ -68,18 +84,27 @@ export interface Choice {
 }
 
 /**
- * The dice for a message: every result of every roll, in order, up to `maxDice`. Custom dice
- * (`dF` and the like) and unusual sizes (`d3`, `d7`…) are left out: the module does not know
- * their faces.
+ * The dice for a message: every result of every roll, in order, up to `maxDice`. The system's
+ * custom dice (`dF` and the like) are thrown when a shape has as many faces; others, and
+ * unusual sizes (`d3`, `d7`…), are left out.
  */
-export function diceOf(message: RolledMessage, choice: Choice): Die[] {
+export function diceOf(
+  message: RolledMessage,
+  choice: Choice,
+  custom: Readonly<Record<string, CustomDie>> = {},
+): Die[] {
   if (!choice.showOthers && message.senderId !== choice.viewerId) return [];
   const results = message.rolls.flatMap((roll) =>
-    roll.dice.flatMap((term) =>
-      term.results.map((result) =>
-        result.label === undefined ? diceFor(term.die, result.value, result.active) : [],
-      ),
-    ),
+    roll.dice.flatMap((term) => {
+      const system = Object.hasOwn(custom, term.die) ? custom[term.die] : undefined;
+      return term.results.map((result) => {
+        if (system) {
+          const label = result.label ?? String(result.value);
+          return customDieFor(system, label, result.active);
+        }
+        return result.label === undefined ? diceFor(term.die, result.value, result.active) : [];
+      });
+    }),
   );
   // A d100's two dice go together or not at all.
   const dice: Die[] = [];

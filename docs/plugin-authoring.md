@@ -917,6 +917,7 @@ Names of types, sheets, cards and recipes are [names](plugin-reference.md#name):
 - **`kind`** is `system` for a game system, which tables are created with, or `module` for an add-on GMs add to any table (see [Modules](#modules)).
 - **`hasCode`** must be `true` exactly when there is a `code/` folder. Admins must acknowledge code before enabling a plugin that has it.
 - **`locales`** lists the languages in `lang/`; each needs its file, and `en` is always required once there is any. **`defaultLocale`** is the language shown when the viewer's lacks a text.
+- **`frames`** declares a module's overlays and panels (see [Overlays and panels](#overlays-and-panels)); a system cannot have it, and a module needs code for it.
 
 ### Actor and item types
 
@@ -1256,6 +1257,8 @@ An attack rolls to hit, then its damage, doubled on a critical hit. One recipe d
 
 Faces are equally likely. A face is a number, a text label (whose number comes from `values`), or `{ "label": "…", "value": 1 }`. Totals, comparisons and success counting use the numbers, and chat shows the labels.
 
+**Die names.** A roll names each of its dice: standard dice are `d<sides>` (`d6`, `d20`, `d100`, and any other size, such as `d7`), and custom dice keep their name from `dice.json` (`dF`). Each result of a custom die also carries its face's `label`. Modules see the same names, and get the table system's custom dice with [`useSystemDice()`](#overlays-and-panels).
+
 #### Roll options
 
 Some things are chosen when rolling: Advantage, the slot a spell is cast with, Bless's 1d4. A recipe lists them in `options`, and its button asks for them:
@@ -1472,7 +1475,16 @@ Every selector must name a part, or be `:root` alone, which sets tokens for the 
 
 #### Overlays and panels
 
-A module's `code/client.js` can export overlays, drawn over the whole table page, and panels, which members open from the **Panels** menu and dock like Chat (ADR-077). Each runs in its own sandboxed frame, as sheet nodes do (see [Plugin code](#plugin-code)): it cannot reach the page, cookies, storage or the network. It learns about the table only through these hooks from `@vtt/sdk/client`, and acts only as the viewer.
+A module's `code/client.js` can export overlays, drawn over the whole table page, and panels, which members open from the **Panels** menu and dock like Chat (ADR-077). `plugin.json` declares each one under `frames`, so the app knows them without running the code (ADR-079):
+
+```json
+"frames": {
+  "overlays": { "lastRoll": {} },
+  "panels": { "tools": { "title": "panel.tools" } }
+}
+```
+
+The code exports a component under each declared name; a declared one it lacks shows as failed, and one it exports but `plugin.json` does not declare never shows. Each runs in its own sandboxed frame, as sheet nodes do (see [Plugin code](#plugin-code)): it cannot reach the page, cookies, storage or the network. It learns about the table only through these hooks from `@vtt/sdk/client`, and acts only as the viewer.
 
 ```js
 import { useState } from 'react';
@@ -1497,12 +1509,12 @@ function Tools() {
 
 export default defineClient({
   overlays: { lastRoll: { component: LastRoll } },
-  panels: { tools: { component: Tools, title: 'panel.tools' } },
+  panels: { tools: { component: Tools } },
 });
 ```
 
-- **Overlays** cover the page, with a transparent background. Clicks pass through them to the page, unless the overlay is declared `interactive: true`; then it takes every click over the page, so keep interactive overlays rare. Each member can turn a table's overlays off with **Overlays** in the table's header; the choice is kept in their browser.
-- **Panels** have a `title`, a lang key or text, shown in the Panels menu and on the tab. A panel stays loaded while another tab is in front of it, so it keeps hearing the table.
+- **Overlays** cover the page, with a transparent background. Clicks pass through them to the page, unless `plugin.json` declares the overlay `"interactive": true`; then it takes every click over the page, so keep interactive overlays rare. Each member can turn a table's overlays off with **Overlays** in the table's header; the choice is kept in their browser.
+- **Panels** have a `title` in `plugin.json`, a lang key or text, shown in the Panels menu and on the tab. A panel stays loaded while another tab is in front of it, so it keeps hearing the table.
 - **`useTableEvents(listener)`** calls `listener` with each table event the viewer can see. The server has already decided and filtered each one, so a whisper or a GM-only roll reaches only the frames of those who see it in the chat:
   - `chat.message` and `chat.updated` come with the `message`, including its `rolls` with dice and totals;
   - `chat.deleted` comes with the message `id`;
@@ -1514,6 +1526,7 @@ export default defineClient({
 - **`useViewer()`** returns the viewer's `id`, `role` and the `tableId`.
 - **`useActions()`** acts as the viewer: `sendChat(text, options)`, `roll(formula, options)` (options: `audience`, `recipientIds`, `actorId`), `openSheet(actorId)`, `openJournal(entryId)`, `combat('start' | 'end' | 'next' | 'previous' | 'initiative')` and `encounter()`. The server checks each one exactly as if the viewer had done it, so a player's frame cannot run combat. Each returns a promise that rejects with the reason when the action is refused. A frame may take 10 actions in any 10 seconds; the app refuses more.
 - **`useTranslate()`** works in overlays and panels too, with the module's lang files.
+- **`useSystemDice()`** returns the table system's custom dice by name, such as `dF`: each with its translated `label` and its `faces`, in order, as `{ label, value }`. It is empty until the system loads, and for systems without custom dice; the frame redraws when they arrive. A roll's results name their die (see [die names](#custom-dice)), so a module can draw a `dF` with its own faces.
 
 A frame that throws is replaced: a panel shows a notice, and an overlay disappears.
 
@@ -1592,6 +1605,28 @@ Rules:
 - **Errors.** A component that throws shows a notice in its place; the rest of the sheet keeps working.
 - **Trust.** Code still runs in every player's browser and can show them anything, and it can change the fields they may change. That is why admins must acknowledge code when they enable a plugin, and why a replaced plugin with code starts disabled again.
 - **Types.** The SDK is not published. To get type checking for plugin code, keep the plugin in this repository's `plugins/` folder, as `tiny-d20` does.
+
+#### Dependencies
+
+`vtt-plugin pack` bundles each entry (`code/client`, `code/shared`, `code/server`) with what it imports into one `code/<entry>.js`. It resolves imports from the plugin folder, as Node does: from a `node_modules` folder in `code/`, in the plugin folder, or in any folder above it. To use a package from npm, give `code/` its own `package.json` and install there:
+
+```json
+{
+  "name": "my-dice-module-code",
+  "private": true,
+  "type": "module",
+  "dependencies": { "three": "^0.170.0" },
+  "devDependencies": { "typescript": "^5.6.0" }
+}
+```
+
+```sh
+cd my-module/code && npm install && cd ../.. && vtt-plugin pack my-module
+```
+
+What `pack` leaves out of the archive: every other file under `code/` that ends in `.js`, `.jsx`, `.ts`, `.tsx`, `.mjs`, `.cjs`, `.mts`, `.cts` or `.json` (your sources, tests, `package.json` and `tsconfig.json`, which are bundled or not needed), any `node_modules` folder, dot files, and earlier `.vttplugin` archives. The validator accepts those files in the folder.
+
+`pack` prints the size of each bundle and warns about one over 1 MiB. Every frame loads the whole `code/client.js` (a module with an overlay and a panel loads it twice), so keep dependencies to what the code needs.
 
 #### Shared code
 
@@ -1777,7 +1812,7 @@ It checks:
 
 ### Packing
 
-`vtt-plugin pack <dir> [--out <file>]` validates the plugin, compiles `code/` to ES modules, minifies the styles, validates the packed files again, and writes `<id>-<version>.vttplugin` (a ZIP). Archives are limited to 20 MB, 2,000 files and 50 MB unpacked.
+`vtt-plugin pack <dir> [--out <file>]` validates the plugin, compiles `code/` to ES modules (see [Dependencies](#dependencies)), minifies the styles, validates the packed files again, and writes `<id>-<version>.vttplugin` (a ZIP). It prints each bundle's size, and warns about one over 1 MiB. Archives are limited to 20 MB, 2,000 files and 50 MB unpacked.
 
 ### Installing and updating
 

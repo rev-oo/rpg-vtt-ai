@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import type { Value } from '@vtt/formula';
-import type { TableEvent, Viewer } from '@vtt/sdk/client';
+import type { SystemDie, TableEvent, Viewer } from '@vtt/sdk/client';
 import { COMBAT_ACTIONS } from '@vtt/sdk/client';
 import { chatSendBody, rollRequestBody } from '@vtt/shared/api';
 
@@ -33,6 +33,8 @@ export interface FrameModule {
   tableId: string;
   viewer: Viewer;
   settings: Readonly<Record<string, Value>>;
+  /** The table system's custom dice, labels translated (T-1612). */
+  dice: Readonly<Record<string, SystemDie>>;
 }
 
 /**
@@ -76,6 +78,8 @@ export type HostMessage =
   | { type: 'event'; event: TableEvent }
   /** The module's settings for the viewer changed. */
   | { type: 'settings'; settings: Readonly<Record<string, Value>> }
+  /** The table system's custom dice changed, or loaded after the frame started. */
+  | { type: 'dice'; dice: Readonly<Record<string, SystemDie>> }
   /** How an action ended: its value, or why it was refused. */
   | { type: 'result'; id: string; ok: true; value: unknown }
   | { type: 'result'; id: string; ok: false; error: string };
@@ -111,19 +115,11 @@ export const frameMessageSchema = z.discriminatedUnion('type', [
   /** `useField`'s setter, as a path relative to the node's row. */
   z.object({ type: z.literal('set'), path, value: z.unknown() }),
   z.object({ type: z.literal('adjust'), path, delta: z.number() }),
-  /** What a probe found: the nodes, cards, overlays and panels the code exports. */
+  /** What a probe found: the nodes and cards a system's code exports. */
   z.object({
     type: z.literal('exports'),
     nodes: z.array(z.string().max(64)).max(200),
     cards: z.array(z.string().max(64)).max(200),
-    overlays: z
-      .array(z.object({ name: z.string().max(64), interactive: z.boolean() }))
-      .max(20)
-      .default([]),
-    panels: z
-      .array(z.object({ name: z.string().max(64), title: z.string().max(200) }))
-      .max(20)
-      .default([]),
   }),
   /** A module frame acts as the viewer; the host answers with `result`. */
   z.object({

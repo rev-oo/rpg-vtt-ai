@@ -10,5 +10,6 @@
   "author": "rpg-vtt-ai",
   "license": "MIT",
   "locales": ["en", "pt-BR"],
-  "defaultLocale": "en"
+  "defaultLocale": "en",
+  "frames": { "overlays": { "dice": {} } }
 }

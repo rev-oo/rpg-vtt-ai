@@ -11,6 +11,7 @@ import {
   useModuleSettings,
   useTableEvents,
   useTranslate,
+  useSystemDice,
   useViewer,
   ModuleFrameContext,
   type ClientSheet,
@@ -115,6 +116,7 @@ describe('module frame hooks (T-1603, ADR-077)', () => {
       tableId: 't1',
       viewer: { id: 'u1', role: 'player' },
       settings: { colour: 'red' },
+      dice: { dF: { label: 'Fate', faces: [{ label: '+', value: 1 }] } },
       setSetting: vi.fn(() => Promise.resolve()),
       listen: (listener) => {
         listeners.add(listener);
@@ -172,12 +174,25 @@ describe('module frame hooks (T-1603, ADR-077)', () => {
     );
   });
 
+  it("read the system's custom dice (T-1612)", () => {
+    function Dice() {
+      const dice = useSystemDice();
+      return <p>{Object.entries(dice).map(([name, die]) => `${name} ${die.label}`)}</p>;
+    }
+    render(
+      <ModuleFrameContext.Provider value={moduleFrame()}>
+        <Dice />
+      </ModuleFrameContext.Provider>,
+    );
+    expect(screen.getByText('dF Fate')).toBeTruthy();
+  });
+
   it('declares overlays and panels', () => {
     const definition = defineClient({
-      overlays: { tray: { component: Overlay, interactive: true } },
-      panels: { log: { component: Overlay, title: 'panel.log' } },
+      overlays: { tray: { component: Overlay } },
+      panels: { log: { component: Overlay } },
     });
     expect(Object.keys(definition.overlays ?? {})).toEqual(['tray']);
-    expect(definition.panels?.log?.title).toBe('panel.log');
+    expect(Object.keys(definition.panels ?? {})).toEqual(['log']);
   });
 });

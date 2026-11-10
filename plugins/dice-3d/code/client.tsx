@@ -1,6 +1,12 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
-import { defineClient, useModuleSettings, useTableEvents, useViewer } from '@vtt/sdk/client';
+import {
+  defineClient,
+  useModuleSettings,
+  useSystemDice,
+  useTableEvents,
+  useViewer,
+} from '@vtt/sdk/client';
 
 import { diceOf } from './src/dice.js';
 import { COLOURS, DiceTable, type Colour, type Report } from './src/stage.js';
@@ -19,6 +25,7 @@ function Dice(): ReactElement {
   const table = useRef<DiceTable | null>(null);
   const [settings] = useModuleSettings();
   const viewer = useViewer();
+  const custom = useSystemDice();
   const [report, setReport] = useState<Report>({ state: 'idle', shown: [], drawing: false });
 
   useEffect(() => {
@@ -34,11 +41,15 @@ function Dice(): ReactElement {
   useTableEvents((event) => {
     // A new message only: an edited one was thrown when it arrived.
     if (event.type !== 'chat.message' || event.message.rolls.length === 0) return;
-    const dice = diceOf(event.message, {
-      viewerId: viewer.id,
-      showOthers: settings.showOthers !== false,
-      maxDice: number(settings.maxDice, 20),
-    });
+    const dice = diceOf(
+      event.message,
+      {
+        viewerId: viewer.id,
+        showOthers: settings.showOthers !== false,
+        maxDice: number(settings.maxDice, 20),
+      },
+      custom,
+    );
     table.current?.throw(dice, {
       colour: isColour(settings.colour) ? settings.colour : 'ivory',
       seconds: number(settings.seconds, 3),

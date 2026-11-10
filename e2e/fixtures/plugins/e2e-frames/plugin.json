@@ -6,5 +6,9 @@
   "coreApi": "^0.1.0",
   "hasCode": true,
   "description": "A module with an overlay and a panel, for the e2e suite (T-1603).",
-  "locales": ["en"]
+  "locales": ["en"],
+  "frames": {
+    "overlays": { "lastRoll": {} },
+    "panels": { "tools": { "title": "panel.title" } }
+  }
 }

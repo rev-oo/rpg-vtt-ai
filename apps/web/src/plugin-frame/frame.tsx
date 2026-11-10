@@ -12,6 +12,7 @@ import type {
   ModuleFrame,
   NodeProps,
   PostOptions,
+  SystemDie,
   TableEvent,
 } from '@vtt/sdk/client';
 
@@ -70,31 +71,24 @@ function components(value: unknown, key: 'nodes' | 'cards'): Components {
   return result;
 }
 
-interface Declared {
-  component: ComponentType;
-  interactive: boolean;
-  title: string;
-}
-
-/** A module's `overlays` or `panels`: objects of `{ component, … }` by name (ADR-077). */
-function declared(value: unknown, key: 'overlays' | 'panels'): Record<string, Declared> {
+/**
+ * A module's `overlays` or `panels`: objects of `{ component }` by name (ADR-077). The manifest
+ * says how each shows (T-1612).
+ */
+function declared(value: unknown, key: 'overlays' | 'panels'): Record<string, ComponentType> {
   if (typeof value !== 'object' || value === null) return {};
   const group: unknown = (value as Record<string, unknown>)[key];
   if (group === undefined) return {};
   if (typeof group !== 'object' || group === null) {
     throw new Error(`code/client.js: "${key}" must be an object`);
   }
-  const result: Record<string, Declared> = {};
+  const result: Record<string, ComponentType> = {};
   for (const [name, entry] of Object.entries(group)) {
-    const { component, interactive, title } = (entry ?? {}) as Record<string, unknown>;
+    const { component } = (entry ?? {}) as Record<string, unknown>;
     if (typeof component !== 'function' && (typeof component !== 'object' || component === null)) {
       throw new Error(`code/client.js: ${key}.${name}.component is not a component`);
     }
-    result[name] = {
-      component: component as ComponentType,
-      interactive: interactive === true,
-      title: typeof title === 'string' ? title : name,
-    };
+    result[name] = component as ComponentType;
   }
   return result;
 }
@@ -102,8 +96,8 @@ function declared(value: unknown, key: 'overlays' | 'panels'): Record<string, De
 interface Loaded {
   nodes: Components;
   cards: Components;
-  overlays: Record<string, Declared>;
-  panels: Record<string, Declared>;
+  overlays: Record<string, ComponentType>;
+  panels: Record<string, ComponentType>;
 }
 
 /** Runs the plugin's code as a module, so it imports React and the SDK by name. */
@@ -229,7 +223,12 @@ const listeners = new Set<(event: TableEvent) => void>();
 
 let root: Root | null = null;
 let render: ((sheet: FrameSheet) => void) | null = null;
-let renderModule: ((settings: Readonly<Record<string, Value>>) => void) | null = null;
+/** What a module frame shows that the host may change: the viewer's settings, the system's dice. */
+interface ModuleState {
+  settings: Readonly<Record<string, Value>>;
+  dice: Readonly<Record<string, SystemDie>>;
+}
+let renderModule: ((change: Partial<ModuleState>) => void) | null = null;
 
 /** Draws a module's overlay or panel with what the host said of the table (ADR-077). */
 function startModule(
@@ -239,11 +238,14 @@ function startModule(
 ): void {
   // The host's page shows through: an overlay over the table, a panel on its own background.
   addStyles(['html, body { background: transparent !important; }']);
-  renderModule = (settings) => {
+  let state: ModuleState = { settings: module.settings, dice: module.dice };
+  renderModule = (change) => {
+    state = { ...state, ...change };
     const frame: ModuleFrame = {
       tableId: module.tableId,
       viewer: module.viewer,
-      settings,
+      settings: state.settings,
+      dice: state.dice,
       setSetting: async (name, value) => {
         await act({ kind: 'setting', name, value: value as string | number | boolean });
       },
@@ -264,7 +266,7 @@ function startModule(
       </sdk.ModuleFrameContext.Provider>,
     );
   };
-  renderModule(module.settings);
+  renderModule({});
 }
 
 async function start(setup: FrameSetup): Promise<void> {
@@ -275,11 +277,6 @@ async function start(setup: FrameSetup): Promise<void> {
       type: 'exports',
       nodes: Object.keys(loaded.nodes),
       cards: Object.keys(loaded.cards),
-      overlays: Object.entries(loaded.overlays).map(([name, { interactive }]) => ({
-        name,
-        interactive,
-      })),
-      panels: Object.entries(loaded.panels).map(([name, { title }]) => ({ name, title })),
     });
     return;
   }
@@ -293,7 +290,7 @@ async function start(setup: FrameSetup): Promise<void> {
   if (view.kind === 'overlay' || view.kind === 'panel') {
     const found = (view.kind === 'overlay' ? loaded.overlays : loaded.panels)[view.name];
     if (!found) throw new Error(`the code has no ${view.kind} "${view.name}"`);
-    startModule(found.component, view.module, translate);
+    startModule(found, view.module, translate);
     return;
   }
   if (view.kind === 'card') {
@@ -343,7 +340,9 @@ window.addEventListener('message', (event: MessageEvent<HostMessage>) => {
       }
     }
   } else if (message.type === 'settings') {
-    renderModule?.(message.settings);
+    renderModule?.({ settings: message.settings });
+  } else if (message.type === 'dice') {
+    renderModule?.({ dice: message.dice });
   } else if (message.type === 'result') {
     const waiting = pending.get(message.id);
     pending.delete(message.id);
