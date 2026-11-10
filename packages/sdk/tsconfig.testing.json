@@ -1,0 +1,15 @@
+{
+  "extends": ["../../tsconfig.base.json", "@vtt/config/tsconfig/node.json"],
+  "//": "@vtt/sdk/testing: tools for testing plugin shared and server code, in Node (T-1613).",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["src/testing", "test/testing"],
+  "references": [
+    { "path": "./tsconfig.json" },
+    { "path": "../formula" },
+    { "path": "../plugin-schema" },
+    { "path": "../plugin-engine" }
+  ]
+}

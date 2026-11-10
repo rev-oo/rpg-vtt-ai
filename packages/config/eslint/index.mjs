@@ -63,18 +63,24 @@ function packageConfigs(dir, { type, kind }) {
     },
   ];
   if (restricted) {
-    configs.push({
-      files,
-      rules: {
-        'no-restricted-imports': [
-          'error',
-          {
-            paths: restricted.paths.map((name) => ({ name, message: restricted.message })),
-            patterns: [{ group: restricted.patterns, message: restricted.message }],
-          },
-        ],
+    /**
+     * @param {{ paths: string[], patterns: string[] }} bans
+     * @returns {import('eslint').Linter.RuleEntry}
+     */
+    const rule = ({ paths, patterns }) => [
+      'error',
+      {
+        paths: paths.map((name) => ({ name, message: restricted.message })),
+        patterns: [{ group: patterns, message: restricted.message }],
       },
-    });
+    ];
+    configs.push({ files, rules: { 'no-restricted-imports': rule(restricted) } });
+    if (restricted.tests) {
+      configs.push({
+        files: TEST_FILES.map((glob) => `${dir}/${glob}`),
+        rules: { 'no-restricted-imports': rule(restricted.tests) },
+      });
+    }
   }
   if (isReact) {
     configs.push({ ...reactHooks.configs.flat.recommended, files });

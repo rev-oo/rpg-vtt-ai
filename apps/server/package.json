@@ -45,6 +45,7 @@
     "@types/better-sqlite3": "^9.6.0",
     "@types/ws": "^8.18.2",
     "@vtt/config": "workspace:*",
+    "@vtt/plugin-cli": "workspace:*",
     "drizzle-kit": "^0.31.11",
     "lib0": "^0.2.119"
   }

@@ -13,6 +13,9 @@
     "lint": {
       "dependsOn": ["^build"]
     },
+    "@vtt/e2e#lint": {
+      "dependsOn": []
+    },
     "test": {
       "dependsOn": ["^build"],
       "outputs": ["coverage/**"]

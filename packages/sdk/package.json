@@ -14,6 +14,14 @@
     "./client": {
       "types": "./dist/src/client/index.d.ts",
       "default": "./dist/src/client/index.js"
+    },
+    "./testing": {
+      "types": "./dist/src/testing/index.d.ts",
+      "default": "./dist/src/testing/index.js"
+    },
+    "./client/testing": {
+      "types": "./dist/src/client/testing.d.ts",
+      "default": "./dist/src/client/testing.js"
     }
   },
   "dependencies": {
@@ -23,8 +31,8 @@
     "@vtt/plugin-engine": "workspace:*"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.json tsconfig.client.json",
-    "typecheck": "tsc -b tsconfig.json tsconfig.client.json",
+    "build": "tsc -b tsconfig.json tsconfig.client.json tsconfig.testing.json",
+    "typecheck": "tsc -b tsconfig.json tsconfig.client.json tsconfig.testing.json",
     "lint": "eslint . --max-warnings 0",
     "test": "vitest run --coverage"
   },
