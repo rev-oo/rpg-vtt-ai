@@ -97,8 +97,14 @@ export const boundaryPolicies = [
 const NODE_BUILTINS = builtinModules.filter((m) => !m.startsWith('_'));
 
 /**
- * Module-name bans enforced with `no-restricted-imports`, keyed by element type.
- * @type {Record<string, { paths: string[], patterns: string[], message: string }>}
+ * @typedef {{ paths: string[], patterns: string[], message: string }} Restriction
+ */
+
+/**
+ * Module-name bans enforced with `no-restricted-imports`, keyed by element type. `tests`, if
+ * given, replaces the bans in test files: plugin tests may import the SDK's testing kits, which
+ * a plugin's packed code could not load (T-1613).
+ * @type {Record<string, Restriction & { tests?: Omit<Restriction, 'message'> }>}
  */
 export const restrictedModules = {
   ...Object.fromEntries(
@@ -114,15 +120,23 @@ export const restrictedModules = {
   ),
   'plugin-code': {
     paths: ['@vtt/sdk'],
-    patterns: ['@vtt/sdk/*', '!@vtt/sdk/client'],
+    patterns: ['@vtt/sdk/*', '!@vtt/sdk/client', '@vtt/sdk/client/*'],
     message:
       'Plugin client code may import only @vtt/sdk/client, which the plugin frame provides (ADR-074).',
+    tests: {
+      paths: ['@vtt/sdk'],
+      patterns: ['@vtt/sdk/*', '!@vtt/sdk/client', '@vtt/sdk/client/*', '!@vtt/sdk/client/testing'],
+    },
   },
   'plugin-server-code': {
-    paths: ['react', 'react-dom', '@vtt/sdk/client', ...NODE_BUILTINS],
+    paths: ['react', 'react-dom', '@vtt/sdk/client', '@vtt/sdk/testing', ...NODE_BUILTINS],
     patterns: ['react/*', 'react-dom/*', '@vtt/sdk/client/*', 'node:*'],
     message:
-      'Plugin shared and server code runs in QuickJS: no React, client SDK or Node built-ins (ADR-073).',
+      'Plugin shared and server code runs in QuickJS: no React, client SDK, SDK testing kit or Node built-ins (ADR-073).',
+    tests: {
+      paths: ['react', 'react-dom', '@vtt/sdk/client', ...NODE_BUILTINS],
+      patterns: ['react/*', 'react-dom/*', '@vtt/sdk/client/*', 'node:*'],
+    },
   },
   server: {
     paths: ['@vtt/ui', '@vtt/sheet-renderer', '@vtt/sdk/client'],

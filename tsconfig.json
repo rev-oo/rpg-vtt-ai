@@ -32,6 +32,9 @@
       "path": "./packages/sdk/tsconfig.client.json"
     },
     {
+      "path": "./packages/sdk/tsconfig.testing.json"
+    },
+    {
       "path": "./packages/plugin-io"
     },
     {

@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- Plugin authors can test their code without a table (T-1613). `@vtt/sdk/testing` runs server handlers against a fake `ctx` that records what they did, and can roll the plugin's own formulas; `@vtt/sdk/client/testing` renders a module's overlays and panels in a test frame that sends them table events and records their actions. The guide's **Testing your code** section shows both.
+
 - Modules declare their overlays and panels in `plugin.json` under `frames`, so a table page no longer runs a module's code an extra time to find them. Overlays and panels get the table system's custom dice (`useSystemDice()`), and `dice-3d` throws them when a die shape has as many faces: Fate dice land as d6s with their own faces. `vtt-plugin pack` prints the size of each code bundle and warns about one over 1 MiB, and the guide explains how plugin code uses npm packages (T-1612).
 
 - Plugin server code works with items (T-1610): handler recipes can be made with an item, handlers get the actor's derived values, item totals and items, step item counters (`ctx.items.adjust`) and set plain fields (`ctx.actors.set`), and a roll's `then` runs server code after the roll is posted. Counters can be bounded by formulas such as `@hp.max`. The D&D 5e SRD system spends a spell slot when a spell is cast, recharges features on a Long Rest, and stops healing at the maximum.

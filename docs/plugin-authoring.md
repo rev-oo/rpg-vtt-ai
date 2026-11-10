@@ -1786,6 +1786,82 @@ export default defineServer({
 
 It runs once per entity an upgrade migrates, after the steps, with the version the entity was made with (`from`), the table's new one (`to`) and the data the steps left, both layers together. Collections are maps of rows keyed by id, each with a `sort`. It has no `ctx`: it only computes. Return the data unchanged for entities it has nothing to do with. An error, or an answer that is not an object, fails that entity like a failing step.
 
+#### Testing your code
+
+The SDK has two testing kits, for tests that run in Node with Vitest or any other runner. Import them only from tests: lint refuses them in a plugin's code, which could not load them once packed.
+
+`@vtt/sdk/testing` tests shared and server code. `fakeHandler` gives a handler its input with a fake `ctx`, and records what the handler asked for:
+
+```ts
+import { fakeHandler, HandlerFailure, loadTestSystem } from '@vtt/sdk/testing';
+
+import shared from '../shared.js';
+import { spendHitDie } from '../src/rests.js';
+
+it('heals up to the maximum', async () => {
+  const rest = fakeHandler({
+    actor: { name: 'Mira', data: { level: 3, hp: { value: 4 } } },
+    derived: { hitDie: 6 },
+    rolls: [9], // what each ctx.roll totals, in order
+    bounds: { 'hp.value': { minimum: 0, maximum: 8 } },
+  });
+  await spendHitDie(rest.input);
+  expect(rest.counter('hp.value')).toBe(8);
+  expect(rest.posts[0]?.text).toBe('Mira spends a Hit Die (d6) and regains 4 Hit Points.');
+});
+```
+
+- **Rolls:** `rolls` gives each roll's total, or `{ total, natural }` for code that reads the d20's face, or a function of the formula. Without it, every roll totals 10.
+- **Counters:** they start at the actor's and items' data, and stay within `bounds`, as the server keeps them within their schema's bounds. `counter(path, id?)` reads one after the handler's steps.
+- **Records:** `rolled` (formulas), `posts`, `steps` (every counter step and where it ended), `sets` and `logs`.
+- **Failures:** `ctx.fail` throws a `HandlerFailure` with the message the player would see.
+- **Rights:** the fake checks none. Who may roll for which actor is the server's job.
+
+To roll the formulas for real, load the plugin's files with `loadTestSystem` and pass it as `system`, with the faces the dice land on. A formula that reads a derived value the actor type does not have then fails in the test, as it would on the server:
+
+```ts
+const system = await loadTestSystem('..', { functions: shared.functions });
+const save = fakeHandler({
+  system,
+  actor: { data: { hp: { value: 0 }, exhaustion: 2 } },
+  dice: [13],
+});
+await deathSave(save.input);
+expect(save.posts[0]?.rolls?.[0]).toMatchObject({ resolved: '1d20 - 4', total: 9 });
+```
+
+`loadTestSystem(folder)` validates the plugin as the server would, and throws if it has errors. Its `rules` work out what the server would: `rules.derived(...)` gives an actor's derived values, and `rules.roll(name, ...)` rolls a recipe. `scriptedDice(...faces)` makes the dice they roll with. The path is relative to where the tests run: `'..'` from `code/`.
+
+`@vtt/sdk/client/testing` tests a module's overlays and panels. `createTestFrame` stands in for the frame: render the component inside its `Provider`, with React Testing Library in jsdom, then send table events, change settings or dice, and read what the component asked for:
+
+```tsx
+// @vitest-environment jsdom
+import { act, render } from '@testing-library/react';
+import { createTestFrame } from '@vtt/sdk/client/testing';
+
+import client from '../client.js';
+
+it('rolls when the viewer clicks', async () => {
+  const frame = createTestFrame({ settings: { colour: 'red' }, lang: { 'tray.roll': 'Roll' } });
+  const Tray = client.panels?.tray?.component;
+  if (!Tray) throw new Error('no tray panel');
+  const view = render(
+    <frame.Provider>
+      <Tray />
+    </frame.Provider>,
+  );
+  act(() => frame.emit({ type: 'chat.message', message }));
+  await act(async () => view.getByRole('button', { name: 'Roll' }).click());
+  expect(frame.calls).toEqual([{ kind: 'roll', formula: '1d20' }]);
+});
+```
+
+- **Options:** the viewer (a player by default), `settings`, the system's `dice`, the module's `lang` texts, what `encounter()` answers, and `refuse`, a function that refuses a call with a reason, as the server would.
+- **Changing the table:** `emit`, `setSettings` and `setDice`. Wrap them in `act`.
+- **Records:** `calls` holds every action and `setSetting`, in order. A `setSetting` the frame allows changes `settings`, as the host would.
+
+dice-3d's overlay tests (`plugins/dice-3d/code/test/overlay.test.tsx`) throw rolls in a test frame. jsdom has no WebGL, so the dice land unseen, and the test reads where they landed from the overlay's data attributes.
+
 ## Checking, previewing and installing
 
 ### Validation
