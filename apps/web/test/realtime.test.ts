@@ -51,6 +51,7 @@ describe('mergeMessages', () => {
     text: id,
     rolls: [],
     card: null,
+    translation: null,
     createdAt: new Date(Date.UTC(2026, 0, 1, 0, 0, second)).toISOString(),
     editedAt: null,
   });

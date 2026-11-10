@@ -152,6 +152,7 @@ describe('module frame hooks (T-1603, ADR-077)', () => {
           text: '',
           rolls: [{ expression: '1d20', resolved: '1d20', total: 15, dice: [] }],
           card: null,
+          translation: null,
           createdAt: '2026-11-07T12:00:00.000Z',
           editedAt: null,
         },

@@ -9,21 +9,17 @@ import {
 } from '@vtt/sdk/client';
 
 import { diceOf } from './src/dice.js';
-import { COLOURS, DiceTable, type Colour, type Report } from './src/stage.js';
+import { readSettings } from './src/settings.js';
+import { DiceTable, type Report } from './src/stage.js';
 
 // The 3D dice overlay (T-1604): for each roll the viewer sees, it throws dice over the table
 // page and lands them on the server's results. Clicks pass through it; the chat never waits.
 
-const isColour = (value: unknown): value is Colour =>
-  typeof value === 'string' && Object.hasOwn(COLOURS, value);
-
-const number = (value: unknown, fallback: number): number =>
-  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-
 function Dice(): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const table = useRef<DiceTable | null>(null);
-  const [settings] = useModuleSettings();
+  // Typed by `vtt-plugin types` from settings.json (T-1611).
+  const settings = readSettings(useModuleSettings()[0]);
   const viewer = useViewer();
   const custom = useSystemDice();
   const [report, setReport] = useState<Report>({ state: 'idle', shown: [], drawing: false });
@@ -45,14 +41,14 @@ function Dice(): ReactElement {
       event.message,
       {
         viewerId: viewer.id,
-        showOthers: settings.showOthers !== false,
-        maxDice: number(settings.maxDice, 20),
+        showOthers: settings.showOthers,
+        maxDice: settings.maxDice,
       },
       custom,
     );
     table.current?.throw(dice, {
-      colour: isColour(settings.colour) ? settings.colour : 'ivory',
-      seconds: number(settings.seconds, 3),
+      colour: settings.colour,
+      seconds: settings.seconds,
     });
   });
 

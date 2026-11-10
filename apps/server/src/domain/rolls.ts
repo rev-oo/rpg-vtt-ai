@@ -15,6 +15,7 @@ import {
   chatCardView,
   createRules,
   EngineError,
+  langText,
   playerDefinition,
   type HeldItem,
   type Rules,
@@ -28,6 +29,7 @@ import {
   MAX_FORMULA_LENGTH,
   type FieldPath,
   type commandRequestBody,
+  type MessageTranslation,
   type RecipeCard,
   type rollRequestBody,
 } from '@vtt/shared/api';
@@ -382,11 +384,43 @@ function isHandler(plugin: PluginDefinition, name: string): boolean {
 
 const postInput = z.strictObject({
   text: z.string().max(MAX_CHAT_TEXT).optional(),
+  /** A lang key of the plugin, with `params` (T-1611): each viewer reads it in their language. */
+  key: z.string().min(1).max(200).optional(),
+  params: z
+    .record(z.string().max(64), z.union([z.string().max(MAX_CHAT_TEXT), z.number()]))
+    .refine((params) => Object.keys(params).length <= 20, 'At most 20 parameters.')
+    .optional(),
   rolls: z
     .array(z.object({ ref: z.number().int() }))
     .max(MAX_HANDLER_POSTS)
     .optional(),
 });
+
+/** The plugin's English texts: what a message posted by lang key stores as its text. */
+const englishOf =
+  (plugin: PluginDefinition) =>
+  (text: string): string => {
+    const english = plugin.lang.en ?? {};
+    return Object.hasOwn(english, text) ? (english[text] ?? text) : text;
+  };
+
+/**
+ * What a post by lang key keeps for viewers to translate (T-1611), or `null` for plain text.
+ * The key needs an English text, which the message stores for everything else.
+ */
+function postTranslation(
+  plugin: PluginDefinition,
+  post: z.output<typeof postInput>,
+): MessageTranslation | null {
+  if (post.key === undefined) {
+    if (post.params !== undefined) throw new Error('Parameters go with a key.');
+    return null;
+  }
+  if (post.text !== undefined) throw new Error('A message has text or a key, not both.');
+  if (!Object.hasOwn(plugin.lang.en ?? {}, post.key))
+    throw new Error(`"${post.key}" has no English text in lang/en.json.`);
+  return { plugin: plugin.manifest.id, key: post.key, params: post.params ?? {} };
+}
 
 const adjustInput = z.tuple([
   z.string(),
@@ -753,13 +787,22 @@ async function runServerCode(
           if (!result) throw new Error('Post only rolls made with ctx.roll in this call.');
           return result;
         });
-        const text = post.text?.trim() ?? '';
+        const translation = postTranslation(plugin, post);
+        const text = translation
+          ? langText(englishOf(plugin), translation.key, translation.params)
+          : (post.text?.trim() ?? '');
         if (results.length === 0 && text === '') throw new Error('A message needs text or rolls.');
         posted.push(
           db.transaction((tx) =>
             createChatMessage(
               tx,
-              { ...message, kind: results.length > 0 ? 'roll' : 'text', text, rolls: results },
+              {
+                ...message,
+                kind: results.length > 0 ? 'roll' : 'text',
+                text,
+                rolls: results,
+                translation,
+              },
               now(),
             ),
           ),

@@ -57,7 +57,11 @@ describe('death saving throws', () => {
     const up = fake({ hp: { value: 0 } }, { rolls: [{ total: 12 }] });
     await deathSave(up.input);
     expect(up.adjusted()).toEqual([['deathSaves.successes', 1]]);
-    expect(up.posts[0]?.text).toBe('Mira: Death Saving Throw success (1/3).');
+    // Posted by lang key (T-1611), so each viewer reads it in their language.
+    expect(up.posts[0]).toMatchObject({
+      key: 'chat.deathSave.success',
+      params: { name: 'Mira', count: 1 },
+    });
 
     const down = fake({ hp: { value: 0 } }, { rolls: [{ total: 7 }] });
     await deathSave(down.input);
@@ -79,7 +83,10 @@ describe('death saving throws', () => {
       ['deathSaves.successes', -1],
       ['deathSaves.failures', -2],
     ]);
-    expect(twenty.posts[0]?.text).toBe('Mira rolls a natural 20 and regains 1 Hit Point!');
+    expect(twenty.posts[0]).toMatchObject({
+      key: 'chat.deathSave.revived',
+      params: { name: 'Mira' },
+    });
   });
 
   it('refuses a character who is not dying', async () => {
@@ -100,7 +107,10 @@ describe('rests', () => {
       ['hp.value', 9],
       ['hitDiceUsed', 1],
     ]);
-    expect(rest.posts[0]?.text).toBe('Mira spends a Hit Die (d6) and regains 4 Hit Points.');
+    expect(rest.posts[0]).toMatchObject({
+      key: 'chat.hitDie',
+      params: { name: 'Mira', die: 6, hp: 4 },
+    });
   });
 
   it('has no Hit Die to spend once all are spent', async () => {
@@ -141,7 +151,7 @@ describe('rests', () => {
       ['f1', 'uses.used', -2],
       ['f2', 'uses.used', -1],
     ]);
-    expect(rest.posts).toHaveLength(1);
+    expect(rest.posts).toEqual([{ key: 'chat.longRest', params: { name: 'Mira' } }]);
   });
 });
 
@@ -187,6 +197,9 @@ describe("with the system's formulas (T-1613)", () => {
     const data = { class: 'class.fighter', level: 3, con: 14, hp: { value: 10, max: 28 } };
     const rest = fake(data, { system: await system, derived: { hitDie: 10 }, dice: [7] });
     await spendHitDie(rest.input);
-    expect(rest.posts[0]?.text).toBe('Mira spends a Hit Die (d10) and regains 9 Hit Points.');
+    expect(rest.texts()).toEqual(['Mira spends a Hit Die (d10) and regains 9 Hit Points.']);
+    expect(rest.texts('pt-BR')).toEqual([
+      'Mira gasta um Dado de Vida (d10) e recupera 9 Pontos de Vida.',
+    ]);
   });
 });

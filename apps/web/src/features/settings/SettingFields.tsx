@@ -13,6 +13,11 @@ function parseNumber(text: string): number | string {
   return text.trim() === '' || !Number.isFinite(value) ? text : value;
 }
 
+/** What an `enum` value shows: its label (T-1611), or itself. */
+function optionLabel(labels: Readonly<Record<string, string>> | undefined, option: string): string {
+  return labels && Object.hasOwn(labels, option) ? (labels[option] ?? option) : option;
+}
+
 export interface SettingFieldsProps {
   settings: Readonly<Record<string, Setting>>;
   values: SettingValues;
@@ -86,6 +91,26 @@ export function SettingFields({
               />
             );
           case 'string':
+            if (setting.format === 'colour')
+              return (
+                <div key={name} className="flex flex-col gap-1">
+                  <label className="flex items-center gap-2">
+                    <span className="font-semibold">{label}</span>
+                    <input
+                      type="color"
+                      name={name}
+                      className="h-8 w-14 cursor-pointer rounded border border-line bg-surface"
+                      disabled={disabled}
+                      value={typeof value === 'string' ? value.toLowerCase() : setting.default}
+                      onChange={(e) => {
+                        onChange(name, e.target.value);
+                      }}
+                    />
+                  </label>
+                  {hint && <span className="text-sm text-muted">{hint}</span>}
+                  {errors[name] && <span className="text-sm text-danger">{errors[name]}</span>}
+                </div>
+              );
             return setting.enum ? (
               <Select
                 key={name}
@@ -99,7 +124,8 @@ export function SettingFields({
               >
                 {setting.enum.map((option) => (
                   <option key={option} value={option}>
-                    {translate(option)}
+                    {/* Its label (T-1611), or the value itself, translated if it is a lang key. */}
+                    {translate(optionLabel(setting.enumLabels, option))}
                   </option>
                 ))}
               </Select>

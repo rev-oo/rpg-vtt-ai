@@ -85,7 +85,13 @@ describe('a reference plugin with its compiled code (T-1613)', () => {
     });
     expect(res.statusCode, res.body).toBe(201);
     const { message } = res.json<{ message: ChatMessage }>();
+    // Posted by lang key (T-1611): the text is the English, the translation for viewers.
     expect(message.text).toBe('Mira: Death Saving Throw success (1/3).');
+    expect(message.translation).toEqual({
+      plugin: 'srd5',
+      key: 'chat.deathSave.success',
+      params: { name: 'Mira', count: 1 },
+    });
     expect(message.rolls[0]).toMatchObject({ resolved: '1d20 - 2', total: 11 });
     expect(stored(id)).toMatchObject({ deathSaves: { successes: 1 } });
   });

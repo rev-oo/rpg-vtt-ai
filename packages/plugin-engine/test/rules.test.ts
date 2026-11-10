@@ -19,8 +19,11 @@ describe('settingsIssues() (FR-ADMIN-04)', () => {
       mode: { type: 'string' as const, label: 'x', default: 'a', enum: ['a', 'b'] },
       name: { type: 'string' as const, label: 'x', default: '', maxLength: 3 },
       scale: { type: 'number' as const, label: 'x', default: 1.5, maximum: 2 },
+      tint: { type: 'string' as const, label: 'x', default: '#000000', format: 'colour' as const },
     };
-    expect(settingsIssues(definitions, { bonus: 4, crit: false, mode: 'b', scale: 2 })).toEqual([]);
+    expect(
+      settingsIssues(definitions, { bonus: 4, crit: false, mode: 'b', scale: 2, tint: '#C0FFEE' }),
+    ).toEqual([]);
     expect(
       settingsIssues(definitions, {
         bonus: 1.5,
@@ -28,6 +31,7 @@ describe('settingsIssues() (FR-ADMIN-04)', () => {
         mode: 'c',
         name: 'abcd',
         scale: 3,
+        tint: 'red',
         old: 1,
       }),
     ).toEqual([
@@ -36,6 +40,8 @@ describe('settingsIssues() (FR-ADMIN-04)', () => {
       { name: 'mode', reason: 'enum' },
       { name: 'name', reason: 'maxLength' },
       { name: 'scale', reason: 'maximum' },
+      // A colour is `#rrggbb` (T-1611).
+      { name: 'tint', reason: 'format' },
       { name: 'old', reason: 'unknown' },
     ]);
   });

@@ -12,7 +12,7 @@ export type NewChatMessage = Pick<
   typeof chatMessages.$inferInsert,
   'tableId' | 'senderId' | 'speaker' | 'audience' | 'kind' | 'text'
 > &
-  Partial<Pick<typeof chatMessages.$inferInsert, 'recipients' | 'rolls' | 'card'>>;
+  Partial<Pick<typeof chatMessages.$inferInsert, 'recipients' | 'rolls' | 'card' | 'translation'>>;
 
 export function createChatMessage(db: DbOrTx, input: NewChatMessage, now: Date): ChatMessageRow {
   return db
@@ -73,12 +73,15 @@ export function updateChatMessageText(
   text: string,
   now: Date,
 ): ChatMessageRow | undefined {
-  return db
-    .update(chatMessages)
-    .set({ text, editedAt: now })
-    .where(eq(chatMessages.id, id))
-    .returning()
-    .get();
+  return (
+    db
+      .update(chatMessages)
+      // The author's own words replace a translated text (T-1611).
+      .set({ text, translation: null, editedAt: now })
+      .where(eq(chatMessages.id, id))
+      .returning()
+      .get()
+  );
 }
 
 /** Removes a message for good. */

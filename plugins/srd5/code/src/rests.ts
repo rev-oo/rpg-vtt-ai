@@ -46,26 +46,22 @@ export async function deathSave({ ctx, actor }: HandlerInput): Promise<void> {
   const natural = naturalOf(roll);
   const successes = numberAt(actor.data, 'deathSaves.successes');
   const failures = numberAt(actor.data, 'deathSaves.failures');
-  let text: string;
+  // Lang keys with the actor's name (T-1611): each viewer reads the message in their language.
+  let key: string;
+  let count = 0;
   if (natural === 20) {
     await ctx.actors.adjust(actor.id, 'hp.value', 1);
     await ctx.actors.adjust(actor.id, 'deathSaves.successes', -successes);
     await ctx.actors.adjust(actor.id, 'deathSaves.failures', -failures);
-    text = `${actor.name} rolls a natural 20 and regains 1 Hit Point!`;
+    key = 'chat.deathSave.revived';
   } else if (roll.total >= 10) {
-    const now = await ctx.actors.adjust(actor.id, 'deathSaves.successes', 1);
-    text =
-      now >= 3
-        ? `${actor.name} is stable.`
-        : `${actor.name}: Death Saving Throw success (${String(now)}/3).`;
+    count = await ctx.actors.adjust(actor.id, 'deathSaves.successes', 1);
+    key = count >= 3 ? 'chat.deathSave.stable' : 'chat.deathSave.success';
   } else {
-    const now = await ctx.actors.adjust(actor.id, 'deathSaves.failures', natural === 1 ? 2 : 1);
-    text =
-      now >= 3
-        ? `${actor.name} dies.`
-        : `${actor.name}: Death Saving Throw failure (${String(now)}/3).`;
+    count = await ctx.actors.adjust(actor.id, 'deathSaves.failures', natural === 1 ? 2 : 1);
+    key = count >= 3 ? 'chat.deathSave.dead' : 'chat.deathSave.failure';
   }
-  await ctx.chat.post({ text, rolls: [roll] });
+  await ctx.chat.post({ key, params: { name: actor.name, count }, rolls: [roll] });
 }
 
 /**
@@ -82,7 +78,8 @@ export async function spendHitDie({ ctx, actor, derived }: HandlerInput): Promis
   const after = await ctx.actors.adjust(actor.id, 'hp.value', Math.max(1, roll.total));
   await ctx.actors.adjust(actor.id, 'hitDiceUsed', 1);
   await ctx.chat.post({
-    text: `${actor.name} spends a Hit Die (d${String(die)}) and regains ${String(after - before)} Hit Points.`,
+    key: 'chat.hitDie',
+    params: { name: actor.name, die, hp: after - before },
     rolls: [roll],
   });
 }
@@ -117,9 +114,7 @@ export async function longRest({ ctx, actor, items }: HandlerInput): Promise<voi
       await ctx.items.adjust(item.id, 'uses.used', -used);
     }
   }
-  await ctx.chat.post({
-    text: `${actor.name} finishes a Long Rest: Hit Points, Hit Dice, spell slots and features are restored.`,
-  });
+  await ctx.chat.post({ key: 'chat.longRest', params: { name: actor.name } });
 }
 
 /**

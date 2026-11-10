@@ -12,6 +12,7 @@ import { scopeCss, validatePlugin } from '@vtt/plugin-schema';
 import { main } from '../src/cli.js';
 import { previewModule, startDevServer } from '../src/commands/dev.js';
 import { BUNDLE_WARNING_BYTES, formatSize } from '../src/commands/pack.js';
+import { settingsModule, settingsOf } from '../src/commands/types.js';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TINY_D20 = path.join(REPO, 'plugins', 'tiny-d20');
@@ -243,7 +244,8 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
       default: { functions: Record<string, (...args: unknown[]) => unknown> };
     };
     expect(definition.functions.slots?.('class.wizard', 5, 3)).toBe(2);
-    expect(definition.functions.saveText?.('ability.dex', 13)).toBe('Dexterity DC 13');
+    // Card rows translate ability names, so it has no `saveText` any more (T-1611).
+    expect(Object.keys(definition.functions)).toEqual(['slots']);
   });
 
   it('packs tiny-d20’s /check command into code that runs on its own (T-0804)', async () => {
@@ -289,6 +291,47 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
       code: 2,
       err: expect.stringContaining('both compile to code/client.js') as unknown,
     });
+  });
+});
+
+describe('vtt-plugin types (T-1611)', () => {
+  const DICE_3D = path.join(REPO, 'plugins', 'dice-3d');
+
+  it("writes the settings' types and a reader that falls back to defaults", async () => {
+    const dir = path.join(temp, 'module');
+    await cp(DICE_3D, dir, {
+      recursive: true,
+      filter: (source) => !source.includes('node_modules'),
+    });
+    const file = path.join(temp, 'settings.ts');
+    expect(await run('types', dir, '--out', file)).toMatchObject({ code: 0 });
+    const written = await readFile(file, 'utf8');
+    expect(written).toContain(
+      "const colourValues = ['ivory', 'crimson', 'sapphire', 'emerald', 'onyx'] as const;",
+    );
+    expect(written).toContain('  colour: (typeof colourValues)[number];');
+    expect(written).toContain('    maxDice: number(values.maxDice, 20),');
+    // Helpers are written only when a setting needs them.
+    expect(written).not.toContain('const text =');
+  });
+
+  it("keeps dice-3d's settings module current (run `vtt-plugin types plugins/dice-3d`)", async () => {
+    const settings = settingsOf(await readFile(path.join(DICE_3D, 'settings.json'), 'utf8'));
+    expect(await readFile(path.join(DICE_3D, 'code', 'src', 'settings.ts'), 'utf8')).toBe(
+      settingsModule(settings ?? {}),
+    );
+  });
+
+  it('writes long choices one per line, and needs settings', async () => {
+    const values = Array.from({ length: 12 }, (_, index) => `choice-number-${String(index)}`);
+    const module = settingsModule({
+      mode: { type: 'string', label: 'Mode', default: 'choice-number-0', enum: values },
+      name: { type: 'string', label: "Bo's name", default: "it's", scope: 'user' },
+    });
+    expect(module).toContain("const modeValues = [\n  'choice-number-0',\n");
+    expect(module).toContain("    name: text(values.name, 'it\\'s'),");
+    await writeFile(path.join(temp, 'settings.json'), '{}');
+    expect(await run('types', temp)).toMatchObject({ code: 1 });
   });
 });
 

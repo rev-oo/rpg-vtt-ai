@@ -31,6 +31,7 @@ import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { ICON } from '../../icons.js';
 import { CardMessage } from '../../plugin-host/CardMessage.js';
+import { useMessageText } from '../../plugin-host/message-text.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 
 import { parseChatInput } from './commands.js';
@@ -266,6 +267,7 @@ function MessageItem({
   const [confirming, setConfirming] = useState(false);
   const [draft, setDraft] = useState(message.text);
   const [busy, setBusy] = useState(false);
+  const text = useMessageText(message);
   const authorship = {
     senderId: message.senderId,
     kind: message.kind,
@@ -400,14 +402,14 @@ function MessageItem({
         <>
           {/* A typed roll's text is its formula, which the roll shows; plugin code may add more. */}
           {message.text !== '' && message.text !== message.rolls[0]?.expression && (
-            <p className="break-words whitespace-pre-wrap">{message.text}</p>
+            <p className="break-words whitespace-pre-wrap">{text}</p>
           )}
           {message.rolls.map((roll, index) => (
             <RollView key={index} roll={roll} />
           ))}
         </>
       ) : (
-        <p className="break-words whitespace-pre-wrap">{message.text}</p>
+        <p className="break-words whitespace-pre-wrap">{text}</p>
       )}
     </li>
   );

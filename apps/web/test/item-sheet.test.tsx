@@ -100,6 +100,7 @@ const ROLLED = {
   text: '1d20 + 1',
   rolls: [{ expression: '1d20 + 1', resolved: '1d20 + 1', total: 12, dice: [] }],
   card: null,
+  translation: null,
   createdAt: '2026-10-20T12:00:00.000Z',
   editedAt: null,
 };

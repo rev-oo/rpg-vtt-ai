@@ -61,17 +61,3 @@ export function slotsFor(classKey: string, level: number, slotLevel: number): nu
   if (casterLevel === 0) return 0;
   return FULL_CASTER_SLOTS[casterLevel - 1]?.[slotLevel - 1] ?? 0;
 }
-
-const ABILITY_NAMES: Readonly<Record<string, string>> = {
-  'ability.str': 'Strength',
-  'ability.dex': 'Dexterity',
-  'ability.con': 'Constitution',
-  'ability.int': 'Intelligence',
-  'ability.wis': 'Wisdom',
-  'ability.cha': 'Charisma',
-};
-
-/** An ability's English name from its lang key: card rows show values untranslated. */
-export function abilityName(key: string): string {
-  return Object.hasOwn(ABILITY_NAMES, key) ? (ABILITY_NAMES[key] ?? key) : key;
-}

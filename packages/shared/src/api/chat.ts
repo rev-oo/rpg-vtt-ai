@@ -132,6 +132,18 @@ export const chatHistoryQuery = z.object({
 });
 export type ChatHistoryQuery = z.input<typeof chatHistoryQuery>;
 
+/**
+ * Text plugin code posted by lang key (T-1611): each viewer reads the plugin's text for the key
+ * in their language, with `{name}` filled from `params`; a string param that is itself a lang
+ * key is translated too. The message's `text` is the English, for everything else.
+ */
+export const messageTranslationSchema = z.object({
+  plugin: z.string(),
+  key: z.string(),
+  params: z.record(z.string(), z.union([z.string(), z.number()])),
+});
+export type MessageTranslation = z.infer<typeof messageTranslationSchema>;
+
 /** Who spoke, as it was when the message was sent; survives renames and deletions. */
 export const speakerSchema = z.object({
   name: z.string(),
@@ -154,6 +166,8 @@ export const chatMessageSchema = z.object({
   rolls: z.array(rollSchema),
   /** Set on `card` messages. */
   card: recipeCardSchema.nullable(),
+  /** Set when plugin code posted the text by lang key; dropped when the author edits it. */
+  translation: messageTranslationSchema.nullable(),
   createdAt: z.string(),
   /** When the author last edited it; `null` if never (FR-CHAT-09). */
   editedAt: z.string().nullable(),

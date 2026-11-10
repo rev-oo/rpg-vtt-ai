@@ -277,6 +277,21 @@
                 "slashing",
                 "thunder"
               ],
+              "enumLabels": {
+                "acid": "damage.acid",
+                "bludgeoning": "damage.bludgeoning",
+                "cold": "damage.cold",
+                "fire": "damage.fire",
+                "force": "damage.force",
+                "lightning": "damage.lightning",
+                "necrotic": "damage.necrotic",
+                "piercing": "damage.piercing",
+                "poison": "damage.poison",
+                "psychic": "damage.psychic",
+                "radiant": "damage.radiant",
+                "slashing": "damage.slashing",
+                "thunder": "damage.thunder"
+              },
               "default": "slashing"
             },
             "extraDamage": {

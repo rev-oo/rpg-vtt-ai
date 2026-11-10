@@ -4,5 +4,10 @@
   "setting.secondsHint": "After they stop rolling.",
   "setting.maxDice": "Most dice in one throw",
   "setting.maxDiceHint": "Larger rolls throw only the first dice.",
-  "setting.showOthers": "Throw other people's rolls too"
+  "setting.showOthers": "Throw other people's rolls too",
+  "colour.ivory": "Ivory",
+  "colour.crimson": "Crimson",
+  "colour.sapphire": "Sapphire",
+  "colour.emerald": "Emerald",
+  "colour.onyx": "Onyx"
 }

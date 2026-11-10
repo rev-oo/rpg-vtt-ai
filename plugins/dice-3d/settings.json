@@ -4,6 +4,13 @@
     "type": "string",
     "default": "ivory",
     "enum": ["ivory", "crimson", "sapphire", "emerald", "onyx"],
+    "enumLabels": {
+      "ivory": "colour.ivory",
+      "crimson": "colour.crimson",
+      "sapphire": "colour.sapphire",
+      "emerald": "colour.emerald",
+      "onyx": "colour.onyx"
+    },
     "label": "setting.colour",
     "scope": "user"
   },

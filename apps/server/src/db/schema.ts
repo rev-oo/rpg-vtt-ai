@@ -28,6 +28,7 @@ import {
   PLUGIN_STATUSES,
   type FogRect,
   type PluginIssueView,
+  type MessageTranslation,
   type RecipeCard,
   type Roll,
   type Speaker,
@@ -365,6 +366,8 @@ export const chatMessages = sqliteTable(
     rolls: text('rolls', { mode: 'json' }).$type<Roll[]>().notNull().default([]),
     /** What a recipe roll resolved, on `card` messages (FR-CHAT-06, ADR-025). */
     card: text('card', { mode: 'json' }).$type<RecipeCard>(),
+    /** Text plugin code posted by lang key, which viewers read in their language (T-1611). */
+    translation: text('translation', { mode: 'json' }).$type<MessageTranslation>(),
     createdAt: createdAt(),
     /** Set when the author edits the text (FR-CHAT-09). */
     editedAt: timestamp('edited_at'),

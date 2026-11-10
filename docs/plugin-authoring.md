@@ -970,6 +970,7 @@ Once any item type has a `group`, a type without one gets a heading of its own: 
 | `minLength`, `maxLength`  | Limits for text                                                             |
 | `format: "dice"`          | Text that holds dice, such as `2d6 + 3`, or nothing; see `roll()`           |
 | `enum`                    | The allowed values, offered by a `select` input                             |
+| `enumLabels`              | What the `select` shows for each `enum` value; see below                    |
 | `properties`              | The fields of an `object`                                                   |
 | `items`                   | The rows of an `array`                                                      |
 | `required`, `description` | As in JSON Schema                                                           |
@@ -977,6 +978,19 @@ Once any item type has a `group`, a type without one gets a heading of its own: 
 `$ref`, `allOf`, `oneOf`, `anyOf`, `not`, `if`/`then`/`else` and `patternProperties` are refused. Field names are [identifiers](plugin-reference.md#identifier) (`strMod`, `hp`), so formulas can refer to them. Top-level fields cannot be named `derived`, `args`, `row`, `settings`, `total`, `roll`, `items` or `item`, which formulas use for other things.
 
 Fields left without a `default` start empty (an empty text, zero or false), so give each field a sensible default.
+
+`enumLabels` gives each `enum` value a lang key or text to show, so the stored value stays plain (T-1611). Formulas compare the plain value, and the sheet shows the label in the viewer's language:
+
+```json
+"damageType": {
+  "type": "string",
+  "enum": ["fire", "cold"],
+  "enumLabels": { "fire": "damage.fire", "cold": "damage.cold" },
+  "default": "fire"
+}
+```
+
+Numbers are labelled by their text (`{ "6": "die.d6" }`). A value without a label shows as it is, translated if it is itself a lang key.
 
 Annotations change how the core stores and edits a field:
 
@@ -1321,6 +1335,8 @@ A card in `cards/<name>.json` lays out a recipe's roll in chat:
 
 Each row's `value` is a formula that can read the roll (`@total`, `@roll.*`), the entity's data and `@args`. `outcome: true` shows the recipe's outcome. A component of the same name in `code/client` replaces the card's rendering.
 
+A value that is a lang key is translated, like labels (T-1611). Build the key in the formula to show a stored value in the viewer's language: `{ "label": "card.damageType", "value": "'damage.' + @item.damageType" }` shows "Fire" from `"damage.fire": "Fire"`. Only a whole value is translated: in `@roll.resolved + ' ' + @item.damageType`, the type stays as stored, so give it a row of its own.
+
 ### Combat
 
 `combat.json` lets the GM roll initiative in the combat tracker:
@@ -1403,7 +1419,7 @@ Migrations only run forwards: data from a newer version than the table's, after 
 }
 ```
 
-A setting is a `boolean`, `integer`, `number` or `string` (with optional `enum`), with a `default`, a `label` and an optional `description`.
+A setting is a `boolean`, `integer`, `number` or `string` (with optional `enum`), with a `default`, a `label` and an optional `description`. A `string` setting with an `enum` may label its values with `enumLabels`, as [fields do](#data). A `string` setting with `"format": "colour"` is a colour, written `#rrggbb` and picked with a colour picker; it has no `enum`.
 
 A setting's `scope` says who sets it (ADR-075):
 
@@ -1426,6 +1442,17 @@ A setting's `scope` says who sets it (ADR-075):
 ```
 
 Formulas read only `table` settings: the validator reports `@settings.colour` above as an unknown reference, since its value differs from one viewer to the next.
+
+Plugin code gets settings as plain values (`useModuleSettings`). `vtt-plugin types <dir>` writes `code/src/settings.ts` from `settings.json`: a `Settings` type, with each choice as the union of its values, and `readSettings(values)`, which types them and falls back to each default. Run it again whenever the settings change:
+
+```tsx
+import { useModuleSettings } from '@vtt/sdk/client';
+
+import { readSettings } from './src/settings.js';
+
+const settings = readSettings(useModuleSettings()[0]);
+settings.colour; // 'ivory' | 'crimson' | …
+```
 
 ### Modules
 
@@ -1707,6 +1734,14 @@ Everything comes as the roller may see it: players' code never gets secret field
 
 A `path` is the field's names joined by dots, `hp.value`; a field in a collection row names the row by its id, `features.<id>.uses`. Only GMs and assistants reach secret fields.
 
+To post text each viewer reads in their language, post a lang `key` with `params` instead of `text` (T-1611):
+
+```ts
+await ctx.chat.post({ key: 'chat.longRest', params: { name: actor.name } });
+```
+
+With `"chat.longRest": "{name} finishes a Long Rest."` in `lang/en.json` and `"{name} termina um Descanso Longo."` in `lang/pt-BR.json`, each member reads their own language. `{name}` takes the `name` parameter; a text parameter that is itself a lang key (`ability.dex`) is translated too. The key needs an English text, which the message also stores as its plain text, for exports and for a table whose system is no longer the plugin. A post has `text` or a `key`, not both. `ctx.fail` messages stay as written.
+
 Rules:
 
 - **Post something.** A handler must post at least one message; the first answers the roll. One that posts nothing fails.
@@ -1824,13 +1859,14 @@ it('heals up to the maximum', async () => {
   });
   await spendHitDie(rest.input);
   expect(rest.counter('hp.value')).toBe(8);
-  expect(rest.posts[0]?.text).toBe('Mira spends a Hit Die (d6) and regains 4 Hit Points.');
+  expect(rest.posts[0]).toMatchObject({ key: 'chat.hitDie', params: { name: 'Mira', hp: 4 } });
 });
 ```
 
 - **Rolls:** `rolls` gives each roll's total, or `{ total, natural }` for code that reads the d20's face, or a function of the formula. Without it, every roll totals 10.
 - **Counters:** they start at the actor's and items' data, and stay within `bounds`, as the server keeps them within their schema's bounds. `counter(path, id?)` reads one after the handler's steps.
 - **Records:** `rolled` (formulas), `posts`, `steps` (every counter step and where it ended), `sets` and `logs`.
+- **Texts:** `texts(locale?)` gives the posts as a viewer reads them: posts by lang key are filled in from the `system`'s lang files (below), English where the locale has none.
 - **Failures:** `ctx.fail` throws a `HandlerFailure` with the message the player would see.
 - **Rights:** the fake checks none. Who may roll for which actor is the server's job.
 
@@ -1840,11 +1876,12 @@ To roll the formulas for real, load the plugin's files with `loadTestSystem` and
 const system = await loadTestSystem('..', { functions: shared.functions });
 const save = fakeHandler({
   system,
-  actor: { data: { hp: { value: 0 }, exhaustion: 2 } },
+  actor: { name: 'Mira', data: { hp: { value: 0 }, exhaustion: 2 } },
   dice: [13],
 });
 await deathSave(save.input);
 expect(save.posts[0]?.rolls?.[0]).toMatchObject({ resolved: '1d20 - 4', total: 9 });
+expect(save.texts('pt-BR')).toEqual(['Mira: falha no Teste de Resistência contra a Morte (1/3).']);
 ```
 
 `loadTestSystem(folder)` validates the plugin as the server would, and throws if it has errors. Its `rules` work out what the server would: `rules.derived(...)` gives an actor's derived values, and `rules.roll(name, ...)` rolls a recipe. `scriptedDice(...faces)` makes the dice they roll with. The path is relative to where the tests run: `'..'` from `code/`.
@@ -1906,6 +1943,8 @@ It checks:
 ### Packing
 
 `vtt-plugin pack <dir> [--out <file>]` validates the plugin, compiles `code/` to ES modules (see [Dependencies](#dependencies)), minifies the styles, validates the packed files again, and writes `<id>-<version>.vttplugin` (a ZIP). It prints each bundle's size, and warns about one over 1 MiB. Archives are limited to 20 MB, 2,000 files and 50 MB unpacked.
+
+`vtt-plugin types <dir> [--out <file>]` writes the types of the plugin's settings for its code, `code/src/settings.ts` by default (see [Plugin settings](#plugin-settings)).
 
 ### Installing and updating
 

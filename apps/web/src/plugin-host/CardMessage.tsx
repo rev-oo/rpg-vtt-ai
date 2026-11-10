@@ -27,7 +27,8 @@ function CoreCard({
         {card.rows.map((row, index) => (
           <div key={index} className={cn('contents', row.class)}>
             <dt className="text-muted">{translate(row.label)}</dt>
-            <dd title={row.error}>{row.error ? '—' : row.value}</dd>
+            {/* A value that is a lang key is translated (T-1611): `'damage.' + @item.damageType`. */}
+            <dd title={row.error}>{row.error ? '—' : translate(row.value)}</dd>
           </div>
         ))}
       </dl>

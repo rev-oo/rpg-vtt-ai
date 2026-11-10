@@ -297,6 +297,70 @@ export const CASES: FixtureCase[] = [
     ],
   },
   {
+    name: 'labels for enum values of fields and settings, and a colour setting (T-1611)',
+    change: (f: PluginFixture): void => {
+      heroFields(f).stance = {
+        type: 'string',
+        enum: ['calm', 'angry'],
+        default: 'calm',
+        enumLabels: { calm: 'stance.calm', angry: 'Angry' },
+      };
+      heroFields(f).die = { type: 'integer', enum: [6, 8], default: 6, enumLabels: { 6: 'd6' } };
+      f['settings.json'] = {
+        mood: {
+          type: 'string',
+          default: 'calm',
+          enum: ['calm', 'angry'],
+          enumLabels: { calm: 'stance.calm' },
+          label: 'Mood',
+        },
+        tint: { type: 'string', default: '#C0ffee', format: 'colour', label: 'Tint' },
+      };
+      f['lang/en.json'] = { ...LANG, 'stance.calm': 'Calm' };
+      f['lang/pt-BR.json'] = { ...LANG, 'stance.calm': 'Calmo' };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'labels for values not in the enum, or without one, and untranslated labels',
+    change: (f: PluginFixture): void => {
+      heroFields(f).stance = {
+        type: 'string',
+        enum: ['calm'],
+        enumLabels: { calm: 'stance.calm', angry: 'Angry' },
+      };
+      heroFields(f).motto = { type: 'string', enumLabels: { yes: 'Yes' } };
+      f['settings.json'] = {
+        mood: {
+          type: 'string',
+          default: 'sad',
+          enum: ['calm'],
+          enumLabels: { happy: 'Happy' },
+          label: 'Mood',
+        },
+        tint: { type: 'string', default: 'red', format: 'colour', label: 'Tint' },
+        shade: {
+          type: 'string',
+          default: '#000000',
+          format: 'colour',
+          enum: ['#000000'],
+          label: 'Shade',
+        },
+      };
+    },
+    issues: [
+      'error invalid_value types/actors/hero.json $.schema.properties.stance.enumLabels.angry',
+      'error missing_key types/actors/hero.json $.schema.properties.motto',
+      'error invalid_value settings.json $.mood.enumLabels.happy',
+      'error invalid_default settings.json $.mood.default',
+      'error invalid_default settings.json $.tint.default',
+      'error invalid_annotation settings.json $.shade.format',
+      'error missing_lang_key types/actors/hero.json $.schema.properties.stance.enumLabels.calm',
+      'warning missing_lang_key types/actors/hero.json $.schema.properties.stance.enumLabels.calm',
+    ],
+  },
+  {
     name: 'item groups and plural labels in the plugin language (T-1203)',
     change: (f: PluginFixture): void => {
       f['sheets/item.json'] = { layout: { type: 'column', children: [] } };

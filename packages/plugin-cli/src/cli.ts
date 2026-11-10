@@ -2,6 +2,7 @@ import { parseArgs } from 'node:util';
 
 import { packCommand } from './commands/pack.js';
 import { schemaCommand } from './commands/schema.js';
+import { typesCommand } from './commands/types.js';
 import { validateCommand } from './commands/validate.js';
 import { consoleOutput, UsageError, type Output } from './io.js';
 
@@ -12,6 +13,7 @@ Commands:
   dev <dir> [--port <n>]         Preview the plugin's sheets, reloading on changes
   pack <dir> [--out <file>]      Compile code/, minify styles and write a .vttplugin archive
   schema [--out <dir>]           Write the JSON Schemas of plugin files (or print them)
+  types <dir> [--out <file>]     Write the settings' types for plugin code (code/src/settings.ts)
   help                           Show this help`;
 
 const options = {
@@ -45,6 +47,8 @@ export async function main(
         return await validateCommand(folder(rest, command), output);
       case 'pack':
         return await packCommand(folder(rest, command), values.out, output);
+      case 'types':
+        return await typesCommand(folder(rest, command), values.out, output);
       case 'schema':
         if (rest.length > 0) throw new UsageError('schema takes no folder.');
         return await schemaCommand(values.out, output);

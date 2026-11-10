@@ -21,11 +21,15 @@
     },
     {
       "label": "card.save",
-      "value": "@item.attack == 'spell.save' ? saveText(@item.save, @derived.spellDc) : '—'"
+      "value": "@item.attack == 'spell.save' ? @item.save : '—'"
+    },
+    {
+      "label": "card.saveDc",
+      "value": "@item.attack == 'spell.save' ? @derived.spellDc : '—'"
     },
     {
       "label": "card.damageType",
-      "value": "@item.effectType"
+      "value": "'damage.' + @item.effectType"
     }
   ],
   "outcome": true

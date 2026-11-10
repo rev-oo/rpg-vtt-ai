@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- Plugins can be translated end to end (T-1611). A field or setting's choices show labels in the viewer's language (`enumLabels`) while the stored values stay as they are; chat card rows translate values that are lang keys; and plugin server code can post messages by lang key, so each member reads them in their own language. Settings can be colours, picked with a colour picker, and `vtt-plugin types` gives plugin code its settings typed. The `srd5` system is now in Portuguese (Brazil) too, and `dice-3d` names its colours in both languages.
+
 - Plugins can credit their content: a manifest `attribution` (text and a link) shows on the Plugins page and with each of the plugin's entries in the Compendium. The `srd5` system shows the SRD 5.2's credit there. Compendium packs may give collections as rows keyed by id, as stored data has them, as well as lists (T-1614).
 
 - Plugin authors can test their code without a table (T-1613). `@vtt/sdk/testing` runs server handlers against a fake `ctx` that records what they did, and can roll the plugin's own formulas; `@vtt/sdk/client/testing` renders a module's overlays and panels in a test frame that sends them table events and records their actions. The guide's **Testing your code** section shows both.

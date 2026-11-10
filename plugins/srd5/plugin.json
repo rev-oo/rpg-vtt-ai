@@ -13,6 +13,6 @@
     "url": "https://www.dndbeyond.com/srd"
   },
   "hasCode": true,
-  "locales": ["en"],
+  "locales": ["en", "pt-BR"],
   "defaultLocale": "en"
 }

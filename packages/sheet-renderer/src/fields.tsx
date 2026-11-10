@@ -192,6 +192,10 @@ export function FieldNode({
 
   if (input === 'select') {
     const options = field.schema?.enum ?? [];
+    // A value shows its label (T-1611), or itself: a value that is a lang key is translated.
+    const labels = field.schema?.enumLabels ?? {};
+    const labelOf = (option: string) =>
+      sheet.translate(Object.hasOwn(labels, option) ? (labels[option] ?? option) : option);
     return (
       <FieldShell {...shell} labelFor={id}>
         <select
@@ -209,7 +213,7 @@ export function FieldNode({
           )}
           {options.map((option) => (
             <option key={String(option)} value={String(option)}>
-              {sheet.translate(String(option))}
+              {labelOf(String(option))}
             </option>
           ))}
         </select>

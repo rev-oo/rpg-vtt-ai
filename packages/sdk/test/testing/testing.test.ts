@@ -72,6 +72,16 @@ describe('fakeHandler (T-1613)', () => {
     expect(roll.resolved).toBe('1d20 + 3');
     await expect(fake.ctx.roll('1d20')).rejects.toThrow('No scripted face');
   });
+
+  it('reads posts by lang key in a language, as viewers would (T-1611)', async () => {
+    const fake = fakeHandler({ system: await loadTestSystem(TINY_D20) });
+    await fake.ctx.chat.post({ key: 'type.character' });
+    await fake.ctx.chat.post({ key: 'not.a.key', params: { n: 1 } });
+    await fake.ctx.chat.post({ text: 'As written' });
+    expect(fake.texts()).toEqual(['Character', 'not.a.key', 'As written']);
+    expect(fake.texts('pt-BR')).toEqual(['Personagem', 'not.a.key', 'As written']);
+    expect(fake.posts[0]).toEqual({ key: 'type.character' });
+  });
 });
 
 describe('loadTestSystem (T-1613)', () => {

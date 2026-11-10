@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { abilityName, slotsFor } from '../src/tables.js';
+import { slotsFor } from '../src/tables.js';
 
 const row = (classKey: string, level: number): number[] =>
   Array.from({ length: 9 }, (_, i) => slotsFor(classKey, level, i + 1));
@@ -29,12 +29,5 @@ describe('spell slots (SRD 5.2 class tables)', () => {
     expect(row('class.fighter', 20)).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0]);
     expect(slotsFor('class.wizard', 0, 1)).toBe(2);
     expect(slotsFor('class.wizard', 99, 9)).toBe(1);
-  });
-});
-
-describe('text for cards', () => {
-  it('names abilities', () => {
-    expect(abilityName('ability.dex')).toBe('Dexterity');
-    expect(abilityName('unknown')).toBe('unknown');
   });
 });

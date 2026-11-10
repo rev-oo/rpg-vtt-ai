@@ -134,6 +134,13 @@
       "when": 1794307507556,
       "tag": "0018_member_ask_roll_options",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1794331961377,
+      "tag": "0019_chat_translation",
+      "breakpoints": true
     }
   ]
 }
