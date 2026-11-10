@@ -17,7 +17,7 @@ export const TYPE: Pick<ActorType, 'schema' | 'derived'> = {
       hp: {
         type: 'object',
         properties: {
-          value: { type: 'integer', default: 10, 'x-counter': true },
+          value: { type: 'integer', default: 10, maximum: '@hp.max', 'x-counter': true },
           max: { type: 'integer', default: 10 },
         },
       },

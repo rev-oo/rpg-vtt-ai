@@ -285,7 +285,7 @@
             "type": "integer",
             "default": 10,
             "minimum": 0,
-            "maximum": 999,
+            "maximum": "@hp.max",
             "x-counter": true
           },
           "max": {
@@ -307,7 +307,7 @@
         "type": "integer",
         "default": 0,
         "minimum": 0,
-        "maximum": 20,
+        "maximum": "@level",
         "x-counter": true
       },
       "deathSaves": {
@@ -351,63 +351,63 @@
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots1",
             "x-counter": true
           },
           "l2": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots2",
             "x-counter": true
           },
           "l3": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots3",
             "x-counter": true
           },
           "l4": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots4",
             "x-counter": true
           },
           "l5": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots5",
             "x-counter": true
           },
           "l6": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots6",
             "x-counter": true
           },
           "l7": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots7",
             "x-counter": true
           },
           "l8": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots8",
             "x-counter": true
           },
           "l9": {
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 4,
+            "maximum": "@derived.slots9",
             "x-counter": true
           }
         }

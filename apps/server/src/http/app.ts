@@ -158,6 +158,7 @@ export async function buildApp({
     definition: (id) => plugins.definition(id),
     now,
     timing: collabTiming,
+    code: (id) => plugins.code(id),
   });
   const events = await registerEvents(app, { db, sessions });
 

@@ -277,7 +277,7 @@
             "title": "Name"
           },
           "item": {
-            "description": "Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`.",
+            "description": "Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`.",
             "minItems": 1,
             "type": "array",
             "items": {
@@ -285,6 +285,12 @@
               "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
               "title": "Name"
             }
+          },
+          "then": {
+            "description": "A handler in `code/server`, run after the roll is posted. It gets the result, the item and the options, and can step counters, such as spending a spell slot.",
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+            "title": "Name"
           },
           "actors": {
             "description": "The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors.",
@@ -317,6 +323,16 @@
             "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
             "title": "Name",
             "description": "A handler in `code/server`, run on the server when the recipe is rolled."
+          },
+          "item": {
+            "description": "Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`.",
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+              "title": "Name"
+            }
           },
           "actors": {
             "description": "The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors.",

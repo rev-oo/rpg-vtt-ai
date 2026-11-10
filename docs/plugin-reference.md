@@ -98,8 +98,8 @@ The entity's data: an object whose properties are fields.
 | `description` | text (at most 2000 characters) |  |  |
 | `default` | any JSON value |  | The value new entities start with; it must fit the field. |
 | `enum` | list of text or number (at least 1 item) |  | The allowed values; a `select` input offers them. |
-| `minimum` | number |  |  |
-| `maximum` | number |  |  |
+| `minimum` | number or [formula](#formula) |  | The lowest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
+| `maximum` | number or [formula](#formula) |  | The highest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `minLength` | integer, at least 0 |  |  |
 | `maxLength` | integer, at least 0 |  |  |
 | `format` | `"dice"` |  | For a `string`: the text must be a dice expression, such as `2d6 + 3` (numbers, dice and + - * / only), or blank. Formulas roll it with `roll(@field)`. |
@@ -161,8 +161,8 @@ The entity's data: an object whose properties are fields.
 | `description` | text (at most 2000 characters) |  |  |
 | `default` | any JSON value |  | The value new entities start with; it must fit the field. |
 | `enum` | list of text or number (at least 1 item) |  | The allowed values; a `select` input offers them. |
-| `minimum` | number |  |  |
-| `maximum` | number |  |  |
+| `minimum` | number or [formula](#formula) |  | The lowest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
+| `maximum` | number or [formula](#formula) |  | The highest value allowed. On a counter (`x-counter`) it may be a formula, such as `@hp.max`, worked out against the entity on every step. |
 | `minLength` | integer, at least 0 |  |  |
 | `maxLength` | integer, at least 0 |  |  |
 | `format` | `"dice"` |  | For a `string`: the text must be a dice expression, such as `2d6 + 3` (numbers, dice and + - * / only), or blank. Formulas roll it with `roll(@field)`. |
@@ -438,7 +438,8 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | `formula` | [formula](#formula) or map from [identifier](#identifier) to [formula](#formula) | yes | What to roll: dice and `@` references to the entity's data, `@derived`, `@args` and `@settings`. Or several formulas by name, rolled in order into one message; each reads those before it as `@rolls.<name>`. |
 | `outcomes` | list of [Outcome](#rolls-outcome) |  | Checked in order; the first whose `when` is true is shown. |
 | `card` | [name](#name) |  | A card in `cards/`, without `.json`, to show the roll with. |
-| `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`. |
+| `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`. |
+| `then` | [name](#name) |  | A handler in `code/server`, run after the roll is posted. It gets the result, the item and the options, and can step counters, such as spending a spell slot. |
 | `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
 <a id="rolls-handler-recipe"></a>
@@ -449,6 +450,7 @@ Any other key maps to one of [Formula recipe](#rolls-formula-recipe), [Handler r
 | --- | --- | --- | --- |
 | `label` | [text](#text) |  |  |
 | `handler` | [name](#name) | yes | A handler in `code/server`, run on the server when the recipe is rolled. |
+| `item` | list of [name](#name) (at least 1 item) |  | Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`. |
 | `actors` | list of [name](#name) (at least 1 item) |  | The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors. |
 
 <a id="rolls-choice-option"></a>

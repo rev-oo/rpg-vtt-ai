@@ -918,11 +918,13 @@ export const CASES: FixtureCase[] = [
       f['code/client.js'] = '';
       sheetChildren(f).push({ type: 'custom:hpBar' });
       at(f, 'rolls.json').attack = { handler: 'attack' };
+      skill(f).then = 'spend';
     },
     issues: [
       'error has_code_mismatch plugin.json $.hasCode',
       'error code_required sheets/hero.json $.layout.children[5].type',
       'error code_required rolls.json $.attack.handler',
+      'error code_required rolls.json $.skill.then',
     ],
   },
   {
@@ -936,6 +938,41 @@ export const CASES: FixtureCase[] = [
     },
     issues: [],
     valid: true,
+  },
+  {
+    name: 'formula bounds (T-1610)',
+    change: (f: PluginFixture): void => {
+      Object.assign(heroFields(f), {
+        hp: {
+          type: 'object',
+          properties: {
+            value: {
+              type: 'integer',
+              default: 5,
+              minimum: '@derived.mod',
+              maximum: '@hp.max',
+              'x-counter': true,
+            },
+            max: { type: 'integer', default: 5, minimum: 1 },
+            temp: { type: 'integer', default: 0, maximum: '@nothing', 'x-counter': true },
+          },
+        },
+        str: { type: 'integer', default: 10, maximum: '@hp.max' },
+      });
+    },
+    issues: [
+      'error formula_bound types/actors/hero.json $.schema.properties.str.maximum',
+      'error unknown_reference types/actors/hero.json $.schema.properties.hp.properties.temp.maximum',
+    ],
+  },
+  {
+    name: 'handler recipes made with items (T-1610)',
+    change: (f: PluginFixture): void => {
+      at(f, 'plugin.json').hasCode = true;
+      f['code/server.js'] = '';
+      at(f, 'rolls.json').use = { handler: 'use', item: ['gem'] };
+    },
+    issues: ['error missing_target rolls.json $.use.item[0]'],
   },
   {
     name: 'missing translations',

@@ -47,7 +47,7 @@
             "type": "integer",
             "default": 4,
             "minimum": 0,
-            "maximum": 999,
+            "maximum": "@hp.max",
             "x-counter": true
           },
           "max": {

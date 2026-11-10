@@ -62,23 +62,6 @@ export function slotsFor(classKey: string, level: number, slotLevel: number): nu
   return FULL_CASTER_SLOTS[casterLevel - 1]?.[slotLevel - 1] ?? 0;
 }
 
-/** A class's Hit Die size. */
-export function hitDieOf(classKey: string): number {
-  switch (classKey) {
-    case 'class.barbarian':
-      return 12;
-    case 'class.fighter':
-    case 'class.paladin':
-    case 'class.ranger':
-      return 10;
-    case 'class.sorcerer':
-    case 'class.wizard':
-      return 6;
-    default:
-      return 8;
-  }
-}
-
 const ABILITY_NAMES: Readonly<Record<string, string>> = {
   'ability.str': 'Strength',
   'ability.dex': 'Dexterity',

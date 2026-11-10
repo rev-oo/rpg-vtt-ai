@@ -27,6 +27,15 @@ const actors = z
     'The actor types that may roll it. The validator checks it against these only, sheets of other types cannot show its buttons, and the server refuses it for other actors.',
   );
 
+/** The item types a recipe is made with (ADR-063); handler recipes too (T-1610). */
+const item = z
+  .array(name)
+  .min(1)
+  .optional()
+  .describe(
+    'Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet; formulas read the item as `@item`, and server code gets it as `item`.',
+  );
+
 /** The most options one recipe asks for, and choices one option offers (T-1609). */
 export const MAX_ROLL_OPTIONS = 10;
 
@@ -130,12 +139,11 @@ export const formulaRecipeSchema = z
       .describe('Checked in order; the first whose `when` is true is shown.'),
     /** A file in `cards/`, without `.json`. */
     card: name.optional().describe('A card in `cards/`, without `.json`, to show the roll with.'),
-    item: z
-      .array(name)
-      .min(1)
+    item,
+    then: name
       .optional()
       .describe(
-        'Item types the roll is made with. It is then rolled from an `items` row or an item’s sheet, and reads the item as `@item`.',
+        'A handler in `code/server`, run after the roll is posted. It gets the result, the item and the options, and can step counters, such as spending a spell slot.',
       ),
     actors,
   })
@@ -148,6 +156,7 @@ export const handlerRecipeSchema = z
     handler: name.describe(
       'A handler in `code/server`, run on the server when the recipe is rolled.',
     ),
+    item,
     actors,
   })
   .meta({ title: 'Handler recipe' });

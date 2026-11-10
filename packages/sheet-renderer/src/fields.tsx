@@ -1,6 +1,7 @@
 import { useId, useState, type ReactElement, type ReactNode } from 'react';
 
 import { isDiceText, type Value } from '@vtt/formula';
+import { fieldBounds } from '@vtt/plugin-engine';
 import type { FieldSchema, SheetNode } from '@vtt/plugin-schema';
 import { Button, cn, controlClass } from '@vtt/ui';
 
@@ -70,13 +71,28 @@ function problemWith(
   const value = Number(text);
   if (text.trim() === '' || !Number.isFinite(value)) return strings.notNumber;
   if (schema?.type === 'integer' && !Number.isInteger(value)) return strings.notInteger;
-  if (schema?.minimum !== undefined && value < schema.minimum) {
-    return fill(strings.tooSmall, { min: schema.minimum });
-  }
-  if (schema?.maximum !== undefined && value > schema.maximum) {
-    return fill(strings.tooBig, { max: schema.maximum });
-  }
+  const { minimum, maximum } = schema ? boundsOf(sheet, schema) : {};
+  if (minimum !== undefined && value < minimum) return fill(strings.tooSmall, { min: minimum });
+  if (maximum !== undefined && value > maximum) return fill(strings.tooBig, { max: maximum });
   return undefined;
+}
+
+/**
+ * A field's bounds: a counter's formulas (T-1610) read the entity whose sheet this is, its
+ * derived values, its item totals and the settings, as the server does on every step.
+ */
+function boundsOf(sheet: SheetEnvironment, schema: FieldSchema) {
+  return fieldBounds(
+    schema,
+    {
+      ...sheet.data,
+      derived: sheet.derived.values,
+      // An item's own fields, in a row of its holder's sheet, have no totals.
+      items: sheet.holderData ? {} : sheet.itemTotals,
+      settings: sheet.settings,
+    },
+    sheet.functions,
+  );
 }
 
 interface FieldShellProps {

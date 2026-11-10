@@ -18,6 +18,7 @@ import {
   playerDefinition,
   type HeldItem,
   type Rules,
+  type SetFieldProblem,
 } from '@vtt/plugin-engine';
 import type { PluginDefinition } from '@vtt/plugin-schema';
 import { canSendChat, isGmLike, type Subject, type TableRole } from '@vtt/shared';
@@ -35,6 +36,7 @@ import type { DbOrTx } from '../db/client.js';
 import {
   createChatMessage,
   findActor,
+  findItem,
   type Actor,
   type ChatMessageRow,
 } from '../db/repositories/index.js';
@@ -42,8 +44,14 @@ import { forbidden, unprocessable } from '../errors.js';
 import { PluginCodeError, type CodeKind, type LoadedCode } from '../plugins/code-runtime.js';
 
 import { recipientsFor, speakerFor } from './chat.js';
-import type { LiveHeldItem } from './documents.js';
-import { actorAccess, dataFilter, requireWritableTable, type DataFilter } from './entities.js';
+import type { LiveHeldItem, SheetEntity } from './documents.js';
+import {
+  actorAccess,
+  dataFilter,
+  itemAccess,
+  requireWritableTable,
+  type DataFilter,
+} from './entities.js';
 import { findTable } from './tables.js';
 
 export type RollRequest = z.output<typeof rollRequestBody>;
@@ -61,13 +69,31 @@ export const secureRng: Rng = { nextInt: (n) => randomInt(n) };
 /** The most messages one handler may post (ADR-047). */
 export const MAX_HANDLER_POSTS = 10;
 
-/** Steps a counter of an actor's live document; `undefined` when the path is no counter there. */
+/** An actor or item whose document server code changes. */
+export interface ChangedEntity {
+  kind: 'actor' | 'item';
+  entity: SheetEntity;
+}
+
+/**
+ * Steps a counter of an actor's or item's live document, within its bounds, formulas included
+ * (T-1610); `undefined` when the path is no counter there.
+ */
 export type AdjustCounter = (
-  actor: Actor,
+  target: ChangedEntity,
   layer: 'main' | 'secret',
   path: FieldPath,
   delta: number,
+  functions: Readonly<Record<string, FormulaFunction>>,
 ) => Promise<number | undefined>;
+
+/** Sets a plain field of an entity's live document (T-1610); why it could not, if it could not. */
+export type SetEntityField = (
+  target: ChangedEntity,
+  layer: 'main' | 'secret',
+  path: FieldPath,
+  value: unknown,
+) => Promise<SetFieldProblem | undefined>;
 
 export interface RollOptions {
   now: () => Date;
@@ -81,8 +107,10 @@ export interface RollOptions {
   heldItems?: (actor: Actor) => LiveHeldItem[];
   /** The system's shared and server code, if it has any (ADR-047). */
   code?: (systemId: string) => Promise<LoadedCode | undefined>;
-  /** For handlers' `ctx.actors.adjust`. */
+  /** For server code's `ctx.actors.adjust` and `ctx.items.adjust`. */
   adjust?: AdjustCounter;
+  /** For server code's `ctx.actors.set` (T-1610). */
+  setField?: SetEntityField;
 }
 
 /** A formula engine error as `422 invalid_formula` (ADR-018). */
@@ -231,7 +259,7 @@ export async function sendRollMessages(
     if (isHandler(system.plugin, name)) {
       if (Object.keys(asked).length > 0)
         throw unprocessable('bad_option', `The roll "${name}" has no options.`);
-      return runHandler(db, prepared, { name, args, code, functions }, options);
+      return runHandler(db, prepared, { name, args, item, code, functions }, options);
     }
     const result = rolling(() =>
       system.rules.roll(name, {
@@ -269,7 +297,29 @@ export async function sendRollMessages(
         now(),
       ),
     );
-    return [row];
+    const then = recipe && 'formula' in recipe ? recipe.then : undefined;
+    if (then === undefined) return [row];
+    // What the roll does next runs after it is posted (T-1610): the card stays either way.
+    const after = await runThen(
+      db,
+      prepared,
+      {
+        name: then,
+        recipe: name,
+        args,
+        item,
+        code,
+        functions,
+        result: {
+          total: result.roll.total,
+          outcome: result.outcome?.label ?? null,
+          rolls: result.rolls,
+          options: result.options ?? {},
+        },
+      },
+      options,
+    );
+    return [row, ...after];
   }
 
   const visible = dataFilter(plugin, sender.role);
@@ -300,7 +350,7 @@ function rolledItem(
   held: readonly LiveHeldItem[],
 ): LiveHeldItem | undefined {
   const recipe = Object.hasOwn(plugin.rolls, name) ? plugin.rolls[name] : undefined;
-  const takes = recipe && 'formula' in recipe ? recipe.item : undefined;
+  const takes = recipe?.item;
   if (itemId === undefined) {
     if (takes) throw unprocessable('item_required', 'Roll this with one of the actor’s items.');
     return undefined;
@@ -344,6 +394,84 @@ const adjustInput = z.tuple([
   z.number().min(-MAX_ADJUST_DELTA).max(MAX_ADJUST_DELTA),
 ]);
 
+const setInput = z.tuple([
+  z.string(),
+  z.string().min(1).max(512),
+  z.union([z.string().max(MAX_CHAT_TEXT), z.number(), z.boolean()]),
+]);
+
+/** Why `ctx.actors.set` refused a value, for the error server code gets. */
+const SET_PROBLEMS: Record<SetFieldProblem, string> = {
+  not_a_field: 'is not a field the sender can set',
+  counter: 'is a counter: step it with ctx.actors.adjust',
+  not_plain: 'is not a text, number or true/false field',
+  type: 'takes another type of value',
+  enum: 'takes one of its listed values',
+  format: 'takes dice, such as 1d4',
+  minimum: 'is below its minimum',
+  maximum: 'is above its maximum',
+  minLength: 'is too short',
+  maxLength: 'is too long',
+};
+
+/** A posted roll as `then` code gets it (T-1610). */
+interface ThenResult {
+  total: number;
+  /** The label of the outcome that matched, or null. */
+  outcome: string | null;
+  rolls: RollResult[];
+  /** What `@options` read: those asked for, the rest at their defaults. */
+  options: Readonly<Record<string, string | number>>;
+}
+
+/**
+ * Runs a formula recipe's `then` handler after its card is posted (T-1610). Its messages
+ * follow the card. When it cannot run or fails, the card stays: what failed is logged, and
+ * a message it failed with on purpose (`ctx.fail`) is posted as text.
+ */
+async function runThen(
+  db: DbOrTx,
+  prepared: Prepared,
+  call: {
+    name: string;
+    recipe: string;
+    args: Readonly<Record<string, Value>>;
+    item: LiveHeldItem | undefined;
+    code: LoadedCode | undefined;
+    functions: Readonly<Record<string, FormulaFunction>>;
+    result: ThenResult;
+  },
+  settings: RollOptions,
+): Promise<ChatMessageRow[]> {
+  const { code } = call;
+  const { options, ...result } = call.result;
+  const log = settings.logger.child({ recipe: call.recipe, then: call.name });
+  if (!code?.handlers.includes(call.name)) {
+    log.warn('the system’s code has no such handler');
+    return [];
+  }
+  const run = await runServerCode(
+    db,
+    prepared,
+    {
+      kind: 'handler',
+      name: call.name,
+      input: call.args,
+      item: call.item,
+      extra: { options, result },
+      code,
+      functions: call.functions,
+    },
+    settings,
+  );
+  if (!run.error?.shown) return run.posted;
+  const text = run.error.message.slice(0, MAX_CHAT_TEXT);
+  const failed = db.transaction((tx) =>
+    createChatMessage(tx, { ...prepared.message, kind: 'text', text }, settings.now()),
+  );
+  return [...run.posted, failed];
+}
+
 /** Runs a `handler` recipe in the plugin's worker (ADR-047). */
 async function runHandler(
   db: DbOrTx,
@@ -351,6 +479,7 @@ async function runHandler(
   call: {
     name: string;
     args: Readonly<Record<string, Value>>;
+    item: LiveHeldItem | undefined;
     code: LoadedCode | undefined;
     functions: Readonly<Record<string, FormulaFunction>>;
   },
@@ -372,7 +501,15 @@ async function runHandler(
   return runCode(
     db,
     prepared,
-    { ...call, code, kind: 'handler', name: recipe.handler, input: call.args },
+    {
+      code,
+      functions: call.functions,
+      kind: 'handler',
+      name: recipe.handler,
+      input: call.args,
+      item: call.item,
+      extra: { options: {} },
+    },
     options,
   );
 }
@@ -445,8 +582,10 @@ interface CodeCall {
   name: string;
   /** A recipe's arguments, which formulas read as `@args`, or a command's text. */
   input: Readonly<Record<string, Value>> | string;
-  /** More input for hooks, next to `actor` and `args`. */
+  /** More input, next to `actor` and `args`: a hook's, or `then` code's result (T-1610). */
   extra?: Readonly<Record<string, unknown>>;
+  /** The item a handler recipe is made with (T-1610). */
+  item?: LiveHeldItem | undefined;
   code: LoadedCode;
   functions: Readonly<Record<string, FormulaFunction>>;
 }
@@ -496,11 +635,45 @@ export async function runHook(
   );
 }
 
+/** An item as server code gets it (T-1610): its main fields and its derived values. */
+function itemView(rules: Rules, plugin: PluginDefinition, item: LiveHeldItem) {
+  const known = Object.hasOwn(plugin.itemTypes, item.type);
+  return {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    data: item.data,
+    derived: known ? rules.derived('item', item.type, item.data).values : {},
+  };
+}
+
+/**
+ * What a handler gets besides its actor and arguments (T-1610): the actor's derived values and
+ * item totals (`@derived`, `@items`), the items it holds, and the item the roll is made with.
+ * They are worked out from what the sender may see, like `ctx.roll`.
+ */
+function handlerInput(
+  { rules, plugin, visible }: { rules: Rules; plugin: PluginDefinition; visible: DataFilter },
+  actor: Actor | null,
+  held: readonly LiveHeldItem[],
+  item: LiveHeldItem | undefined,
+) {
+  const known = actor !== null && Object.hasOwn(plugin.actorTypes, actor.type);
+  return {
+    derived: known
+      ? rules.derived('actor', actor.type, visible('actor', actor.type, actor.system), held).values
+      : {},
+    totals: known ? rules.itemTotals(held) : {},
+    items: held.map((entry) => itemView(rules, plugin, entry)),
+    ...(item && { item: itemView(rules, plugin, item) }),
+  };
+}
+
 async function runServerCode(
   db: DbOrTx,
   prepared: Prepared,
   call: CodeCall,
-  { now, rng, logger, adjust }: RollOptions,
+  { now, rng, logger, adjust, setField }: RollOptions,
 ): Promise<CodeRun> {
   const { subject, message, actor, plugin, table } = prepared;
   if (!plugin || !table)
@@ -530,6 +703,26 @@ async function runServerCode(
           items: prepared.items,
         }
       : { data: actor ? visible('actor', actor.type, actor.system) : {} };
+
+  // Server code changes what the sender may edit, on the layers they see (T-1610).
+  const layers = isGmLike(subject.role) ? (['main', 'secret'] as const) : (['main'] as const);
+  const editableActor = (id: string): ChangedEntity => {
+    const found = findActor(db, id);
+    if (found?.tableId !== table.id || actorAccess(subject, found) !== 'owner') {
+      throw new Error('The sender cannot edit that actor.');
+    }
+    return { kind: 'actor', entity: found };
+  };
+  const editableItem = (id: string): ChangedEntity => {
+    const found = findItem(db, id);
+    // An item of an actor in the trash is out of reach with it (ADR-015).
+    const holder = found?.actorId ? findActor(db, found.actorId) : undefined;
+    const reachable = found?.tableId === table.id && (found.actorId === null || holder);
+    if (!found || !reachable || itemAccess(subject, holder) !== 'owner') {
+      throw new Error('The sender cannot edit that item.');
+    }
+    return { kind: 'item', entity: found };
+  };
 
   const host = async (method: string, args: readonly unknown[]): Promise<unknown> => {
     switch (method) {
@@ -579,20 +772,28 @@ async function runServerCode(
         if (found?.tableId !== table.id || actorAccess(subject, found) === null) return null;
         return view(found);
       }
-      case 'adjust': {
+      case 'adjust':
+      case 'adjustItem': {
         const [id, path, delta] = adjustInput.parse(args);
-        const found = findActor(db, id);
-        if (found?.tableId !== table.id || actorAccess(subject, found) !== 'owner') {
-          throw new Error('The sender cannot edit that actor.');
-        }
+        const target = method === 'adjust' ? editableActor(id) : editableItem(id);
         if (!adjust) throw new Error('Counters cannot be adjusted here.');
-        const segments = path.split('.');
-        const layers = isGmLike(subject.role) ? (['main', 'secret'] as const) : (['main'] as const);
         for (const layer of layers) {
-          const value = await adjust(found, layer, segments, delta);
+          const value = await adjust(target, layer, path.split('.'), delta, call.functions);
           if (value !== undefined) return value;
         }
         throw new Error(`"${path}" is not a counter the sender can adjust.`);
+      }
+      case 'set': {
+        const [id, path, value] = setInput.parse(args);
+        const target = editableActor(id);
+        if (!setField) throw new Error('Fields cannot be set here.');
+        let problem: SetFieldProblem | undefined = 'not_a_field';
+        for (const layer of layers) {
+          problem = await setField(target, layer, path.split('.'), value);
+          if (problem !== 'not_a_field') break;
+        }
+        if (problem) throw new Error(`"${path}" ${SET_PROBLEMS[problem]}.`);
+        return undefined;
       }
       default:
         throw new Error(`Unknown ctx method "${method}".`);
@@ -603,7 +804,13 @@ async function runServerCode(
     const value = await code.handle(
       call.kind,
       call.name,
-      { ...call.extra, actor: actor && view(actor), args: call.input },
+      {
+        ...call.extra,
+        ...(call.kind === 'handler' &&
+          handlerInput({ ...typed, visible }, actor, prepared.items, call.item)),
+        actor: actor && view(actor),
+        args: call.input,
+      },
       host,
     );
     return { posted, value, error: undefined };

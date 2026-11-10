@@ -163,6 +163,10 @@ const BOOTSTRAP = `(host, log, output) => {
     actors: Object.freeze({
       get: (id) => host(call, 'get', [id]),
       adjust: (id, path, delta) => host(call, 'adjust', [id, path, delta]),
+      set: (id, path, value) => host(call, 'set', [id, path, value]),
+    }),
+    items: Object.freeze({
+      adjust: (id, path, delta) => host(call, 'adjustItem', [id, path, delta]),
     }),
     log: (message, data) => { log(String(message), data === undefined ? null : data); },
     fail: (message) => {

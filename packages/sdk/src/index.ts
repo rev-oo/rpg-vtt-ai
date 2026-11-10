@@ -32,6 +32,17 @@ export interface HandlerActor {
   data: Record<string, unknown>;
 }
 
+/** An item as server code gets it (T-1610): its fields and its derived values. */
+export interface HandlerItem {
+  id: string;
+  name: string;
+  type: string;
+  /** Its fields; secret fields are left out. */
+  data: Record<string, unknown>;
+  /** Its derived values, as `@item.derived` reads them. */
+  derived: Record<string, Value>;
+}
+
 /** A message posted by a handler, as the roll's speaker and to the roll's audience. */
 export interface HandlerPost {
   text?: string;
@@ -52,7 +63,22 @@ export interface ServerContext {
   actors: {
     /** An actor of the table, with the fields the roller may see; `null` if they cannot see it. */
     get(id: string): Promise<HandlerActor | null>;
-    /** Steps a counter field (`x-counter`) of an actor the roller may edit; returns its new value. */
+    /**
+     * Steps a counter field (`x-counter`) of an actor the roller may edit, within its bounds;
+     * returns its new value. A path into a collection names the row by id: `attacks.<id>.uses`.
+     */
+    adjust(id: string, path: string, delta: number): Promise<number>;
+    /**
+     * Sets a text, number or true/false field that is not a counter, of an actor the roller may
+     * edit (T-1610). The value must fit the field, or the call throws.
+     */
+    set(id: string, path: string, value: string | number | boolean): Promise<void>;
+  };
+  items: {
+    /**
+     * Steps a counter field of an item the roller may edit, within its bounds (T-1610): one held
+     * by an actor they own, or, for GMs and assistants, one in the library. Returns its new value.
+     */
     adjust(id: string, path: string, delta: number): Promise<number>;
   };
   log(message: string, data?: Readonly<Record<string, unknown>>): void;
@@ -60,15 +86,41 @@ export interface ServerContext {
   fail(message: string): never;
 }
 
-/** What a `handler` recipe receives. */
+/** A roll a recipe posted, as its `then` handler gets it (T-1610). */
+export interface PostedRoll {
+  /** The first roll's total, which `@total` reads. */
+  total: number;
+  /** The label of the outcome that matched, or `null`. */
+  outcome: string | null;
+  /** Every roll in order: one, or one per named formula. */
+  rolls: readonly RollResult[];
+}
+
+/** What a `handler` recipe, or a formula recipe's `then` handler, receives. */
 export interface HandlerInput {
   ctx: ServerContext;
   /** The actor the recipe was rolled for. */
   actor: HandlerActor;
+  /** The actor's derived values, as `@derived` reads them (T-1610). */
+  derived: Readonly<Record<string, Value>>;
+  /** The actor's item totals, as `@items` reads them (T-1610). */
+  totals: Readonly<Record<string, Value>>;
+  /** The items the actor holds (T-1610). */
+  items: readonly HandlerItem[];
+  /** The item the roll is made with, when the recipe declares `item` (T-1610). */
+  item?: HandlerItem;
   /** The roll button's `args`. */
   args: Readonly<Record<string, Value>>;
+  /** For `then`: the options, as `@options` read them; empty for handler recipes. */
+  options: Readonly<Record<string, string | number>>;
+  /** For `then`: the roll the recipe posted (T-1610). */
+  result?: PostedRoll;
 }
 
+/**
+ * Runs a `handler` recipe, which must post at least one message, or a formula recipe's `then`,
+ * after its roll is posted, which may post nothing. A `then` that fails leaves the roll posted.
+ */
 export type Handler = (input: HandlerInput) => Promise<void> | void;
 
 /** What a slash command gets: `/name args` typed by a member (ADR-048). */

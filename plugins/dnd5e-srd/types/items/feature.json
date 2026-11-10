@@ -20,7 +20,7 @@
             "type": "integer",
             "default": 0,
             "minimum": 0,
-            "maximum": 20,
+            "maximum": "@uses.max",
             "x-counter": true
           },
           "max": {
