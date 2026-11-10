@@ -74,6 +74,26 @@ export const manifestSchema = z
     description: z.string().max(2000).optional().describe('Shown on the plugin admin page.'),
     author: z.string().max(200).optional(),
     license: z.string().max(100).optional(),
+    /** Credit the plugin's content needs, such as CC-BY's (T-1614). */
+    attribution: z
+      .strictObject({
+        text: z
+          .string()
+          .trim()
+          .min(1)
+          .max(500)
+          .describe('The credit, as it must read; shown as written, in every language.'),
+        url: z
+          .string()
+          .max(500)
+          .regex(/^https?:\/\/[^\s/?#]+[^\s]*$/)
+          .optional()
+          .describe('A web page for the source or its licence, linked from the credit.'),
+      })
+      .optional()
+      .describe(
+        "Credit for the plugin's content, such as a CC-BY licence asks for. Shown on the Plugins page and with each compendium entry from its packs.",
+      ),
     /** Must match whether a `code/` folder exists (FR-PLUGIN-06). */
     hasCode: z
       .boolean()

@@ -17,6 +17,7 @@ import { actors, items } from '../db/schema.js';
 import { notFound, unprocessable } from '../errors.js';
 
 import { requireRoomForItems } from './entities.js';
+import { attributionOf } from './plugins.js';
 import type { GameTable } from './tables.js';
 
 // The compendium (FR-PLUGIN-09, ADR-060): the entries of the system's packs, which members
@@ -38,7 +39,12 @@ const before = (a: NameKey, b: NameKey) =>
 
 /** The system's packs, for the pack filter. */
 export function compendiumPacks(plugin: PluginDefinition): CompendiumPack[] {
-  return Object.entries(plugin.packs ?? {}).map(([name, pack]) => ({ name, label: pack.label }));
+  const attribution = attributionOf(plugin);
+  return Object.entries(plugin.packs ?? {}).map(([name, pack]) => ({
+    name,
+    label: pack.label,
+    attribution,
+  }));
 }
 
 /** Every entry of every pack of the system, in name order. */

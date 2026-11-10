@@ -246,6 +246,57 @@ export const CASES: FixtureCase[] = [
     valid: true,
   },
   {
+    name: 'a pack with collections as rows keyed by id, as stored (T-1614)',
+    change: (f: PluginFixture): void => {
+      f['packs/heroes.json'] = {
+        label: 'Heroes',
+        entries: [
+          {
+            id: 'ayla',
+            kind: 'actor',
+            type: 'hero',
+            name: 'Ayla',
+            data: { skills: { climb: { name: 'Climb', rank: 2, sort: 'a0' }, swim: {} } },
+          },
+          {
+            id: 'bo',
+            kind: 'actor',
+            type: 'hero',
+            name: 'Bo',
+            data: { skills: { 'bad id': {}, run: { rank: 'x', sort: 3 }, jump: 'high' } },
+          },
+        ],
+      };
+    },
+    issues: [
+      'error invalid_value packs/heroes.json $.entries[1].data.skills["bad id"]',
+      'error invalid_value packs/heroes.json $.entries[1].data.skills.run.rank',
+      'error invalid_value packs/heroes.json $.entries[1].data.skills.run.sort',
+      'error invalid_value packs/heroes.json $.entries[1].data.skills.jump',
+    ],
+  },
+  {
+    name: 'an attribution with a link (T-1614)',
+    change: (f: PluginFixture): void => {
+      at(f, 'plugin.json').attribution = {
+        text: 'Includes material from the Example Reference Document, CC-BY-4.0.',
+        url: 'https://example.com/licence',
+      };
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'an attribution without text, or with a link that is not a web address',
+    change: (f: PluginFixture): void => {
+      at(f, 'plugin.json').attribution = { text: ' ', url: 'javascript:alert(1)' };
+    },
+    issues: [
+      'error invalid_value plugin.json $.attribution.text',
+      'error invalid_value plugin.json $.attribution.url',
+    ],
+  },
+  {
     name: 'item groups and plural labels in the plugin language (T-1203)',
     change: (f: PluginFixture): void => {
       f['sheets/item.json'] = { layout: { type: 'column', children: [] } };

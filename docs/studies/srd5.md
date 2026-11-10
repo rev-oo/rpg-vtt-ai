@@ -1,6 +1,6 @@
 # Study: D&D 5e from the SRD 5.2 as a system plugin (T-1605)
 
-`plugins/dnd5e-srd` is a game system built from the [System Reference Document 5.2](https://www.dndbeyond.com/srd) (CC-BY-4.0). It has characters and creatures with abilities, skills, saving throws, proficiency, attacks, spells and slots, conditions, rests, and an SRD pack. It uses only what the plugin format offers: JSON types, sheets, rolls, cards and a pack, plus `code/shared` (formula functions) and `code/server` (handlers). It has no client code and no styles. This study records what was missing, what needed a workaround, what was rough, and what needed reading the app's code rather than the [authoring guide](../plugin-authoring.md). It ends with proposed follow-up tasks and the questions left for the user.
+`plugins/srd5` is a game system built from the [System Reference Document 5.2](https://www.dndbeyond.com/srd) (CC-BY-4.0). It has characters and creatures with abilities, skills, saving throws, proficiency, attacks, spells and slots, conditions, rests, and an SRD pack. It uses only what the plugin format offers: JSON types, sheets, rolls, cards and a pack, plus `code/shared` (formula functions) and `code/server` (handlers). It has no client code and no styles. This study records what was missing, what needed a workaround, what was rough, and what needed reading the app's code rather than the [authoring guide](../plugin-authoring.md). It ends with proposed follow-up tasks and the questions left for the user.
 
 ## How the plugin works
 
@@ -15,7 +15,7 @@
 - **SRD pack** (`packs/srd.json`, 58 entries): 19 weapons, 13 armours, 7 pieces of gear, 12 spells and 7 creatures (Goblin Warrior, Skeleton, Zombie, Wolf, Bandit, Guard, Ogre).
 - **Attribution**: the manifest's description and a `LICENSE.md` carry the SRD's CC-BY-4.0 attribution. The plugin is named "SRD 5.2 (fifth edition)", without the D&D trademark (see D1).
 - **Generated files.** The JSON (sheets, types, rolls, cards, pack and `lang/en.json`, 372 keys) was written by a script, because so much of it repeats (see F10). The script is not committed (see Q1).
-- **Tests.** `code/` is a workspace package, like dice-3d's, with unit tests for the class tables and the handlers (with a fake `ctx`). The schema and CLI suites treat it as a reference plugin. `e2e/tests/dnd5e-srd.spec.ts` makes a level 5 wizard, copies a longsword and Fire Bolt from the pack, attacks, casts, spends a slot and takes a Long Rest.
+- **Tests.** `code/` is a workspace package, like dice-3d's, with unit tests for the class tables and the handlers (with a fake `ctx`). The schema and CLI suites treat it as a reference plugin. `e2e/tests/srd5.spec.ts` makes a level 5 wizard, copies a longsword and Fire Bolt from the pack, attacks, casts, spends a slot and takes a Long Rest.
 
 ## Findings
 
@@ -110,7 +110,7 @@ Conditions are booleans that change the actor's own rolls (through the edges). N
 ### F18. Tooling (rough edge)
 
 - The lint boundaries assumed plugin code is client code (`plugin-code` allows only `@vtt/sdk/client`). Shared and server code import `@vtt/sdk`, so `packages/config/eslint/workspace.mjs` gained a `plugin-server-code` element (pure, `@vtt/sdk` only, no React, client SDK or Node built-ins).
-- The server tests copy reference plugins without their code (`apps/server/test/support/reference.ts`), so a system whose formulas call its shared functions does not load there. dnd5e-srd is tested through unit tests of its code, the schema and CLI suites, and e2e.
+- The server tests copy reference plugins without their code (`apps/server/test/support/reference.ts`), so a system whose formulas call its shared functions does not load there. srd5 is tested through unit tests of its code, the schema and CLI suites, and e2e.
 - The SDK has no fake `ctx` for handlers; the unit tests build one (`code/test/rests.test.ts`).
 
 ### F19. What worked as documented
@@ -165,7 +165,7 @@ P1 is small and fixes what every player sees. P3, P4, P6 and P7 add keys to the 
 
 ## Decisions
 
-- **D1. No D&D trademark in the name.** The SRD's licence covers its text, not Wizards of the Coast's trademarks, so the plugin is "SRD 5.2 (fifth edition)". Its id, `dnd5e-srd`, comes from the task and is not shown to players; see Q2.
+- **D1. No D&D trademark in the name.** The SRD's licence covers its text, not Wizards of the Coast's trademarks, so the plugin is "SRD 5.2 (fifth edition)". Its id was `dnd5e-srd`, from the task, until T-1614 renamed it `srd5` (Q2).
 - **D2. The 2024 rules, as the SRD 5.2 has them.** A Long Rest restores all Hit Dice, Exhaustion takes 2 per level from D20 Tests, paladins and rangers cast from level 1, and weapons have a mastery (stored as text: its effects are not automated). The healing from a Hit Die is at least 1.
 - **D3. One class per character.** Multiclassing would need a collection of classes, slots from the combined caster level and Hit Dice per class. It is left out of the study.
 - **D4. Slots and Hit Dice are stored as spent.** The maximum then comes from the class tables, and a Long Rest sets the spent counters back to 0.
@@ -173,7 +173,7 @@ P1 is small and fixes what every player sees. P3, P4, P6 and P7 add keys to the 
 
 ## Questions for the user
 
-- **Q1.** The JSON was generated by a script that is not in the repository. Should it be committed (for instance as `plugins/dnd5e-srd/code/generate.ts`, which `pack` leaves out), so the plugin is edited through it, or should the JSON stay the source and be edited by hand?
-- **Q2.** Keep the id `dnd5e-srd`, or rename it to something without "dnd" (such as `srd5`) before any table uses it?
+- **Q1.** The JSON was generated by a script that is not in the repository. Should it be committed (for instance as `plugins/srd5/code/generate.ts`, which `pack` leaves out), so the plugin is edited through it, or should the JSON stay the source and be edited by hand?
+- **Q2.** Keep the id `dnd5e-srd`, or rename it to something without "dnd" (such as `srd5`) before any table uses it? **Answered:** renamed `srd5` in T-1614.
 - **Q3.** Should the plugin have a pt-BR translation now, or wait for P8 so values and server messages can be translated too?
 - **Q4.** Which of P1–P15 join M16?

@@ -14,6 +14,14 @@ export type PluginStatus = (typeof PLUGIN_STATUSES)[number];
 export const PLUGIN_KINDS = ['system', 'module'] as const;
 export type PluginKind = (typeof PLUGIN_KINDS)[number];
 
+/** The credit a plugin's content needs, from its manifest (T-1614). */
+export const pluginAttributionSchema = z.object({
+  text: z.string(),
+  /** An http or https address, checked by the validator. */
+  url: z.string().nullable(),
+});
+export type PluginAttribution = z.infer<typeof pluginAttributionSchema>;
+
 export const pluginIssueSchema = z.object({
   severity: z.enum(['error', 'warning']),
   code: z.string(),
@@ -29,6 +37,8 @@ export const adminPluginSchema = z.object({
   version: z.string(),
   kind: z.enum(PLUGIN_KINDS),
   description: z.string().nullable(),
+  /** Null when it has none, or its files no longer load. */
+  attribution: pluginAttributionSchema.nullable(),
   /** Whether it declares settings admins set for the whole instance (ADR-075). */
   instanceSettings: z.boolean(),
   /** The `coreApi` range the plugin declares. */

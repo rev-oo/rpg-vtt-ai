@@ -1,4 +1,4 @@
-// dnd5e-srd's formula functions (specs §8.9): class tables, and the names of abilities until
+// srd5's formula functions (specs §8.9): class tables, and the names of abilities until
 // card rows can translate values (T-1611). They run in QuickJS in the browser and on the server.
 import { defineShared } from '@vtt/sdk';
 

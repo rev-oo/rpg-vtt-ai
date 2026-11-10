@@ -83,7 +83,17 @@ const SWORD: CompendiumEntry = {
 };
 
 const page = (...entries: CompendiumEntry[]) => ({
-  body: { packs: [{ name: 'bestiary', label: 'pack.bestiary' }], entries, nextCursor: null },
+  body: {
+    packs: [
+      {
+        name: 'bestiary',
+        label: 'pack.bestiary',
+        attribution: { text: 'From the Tiny SRD.', url: null },
+      },
+    ],
+    entries,
+    nextCursor: null,
+  },
 });
 
 /** The table with its compendium panel open. */
@@ -141,6 +151,8 @@ describe('compendium browser', () => {
     if (!ogre) throw new Error('no Ogre row');
     await user.click(within(ogre).getByText('Preview', { selector: 'summary', exact: false }));
     expect(await within(ogre).findByLabelText('Strength')).toHaveValue('19');
+    // The pack's credit shows beside the entry it credits (T-1614).
+    expect(within(ogre).getByText('From the Tiny SRD.')).toBeVisible();
   });
 
   it('lets the GM copy an entry into the table', async () => {

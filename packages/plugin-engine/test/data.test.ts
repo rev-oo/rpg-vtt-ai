@@ -158,4 +158,20 @@ describe('packData() (ADR-051)', () => {
       'b',
     ]);
   });
+
+  it('keeps collections given as rows keyed by id, sorting rows without a key last (T-1614)', () => {
+    const data = packData(schema, {
+      gear: {
+        bags: {
+          rope: { name: 'rope' },
+          sack: { name: 'sack', sort: 'b0' },
+          lamp: { name: 'lamp', sort: 'a0' },
+          tent: { name: 'tent' },
+        },
+      },
+    });
+    const bags = (data.gear as Record<string, unknown>).bags;
+    expect(collectionRows(bags).map((row) => row.id)).toEqual(['lamp', 'sack', 'rope', 'tent']);
+    expect(collectionRows(bags)[0]).toEqual({ id: 'lamp', name: 'lamp', sort: 'a0' });
+  });
 });

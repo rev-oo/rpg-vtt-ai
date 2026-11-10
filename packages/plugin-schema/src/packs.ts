@@ -18,7 +18,7 @@ export const packEntrySchema = z
       .record(z.string(), z.unknown())
       .optional()
       .describe(
-        'Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults.',
+        'Its data, checked against the type’s schema; what it leaves out takes the defaults. Collections are lists of rows, as in defaults, or rows keyed by id, as stored data has them.',
       ),
   })
   .describe('A compendium entry.');

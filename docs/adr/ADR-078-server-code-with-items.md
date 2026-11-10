@@ -8,7 +8,7 @@
 
 ## Context
 
-The D&D 5e study (`docs/studies/dnd5e-srd.md`, F6, F7 and F16) found that server code could not work with items, read derived values or change anything but actor counters, and that counter bounds were fixed numbers. Casting a spell could not spend its slot, a Long Rest could not recharge features (they live on items), and healing could pass the maximum. Spending a slot is the hard case: the Cast roll is a formula recipe with a card, outcomes and a slot option, none of which a handler recipe has.
+The D&D 5e study (`docs/studies/srd5.md`, F6, F7 and F16) found that server code could not work with items, read derived values or change anything but actor counters, and that counter bounds were fixed numbers. Casting a spell could not spend its slot, a Long Rest could not recharge features (they live on items), and healing could pass the maximum. Spending a slot is the hard case: the Cast roll is a formula recipe with a card, outcomes and a slot option, none of which a handler recipe has.
 
 ## Decision
 

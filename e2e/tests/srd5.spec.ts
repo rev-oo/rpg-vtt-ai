@@ -16,7 +16,7 @@ import { showPanel } from './support/workspace.js';
 // T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
 
-const plugin = fileURLToPath(new URL('../../plugins/dnd5e-srd', import.meta.url));
+const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
 let temp = '';
 test.beforeAll(async () => {
@@ -35,12 +35,12 @@ async function openSheet(page: Page, tableId: string, name: string): Promise<voi
 
 test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ browser }) => {
   const gm = await signIn(browser, ADMIN);
-  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'dnd5e-srd.vttplugin')));
-  await post(gm, '/plugins/dnd5e-srd/enable', { acknowledgeCode: true });
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
   const player = await createPlayer(browser, gm, 'mira', 'Mira');
   const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
     name: 'Fifth Edition',
-    systemId: 'dnd5e-srd',
+    systemId: 'srd5',
   });
   const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
     role: 'player',
@@ -64,7 +64,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await openSheet(page, table.id, 'Elowen');
-  const sheet = page.locator('[data-plugin="dnd5e-srd"]');
+  const sheet = page.locator('[data-plugin="srd5"]');
   const log = page.getByRole('log', { name: 'Messages' });
 
   await test.step('the sheet derives the numbers of a level 5 wizard', async () => {
@@ -86,6 +86,15 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
       await page.getByRole('button', { name: `Copy ${name} onto the chosen actor` }).click();
       await expect(page.getByText(`${name} was copied onto Elowen.`)).toBeVisible();
     }
+    // The SRD's credit shows beside each entry, linked to the SRD (T-1614).
+    const longsword = page
+      .getByRole('group', { name: 'Compendium entries' })
+      .getByRole('listitem')
+      .filter({ has: page.getByRole('heading', { name: 'Longsword', exact: true }) });
+    await longsword.getByText('Preview').click();
+    await expect(
+      longsword.getByRole('link', { name: /material from the System Reference Document 5\.2/ }),
+    ).toHaveAttribute('href', 'https://www.dndbeyond.com/srd');
     await showPanel(page, 'Actors');
     await page.getByRole('button', { name: 'Open sheet: Elowen' }).click();
     await sheet.getByRole('tab', { name: 'Main' }).click();
@@ -96,7 +105,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     const sword = sheet.getByRole('listitem', { name: 'Longsword' });
     // Shift picks Advantage and rolls at once (T-1609).
     await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Shift'] });
-    const card = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const card = log.locator('[data-plugin="srd5"]').last();
     await expect(card.getByText('Weapon attack')).toBeVisible();
     await expect(card.locator('dd').nth(0)).toHaveText('Longsword');
     await expect(card.locator('dd').nth(1)).toHaveText(/^2d20kh1 \+ \d+$/);
@@ -113,7 +122,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await expect(options.getByRole('radio', { name: 'Normal' })).toBeChecked();
     await options.getByRole('button', { name: 'Roll' }).click();
     await expect(options).toBeHidden();
-    const versatile = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const versatile = log.locator('[data-plugin="srd5"]').last();
     await expect(versatile.locator('dd').nth(3)).toHaveText(/^[12]d10 \+ 3 slashing$/);
   });
 
@@ -129,7 +138,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     // Improved Critical, taken to the limit: every attack is a critical hit.
     await sheet.getByRole('textbox', { name: 'Critical hit on' }).fill('1');
     await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Control'] });
-    const crit = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const crit = log.locator('[data-plugin="srd5"]').last();
     await expect(crit.getByText('Critical hit!')).toBeVisible();
     await expect(crit.locator('dd').nth(3)).toHaveText('2d10 + 3 + 2d6 slashing');
     await expect(crit.getByRole('list', { name: 'Dice of 2d6' })).toBeVisible();
@@ -140,7 +149,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     const bolt = sheet.getByRole('listitem', { name: 'Fire Bolt' });
     await bolt.getByRole('button', { name: 'Cast' }).click();
     await page.getByRole('dialog', { name: 'Cast' }).getByRole('button', { name: 'Roll' }).click();
-    const cast = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const cast = log.locator('[data-plugin="srd5"]').last();
     await expect(cast.getByText('Spell', { exact: true }).first()).toBeVisible();
     await expect(cast.locator('dd').nth(0)).toHaveText('Fire Bolt');
     await expect(cast.locator('dd').nth(2)).toContainText('1d20');
@@ -151,7 +160,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
       .getByRole('dialog', { name: 'Spell effect' })
       .getByRole('button', { name: 'Roll' })
       .click();
-    const effect = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const effect = log.locator('[data-plugin="srd5"]').last();
     await expect(effect.locator('dd').nth(2)).toContainText('2d10');
     await expect(effect.locator('dd').nth(5)).toHaveText('fire');
   });
@@ -166,7 +175,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await expect(options.getByText('Must be at least 1.')).toBeVisible();
     await slot.fill('3');
     await options.getByRole('button', { name: 'Roll' }).click();
-    const effect = log.locator('[data-plugin="dnd5e-srd"]').last();
+    const effect = log.locator('[data-plugin="srd5"]').last();
     await expect(effect.locator('dd').nth(0)).toHaveText('Magic Missile');
     await expect(effect.locator('dd').nth(1)).toHaveText('3');
     await expect(effect.locator('dd').nth(2)).toHaveText('5d4 + 5');

@@ -51,6 +51,28 @@
       "type": "string",
       "maxLength": 100
     },
+    "attribution": {
+      "description": "Credit for the plugin's content, such as a CC-BY licence asks for. Shown on the Plugins page and with each compendium entry from its packs.",
+      "type": "object",
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500,
+          "description": "The credit, as it must read; shown as written, in every language."
+        },
+        "url": {
+          "description": "A web page for the source or its licence, linked from the credit.",
+          "type": "string",
+          "maxLength": 500,
+          "pattern": "^https?:\\/\\/[^\\s/?#]+[^\\s]*$"
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "additionalProperties": false
+    },
     "hasCode": {
       "type": "boolean",
       "description": "True exactly when the plugin has a `code/` folder. Admins must acknowledge code before enabling the plugin."

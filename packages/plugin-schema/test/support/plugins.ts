@@ -7,7 +7,7 @@ export const REFERENCE_PLUGINS = [
   'tiny-pool',
   'parchment-skin',
   'dice-3d',
-  'dnd5e-srd',
+  'srd5',
 ] as const;
 
 const pluginsDir = fileURLToPath(new URL('../../../../plugins/', import.meta.url));

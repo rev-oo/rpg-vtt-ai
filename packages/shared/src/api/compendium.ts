@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { MAX_ENTITY_TYPE, MAX_LIST_PAGE, MAX_SEARCH } from './constants.js';
+import { pluginAttributionSchema } from './plugins.js';
 import { actorSchema, itemSchema } from './responses.js';
 
 // The compendium browser (FR-PLUGIN-09, ADR-060): the entries of the table's system's packs,
@@ -33,6 +34,8 @@ export const compendiumPackSchema = z.object({
   name: z.string(),
   /** A lang key of the system, or text. */
   label: z.string(),
+  /** The credit its plugin's content needs, shown with each of its entries (T-1614). */
+  attribution: pluginAttributionSchema.nullable(),
 });
 export type CompendiumPack = z.infer<typeof compendiumPackSchema>;
 

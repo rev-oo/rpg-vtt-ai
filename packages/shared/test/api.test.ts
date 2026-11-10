@@ -195,6 +195,7 @@ describe('responses', () => {
       version: '0.1.0',
       kind: 'system',
       description: null,
+      attribution: { text: 'Includes the Tiny Reference, CC-BY-4.0.', url: null },
       instanceSettings: false,
       coreApi: '^0.1.0',
       hasCode: false,
@@ -216,6 +217,7 @@ describe('responses', () => {
     expect(pluginsResponseSchema.parse({ plugins: [plugin] })).toEqual({ plugins: [plugin] });
     expect(adminPluginSchema.safeParse({ ...plugin, status: 'broken' }).success).toBe(false);
     expect(adminPluginSchema.safeParse({ ...plugin, kind: 'theme' }).success).toBe(false);
+    expect(adminPluginSchema.safeParse({ ...plugin, attribution: undefined }).success).toBe(false);
     expect(enablePluginBody.parse({})).toEqual({});
     expect(enablePluginBody.safeParse({ acknowledgeCode: 'yes' }).success).toBe(false);
   });

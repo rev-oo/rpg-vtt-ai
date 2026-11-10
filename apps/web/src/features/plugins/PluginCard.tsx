@@ -7,6 +7,7 @@ import { api } from '../../api/endpoints.js';
 import { t, type MessageKey } from '../../i18n/index.js';
 import { PluginSettingsForm } from '../settings/PluginSettingsForm.js';
 
+import { Attribution } from './Attribution.js';
 import { IssueList } from './IssueList.js';
 
 const STATUS_CLASS: Record<AdminPlugin['status'], string> = {
@@ -107,6 +108,7 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
       </p>
 
       {plugin.description && <p>{plugin.description}</p>}
+      {plugin.attribution && <Attribution attribution={plugin.attribution} />}
       {hint && <p className="text-sm text-muted">{t(hint)}</p>}
 
       {/* Admins see what code a plugin runs before and after enabling it (FR-PLUGIN-06). */}

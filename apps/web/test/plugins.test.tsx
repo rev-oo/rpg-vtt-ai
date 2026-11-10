@@ -21,6 +21,7 @@ const plugin = (overrides: Record<string, unknown> = {}) => {
     version: '1.0.0',
     kind: 'system',
     description: 'A tiny d20 system.',
+    attribution: null,
     instanceSettings: false,
     coreApi: '^0.1.0',
     hasCode: false,
@@ -61,6 +62,7 @@ const CODED = plugin({
   name: 'Coded',
   hasCode: true,
   codeEntries: ['code/server.js', 'code/client.js'],
+  attribution: { text: 'Uses the Coded Reference, CC-BY-4.0.', url: 'https://example.com/coded' },
 });
 
 function adminApi(extra: Record<string, FakeResponse | ((body: unknown) => FakeResponse)> = {}) {
@@ -113,6 +115,11 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     ).toBeInTheDocument();
 
     expect(card('Coded').getByText('Includes code')).toBeInTheDocument();
+    // The credit the plugin's content needs, linked to its source (T-1614).
+    expect(
+      card('Coded').getByRole('link', { name: 'Uses the Coded Reference, CC-BY-4.0.' }),
+    ).toHaveAttribute('href', 'https://example.com/coded');
+    expect(card('Tiny d20').queryByTestId('plugin-attribution')).toBeNull();
   });
 
   it('enables and disables a plugin without code', async () => {
