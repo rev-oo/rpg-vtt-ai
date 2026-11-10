@@ -366,7 +366,9 @@ function RollButtonNode({
     <div className={cn('vtt-rollButton', node.class)} data-roll={node.roll}>
       <Button
         variant="primary"
-        title={problem}
+        title={
+          problem ?? (options && !sheet.askRollOptions ? sheet.strings.optionsHint : undefined)
+        }
         // Rolling changes no data: an observer may roll whenever the host passes `onRoll`.
         disabled={!onRoll || !args}
         {...(options && { 'aria-haspopup': 'dialog' as const })}
@@ -382,7 +384,9 @@ function RollButtonNode({
             key &&
             shortcutOptions(options, key, { scope: optionScope, functions: sheet.functions });
           if (picked) send(args, picked);
-          else setAsking(true);
+          // Without asking (T-1616), a click rolls at the defaults and Alt-click asks.
+          else if (sheet.askRollOptions || event.altKey) setAsking(true);
+          else send(args, defaults);
         }}
       >
         {label}

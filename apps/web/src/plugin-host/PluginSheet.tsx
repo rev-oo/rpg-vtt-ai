@@ -48,6 +48,7 @@ const strings = (): SheetStrings => ({
   notDice: t('validation.notDice'),
   roll: t('sheet.roll'),
   cancel: t('sheet.cancel'),
+  optionsHint: t('sheet.optionsHint'),
 });
 
 /**
@@ -107,6 +108,8 @@ export interface PluginSheetProps {
   /** The editor of `richText` fields on a live sheet (ADR-037). */
   renderRichText?: RichTextRenderer | undefined;
   onRoll?: RollHandler | undefined;
+  /** The viewer's preference at the table: roll buttons ask for options (T-1616). */
+  askRollOptions?: boolean | undefined;
   /** An actor's item totals (`@items`) and its `items` nodes (ADR-063). */
   itemTotals?: Readonly<Record<string, Value>> | undefined;
   renderItems?: ItemsRenderer | undefined;
@@ -128,6 +131,7 @@ export function PluginSheet({
   presence,
   renderRichText,
   onRoll,
+  askRollOptions,
   itemTotals,
   renderItems,
   pickImage,
@@ -172,6 +176,7 @@ export function PluginSheet({
         {...(renderRichText && { renderRichText })}
         {...(onRoll && { onRoll })}
         rolls={definition.rolls}
+        {...(askRollOptions !== undefined && { askRollOptions })}
         {...(itemTotals && { itemTotals })}
         {...(renderItems && { renderItems })}
         {...(pickImage && { pickImage })}

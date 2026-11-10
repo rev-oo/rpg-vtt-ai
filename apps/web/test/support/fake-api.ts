@@ -95,5 +95,6 @@ export const TABLE: TableView = {
   systemAvailable: true,
   archivedAt: null,
   role: 'gm',
+  askRollOptions: true,
   createdAt: '2026-10-19T00:00:00.000Z',
 };

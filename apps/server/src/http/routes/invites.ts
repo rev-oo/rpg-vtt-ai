@@ -155,7 +155,7 @@ export function inviteRoutes({
       const table = tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).get();
       if (!table) throw notFound('Invite not found.');
       return {
-        table: toTableView(tx, table, existing?.role ?? invite.role),
+        table: toTableView(tx, table, existing ?? { role: invite.role }),
         joined: !existing,
       };
     });
@@ -184,7 +184,7 @@ export function inviteRoutes({
         .run();
       const table = tx.select().from(gameTables).where(eq(gameTables.id, invite.tableId)).get();
       if (!table) throw notFound('Invite not found.');
-      return { user, table: toTableView(tx, table, invite.role) };
+      return { user, table: toTableView(tx, table, { role: invite.role }) };
     });
 
     const issued = sessions.rotate(request.cookies[SESSION_COOKIE], user.id);

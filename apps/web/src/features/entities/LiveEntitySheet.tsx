@@ -46,7 +46,7 @@ export function LiveEntitySheet({
   const type = entityType(host.system.definition, kind, entity.type);
   const layout = useMemo(() => (type ? documentLayout(type.schema) : NO_FIELDS), [type]);
   const live = useLiveSheet({ kind, id: entity.id }, layout, { secret });
-  const { members } = useTableData();
+  const { table, members } = useTableData();
   const userId = useSession().user?.id ?? '';
   const presence = useSheetPresence(live.status === 'ready' ? live.awareness : undefined, {
     userId,
@@ -101,6 +101,7 @@ export function LiveEntitySheet({
         readOnly={readOnly}
         secret={secret}
         onRoll={onRoll}
+        askRollOptions={table.askRollOptions}
         itemTotals={itemTotals}
         renderItems={renderItems}
         pickImage={pickImage}

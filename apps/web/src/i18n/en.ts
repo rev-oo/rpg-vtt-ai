@@ -398,6 +398,7 @@ export const en = {
   'sheet.moveDown': 'Move down',
   'sheet.decrease': 'Decrease {label}',
   'sheet.increase': 'Increase {label}',
+  'sheet.optionsHint': 'Alt-click to choose the options.',
   'sheet.roll': 'Roll',
   'sheet.cancel': 'Cancel',
   'sheet.noRows': 'Nothing here yet.',
@@ -601,6 +602,10 @@ export const en = {
   'members.defaultCharacterSaved': 'Your default character was saved.',
   'members.remove': 'Remove',
   'members.removed': '{name} was removed from the table.',
+  'members.askRollOptions': 'Ask for roll options',
+  'members.askRollOptionsOn': 'Roll buttons ask for their options at this table.',
+  'members.askRollOptionsOff':
+    'Roll buttons roll at once at this table; Alt-click asks for the options.',
   'members.leave': 'Leave table',
   'members.removeNote': 'Characters of a member who leaves stay on the table, without an owner.',
 

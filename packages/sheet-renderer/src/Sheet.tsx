@@ -44,6 +44,8 @@ export interface SheetProps {
   onRoll?: RollHandler;
   /** The plugin's roll recipes, whose options roll buttons ask for (T-1609). */
   rolls?: Readonly<Record<string, Recipe>>;
+  /** The viewer's preference: a click asks for the options (the default), or rolls at their defaults with Alt-click asking (T-1616). */
+  askRollOptions?: boolean;
   /** The plugin's custom nodes by name (`custom:<name>`). */
   nodes?: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
   /** Other viewers' focus, outlined on their fields (FR-SHEET-02). */
@@ -77,6 +79,7 @@ export function Sheet({
   strings,
   onRoll,
   rolls,
+  askRollOptions = true,
   nodes = {},
   presence,
   renderRichText,
@@ -103,6 +106,7 @@ export function Sheet({
     strings: { ...DEFAULT_STRINGS, ...strings },
     onRoll,
     rolls,
+    askRollOptions,
     nodes,
     presence,
     renderRichText,

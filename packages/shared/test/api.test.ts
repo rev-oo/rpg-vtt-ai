@@ -182,6 +182,7 @@ describe('responses', () => {
       archivedAt: null,
       createdAt: '2026-10-20T00:00:00.000Z',
       role: 'gm',
+      askRollOptions: true,
     };
     expect(tableSchema.parse(table)).toEqual(table);
     expect(tableSchema.safeParse({ ...table, role: 'owner' }).success).toBe(false);

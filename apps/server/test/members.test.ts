@@ -204,6 +204,52 @@ describe('default character (FR-TABLE-05)', () => {
   });
 });
 
+describe('asking for roll options (T-1616)', () => {
+  const tableView = async (t: Awaited<ReturnType<typeof setup>>, client: Client) =>
+    (
+      await t.app.inject({
+        method: 'GET',
+        url: `/api/v1/tables/${t.table.id}`,
+        headers: authHeaders(client),
+      })
+    ).json<{ table: { askRollOptions: boolean } }>().table;
+
+  it('is on by default and kept per member and table', async () => {
+    const t = await setup();
+    expect((await tableView(t, t.bob.client)).askRollOptions).toBe(true);
+    const off = await patchMember(t.app, t.bob.client, t.table.id, t.bob.userId, {
+      askRollOptions: false,
+    });
+    expect(off.statusCode, off.body).toBe(200);
+    expect(off.json()).toMatchObject({ member: { askRollOptions: false } });
+    expect((await tableView(t, t.bob.client)).askRollOptions).toBe(false);
+    // Carol still gets asked, and so does Bob at his other tables.
+    expect((await tableView(t, t.carol.client)).askRollOptions).toBe(true);
+    const other = await createTable(t.app, t.bob.client);
+    const tables = await t.app.inject({
+      method: 'GET',
+      url: '/api/v1/tables',
+      headers: authHeaders(t.bob.client),
+    });
+    const listed = tables.json<{ tables: { id: string; askRollOptions: boolean }[] }>().tables;
+    expect(
+      listed.map(({ id, askRollOptions }) => [id === other.id, askRollOptions]).sort(),
+    ).toEqual([
+      [false, false],
+      [true, true],
+    ]);
+  });
+
+  it("does not let anyone, even the GM, change another member's preference", async () => {
+    const t = await setup();
+    const res = await patchMember(t.app, t.gm.client, t.table.id, t.bob.userId, {
+      askRollOptions: false,
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ error: { code: 'not_own_member' } });
+  });
+});
+
 describe('removal (FR-TABLE-04)', () => {
   it('lets the GM remove a member', async () => {
     const t = await setup();

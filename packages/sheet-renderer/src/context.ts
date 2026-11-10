@@ -104,6 +104,8 @@ export interface SheetEnvironment {
   onRoll: RollHandler | undefined;
   /** The plugin's roll recipes, so roll buttons can ask for their options (T-1609). */
   rolls: Readonly<Record<string, Recipe>> | undefined;
+  /** Whether a click asks for the options; otherwise only Alt-click does (T-1616). */
+  askRollOptions: boolean;
   nodes: Readonly<Record<string, ComponentType<CustomNodeProps>>>;
   /** Other viewers' focus, on live sheets (FR-SHEET-02). */
   presence: SheetPresence | undefined;

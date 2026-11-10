@@ -1284,7 +1284,7 @@ Some things are chosen when rolling: Advantage, the slot a spell is cast with, B
 
 - **Kinds:** a `choice` of up to 10 values (the first is picked unless `default` names another), a whole `number`, or `dice` such as `1d4` (blank by default, and only numbers, dice and arithmetic). The formulas, named values, outcomes and card read them as `@options.<name>`; `roll(@options.bonus)` rolls the dice, and blank dice add nothing.
 - **Bounds:** a number's `default`, `minimum` and `maximum` are whole numbers or formulas worked out for the roll, so they can read `@item`, `@args` and the actor, but not other options.
-- **Asking:** pressing the button opens a dialog with each option at its default. A choice with `key` is picked by holding that key (`shift`, or `ctrl`, which is also ⌘ on a Mac) while clicking: the roll goes at once, with the other options at their defaults. Each key picks one choice per recipe.
+- **Asking:** pressing the button opens a dialog with each option at its default. A choice with `key` is picked by holding that key (`shift`, or `ctrl`, which is also ⌘ on a Mac) while clicking: the roll goes at once, with the other options at their defaults. Each key picks one choice per recipe. Members who turn off **Ask for roll options** for a table, on their own row of its member list, roll there at once with a click, every option at its default; Alt-click then opens the dialog.
 - **Checks:** the server checks every value against the declaration and refuses the roll otherwise, so a player cannot send a level 12 slot or dice that read the sheet. Recipes without options take none, and handler recipes take none yet.
 
 ### Chat cards

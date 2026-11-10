@@ -83,6 +83,9 @@ export function memberRoutes({ app, db }: AppContext): void {
     if (body.defaultCharacterId !== undefined && !isSelf) {
       throw badRequest('not_own_member', 'You can only set your own default character.');
     }
+    if (body.askRollOptions !== undefined && !isSelf) {
+      throw badRequest('not_own_member', 'You can only change your own preferences.');
+    }
     if (body.defaultCharacterId) requireOwnCharacter(id, membership, body.defaultCharacterId);
 
     const updated = db.transaction((tx) => {
@@ -101,6 +104,7 @@ export function memberRoutes({ app, db }: AppContext): void {
         userId: updated.userId,
         role: updated.role,
         defaultCharacterId: updated.defaultCharacterId,
+        askRollOptions: updated.askRollOptions,
       },
     };
   });

@@ -413,6 +413,7 @@ export const ptBR: Messages = {
   'sheet.items.added': '{name} adicionado.',
   'sheet.items.remove': 'Remover {name}',
   'sheet.items.removed': '{name} está na lixeira.',
+  'sheet.optionsHint': 'Alt-clique para escolher as opções.',
   'sheet.roll': 'Rolar',
   'sheet.cancel': 'Cancelar',
   'sheet.noRows': 'Nada aqui ainda.',
@@ -609,6 +610,10 @@ export const ptBR: Messages = {
   'members.defaultCharacterSaved': 'Seu personagem padrão foi salvo.',
   'members.remove': 'Remover',
   'members.removed': '{name} foi removido da mesa.',
+  'members.askRollOptions': 'Perguntar as opções da rolagem',
+  'members.askRollOptionsOn': 'Os botões de rolagem perguntam as opções nesta mesa.',
+  'members.askRollOptionsOff':
+    'Os botões de rolagem rolam na hora nesta mesa; Alt-clique pergunta as opções.',
   'members.leave': 'Sair da mesa',
   'members.removeNote': 'Os personagens de quem sai da mesa continuam nela, sem dono.',
 

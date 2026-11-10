@@ -25,6 +25,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - In `dnd5e-srd`, one Attack button rolls the attack and its damage into one card, and a critical hit doubles the damage dice. Characters have a **Critical hit on** field for features such as Improved Critical. **Two hands** shows only for versatile weapons, and spells show **Cast** and **Effect** only when they have something to roll (T-1608).
 - Roll recipes can declare options the player chooses when rolling: a choice such as Advantage, a whole number such as a spell slot level, or bonus dice such as Bless's `1d4`. The roll button asks for them in a dialog; holding Shift or Ctrl picks a choice and rolls at once. Recipes read them as `@options.<name>`, and the server checks them (T-1609).
 - In `dnd5e-srd`, every d20 roll asks for Advantage or Disadvantage and bonus dice (Shift rolls with Advantage, Ctrl with Disadvantage), which replaces the **Next d20 rolls** field. Spells are cast with a chosen slot level, and spells gain **Extra dice per slot level** and **Extra bonus per slot level** fields, filled in for the pack's spells (T-1609).
+- **Ask for roll options**, on your own row of a table's member list, is on by default. Turned off, roll buttons at that table roll with a click, with every option at its default; Alt-click opens the options, and Shift and Ctrl still roll with Advantage or Disadvantage. Each member chooses for each table (T-1616).
 
 ### Changed
 
