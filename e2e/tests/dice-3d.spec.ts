@@ -13,6 +13,7 @@ import { installPlugin, packPlugin } from './support/plugins.js';
 // at once, while the dice still roll; the viewer's Overlays switch hides them.
 
 const plugin = fileURLToPath(new URL('../../plugins/dice-3d', import.meta.url));
+const tinyPool = fileURLToPath(new URL('../../plugins/tiny-pool', import.meta.url));
 
 let temp = '';
 test.beforeAll(async () => {
@@ -23,15 +24,19 @@ test.afterAll(async () => {
 });
 
 interface Rolled {
-  rolls: { dice: { die: string; results: { value: number }[] }[] }[];
+  rolls: { dice: { die: string; results: { value: number; label?: string }[] }[] }[];
 }
 
-/** What the dice should show on top for a roll: a d100 as its tens and units dice. */
+/**
+ * What the dice should show on top for a roll: a d100 as its tens and units dice, a custom
+ * die as its face's label.
+ */
 function tops(message: Rolled): string {
   return message.rolls
     .flatMap((roll) => roll.dice)
     .flatMap(({ die, results }) =>
-      results.flatMap(({ value }) => {
+      results.flatMap(({ value, label }) => {
+        if (label !== undefined) return [label];
         if (die !== 'd100') return [String(value)];
         const rest = value % 100;
         return [String(Math.floor(rest / 10) * 10).padStart(2, '0'), String(rest % 10)];
@@ -54,11 +59,18 @@ test('3D dice land on the results the server rolled, and the viewer can hide the
   await patch(gm, `/tables/${table.id}`, { modules: ['dice-3d'] });
 
   const page = await gm.context.newPage();
+  // Each frame loads the frame page once.
+  let frames = 0;
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/plugin-frame.html') frames += 1;
+  });
   await page.goto(`/tables/${table.id}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
   const frame = page.frameLocator('iframe[title="3D dice: dice"]');
   const dice = frame.locator('.dice-3d');
   await expect(dice).toHaveAttribute('data-state', 'idle');
+  // The manifest declares the overlay, so the module's code runs only in it: no probe (T-1612).
+  expect(frames).toBe(1);
   const log = page.getByRole('log', { name: 'Messages' });
   const type = async (current: Page, text: string): Promise<void> => {
     const input = current.getByLabel('Message', { exact: true });
@@ -88,6 +100,36 @@ test('3D dice land on the results the server rolled, and the viewer can hide the
     await expect(dice).toHaveAttribute('data-state', 'resting', { timeout: 10_000 });
     await expect(dice).toHaveAttribute('data-shown', tops(roll));
     await expect(dice).toHaveAttribute('data-state', 'idle', { timeout: 10_000 });
+  });
+
+  /** The one roll in a table's history. */
+  const lastRoll = async (tableId: string): Promise<Rolled> => {
+    const response = await gm.context.request.get(`/api/v1/tables/${tableId}/messages`);
+    const { messages } = (await response.json()) as { messages: Rolled[] };
+    const [roll] = messages.filter((message) => message.rolls.length > 0);
+    if (!roll) throw new Error('the roll is not in the history');
+    return roll;
+  };
+
+  await test.step("a system's custom die is thrown with its own faces (T-1612)", async () => {
+    await installPlugin(gm, packPlugin(tinyPool, path.join(temp, 'tiny-pool.vttplugin')));
+    await post(gm, '/plugins/tiny-pool/enable', { acknowledgeCode: true });
+    const { table: pool } = await post<{ table: { id: string } }>(gm, '/tables', {
+      name: 'Fate Table',
+      systemId: 'tiny-pool',
+    });
+    await patch(gm, `/tables/${pool.id}`, { modules: ['dice-3d'] });
+    const fate = await gm.context.newPage();
+    await fate.goto(`/tables/${pool.id}`);
+    await expect(fate.getByText(/Connecting|Reconnecting/)).toBeHidden();
+    const thrown = fate.frameLocator('iframe[title="3D dice: dice"]').locator('.dice-3d');
+    await expect(thrown).toHaveAttribute('data-state', 'idle');
+    await type(fate, '/r 4dF');
+    await expect(thrown).toHaveAttribute('data-state', 'resting', { timeout: 10_000 });
+    const roll = await lastRoll(pool.id);
+    expect(roll.rolls[0]?.dice[0]?.die).toBe('dF');
+    await expect(thrown).toHaveAttribute('data-shown', tops(roll));
+    await fate.close();
   });
 
   await test.step('the Overlays switch hides the dice', async () => {

@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { cp, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -10,6 +11,7 @@ import { scopeCss, validatePlugin } from '@vtt/plugin-schema';
 
 import { main } from '../src/cli.js';
 import { previewModule, startDevServer } from '../src/commands/dev.js';
+import { BUNDLE_WARNING_BYTES, formatSize } from '../src/commands/pack.js';
 
 const REPO = fileURLToPath(new URL('../../../', import.meta.url));
 const TINY_D20 = path.join(REPO, 'plugins', 'tiny-d20');
@@ -110,6 +112,11 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     const result = await run('pack', dir, '--out', file);
     expect(result.code).toBe(0);
     expect(result.out).toMatch(/^Packed e2e-code 1\.0\.0: 10 files/);
+    // Each bundle's size, under the warning threshold (T-1612).
+    expect(result.out).toMatch(
+      /\n {2}code\/client\.js: \d+(\.\d)? (B|KiB)\n {2}code\/server\.js: /,
+    );
+    expect(result.err).toBe('');
 
     const files = readZip(await readFile(file), ARCHIVE_LIMITS);
     expect([...files.keys()]).toEqual([
@@ -185,6 +192,22 @@ describe('vtt-plugin (T-0410, §8.13)', () => {
     expect([...files.keys()].filter((name) => name.startsWith('code/'))).toEqual(
       id === 'tiny-d20' ? ['code/client.js', 'code/server.js'] : [],
     );
+  });
+
+  it('warns about a code bundle over the threshold (T-1612)', async () => {
+    const dir = await tsxPlugin();
+    // Random text survives minifying, so the bundle stays as large.
+    const filler = randomBytes(BUNDLE_WARNING_BYTES).toString('base64');
+    await writeFile(
+      path.join(dir, 'code', 'label.ts'),
+      `export const label = () => '${filler}';\n`,
+    );
+    const result = await run('pack', dir, '--out', path.join(temp, 'big.vttplugin'));
+    expect(result.code).toBe(0);
+    expect(result.out).toMatch(/code\/client\.js: 1\.\d MiB/);
+    expect(result.err).toMatch(/^Warning: code\/client\.js is 1\.\d MiB, over 1\.0 MiB\./);
+    expect(formatSize(512)).toBe('512 B');
+    expect(formatSize(2048)).toBe('2.0 KiB');
   });
 
   it('packs dice-3d with three and cannon-es bundled, and none of its tooling (T-1604)', async () => {

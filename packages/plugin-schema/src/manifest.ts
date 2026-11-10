@@ -2,9 +2,43 @@ import { z } from 'zod';
 
 import { PLUGIN_KINDS } from '@vtt/shared/api';
 
-import { LOCALE, PLUGIN_ID, SEMVER, schemaUrl } from './common.js';
+import { LOCALE, PLUGIN_ID, SEMVER, schemaUrl, text } from './common.js';
 
 const locale = z.string().regex(LOCALE).meta({ title: 'Locale' });
+
+/** The name of an overlay or panel, as `code/client` exports it. */
+const frameName = z
+  .string()
+  .regex(/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/)
+  .meta({ title: 'Frame name' });
+
+/** A module's overlays and panels (ADR-077), declared so the app knows them before any code runs. */
+export const moduleFramesSchema = z
+  .strictObject({
+    overlays: z
+      .record(
+        frameName,
+        z.strictObject({
+          interactive: z
+            .boolean()
+            .optional()
+            .describe('True when the overlay takes the pointer; otherwise clicks pass through it.'),
+        }),
+      )
+      .optional()
+      .describe('Overlays over the table page, by the name `code/client` exports them under.'),
+    panels: z
+      .record(
+        frameName,
+        z.strictObject({
+          title: text.describe("The panel's title: a lang key or literal text."),
+        }),
+      )
+      .optional()
+      .describe('Panels in the table workspace, by the name `code/client` exports them under.'),
+  })
+  .meta({ title: 'Module frames' });
+export type ModuleFrames = z.infer<typeof moduleFramesSchema>;
 
 /** `plugin.json` (specs §8.3). */
 export const manifestSchema = z
@@ -55,6 +89,12 @@ export const manifestSchema = z
       .optional()
       .describe(
         "The language whose text shows when the viewer's language lacks a key; one of `locales`. Defaults to the first of `locales`, then `en`.",
+      ),
+    /** Declared, so the app needs no probe frame to list them (T-1612). */
+    frames: moduleFramesSchema
+      .optional()
+      .describe(
+        "A module's overlays and panels. Each must be exported by `code/client` under the same name; only modules with code have them.",
       ),
   })
   .describe('The plugin manifest. Every plugin has one, at the root of its folder.');

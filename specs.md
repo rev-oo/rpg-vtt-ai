@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 63%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 69%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1612` (module code: packaging, declared exports, system dice)
+- **Next task:** `T-1613` (testing kits for plugin code)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -68,6 +68,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-09 | T-1616 joins M16 at the user's request: a personal preference to roll at once with default options, Alt-click opening the dialog.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | 2026-11-10 | T-1616 done: "Ask for roll options" is kept per table member, at the user's request (`members.ask_roll_options`, returned with the caller's table view and changed by the member alone through `PATCH /tables/:id/members/:userId`), on by default. Turned off, a roll button rolls at the options' defaults, Alt-click asks, and Shift and Ctrl still pick their choices.                                                                                                                                                                                                                                                                                                               |
 | 2026-11-10 | T-1610 done (ADR-078): a counter's `minimum` and `maximum` may be formulas (`@hp.max`), worked out on every step from sheets and server code. Handler recipes take `item`; handlers get the item, the actor's derived values, item totals and held items; `ctx.items.adjust` steps item counters and `ctx.actors.set` sets plain actor fields, with the roller's rights. A formula recipe's `then` runs a handler after its card is posted, at the user's choice over handlers that roll recipes. `dnd5e-srd` spends the slot a spell is cast with, recharges features on a Long Rest, and bounds Hit Points, slots and Hit Dice.                                                        |
+| 2026-11-10 | T-1612 done (ADR-079): a module declares its overlays and panels in `plugin.json` (`frames`), so the app runs no probe frame for it; the SDK's overlay and panel definitions keep only their component. Module frames get the table system's custom dice (`useSystemDice()`), and dice-3d throws them, such as `dF` as a d6 with its own faces. The guide documents die names and how `pack` resolves npm imports, with an example `code/package.json`; `pack` prints each bundle's size and warns above 1 MiB.                                                                                                                                                                          |
 
 ---
 
@@ -506,7 +507,7 @@ Code entries are TypeScript sources in the plugin folder for development, but th
 
 ### 8.3 Manifest (`plugin.json`)
 
-The manifest names the plugin (`id`, `name`, `version`), declares the core API range it supports (`coreApi`), whether it has code (`hasCode`), and its languages (`locales`, `defaultLocale`). `kind` is `system`, or `module` for add-ons that extend any table alongside its system: themes, overlays and panels (FR-PLUGIN-16, M16). Rules: [guide, The manifest](docs/plugin-authoring.md#the-manifest); keys: [reference, Plugin manifest](docs/plugin-reference.md#plugin).
+The manifest names the plugin (`id`, `name`, `version`), declares the core API range it supports (`coreApi`), whether it has code (`hasCode`), and its languages (`locales`, `defaultLocale`). `kind` is `system`, or `module` for add-ons that extend any table alongside its system: themes, overlays and panels (FR-PLUGIN-16, M16), which a module declares under `frames` (ADR-079). Rules: [guide, The manifest](docs/plugin-authoring.md#the-manifest); keys: [reference, Plugin manifest](docs/plugin-reference.md#plugin).
 
 ### 8.4 Actor and item types
 
@@ -869,7 +870,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/dnd5e-srd.md#proposed-tasks), P8, and the [dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P5. `enumLabels` gives a lang key per value for type fields and settings, so stored values stay plain; card rows translate values that are lang keys, so `srd5` drops its `saveText()` shared function; server code posts text by lang key with parameters, so each viewer reads it in their language. Settings gain a `colour` format drawn as a colour picker, and plugin code gets typed settings. Then translate `srd5` and `dice-3d` to pt-BR (the 5e study's Q3).
   - **Done when:** tests cover labels, translated card rows and server messages; e2e shows a pt-BR sheet, card and rest message.
 
-- [ ] **T-1612 · Module code: packaging, declared exports, system dice**
+- [x] **T-1612 · Module code: packaging, declared exports, system dice**
   - **Deps:** none
   - **Do:** From the [dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P1, P3 and P6. The guide documents where `vtt-plugin pack` resolves npm imports and which files under `code/` it leaves out, with an example `code/package.json`; `pack` prints each bundle's size and warns above a threshold. A module declares its overlays and panels in its files, so the app needs no probe frame. Module frames get the table system's custom dice (faces, labels, values), and the guide documents die names (`d<sides>`, `d<NAME>`).
   - **Done when:** tests cover the declaration, the size warning and the dice given to frames; dice-3d loads with no probe frame and throws a system's custom die in e2e.
@@ -1097,6 +1098,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-076 | [Module themes and named parts of the table page](docs/adr/ADR-076-module-themes-and-parts.md)                                                  | Accepted                                   |
 | ADR-077 | [Module overlays and panels](docs/adr/ADR-077-module-overlays-and-panels.md)                                                                    | Accepted                                   |
 | ADR-078 | [Server code with items, formula bounds and `then`](docs/adr/ADR-078-server-code-with-items.md)                                                 | Accepted                                   |
+| ADR-079 | [Declared module frames and system dice](docs/adr/ADR-079-declared-module-frames.md)                                                            | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

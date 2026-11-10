@@ -113,12 +113,31 @@ export interface ModuleActions {
   encounter: () => Promise<EncounterView | null>;
 }
 
+/** A face of a system die: the text it shows, and the number it counts as. */
+export interface SystemDieFace {
+  label: string;
+  value: number;
+}
+
+/**
+ * One of the table system's custom dice (its `dice.json`), by the name rolls give it, such as
+ * `dF`. Standard dice are named `d<sides>` and are not listed.
+ */
+export interface SystemDie {
+  /** Its name, translated for the viewer. */
+  label: string;
+  /** Its faces, equally likely, in the system's order. */
+  faces: readonly SystemDieFace[];
+}
+
 /** The table a module's frame runs in, as the host provides it. */
 export interface ModuleFrame {
   tableId: string;
   viewer: Viewer;
   /** Every setting's value for the viewer: instance, table or user, by its scope. */
   settings: Readonly<Record<string, Value>>;
+  /** The table system's custom dice by name; empty until the system loads, or if it has none. */
+  dice: Readonly<Record<string, SystemDie>>;
   /** Changes one of the viewer's own (`user`) settings. */
   setSetting: (name: string, value: Value) => Promise<void>;
   /** Calls `listener` with each table event; returns a function that stops it. */
@@ -166,6 +185,14 @@ export function useViewer(): Viewer & { tableId: string } {
   return { ...frame.viewer, tableId: frame.tableId };
 }
 
+/**
+ * The table system's custom dice by name (`dF`…), so a module can draw them. A roll's results
+ * name their die (`d20`, `dF`) and, for custom dice, the face's label.
+ */
+export function useSystemDice(): Readonly<Record<string, SystemDie>> {
+  return useModuleFrame('useSystemDice').dice;
+}
+
 /** What the module may do as the viewer. */
 export function useActions(): ModuleActions {
   return useModuleFrame('useActions').actions;
@@ -184,18 +211,20 @@ export interface CardProps {
   translate: (text: string) => string;
 }
 
-/** A module's overlay, drawn over the whole table page. */
+/**
+ * A module's overlay, drawn over the whole table page. `plugin.json` declares it under
+ * `frames.overlays`, with whether it takes the pointer (T-1612).
+ */
 export interface OverlayDefinition {
   component: ComponentType;
-  /** Takes the pointer; otherwise clicks pass through to the page. */
-  interactive?: boolean;
 }
 
-/** A module's panel, which the viewer opens from the Panels menu. */
+/**
+ * A module's panel, which the viewer opens from the Panels menu. `plugin.json` declares it
+ * under `frames.panels`, with its title (T-1612).
+ */
 export interface PanelDefinition {
   component: ComponentType;
-  /** The panel's title: a lang key or text. */
-  title: string;
 }
 
 /** The default export of `code/client.js`. */
@@ -204,9 +233,9 @@ export interface ClientDefinition {
   nodes?: Readonly<Record<string, ComponentType<NodeProps>>>;
   /** Components that replace the core rendering of `cards/<name>.json`. */
   cards?: Readonly<Record<string, ComponentType<CardProps>>>;
-  /** A module's overlays, over the table page (ADR-077). */
+  /** A module's overlays, over the table page (ADR-077); each declared in `plugin.json`. */
   overlays?: Readonly<Record<string, OverlayDefinition>>;
-  /** A module's panels in the table workspace (ADR-077). */
+  /** A module's panels in the table workspace (ADR-077); each declared in `plugin.json`. */
   panels?: Readonly<Record<string, PanelDefinition>>;
 }
 

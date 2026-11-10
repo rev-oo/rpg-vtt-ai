@@ -74,5 +74,5 @@ function Tools() {
 
 export default defineClient({
   overlays: { lastRoll: { component: LastRoll } },
-  panels: { tools: { component: Tools, title: 'panel.title' } },
+  panels: { tools: { component: Tools } },
 });

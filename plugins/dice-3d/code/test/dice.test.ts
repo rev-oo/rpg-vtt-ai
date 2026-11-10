@@ -64,9 +64,29 @@ describe('diceOf', () => {
     ]);
   });
 
-  it('leaves out custom dice, whose faces it does not know', () => {
-    const fate = message([{ die: 'dF', results: [{ value: 1, label: '+' }] }]);
+  it("throws the system's custom dice as the shape with as many faces (T-1612)", () => {
+    const fate = message([
+      {
+        die: 'dF',
+        results: [
+          { value: 1, label: '+' },
+          { value: -1, label: '-', active: false },
+        ],
+      },
+    ]);
+    const labels = ['-', '-', ' ', ' ', '+', '+'];
+    const dF = { faces: labels.map((label) => ({ label })) };
+    expect(diceOf(fate, choice, { dF })).toEqual([
+      { shape: 'd6', top: '+', labels, active: true },
+      { shape: 'd6', top: '-', labels, active: false },
+    ]);
+    // Unknown to the module, or with no shape of that many faces, a custom die is left out.
     expect(diceOf(fate, choice)).toEqual([]);
+    expect(diceOf(fate, choice, { dF: { faces: [{ label: '+' }, { label: '-' }] } })).toEqual([]);
+    // A system die keeps its own faces, even one named like a standard die.
+    const odd = message([{ die: 'd4', results: [{ value: 2, label: 'b' }] }]);
+    const d4 = { faces: ['a', 'b', 'c', 'd'].map((label) => ({ label })) };
+    expect(diceOf(odd, choice, { d4 }).map((die) => die.top)).toEqual(['b']);
   });
 
   it("skips other people's rolls when the viewer asks", () => {

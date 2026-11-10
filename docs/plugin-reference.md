@@ -59,6 +59,34 @@ The plugin manifest. Every plugin has one, at the root of its folder.
 | `hasCode` | true or false | yes | True exactly when the plugin has a `code/` folder. Admins must acknowledge code before enabling the plugin. |
 | `locales` | list of [locale](#locale) (at least 1 item) |  | The languages in `lang/`. Each needs its `lang/<locale>.json`. |
 | `defaultLocale` | [locale](#locale) |  | The language whose text shows when the viewer's language lacks a key; one of `locales`. Defaults to the first of `locales`, then `en`. |
+| `frames` | [Module frames](#plugin-module-frames) |  | A module's overlays and panels. Each must be exported by `code/client` under the same name; only modules with code have them. |
+
+<a id="plugin-module-frames"></a>
+
+### Module frames
+
+A module's overlays and panels. Each must be exported by `code/client` under the same name; only modules with code have them.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `overlays` | map from text (matching `^[a-zA-Z][a-zA-Z0-9_-]{0,63}$`) to [`overlays`](#plugin-overlays) |  | Overlays over the table page, by the name `code/client` exports them under. |
+| `panels` | map from text (matching `^[a-zA-Z][a-zA-Z0-9_-]{0,63}$`) to [`panels`](#plugin-panels) |  | Panels in the table workspace, by the name `code/client` exports them under. |
+
+<a id="plugin-overlays"></a>
+
+### `overlays`
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `interactive` | true or false |  | True when the overlay takes the pointer; otherwise clicks pass through it. |
+
+<a id="plugin-panels"></a>
+
+### `panels`
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `title` | [text](#text) | yes | The panel's title: a lang key or literal text. |
 
 <a id="actor-type"></a>
 

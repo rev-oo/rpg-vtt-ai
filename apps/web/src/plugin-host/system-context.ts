@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 
-import { createRules, type Rules } from '@vtt/plugin-engine';
+import { createRules, toCustomDie, type Rules } from '@vtt/plugin-engine';
+import type { SystemDie } from '@vtt/sdk/client';
 import type { TableView } from '@vtt/shared/api';
 
 import { errorMessage } from '../api/errors.js';
@@ -61,3 +62,14 @@ export function useTableSystem(table: TableView): TableSystem {
 export const TableSystemContext = createContext<TableSystem>({ status: 'loading' });
 
 export const useSystem = (): TableSystem => useContext(TableSystemContext);
+
+/** The table system's custom dice, as module frames get them (T-1612): none until it loads. */
+export function systemDice(system: TableSystem): Record<string, SystemDie> {
+  if (system.status !== 'ready') return {};
+  return Object.fromEntries(
+    Object.entries(system.system.definition.dice).map(([name, die]) => [
+      name,
+      { label: system.translate(die.label ?? name), faces: toCustomDie(die).faces },
+    ]),
+  );
+}

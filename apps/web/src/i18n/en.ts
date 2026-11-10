@@ -364,6 +364,7 @@ export const en = {
   'pluginIssue.has_code_mismatch.false': 'The plugin has a code/ folder, so hasCode must be true.',
   'pluginIssue.code_required': '{feature} needs plugin code; set hasCode and add code/.',
   'pluginIssue.module_file': '{file} is for systems; a module cannot have it.',
+  'pluginIssue.module_key': '"{key}" is for modules; a system cannot have it.',
   'pluginIssue.system_file': '{file} is for modules; a system cannot have it.',
   'pluginIssue.theme_file':
     '{file} is the wrong kind of file: fonts must be .woff2, .woff, .ttf or .otf files and the background an image.',

@@ -239,6 +239,13 @@ export function validatePlugin(
   // A theme is for modules only (ADR-076).
   if (manifest?.kind === 'system' && files.has('theme.json'))
     error('system_file', 'theme.json', [], { file: 'theme.json' });
+  // Overlays and panels are module code, declared in the manifest (T-1612).
+  if (manifest?.frames) {
+    if (manifest.kind === 'system')
+      error('module_key', 'plugin.json', ['frames'], { key: 'frames' });
+    if (!hasCode)
+      error('code_required', 'plugin.json', ['frames'], { feature: 'Overlays and panels' });
+  }
   // A module extends any table, so it brings nothing a system defines (ADR-075).
   if (manifest?.kind === 'module') {
     for (const path of paths) {
@@ -866,6 +873,9 @@ export function validatePlugin(
     for (const issue of scoped.issues)
       add(issue.severity, issue.code, issue.file, issue.path, issue.params);
   }
+
+  for (const [name, panel] of Object.entries(manifest?.frames?.panels ?? {}))
+    useText(panel.title, 'plugin.json', ['frames', 'panels', name, 'title']);
 
   // 7. Translations: English is required once any lang file exists (specs §8.2).
   const locales = new Set(paths.filter((path) => pluginFileKind(path) === 'lang').map(baseName));

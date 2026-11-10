@@ -371,6 +371,7 @@ export const ptBR: Messages = {
   'pluginIssue.code_required':
     '{feature} precisa de código no plugin; defina hasCode e adicione code/.',
   'pluginIssue.module_file': '{file} é para sistemas; um módulo não pode tê-lo.',
+  'pluginIssue.module_key': '"{key}" é para módulos; um sistema não pode tê-lo.',
   'pluginIssue.system_file': '{file} é para módulos; um sistema não pode tê-lo.',
   'pluginIssue.theme_file':
     '{file} é do tipo errado: fontes precisam ser arquivos .woff2, .woff, .ttf ou .otf, e o fundo, uma imagem.',

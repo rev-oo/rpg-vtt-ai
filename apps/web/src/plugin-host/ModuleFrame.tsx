@@ -1,7 +1,9 @@
 import {
+  use,
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactElement,
@@ -16,6 +18,7 @@ import { listen, pageStyles, send } from './frame-channel.js';
 import { FRAME_URL } from './frame-protocol.js';
 import { useFrameRestarts } from './frame-restarts.js';
 import { frameEvent, rateLimiter, runAction, type ActionContext } from './module-actions.js';
+import { systemDice, TableSystemContext } from './system-context.js';
 import type { LoadedModule, ModuleFrames } from './table-modules.js';
 
 // A module's overlay or panel (T-1603, ADR-077), in the same sandboxed frame as plugin nodes
@@ -48,9 +51,11 @@ export function ModuleFrame({
   }, []);
   const restarts = useFrameRestarts(giveUp);
   const { begin, live } = restarts;
-  const latest = useRef({ module, viewer, context });
+  const system = use(TableSystemContext);
+  const dice = useMemo(() => systemDice(system), [system]);
+  const latest = useRef({ module, viewer, context, dice });
   useLayoutEffect(() => {
-    latest.current = { module, viewer, context };
+    latest.current = { module, viewer, context, dice };
   });
   // One limiter for the frame's whole life: reloading settings does not reset it.
   const [allowed] = useState(() => rateLimiter());
@@ -86,6 +91,7 @@ export function ModuleFrame({
                       tableId: current.context.tableId,
                       viewer: current.viewer,
                       settings: current.module.settings,
+                      dice: current.dice,
                     },
                   },
                 },
@@ -125,6 +131,11 @@ export function ModuleFrame({
   useEffect(() => {
     if (live()) send(frame.current, { type: 'settings', settings: module.settings });
   }, [module.settings, live]);
+
+  // The system loaded after the frame started, or the table moved to another version of it.
+  useEffect(() => {
+    if (live()) send(frame.current, { type: 'dice', dice });
+  }, [dice, live]);
 
   if (failed) {
     // A failed overlay stays out of the way; a failed panel says so.

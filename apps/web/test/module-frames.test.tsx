@@ -13,7 +13,12 @@ import {
   type ActionContext,
 } from '../src/plugin-host/module-actions.js';
 import { ModuleFrame } from '../src/plugin-host/ModuleFrame.js';
-import type { FramedModule } from '../src/plugin-host/table-modules.js';
+import {
+  systemDice,
+  TableSystemContext,
+  type TableSystem,
+} from '../src/plugin-host/system-context.js';
+import { declaredFrames, type FramedModule } from '../src/plugin-host/table-modules.js';
 import { closeEventsClient } from '../src/realtime/events-client.js';
 
 import { fakeApi } from './support/fake-api.js';
@@ -290,6 +295,104 @@ describe('module frames on the page (T-1603)', () => {
       id: String(ACTION_LIMIT),
       ok: false,
       error: 'The module acted too often; try again in a few seconds.',
+    });
+  });
+});
+
+describe('declared frames and system dice (T-1612)', () => {
+  it("lists a module's overlays and panels from its manifest, with no code run", () => {
+    const definition = {
+      manifest: {
+        frames: {
+          overlays: { tray: {}, picker: { interactive: true } },
+          panels: { log: { title: 'panel.log' } },
+        },
+      },
+    } as unknown as PluginDefinition;
+    expect(declaredFrames(definition)).toEqual({
+      overlays: [
+        { name: 'tray', interactive: false },
+        { name: 'picker', interactive: true },
+      ],
+      panels: [{ name: 'log', title: 'panel.log' }],
+    });
+    expect(declaredFrames({ manifest: {} } as PluginDefinition)).toEqual({
+      overlays: [],
+      panels: [],
+    });
+  });
+
+  const READY = {
+    status: 'ready',
+    system: {
+      definition: {
+        dice: {
+          dF: {
+            label: 'dice.fate',
+            faces: ['-', ' ', '+'],
+            values: { '-': -1, ' ': 0, '+': 1 },
+          },
+          dX: { faces: [1, { label: 'two', value: 2 }] },
+        },
+      },
+    },
+    translate: (text: string) => (text === 'dice.fate' ? 'Fate' : text),
+  } as unknown as TableSystem;
+  const FATE = {
+    dF: {
+      label: 'Fate',
+      faces: [
+        { label: '-', value: -1 },
+        { label: ' ', value: 0 },
+        { label: '+', value: 1 },
+      ],
+    },
+    dX: {
+      label: 'dX',
+      faces: [
+        { label: '1', value: 1 },
+        { label: 'two', value: 2 },
+      ],
+    },
+  };
+
+  it("gives the system's custom dice with their faces and translated names", () => {
+    expect(systemDice({ status: 'loading' })).toEqual({});
+    expect(systemDice({ status: 'unavailable' })).toEqual({});
+    expect(systemDice(READY)).toEqual(FATE);
+  });
+
+  it('sends them when the frame starts, and again once the system loads', () => {
+    const frameFor = (system: TableSystem) => (
+      <TableSystemContext value={system}>
+        <ModuleFrame
+          module={MODULE}
+          kind="overlay"
+          name="tray"
+          title="Dice tray"
+          viewer={{ id: 'u1', role: 'player' }}
+          context={context()}
+        />
+      </TableSystemContext>
+    );
+    fakeWebSocket();
+    const { rerender } = render(frameFor({ status: 'loading' }));
+    const window = screen.getByTitle<HTMLIFrameElement>('Dice tray').contentWindow;
+    if (!window) throw new Error('no frame window');
+    const sent = vi.spyOn(window, 'postMessage').mockImplementation(() => undefined);
+    act(() => {
+      globalThis.dispatchEvent(
+        new MessageEvent('message', { data: { type: 'ready' }, source: window }),
+      );
+    });
+    expect(sent.mock.calls[0]?.[0]).toMatchObject({
+      type: 'init',
+      setup: { view: { module: { dice: {} } } },
+    });
+    rerender(frameFor(READY));
+    expect(sent.mock.calls.map(([message]) => message as HostMessage)).toContainEqual({
+      type: 'dice',
+      dice: FATE,
     });
   });
 });
