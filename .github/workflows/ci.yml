@@ -58,8 +58,20 @@ jobs:
           exit 1
 
       - name: E2E
+        id: e2e
         if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/tags/v')
         run: pnpm e2e
+
+      # A failed test keeps its trace (actions, page snapshots, console), so a failure that
+      # does not happen locally can still be studied.
+      - name: Keep the traces of failed e2e tests
+        if: failure() && steps.e2e.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-traces
+          path: e2e/test-results/
+          if-no-files-found: ignore
+          retention-days: 14
 
   # Builds the image from the compose example and checks it like a new operator would
   # (T-0703), on both architectures the release publishes, each on its own runner (T-0811).

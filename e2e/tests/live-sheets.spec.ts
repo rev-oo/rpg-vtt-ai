@@ -141,17 +141,11 @@ test('two browsers edit one live sheet', async ({ browser }) => {
 
     await biography(ownerSheet).press('End');
     await biography(gmSheet).click();
-    // The first letter shows the caret took: the editor sometimes settles its selection at the
-    // end after reading the Home key, so a letter typed there is taken back and Home tried again.
-    await expect(async () => {
-      if ((await biography(gmSheet).textContent()) !== 'Born in Elm.') {
-        await biography(gmSheet).press('End');
-        await biography(gmSheet).press('Backspace');
-      }
-      await biography(gmSheet).press('Home');
-      await biography(gmSheet).pressSequentially('A');
-      await expect(biography(gmSheet)).toHaveText('ABorn in Elm.', { timeout: 1000 });
-    }).toPass();
+    await biography(gmSheet).press('Home');
+    // The first letter shows the caret took before both people type at once. Once on CI it
+    // landed at the end instead, with no remote edit in between locally and no local repeat;
+    // CI keeps the trace of a failed test to tell why if it happens again.
+    await biography(gmSheet).pressSequentially('A');
     await expect(biography(ownerSheet)).toHaveText('ABorn in Elm.');
     await Promise.all([
       biography(ownerSheet).pressSequentially(' Raised by wolves.', { delay: 30 }),
