@@ -16,7 +16,7 @@ import type { Recipe } from '../rolls.js';
 import { COLOUR, settingsOfScope, type Setting } from '../settings.js';
 import type { Sheet, SheetNode } from '../sheet.js';
 import { FONT_FILE, IMAGE_FILE, type Theme } from '../theme.js';
-import type { ActorType, FieldSchema, ItemType } from '../types.js';
+import { ICON_FILE, type ActorType, type FieldSchema, type ItemType } from '../types.js';
 
 import {
   checkData,
@@ -927,6 +927,30 @@ export function validatePlugin(
           });
         }
       }
+    });
+  }
+
+  // Statuses: true/false fields of the type, each with an image of the plugin (T-1618).
+  for (const [typeName, type] of Object.entries(actorTypes)) {
+    const file = `types/actors/${typeName}.json`;
+    type.statuses?.forEach((status, index) => {
+      const at = ['statuses', index];
+      useText(status.label, file, [...at, 'label']);
+      const field = fieldAt(type.schema, status.field, false);
+      if (!field)
+        error('unknown_field', file, [...at, 'field'], {
+          field: status.field,
+          scope: `actor type "${typeName}"`,
+        });
+      else if (field.type !== 'boolean')
+        error('field_mismatch', file, [...at, 'field'], {
+          field: status.field,
+          expected: 'a true/false field',
+        });
+      if (!files.has(status.icon))
+        error('missing_file', file, [...at, 'icon'], { file: status.icon });
+      else if (!ICON_FILE.test(status.icon))
+        error('icon_file', file, [...at, 'icon'], { file: status.icon });
     });
   }
 

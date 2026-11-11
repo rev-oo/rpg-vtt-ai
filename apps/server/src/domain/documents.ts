@@ -357,7 +357,8 @@ export function liveHeldItems(
  * Stores a document and refreshes its entity's projection in one transaction (specs §9.6).
  * An actor's or item's projection joins both layers: the other one comes from `live` when it
  * is loaded, else from its stored state, else from the projection itself. Only actors keep
- * sheet history (ADR-053).
+ * sheet history (ADR-053). For an actor, returns the data its projection held before, so
+ * changes that show elsewhere, such as its statuses on tokens (T-1618), can be told.
  */
 export function storeDocument(
   db: DbOrTx,
@@ -368,9 +369,9 @@ export function storeDocument(
     live,
     now,
   }: { definition: DefinitionOf; live: (name: string) => Y.Doc | undefined; now: Date },
-): void {
+): { actorId: string; before: Record<string, unknown> } | undefined {
   const name = documentName(ref);
-  db.transaction((tx) => {
+  return db.transaction((tx) => {
     const owner = ref.kind === 'journal' ? undefined : findEntity(tx, ref.kind, ref.id);
     // An entity purged meanwhile has nothing to store.
     if (ref.kind !== 'journal' && !owner) return;
@@ -396,5 +397,6 @@ export function storeDocument(
     }
     recordSnapshot(tx, { actorId: owner.id, layer: ref.layer }, doc.getMap(DATA_MAP), now);
     tx.update(actors).set({ system, updatedAt: now }).where(eq(actors.id, ref.id)).run();
+    return { actorId: owner.id, before: owner.system };
   });
 }

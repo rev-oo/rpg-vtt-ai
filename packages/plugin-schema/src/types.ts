@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { formula, identifier, name, schemaUrl, text } from './common.js';
+import { fieldPath, formula, identifier, name, schemaUrl, text } from './common.js';
 
 export const FIELD_TYPES = ['string', 'integer', 'number', 'boolean', 'object', 'array'] as const;
 export const FIELD_KINDS = ['longText', 'collection', 'richText', 'image'] as const;
@@ -132,6 +132,32 @@ const typeBase = {
     ),
 };
 
+/** The most statuses one actor type declares (T-1618). */
+export const MAX_STATUSES = 32;
+
+/** A file of the plugin, relative to its folder, without `..`. */
+const PLUGIN_FILE = /^(?!.*(?:^|\/)\.\.?(?:\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$/;
+/** The images a status icon may be. */
+export const ICON_FILE = /\.(?:svg|png|webp|avif|gif|jpe?g)$/i;
+
+/** A true/false field shown on the actor's tokens while it is on (T-1618). */
+export const statusSchema = z
+  .strictObject({
+    field: fieldPath.describe(
+      'A true/false field of the type, such as `conditions.prone`, reached through objects only. A secret field’s status shows only to the GM and assistants.',
+    ),
+    label: text.describe('What the status is called; a lang key or literal text.'),
+    icon: z
+      .string()
+      .regex(PLUGIN_FILE)
+      .meta({ title: 'Plugin file' })
+      .describe(
+        'An image of the plugin, such as `icons/prone.svg`: SVG, PNG, WebP, AVIF, GIF or JPEG. Square, and readable small.',
+      ),
+  })
+  .meta({ title: 'Status' });
+export type Status = z.infer<typeof statusSchema>;
+
 /** `types/actors/<type>.json` (specs §8.4). */
 export const actorTypeSchema = z
   .strictObject({
@@ -140,6 +166,13 @@ export const actorTypeSchema = z
     controlledBy: z
       .enum(['player', 'gm'])
       .describe('Who may create actors of the type: players too, or only the GM.'),
+    statuses: z
+      .array(statusSchema)
+      .max(MAX_STATUSES)
+      .optional()
+      .describe(
+        "Fields shown on the actor's tokens, in the token list and in the combat tracker while they are on, such as conditions; in order.",
+      ),
   })
   .describe('An actor type, such as a character or an NPC.');
 export type ActorType = z.infer<typeof actorTypeSchema>;

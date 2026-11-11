@@ -379,6 +379,7 @@ export const ptBR: Messages = {
   'pluginIssue.module_file': '{file} é para sistemas; um módulo não pode tê-lo.',
   'pluginIssue.module_key': '"{key}" é para módulos; um sistema não pode tê-lo.',
   'pluginIssue.system_file': '{file} é para módulos; um sistema não pode tê-lo.',
+  'pluginIssue.icon_file': '{file} deve ser uma imagem: SVG, PNG, WebP, AVIF, GIF ou JPEG.',
   'pluginIssue.theme_file':
     '{file} é do tipo errado: fontes precisam ser arquivos .woff2, .woff, .ttf ou .otf, e o fundo, uma imagem.',
   'pluginIssue.css_part_required':

@@ -1184,6 +1184,42 @@ export const CASES: FixtureCase[] = [
     issues: ['error card_item_roll cards/roll.json $.actions[0].roll'],
   },
   {
+    name: 'statuses shown on tokens while their fields are on (T-1618)',
+    change: (f: PluginFixture): void => {
+      const hero = at(f, 'types/actors/hero.json');
+      const schema = at(hero, 'schema');
+      at(schema, 'properties').prone = { type: 'boolean', default: false };
+      at(schema, 'properties').cursed = { type: 'boolean', 'x-layer': 'secret' };
+      hero.statuses = [
+        { field: 'prone', label: 'Prone', icon: 'icons/prone.svg' },
+        { field: 'cursed', label: 'Cursed', icon: 'icons/cursed.png' },
+      ];
+      f['icons/prone.svg'] = '<svg xmlns="http://www.w3.org/2000/svg"/>';
+      f['icons/cursed.png'] = '';
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'statuses on fields that are no true/false fields, or with icons that are no images',
+    change: (f: PluginFixture): void => {
+      at(f, 'types/actors/hero.json').statuses = [
+        { field: 'str', label: 'Strong', icon: 'icons/strong.svg' },
+        { field: 'skills.rank', label: 'Skilled', icon: 'icons/notes.txt' },
+        { field: 'hp.value', label: 'Hurt', icon: 'icons/hurt.svg' },
+      ];
+      f['icons/strong.svg'] = '';
+      f['icons/notes.txt'] = '';
+    },
+    issues: [
+      'error field_mismatch types/actors/hero.json $.statuses[0].field',
+      'error unknown_field types/actors/hero.json $.statuses[1].field',
+      'error icon_file types/actors/hero.json $.statuses[1].icon',
+      'error field_mismatch types/actors/hero.json $.statuses[2].field',
+      'error missing_file types/actors/hero.json $.statuses[2].icon',
+    ],
+  },
+  {
     name: 'card actions rolling for the roller, with the item the card was rolled with',
     change: (f: PluginFixture): void => {
       f['sheets/item.json'] = { layout: { type: 'column', children: [] } };

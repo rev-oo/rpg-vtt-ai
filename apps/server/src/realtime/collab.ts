@@ -175,6 +175,12 @@ interface CollabOptions {
   timing?: CollabTiming | undefined;
   /** The system's plugin code, whose shared functions counter bounds may call (T-1610). */
   code?: ((systemId: string) => Promise<LoadedCode | undefined>) | undefined;
+  /**
+   * Called after an actor's sheet is stored, with the data its projection held before, so
+   * what shows elsewhere, such as its statuses on tokens (T-1618), can follow.
+   */
+  onActorStored?:
+    ((actorId: string, before: Readonly<Record<string, unknown>>) => void) | undefined;
 }
 
 /** The Yjs document server and the sockets connected to it. */
@@ -194,7 +200,7 @@ export const RECHECK_INTERVAL_MS = 30_000;
  * Read access opens the document read-only: Hocuspocus then drops the client's updates.
  */
 function createHocuspocus(
-  { db, sessions, definition, now, timing = COLLAB_TIMING, code }: CollabOptions,
+  { db, sessions, definition, now, timing = COLLAB_TIMING, code, onActorStored }: CollabOptions,
   logger: FastifyBaseLogger,
   unloads: DelayedUnloads,
 ): { hocuspocus: Hocuspocus<CollabContext>; recheck: () => void } {
@@ -278,11 +284,12 @@ function createHocuspocus(
         }
       }
       editors.delete(document);
-      storeDocument(db, ref, document, {
+      const stored = storeDocument(db, ref, document, {
         definition,
         live: (name) => instance.documents.get(name),
         now: now(),
       });
+      if (stored) onActorStored?.(stored.actorId, stored.before);
       return Promise.resolve();
     },
     connected: ({ documentName }) => {

@@ -12,5 +12,6 @@ export * from './options.js';
 export * from './recipes.js';
 export * from './rules.js';
 export * from './settings.js';
+export * from './statuses.js';
 export * from './ydoc.js';
 export { formatValue } from './values.js';

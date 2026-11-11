@@ -81,6 +81,42 @@
         "gm"
       ],
       "description": "Who may create actors of the type: players too, or only the GM."
+    },
+    "statuses": {
+      "description": "Fields shown on the actor's tokens, in the token list and in the combat tracker while they are on, such as conditions; in order.",
+      "maxItems": 32,
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+            "title": "Path",
+            "description": "A true/false field of the type, such as `conditions.prone`, reached through objects only. A secret field’s status shows only to the GM and assistants."
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500,
+            "title": "Text",
+            "description": "What the status is called; a lang key or literal text."
+          },
+          "icon": {
+            "type": "string",
+            "pattern": "^(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$",
+            "title": "Plugin file",
+            "description": "An image of the plugin, such as `icons/prone.svg`: SVG, PNG, WebP, AVIF, GIF or JPEG. Square, and readable small."
+          }
+        },
+        "required": [
+          "field",
+          "label",
+          "icon"
+        ],
+        "additionalProperties": false,
+        "title": "Status"
+      }
     }
   },
   "required": [
