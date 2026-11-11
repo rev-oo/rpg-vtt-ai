@@ -141,10 +141,17 @@ test('two browsers edit one live sheet', async ({ browser }) => {
 
     await biography(ownerSheet).press('End');
     await biography(gmSheet).click();
-    await biography(gmSheet).press('Home');
-    // The first letter shows the caret took: a remote edit arriving before the editor read
-    // the Home key could otherwise put it back at the end.
-    await biography(gmSheet).pressSequentially('A');
+    // The first letter shows the caret took: the editor sometimes settles its selection at the
+    // end after reading the Home key, so a letter typed there is taken back and Home tried again.
+    await expect(async () => {
+      if ((await biography(gmSheet).textContent()) !== 'Born in Elm.') {
+        await biography(gmSheet).press('End');
+        await biography(gmSheet).press('Backspace');
+      }
+      await biography(gmSheet).press('Home');
+      await biography(gmSheet).pressSequentially('A');
+      await expect(biography(gmSheet)).toHaveText('ABorn in Elm.', { timeout: 1000 });
+    }).toPass();
     await expect(biography(ownerSheet)).toHaveText('ABorn in Elm.');
     await Promise.all([
       biography(ownerSheet).pressSequentially(' Raised by wolves.', { delay: 30 }),
