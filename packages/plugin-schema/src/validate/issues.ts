@@ -65,6 +65,7 @@ export const PLUGIN_ISSUE_CODES = [
   'system_file',
   'module_key',
   'theme_file',
+  'icon_file',
   // Translations
   'missing_lang_file',
   'missing_lang_key',
@@ -187,6 +188,7 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   module_file: (x) => `${p(x, 'file')} is for systems; a module cannot have it`,
   system_file: (x) => `${p(x, 'file')} is for modules; a system cannot have it`,
   module_key: (x) => `"${p(x, 'key')}" is for modules; a system cannot have it`,
+  icon_file: (x) => `${p(x, 'file')} must be an image: SVG, PNG, WebP, AVIF, GIF or JPEG`,
   theme_file: (x) =>
     `${p(x, 'file')} must be ${p(x, 'expected') === 'font' ? 'a font' : 'an image'} file`,
   css_part_required: (x) =>

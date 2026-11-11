@@ -1052,6 +1052,24 @@ Each contribution's `formula` reads the item's own fields and derived values, ne
 
 Only the actor's items count, not those in the trash, and an actor holds at most 500 items. Contributions read only fields every viewer of the item may see: a formula that reaches a `"x-layer": "secret"` field, directly or through a derived value, is refused, so totals never reveal secrets.
 
+#### Statuses
+
+An actor type can list true/false fields as `statuses`, such as conditions (T-1618). While one is on, the actor's tokens show its icon on the map, and the token list and the combat tracker show it with its label:
+
+```json
+"statuses": [
+  { "field": "conditions.prone", "label": "condition.prone", "icon": "icons/prone.svg" },
+  { "field": "conditions.poisoned", "label": "condition.poisoned", "icon": "icons/poisoned.svg" }
+]
+```
+
+- `field` is a `boolean` field of the type, reached through objects, not inside a list.
+- `label` is a lang key or text. Screen readers read it, and it is the icon's tooltip.
+- `icon` is an image in the plugin's folder: SVG, PNG, WebP, AVIF, GIF or JPEG. Draw it square and readable at 16 pixels, on its own background, as the map and the light and dark themes all show it.
+- Statuses show in the order the type lists them, up to 32. A token shows five; past that, the last place counts the rest.
+- A status whose field is secret (`"x-layer": "secret"`), or inside a secret object, shows only to the GM and assistants.
+- Statuses follow the sheet: a change shows on the map once the sheet is saved, within a few seconds.
+
 ### Sheets
 
 `sheets/<name>.json` holds one tree of nodes under `layout`. Every node has a `type`, and may have `class` (CSS classes) and `visibleIf` (a formula; the node shows only while it is true).

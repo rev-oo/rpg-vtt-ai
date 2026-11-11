@@ -25,6 +25,7 @@ import type { LoadedCode } from '../plugins/code-runtime.js';
 
 import { generateId } from './auth/tokens.js';
 import { runHook, type RollOptions } from './rolls.js';
+import type { StatusesOf } from './statuses.js';
 import { findTable } from './tables.js';
 
 // A table's encounter (FR-COMBAT-01, 03, 04; ADR-049): rows changed by the GM, read by every
@@ -84,7 +85,7 @@ export function orderCombatants<T extends Orderable>(list: readonly T[], rule: O
 }
 
 /** The combatants in their stored turn order; ones not yet placed go last, in adding order. */
-function combatantsOf(db: DbOrTx, encounterId: string): Combatant[] {
+export function combatantsOf(db: DbOrTx, encounterId: string): Combatant[] {
   return db
     .select()
     .from(combatants)
@@ -98,7 +99,12 @@ function combatantsOf(db: DbOrTx, encounterId: string): Combatant[] {
  * Others never receive hidden combatants, nor the turn while a hidden one has it, and see an
  * actor's id only when they may see that actor.
  */
-export function toEncounterView(db: DbOrTx, encounter: Encounter, subject: Subject): EncounterView {
+export function toEncounterView(
+  db: DbOrTx,
+  encounter: Encounter,
+  subject: Subject,
+  statuses: StatusesOf,
+): EncounterView {
   const gm = isGmLike(subject.role);
   const visible: CombatantView[] = [];
   for (const combatant of combatantsOf(db, encounter.id)) {
@@ -110,6 +116,7 @@ export function toEncounterView(db: DbOrTx, encounter: Encounter, subject: Subje
       name: combatant.name,
       initiative: combatant.initiative,
       hidden: combatant.hidden,
+      statuses: statuses(actor),
     });
   }
   const current = visible.some((c) => c.id === encounter.currentId) ? encounter.currentId : null;

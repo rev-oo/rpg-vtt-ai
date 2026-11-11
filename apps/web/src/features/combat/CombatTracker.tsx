@@ -9,6 +9,7 @@ import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
 import { useSystem } from '../../plugin-host/system-context.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
+import { StatusIcons } from '../map/StatusIcons.js';
 
 interface CombatTrackerProps {
   table: TableView;
@@ -149,6 +150,7 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
                       {combatant.initiative ?? '–'}
                     </span>
                     <span className="min-w-0 flex-1 truncate">{combatant.name}</span>
+                    <StatusIcons statuses={combatant.statuses} />
                     {combatant.hidden && (
                       <span className="text-xs text-muted">{t('combat.hidden')}</span>
                     )}

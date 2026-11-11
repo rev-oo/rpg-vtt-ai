@@ -14,6 +14,20 @@ const cell = z
   .min(0)
   .max(MAX_SCENE_CELLS - 1);
 
+/**
+ * A status of a token's actor that is on (T-1618), such as a condition: one of the true/false
+ * fields its type lists as statuses. A secret field's reaches only GMs and assistants.
+ */
+export const tokenStatusSchema = z.object({
+  /** The field, such as `conditions.prone`. */
+  field: z.string(),
+  /** A lang key of the table's system, or text. */
+  label: z.string(),
+  /** The icon's URL: a file of the table's system. */
+  icon: z.string(),
+});
+export type TokenStatus = z.infer<typeof tokenStatusSchema>;
+
 export const tokenSchema = z.object({
   id: z.string(),
   sceneId: z.string(),
@@ -31,6 +45,8 @@ export const tokenSchema = z.object({
   hidden: z.boolean(),
   /** Whether the caller may move it. */
   movable: z.boolean(),
+  /** Its actor's statuses that are on, in the order its type lists them (T-1618). */
+  statuses: z.array(tokenStatusSchema),
 });
 export type TokenView = z.infer<typeof tokenSchema>;
 

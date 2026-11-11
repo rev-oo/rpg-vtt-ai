@@ -20,6 +20,8 @@ export interface TokenHandlers {
 const COLORS = [0xb45309, 0x15803d, 0x1d4ed8, 0x7e22ce, 0xbe123c, 0x0f766e];
 const SELECTED = 0xfacc15;
 const DOUBLE_TAP_MS = 350;
+/** Statuses drawn on a token; more show as a count (T-1618). */
+const MAX_STATUS_ICONS = 5;
 
 /** A colour that stays with a token across redraws. */
 function colorOf(id: string): number {
@@ -88,6 +90,7 @@ export class TokenLayer {
       label.anchor.set(0.5, 0);
       label.y = radius + 2;
       piece.addChild(label);
+      this.addStatuses(piece, token, radius);
       this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
@@ -101,7 +104,7 @@ export class TokenLayer {
     }
   }
 
-  private addImage(piece: Container, url: string, radius: number): void {
+  private texture(url: string): Promise<Texture | null> {
     let texture = this.textures.get(url);
     if (!texture) {
       texture = loadImage(url).then(
@@ -110,7 +113,50 @@ export class TokenLayer {
       );
       this.textures.set(url, texture);
     }
-    void texture.then((loaded) => {
+    return texture;
+  }
+
+  /**
+   * The statuses that are on (T-1618): the system's icons in a row along the top of the disc,
+   * the last replaced by a count when there are too many.
+   */
+  private addStatuses(piece: Container, token: TokenView, radius: number): void {
+    const { statuses } = token;
+    if (statuses.length === 0) return;
+    const size = radius * 0.55;
+    const shown = statuses.length > MAX_STATUS_ICONS ? MAX_STATUS_ICONS - 1 : statuses.length;
+    const slots = Math.min(statuses.length, MAX_STATUS_ICONS);
+    const x = (slot: number) => (slot - (slots - 1) / 2) * size;
+    const y = -radius + size * 0.2;
+    statuses.slice(0, shown).forEach((status, slot) => {
+      void this.texture(status.icon).then((loaded) => {
+        if (!loaded || piece.destroyed || this.destroyed) return;
+        const sprite = new Sprite(loaded);
+        sprite.scale.set(size / Math.max(loaded.width, loaded.height));
+        sprite.anchor.set(0.5);
+        sprite.position.set(x(slot), y);
+        piece.addChild(sprite);
+        this.viewport.dirty = true;
+      });
+    });
+    if (shown < statuses.length) {
+      const more = new Text({
+        text: `+${String(statuses.length - shown)}`,
+        style: {
+          fill: 0xffffff,
+          fontSize: size * 0.6,
+          fontWeight: 'bold',
+          stroke: { color: 0x111827, width: 3 },
+        },
+      });
+      more.anchor.set(0.5);
+      more.position.set(x(shown), y);
+      piece.addChild(more);
+    }
+  }
+
+  private addImage(piece: Container, url: string, radius: number): void {
+    void this.texture(url).then((loaded) => {
       if (!loaded || piece.destroyed || this.destroyed) return;
       const sprite = new Sprite(loaded);
       const scale = (radius * 2) / Math.min(loaded.width, loaded.height);

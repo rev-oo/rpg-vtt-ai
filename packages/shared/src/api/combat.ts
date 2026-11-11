@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { MAX_ENTITY_NAME } from './constants.js';
+import { tokenStatusSchema } from './tokens.js';
 
 // Combat (FR-COMBAT-01, 03, 04; ADR-049): a table's one encounter, run by the GM.
 
@@ -13,6 +14,8 @@ export const combatantSchema = z.object({
   initiative: z.number().nullable(),
   /** Only GMs and assistants receive hidden combatants (FR-COMBAT-04). */
   hidden: z.boolean(),
+  /** Its actor's statuses that are on, as its tokens show them (T-1618). */
+  statuses: z.array(tokenStatusSchema),
 });
 export type CombatantView = z.infer<typeof combatantSchema>;
 

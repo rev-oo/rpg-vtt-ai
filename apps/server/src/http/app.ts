@@ -24,6 +24,7 @@ import {
 } from '../realtime/collab.js';
 import { eventsSocket, registerEvents } from '../realtime/events-socket.js';
 import type { EventHub } from '../realtime/hub.js';
+import { publishStatusChanges } from '../realtime/statuses.js';
 
 import { registerAuth } from './auth.js';
 import { scheduleBackups } from './backups.js';
@@ -152,6 +153,9 @@ export async function buildApp({
     now,
   });
   registerAuth(app, sessions);
+  /** Statuses on tokens and combatants follow the sheet (T-1618), once the event hub exists. */
+  let actorStored: (actorId: string, before: Readonly<Record<string, unknown>>) => void = () =>
+    undefined;
   const collab = registerCollab(app, {
     db,
     sessions,
@@ -159,8 +163,14 @@ export async function buildApp({
     now,
     timing: collabTiming,
     code: (id) => plugins.code(id),
+    onActorStored: (actorId, before) => {
+      actorStored(actorId, before);
+    },
   });
   const events = await registerEvents(app, { db, sessions });
+  actorStored = (actorId, before) => {
+    publishStatusChanges(db, events, (id) => plugins.definition(id), actorId, before);
+  };
 
   const context: AppContext = {
     app,

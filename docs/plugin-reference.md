@@ -114,6 +114,7 @@ An actor type, such as a character or an NPC.
 | `schema` | [Data schema](#actor-type-data-schema) | yes | The entity's data: an object whose properties are fields. |
 | `derived` | map from [identifier](#identifier) to [formula](#formula) |  | Values computed from the data and never stored, by name. Formulas read them as `@derived.<name>`. |
 | `controlledBy` | one of `"player"`, `"gm"` | yes | Who may create actors of the type: players too, or only the GM. |
+| `statuses` | list of [Status](#actor-type-status) (at most 32 items) |  | Fields shown on the actor's tokens, in the token list and in the combat tracker while they are on, such as conditions; in order. |
 
 <a id="actor-type-data-schema"></a>
 
@@ -127,6 +128,16 @@ The entity's data: an object whose properties are fields.
 | `properties` | map from [identifier](#identifier) to [Field](#actor-type-field) | yes |  |
 | `required` | list of [identifier](#identifier) |  |  |
 | `description` | text (at most 2000 characters) |  |  |
+
+<a id="actor-type-status"></a>
+
+### Status
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `field` | [path](#path) | yes | A true/false field of the type, such as `conditions.prone`, reached through objects only. A secret field’s status shows only to the GM and assistants. |
+| `label` | [text](#text) | yes | What the status is called; a lang key or literal text. |
+| `icon` | text (matching `^(?!.*(?:^\|\/)\.\.?(?:\/\|$))[A-Za-z0-9_][A-Za-z0-9_./-]{0,199}$`) | yes | An image of the plugin, such as `icons/prone.svg`: SVG, PNG, WebP, AVIF, GIF or JPEG. Square, and readable small. |
 
 <a id="actor-type-field"></a>
 

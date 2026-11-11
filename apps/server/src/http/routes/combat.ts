@@ -25,6 +25,7 @@ import {
   updateCombatant,
 } from '../../domain/combat.js';
 import { requireWritableTable } from '../../domain/entities.js';
+import { statusReader } from '../../domain/statuses.js';
 import { publishChatMessage } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
@@ -40,7 +41,18 @@ const combatantParams = z.object({ id: z.uuid(), combatantId: z.string().min(1).
  * members refetch, so what they receive is always filtered here.
  */
 export function combatRoutes(context: AppContext): void {
-  const { app, db, events, now } = context;
+  const { app, db, events, now, plugins } = context;
+  /** What each member sees of the combatants' statuses (T-1618). */
+  const view = (
+    encounter: Parameters<typeof toEncounterView>[1],
+    subject: { role: TableRole; userId: string },
+  ) =>
+    toEncounterView(
+      db,
+      encounter,
+      subject,
+      statusReader(db, encounter.tableId, (id) => plugins.definition(id), subject.role),
+    );
   const options = rollOptions(context);
   const base = '/api/v1/tables/:id/encounter';
 
@@ -67,14 +79,14 @@ export function combatRoutes(context: AppContext): void {
     for (const row of messages) publishChatMessage(events, row);
     events.publish(tableId, { type: 'combat.updated', tableId, payload: {} }, () => true);
     const encounter = findEncounter(db, tableId);
-    return { encounter: encounter ? toEncounterView(db, encounter, runner) : null };
+    return { encounter: encounter ? view(encounter, runner) : null };
   };
 
   app.get(base, (request): EncounterResponse => {
     const { id } = parseInput(idParams, request.params);
     const { membership } = requireMember(db, request, id);
     const encounter = findEncounter(db, id);
-    return { encounter: encounter ? toEncounterView(db, encounter, membership) : null };
+    return { encounter: encounter ? view(encounter, membership) : null };
   });
 
   app.post(base, async (request, reply) => {

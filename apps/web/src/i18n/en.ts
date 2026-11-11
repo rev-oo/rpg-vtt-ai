@@ -372,6 +372,7 @@ export const en = {
   'pluginIssue.module_file': '{file} is for systems; a module cannot have it.',
   'pluginIssue.module_key': '"{key}" is for modules; a system cannot have it.',
   'pluginIssue.system_file': '{file} is for modules; a system cannot have it.',
+  'pluginIssue.icon_file': '{file} must be an image: SVG, PNG, WebP, AVIF, GIF or JPEG.',
   'pluginIssue.theme_file':
     '{file} is the wrong kind of file: fonts must be .woff2, .woff, .ttf or .otf files and the background an image.',
   'pluginIssue.css_part_required':

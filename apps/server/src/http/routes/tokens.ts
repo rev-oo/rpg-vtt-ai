@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { canManageScenes } from '@vtt/shared';
+import { canManageScenes, type TableRole } from '@vtt/shared';
 import {
   tokenCreateBody,
   tokenUpdateBody,
@@ -10,6 +10,7 @@ import {
 
 import { requireUnarchived } from '../../domain/entities.js';
 import { findScene, visibleScene, type Scene } from '../../domain/scenes.js';
+import { statusReader } from '../../domain/statuses.js';
 import {
   createToken,
   deleteToken,
@@ -34,7 +35,11 @@ const idParams = z.object({ id: z.uuid() });
  * token, or of one in the fog (ADR-070), never reach players (NFR-08); they refetch what they
  * may see.
  */
-export function tokenRoutes({ app, db, events, now }: AppContext): void {
+export function tokenRoutes({ app, db, events, now, plugins }: AppContext): void {
+  /** What each member sees of the table's actors' statuses (T-1618). */
+  const statuses = (tableId: string, role: TableRole) =>
+    statusReader(db, tableId, (id) => plugins.definition(id), role);
+
   const changed = (scene: Scene, ...states: Placed[]) => {
     events.publish(
       scene.tableId,
@@ -64,7 +69,7 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
   app.get('/api/v1/scenes/:id/tokens', (request): TokenListResponse => {
     const { id } = parseInput(idParams, request.params);
     const { scene, membership } = sceneFor(request, id);
-    return { tokens: listTokens(db, scene, membership) };
+    return { tokens: listTokens(db, scene, membership, statuses(scene.tableId, membership.role)) };
   });
 
   app.post('/api/v1/scenes/:id/tokens', (request, reply) => {
@@ -75,7 +80,12 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
     const body = parseInput(tokenCreateBody, request.body);
     const placed = createToken(db, scene, body, now());
     changed(scene, placed);
-    const token: TokenView = toTokenView(placed, scene, membership);
+    const token: TokenView = toTokenView(
+      placed,
+      scene,
+      membership,
+      statuses(scene.tableId, membership.role),
+    );
     return reply.code(201).send({ token });
   });
 
@@ -85,7 +95,9 @@ export function tokenRoutes({ app, db, events, now }: AppContext): void {
     const body = parseInput(tokenUpdateBody, request.body);
     const updated = updateToken(db, placed, scene, membership, body, now());
     changed(scene, placed, updated);
-    return { token: toTokenView(updated, scene, membership) };
+    return {
+      token: toTokenView(updated, scene, membership, statuses(scene.tableId, membership.role)),
+    };
   });
 
   app.delete('/api/v1/tokens/:id', (request, reply) => {
