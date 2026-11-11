@@ -591,6 +591,7 @@ How a recipe roll shows in chat.
 | `title` | [text](#text) | yes | A lang key or literal text. |
 | `rows` | list of [Card row](#card-card-row) | yes |  |
 | `outcome` | true or false |  | Shows the recipe's outcome. |
+| `actions` | list of one of [Apply action](#card-apply-action), [Roll action](#card-roll-action) (at most 6 items) |  | Buttons under the card. Each acts on the token the clicker has selected on the map: an apply action steps one of its counters, such as taking damage, and a roll action rolls a recipe for it, such as a saving throw. |
 
 <a id="card-card-row"></a>
 
@@ -601,6 +602,32 @@ How a recipe roll shows in chat.
 | `label` | [text](#text) | yes | A lang key or literal text. |
 | `value` | [formula](#formula) | yes | Reads `@total`, `@roll` (`expression`, `resolved`, `total`, `natural`, `dice`), the recipe's `@rolls` and `@let`, and the entity's data. It cannot roll dice. |
 | `class` | [css classes](#css-classes) |  |  |
+
+<a id="card-apply-action"></a>
+
+### Apply action
+
+Steps a counter of the actor of the token the clicker has selected, within its bounds, if they may edit that actor.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `label` | [text](#text) | yes | The button's text; a lang key or literal text. |
+| `field` | [path](#path) | yes | A counter (`x-counter`) of the actor it is applied to, such as `hp.value`. |
+| `amount` | [formula](#formula) | yes | How far to step the counter, worked out when the roll is made and rounded as `round()` does: `-@rolls.damage.total` takes damage away, `@total` heals. It reads what rows read. |
+| `when` | [formula](#formula) |  | A true/false formula worked out when the roll is made, reading what rows read; the card offers the action only when it is true. |
+
+<a id="card-roll-action"></a>
+
+### Roll action
+
+Rolls another recipe for the selected token, such as the saving throw a spell asks for.
+
+| Key | Value | Required | About |
+| --- | --- | --- | --- |
+| `label` | [text](#text) | yes | The button's text; a lang key or literal text. |
+| `roll` | [name](#name) | yes | A recipe in `rolls.json`, without an item, rolled for the actor of the token the clicker has selected, if they may roll for it. |
+| `args` | map from [identifier](#identifier) to [formula](#formula) |  | Values the recipe reads as `@args.<name>`, worked out when this card is rolled, such as `{ "dc": "@derived.spellDc" }`. |
+| `when` | [formula](#formula) |  | A true/false formula worked out when the roll is made, reading what rows read; the card offers the action only when it is true. |
 
 <a id="settings"></a>
 

@@ -49,6 +49,103 @@
     "outcome": {
       "description": "Shows the recipe's outcome.",
       "type": "boolean"
+    },
+    "actions": {
+      "description": "Buttons under the card. Each acts on the token the clicker has selected on the map: an apply action steps one of its counters, such as taking damage, and a roll action rolls a recipe for it, such as a saving throw.",
+      "maxItems": 6,
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "title": "Text",
+                "description": "The button's text; a lang key or literal text."
+              },
+              "field": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*(?:\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+                "title": "Path",
+                "description": "A counter (`x-counter`) of the actor it is applied to, such as `hp.value`."
+              },
+              "amount": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "title": "Formula",
+                "description": "How far to step the counter, worked out when the roll is made and rounded as `round()` does: `-@rolls.damage.total` takes damage away, `@total` heals. It reads what rows read."
+              },
+              "when": {
+                "description": "A true/false formula worked out when the roll is made, reading what rows read; the card offers the action only when it is true.",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "title": "Formula"
+              }
+            },
+            "required": [
+              "label",
+              "field",
+              "amount"
+            ],
+            "additionalProperties": false,
+            "title": "Apply action",
+            "description": "Steps a counter of the actor of the token the clicker has selected, within its bounds, if they may edit that actor."
+          },
+          {
+            "type": "object",
+            "properties": {
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "title": "Text",
+                "description": "The button's text; a lang key or literal text."
+              },
+              "roll": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]{0,63}$",
+                "title": "Name",
+                "description": "A recipe in `rolls.json`, without an item, rolled for the actor of the token the clicker has selected, if they may roll for it."
+              },
+              "args": {
+                "description": "Values the recipe reads as `@args.<name>`, worked out when this card is rolled, such as `{ \"dc\": \"@derived.spellDc\" }`.",
+                "type": "object",
+                "propertyNames": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+                  "title": "Identifier"
+                },
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000,
+                  "title": "Formula",
+                  "description": "A formula (specs §8.9)."
+                }
+              },
+              "when": {
+                "description": "A true/false formula worked out when the roll is made, reading what rows read; the card offers the action only when it is true.",
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "title": "Formula"
+              }
+            },
+            "required": [
+              "label",
+              "roll"
+            ],
+            "additionalProperties": false,
+            "title": "Roll action",
+            "description": "Rolls another recipe for the selected token, such as the saving throw a spell asks for."
+          }
+        ]
+      }
     }
   },
   "required": [

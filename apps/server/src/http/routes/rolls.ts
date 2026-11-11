@@ -1,9 +1,12 @@
 import { z } from 'zod';
 
-import { commandRequestBody, rollRequestBody } from '@vtt/shared/api';
+import { cardApplyBody, commandRequestBody, rollRequestBody } from '@vtt/shared/api';
 
-import { toChatMessage } from '../../domain/chat.js';
+import { findChatMessage } from '../../db/repositories/index.js';
+import { applyCardAction } from '../../domain/card-actions.js';
+import { requireVisibleMessage, toChatMessage } from '../../domain/chat.js';
 import { sendCommandMessages, sendRollMessages } from '../../domain/rolls.js';
+import { notFound } from '../../errors.js';
 import { publishChatMessage } from '../../realtime/notify.js';
 import type { AppContext } from '../app.js';
 import { requireMember } from '../membership.js';
@@ -47,5 +50,21 @@ export function rollRoutes(context: AppContext): void {
     );
     for (const row of rows) publishChatMessage(events, row);
     return reply.code(201).send({ message: toChatMessage(rows[0]) });
+  });
+
+  /**
+   * A card's apply action, such as taking a hit's damage (T-1617), on the actor of the token
+   * the caller has selected. The change reaches everyone through the actor's document.
+   */
+  app.post('/api/v1/messages/:id/apply', async (request) => {
+    const { id } = parseInput(idParams, request.params);
+    const row = findChatMessage(db, id);
+    if (!row) throw notFound('Message not found.');
+    const { membership } = requireMember(db, request, row.tableId);
+    const subject = { userId: membership.userId, role: membership.role };
+    requireVisibleMessage(subject, row);
+    const body = parseInput(cardApplyBody, request.body);
+    const value = await applyCardAction(db, subject, row, body, options);
+    return { value };
   });
 }

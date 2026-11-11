@@ -32,5 +32,34 @@
       "value": "'damage.' + @item.effectType"
     }
   ],
-  "outcome": true
+  "outcome": true,
+  "actions": [
+    {
+      "label": "card.rollSave",
+      "roll": "save",
+      "args": {
+        "ability": "@item.save",
+        "dc": "@derived.spellDc"
+      },
+      "when": "@item.attack == 'spell.save'"
+    },
+    {
+      "label": "card.applyDamage",
+      "field": "hp.value",
+      "amount": "-@total",
+      "when": "@let.effect and @item.effectType != 'healing' and @item.effectType != 'none'"
+    },
+    {
+      "label": "card.applyHalf",
+      "field": "hp.value",
+      "amount": "-floor(@total / 2)",
+      "when": "@let.effect and @item.effectType != 'healing' and @item.effectType != 'none'"
+    },
+    {
+      "label": "card.applyHealing",
+      "field": "hp.value",
+      "amount": "@total",
+      "when": "@let.effect and @item.effectType == 'healing'"
+    }
+  ]
 }

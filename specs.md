@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 78%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 83%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1617` (card actions)
+- **Next task:** `T-1618` (token statuses)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -73,6 +73,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-10 | T-1614 done: a manifest `attribution` (text and an optional `http(s)` link) shows on the Plugins page and in each compendium entry's preview; the admin plugin view and compendium packs return it. Pack entries accept collections as rows keyed by id (the stored form), keeping row ids and sort keys. `dnd5e-srd` is renamed `srd5` (folder, id, package, tests, docs; the study answers Q2), and its SRD credit moves from the description to its attribution.                                                                                                                                                                                                                                                           |
 | 2026-11-10 | T-1611 done (ADR-081): `enumLabels` gives type fields and settings a lang key per value, so stored values stay plain; card rows translate values that are lang keys; server code posts by lang key with parameters (`ctx.chat.post({ key, params })`), each viewer reading it in their language while the message stores the English (`chat_messages.translation`). String settings may be colours (`"format": "colour"`, a colour picker), and `vtt-plugin types` writes typed settings for plugin code. srd5 drops `saveText()`, posts its rest and death save messages by key and ships pt-BR; dice-3d labels its colours and reads its settings typed.                                                                    |
 | 2026-11-11 | T-1615 is split at the user's request into T-1617 (card actions, such as applying damage to the selected token), T-1618 (token statuses) and T-1615 (targets, which then carry the card's actions to each target), done in that order.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| 2026-11-11 | T-1617 done (ADR-082): cards declare `actions` (at most 6), worked out when the roll is made: apply actions step a counter of the actor of the token the clicker has selected on the map, through `POST /messages/:id/apply`, if they may edit it; roll actions roll another recipe for it with arguments from the card. srd5's attack cards apply damage or half of it, its spell card applies damage or healing, and spells that ask for a save offer **Roll saving throw** through a new `save` recipe that reads the ability and DC.                                                                                                                                                                                      |
 
 ---
 
@@ -560,7 +561,7 @@ Rules:
 
 ### 8.11 Chat cards
 
-A card lays out a recipe's roll in chat with formula rows that read the roll; a client component of the same name replaces it. A row value that is a lang key is translated, as labels are (ADR-081). [Guide, Chat cards](docs/plugin-authoring.md#chat-cards); [reference, Chat card](docs/plugin-reference.md#card).
+A card lays out a recipe's roll in chat with formula rows that read the roll; a client component of the same name replaces it. A row value that is a lang key is translated, as labels are (ADR-081). A card may offer actions on the token the clicker has selected: steps of one of its counters, such as damage, or rolls of another recipe, such as a saving throw (ADR-082). [Guide, Chat cards](docs/plugin-authoring.md#chat-cards); [reference, Chat card](docs/plugin-reference.md#card).
 
 ### 8.12 Settings
 
@@ -889,10 +890,11 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P12, and its Q2. A manifest `attribution` (text and a link) shows on the Plugins page and in the Compendium beside each entry from the plugin's packs. Packs accept collections in the stored form (maps by id) as well as lists. Rename `dnd5e-srd` to `srd5` (folder, id, tests and docs), and give it its SRD attribution.
   - **Done when:** tests cover the attribution and both pack forms; e2e sees the attribution in the Compendium; nothing named `dnd5e-srd` is left.
 
-- [ ] **T-1617 · Card actions**
+- [x] **T-1617 · Card actions**
   - **Deps:** T-1608
   - **Do:** A card offers actions, such as "Apply damage" or "Take healing", that step a counter by an amount worked out when the roll is made. Whoever clicks applies it to the token they have selected on the map, if they may edit its actor: the GM selects the goblin and applies the damage, a player selects their own token and takes the healing. `srd5` applies attack damage or half of it, and spell damage or healing.
   - **Done when:** tests cover the actions and their rights; e2e applies an attack's damage to a selected token.
+  - **Also:** a spell that asks for a saving throw offers to roll it for the selected token, against the spell's DC (at the user's request).
 
 - [ ] **T-1618 · Token statuses**
   - **Deps:** none
@@ -1115,6 +1117,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-079 | [Declared module frames and system dice](docs/adr/ADR-079-declared-module-frames.md)                                                            | Accepted                                   |
 | ADR-080 | [Testing kits for plugin code](docs/adr/ADR-080-plugin-testing-kits.md)                                                                         | Accepted                                   |
 | ADR-081 | [Labels for values, and translated plugin texts](docs/adr/ADR-081-value-labels-and-translation.md)                                              | Accepted                                   |
+| ADR-082 | [Card actions on the selected token](docs/adr/ADR-082-card-actions.md)                                                                          | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

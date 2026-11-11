@@ -410,6 +410,57 @@
     },
     "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.chaSave + roll(@options.bonus)"
   },
+  "save": {
+    "label": "roll.save",
+    "options": {
+      "mode": {
+        "type": "choice",
+        "label": "option.mode",
+        "choices": [
+          {
+            "value": "normal",
+            "label": "mode.normal"
+          },
+          {
+            "value": "advantage",
+            "label": "mode.advantage",
+            "key": "shift"
+          },
+          {
+            "value": "disadvantage",
+            "label": "mode.disadvantage",
+            "key": "ctrl"
+          }
+        ]
+      },
+      "bonus": {
+        "type": "dice",
+        "label": "option.bonus"
+      }
+    },
+    "let": {
+      "edge": "((@options.mode == 'advantage') ? 1 : 0) - ((@options.mode == 'disadvantage') ? 1 : 0)",
+      "bonus": "@args.ability == 'ability.str' ? @derived.strSave : @args.ability == 'ability.dex' ? @derived.dexSave : @args.ability == 'ability.con' ? @derived.conSave : @args.ability == 'ability.int' ? @derived.intSave : @args.ability == 'ability.wis' ? @derived.wisSave : @derived.chaSave"
+    },
+    "formula": "(@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @let.bonus + roll(@options.bonus)",
+    "outcomes": [
+      {
+        "when": "(@args.ability == 'ability.str' or @args.ability == 'ability.dex') and (@conditions.paralyzed or @conditions.stunned or @conditions.unconscious or @conditions.petrified)",
+        "label": "outcome.autoFail",
+        "class": "fail"
+      },
+      {
+        "when": "@total >= @args.dc",
+        "label": "outcome.saved",
+        "class": "success"
+      },
+      {
+        "label": "outcome.failed",
+        "class": "fail"
+      }
+    ],
+    "card": "save"
+  },
   "skill_acrobatics": {
     "label": "roll.skill.acrobatics",
     "options": {
@@ -1147,7 +1198,8 @@
     "let": {
       "edge": "((@options.mode == 'advantage' or @derived.attackAdv) ? 1 : 0) - ((@options.mode == 'disadvantage' or @derived.attackDis) ? 1 : 0)",
       "dice": "@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice + @item.slotDice * (@options.slot - @item.level)",
-      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)"
+      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)",
+      "effect": "@item.attack != 'spell.attack'"
     },
     "formula": "@item.attack == 'spell.attack' ? (@let.edge == 0 ? 1d20 : @let.edge > 0 ? 2d20kh1 : 2d20kl1) + @derived.spellAttack + roll(@options.bonus) : (@let.dice)d(@item.die) + @let.plus",
     "outcomes": [
@@ -1180,7 +1232,8 @@
     },
     "let": {
       "dice": "@item.level == 0 ? @item.dice * @derived.cantripDice : @item.dice + @item.slotDice * (@options.slot - @item.level)",
-      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)"
+      "plus": "(@item.addMod ? @derived.spellMod : 0) + @item.bonus + @item.slotBonus * (@options.slot - @item.level)",
+      "effect": "true"
     },
     "formula": "(@let.dice)d(@item.die) + @let.plus",
     "card": "spell",

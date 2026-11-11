@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../packages/plugin-schema/schemas/card.schema.json",
+  "title": "card.save",
+  "rows": [
+    {
+      "label": "card.ability",
+      "value": "@args.ability"
+    },
+    {
+      "label": "card.saveDc",
+      "value": "@args.dc"
+    },
+    {
+      "label": "card.roll",
+      "value": "@roll.resolved"
+    },
+    {
+      "label": "card.total",
+      "value": "@total",
+      "class": "total"
+    }
+  ],
+  "outcome": true
+}

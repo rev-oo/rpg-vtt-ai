@@ -255,6 +255,10 @@ export const en = {
   'chat.unknownCommand':
     'Unknown command {command}. Start with // to send a message beginning with “/”.',
   'chat.invalidSpeaker': 'You can only speak as an actor you own.',
+  'chat.actionsOn': 'Acts on {name}',
+  'chat.actionsSelect': 'Select a token on the map to use these.',
+  'chat.actionApplied': 'Done: {name} is now at {value}.',
+  'chat.actionRolled': 'Rolled for {name}.',
   'chat.invalidRecipient': 'Whispers can only go to other members of this table.',
 
   'plugins.title': 'Plugins',
@@ -329,6 +333,8 @@ export const en = {
   'pluginIssue.nested_items': 'An items node cannot sit inside a list or another items node.',
   'pluginIssue.item_required':
     'The roll “{roll}” is made with an item: put its button in an items row or on an item sheet.',
+  'pluginIssue.card_item_roll':
+    'The roll “{roll}” is made with an item, so a card action cannot roll it.',
   'pluginIssue.item_mismatch':
     'The roll “{roll}” is not made with items of type “{type}”; list it in the roll’s item.',
   'pluginIssue.actor_mismatch':

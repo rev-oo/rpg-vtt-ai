@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
-import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
+import { installPlugin, packPlugin, setActorData, setItemData } from './support/plugins.js';
 import { showPanel } from './support/workspace.js';
 
 // T-1605: the SRD 5.2 system, packed from plugins/ like an author would. A player's wizard
@@ -16,6 +16,7 @@ import { showPanel } from './support/workspace.js';
 // T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
 // T-1611: a Portuguese player reads the sheet, cards and server messages in pt-BR.
+// T-1617: cards apply damage to the token selected on the map, and roll the save a spell asks for.
 
 const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
@@ -302,4 +303,140 @@ test('a Portuguese player reads the SRD sheet, cards and rest messages in pt-BR'
 
   expect(errors).toEqual([]);
   await context.close();
+});
+
+test('cards apply damage to the selected token and roll the save a spell asks for', async ({
+  browser,
+}) => {
+  const gm = await signIn(browser, ADMIN);
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5-actions.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
+  const player = await createPlayer(browser, gm, 'tamsin', 'Tamsin');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Card Actions',
+    systemId: 'srd5',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor: elowen } = await post<{ actor: { id: string } }>(
+    player,
+    `/tables/${table.id}/actors`,
+    { type: 'character', name: 'Elowen' },
+  );
+  setActorData(elowen.id, {
+    class: 'class.wizard',
+    level: 5,
+    int: 16,
+    hp: { value: 20, max: 27, temp: 0 },
+  });
+  const { actor: goblin } = await post<{ actor: { id: string } }>(
+    gm,
+    `/tables/${table.id}/actors`,
+    {
+      type: 'npc',
+      name: 'Goblin',
+    },
+  );
+  setActorData(goblin.id, {
+    hp: { value: 7, max: 7 },
+    actions: {
+      a1: {
+        name: 'Scimitar',
+        bonus: 4,
+        dice: 1,
+        die: 6,
+        damageBonus: 2,
+        damageType: 'slashing',
+        extraDamage: '',
+        sort: 'a0',
+      },
+    },
+  });
+  // A save spell the wizard holds.
+  const { item: library } = await post<{ item: { id: string } }>(gm, `/tables/${table.id}/items`, {
+    type: 'spell',
+    name: 'Burning Hands',
+  });
+  const { item: spell } = await post<{ item: { id: string } }>(
+    player,
+    `/actors/${elowen.id}/items`,
+    { itemId: library.id },
+  );
+  setItemData(spell.id, {
+    level: 1,
+    attack: 'spell.save',
+    save: 'ability.dex',
+    dice: 3,
+    die: 6,
+    effectType: 'fire',
+  });
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Ambush',
+    columns: 8,
+    rows: 6,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: elowen.id, column: 1, row: 1 });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: goblin.id, column: 4, row: 2 });
+
+  const open = async (who: typeof gm): Promise<Page> => {
+    const page = await who.context.newPage();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/tables/${table.id}`);
+    await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+    await expect(page.getByRole('application', { name: 'Ambush' })).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+    return page;
+  };
+  const gmPage = await open(gm);
+  const playerPage = await open(player);
+  const errors: string[] = [];
+  for (const page of [gmPage, playerPage])
+    page.on('pageerror', (error) => errors.push(error.message));
+  const tokens = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+  const cards = (page: Page) =>
+    page.getByRole('log', { name: 'Messages' }).locator('[data-plugin="srd5"]');
+
+  await test.step('the player takes a goblin’s hit on their selected token', async () => {
+    await post(gm, `/tables/${table.id}/rolls`, {
+      actorId: goblin.id,
+      recipe: { name: 'npcAttack', args: { id: 'a1' } },
+    });
+    const card = cards(playerPage).filter({ hasText: 'Scimitar' });
+    await expect(card.getByText('Select a token on the map to use these.')).toBeVisible();
+    await expect(card.getByRole('button', { name: 'Apply damage' })).toBeDisabled();
+    await tokens(playerPage)
+      .getByRole('button', { name: /^Elowen/ })
+      .click();
+    await expect(card.getByText('Acts on Elowen')).toBeVisible();
+    await card.getByRole('button', { name: 'Apply damage' }).click();
+    // 20 hit points less 1d6 + 2.
+    await expect(card.getByRole('status')).toHaveText(/^Done: Elowen is now at 1[2-7]\.$/);
+  });
+
+  await test.step('the GM rolls the goblin’s save from the spell card, then applies half', async () => {
+    await post(player, `/tables/${table.id}/rolls`, {
+      actorId: elowen.id,
+      recipe: { name: 'spellEffect', args: {}, itemId: spell.id },
+    });
+    const card = cards(gmPage).filter({ hasText: 'Burning Hands' });
+    await tokens(gmPage)
+      .getByRole('button', { name: /^Goblin/ })
+      .click();
+    await expect(card.getByText('Acts on Goblin')).toBeVisible();
+    await card.getByRole('button', { name: 'Roll saving throw' }).click();
+    const save = cards(gmPage).filter({ hasText: 'Saving throw' }).last();
+    await expect(save.getByText(/^(Success|Failure)$/)).toBeVisible();
+    // Intelligence 16 and a Proficiency Bonus of 3: DC 14.
+    await expect(save.locator('dd').nth(0)).toHaveText('Dexterity');
+    await expect(save.locator('dd').nth(1)).toHaveText('14');
+    await card.getByRole('button', { name: 'Apply half damage' }).click();
+    await expect(card.getByRole('status')).toHaveText(/^Done: Goblin is now at \d\.$/);
+  });
+
+  expect(errors).toEqual([]);
 });

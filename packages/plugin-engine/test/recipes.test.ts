@@ -82,6 +82,61 @@ describe('rollRecipe() (specs §8.7)', () => {
     });
   });
 
+  it('works out card actions when the roll is made (T-1617)', () => {
+    const cards = {
+      hit: {
+        title: 'Hit',
+        rows: [],
+        actions: [
+          { label: 'Take', field: 'hp.value', amount: '-@total / 2' },
+          { label: 'Heal', field: 'hp.value', amount: '@total', when: '@total > 100' },
+          { label: 'Save', roll: 'save', args: { dc: '10 + @derived.strMod', who: '@args.id' } },
+          { label: 'Broken', field: 'hp.value', amount: '@nope' },
+          { label: 'Not a number', field: 'hp.value', amount: "'many'" },
+          { label: 'Bad arg', roll: 'save', args: { dc: '@nope' } },
+          { label: 'Hidden', roll: 'save', when: '@nope' },
+        ],
+      },
+    };
+    const { card } = rollRecipe(
+      'hit',
+      { formula: '1d20', card: 'hit' },
+      {
+        scope,
+        rng: scripted(7),
+        cards,
+      },
+    );
+    expect(card?.actions).toEqual([
+      // -3.5, rounded as `round()` does.
+      { kind: 'apply', label: 'Take', field: 'hp.value', amount: -3 },
+      { kind: 'roll', label: 'Save', roll: 'save', args: { dc: 12, who: 'climb' } },
+      {
+        kind: 'apply',
+        label: 'Broken',
+        field: 'hp.value',
+        amount: 0,
+        error: expect.stringContaining('nope') as unknown,
+      },
+      {
+        kind: 'apply',
+        label: 'Not a number',
+        field: 'hp.value',
+        amount: 0,
+        error: 'Expected a number, got many',
+      },
+      {
+        kind: 'roll',
+        label: 'Bad arg',
+        roll: 'save',
+        args: {},
+        error: expect.stringContaining('nope') as unknown,
+      },
+    ]);
+    // A card without actions resolves none.
+    expect(rollSkill(12).card).not.toHaveProperty('actions');
+  });
+
   it('notes a card the plugin does not have', () => {
     const lost = PLUGIN.rolls.lostCard;
     if (!lost || !('formula' in lost)) throw new Error('fixture');

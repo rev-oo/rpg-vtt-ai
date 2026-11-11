@@ -28,6 +28,7 @@ export const PLUGIN_ISSUE_CODES = [
   'actor_sheet_node',
   'nested_items',
   'item_required',
+  'card_item_roll',
   'item_mismatch',
   'actor_mismatch',
   // Data schemas
@@ -143,6 +144,8 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   nested_items: () => 'An items node cannot sit inside a list or another items node',
   item_required: (x) =>
     `The roll "${p(x, 'roll')}" is made with an item: put its button in an items row or on an item sheet`,
+  card_item_roll: (x) =>
+    `The roll "${p(x, 'roll')}" is made with an item, so a card action cannot roll it`,
   item_mismatch: (x) =>
     `The roll "${p(x, 'roll')}" is not made with items of type "${p(x, 'type')}"; list it in the roll's item`,
   actor_mismatch: (x) =>

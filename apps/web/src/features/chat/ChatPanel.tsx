@@ -397,7 +397,7 @@ function MessageItem({
           </span>
         </form>
       ) : message.kind === 'card' ? (
-        <CardMessage message={message} />
+        <CardMessage message={message} canAct={subject !== null && canSendChat(subject.role)} />
       ) : message.kind === 'roll' && message.rolls.length > 0 ? (
         <>
           {/* A typed roll's text is its formula, which the roll shows; plugin code may add more. */}

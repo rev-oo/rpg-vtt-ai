@@ -1141,4 +1141,46 @@ export const CASES: FixtureCase[] = [
     issues: ['warning unknown_file notes/monsters.json $'],
     valid: true,
   },
+  {
+    name: 'card actions that apply to a counter and roll a recipe (T-1617)',
+    change: (f: PluginFixture): void => {
+      at(f, 'cards/roll.json').actions = [
+        { label: 'Take it', field: 'hp.value', amount: '-@total', when: '@total > 1' },
+        { label: 'Roll again', roll: 'skill', args: { id: "'a'" } },
+      ];
+    },
+    issues: [],
+    valid: true,
+  },
+  {
+    name: 'card actions on fields that are no counters, and rolls that do not exist',
+    change: (f: PluginFixture): void => {
+      at(f, 'cards/roll.json').actions = [
+        { label: 'Take it', field: 'str', amount: '-@total' },
+        { label: 'Lose it', field: 'luck', amount: '@nothing' },
+        { label: 'Roll it', roll: 'missing', args: { dc: '@nope' } },
+      ];
+    },
+    issues: [
+      'error field_mismatch cards/roll.json $.actions[0].field',
+      'error unknown_field cards/roll.json $.actions[1].field',
+      'error unknown_reference cards/roll.json $.actions[1].amount',
+      'error missing_target cards/roll.json $.actions[2].roll',
+      'error unknown_reference cards/roll.json $.actions[2].args.dc',
+    ],
+  },
+  {
+    name: 'a card action rolling a recipe made with an item',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      f['types/items/gem.json'] = {
+        label: 'Gem',
+        sheet: 'item',
+        schema: { type: 'object', properties: {} },
+      };
+      at(f, 'rolls.json').shine = { formula: '1d6', item: ['gem'] };
+      at(f, 'cards/roll.json').actions = [{ label: 'Shine', roll: 'shine' }];
+    },
+    issues: ['error card_item_roll cards/roll.json $.actions[0].roll'],
+  },
 ];

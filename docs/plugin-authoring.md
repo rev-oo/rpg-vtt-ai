@@ -1337,6 +1337,31 @@ Each row's `value` is a formula that can read the roll (`@total`, `@roll.*`), th
 
 A value that is a lang key is translated, like labels (T-1611). Build the key in the formula to show a stored value in the viewer's language: `{ "label": "card.damageType", "value": "'damage.' + @item.damageType" }` shows "Fire" from `"damage.fire": "Fire"`. Only a whole value is translated: in `@roll.resolved + ' ' + @item.damageType`, the type stays as stored, so give it a row of its own.
 
+#### Card actions
+
+A card can offer up to six buttons, `actions`, that act on the token the clicker has selected on the map (T-1617). An **apply** action steps a counter of that token's actor; a **roll** action rolls another recipe for it:
+
+```json
+"actions": [
+  { "label": "card.applyDamage", "field": "hp.value", "amount": "-@rolls.damage.total" },
+  { "label": "card.applyHalf", "field": "hp.value", "amount": "-floor(@rolls.damage.total / 2)" },
+  {
+    "label": "card.rollSave",
+    "roll": "save",
+    "args": { "ability": "@item.save", "dc": "@derived.spellDc" },
+    "when": "@item.attack == 'spell.save'"
+  }
+]
+```
+
+- `amount`, `args` and `when` are formulas worked out when the roll is made. They read what rows read: the roller's data, the roll, `@let`, `@options` and `@item`. The chat keeps their results, so a later change to the roller's sheet does not change a card already posted.
+- `when` leaves an action off the card unless it is true, as `visibleIf` does on a sheet.
+- `amount` is rounded as `round()` does. A negative amount takes away. The step stays within the counter's bounds, so damage stops at 0 and healing at `@hp.max`.
+- `field` must be a counter (`x-counter`) of some actor type. The validator checks this. An actor of a type without that counter refuses the action.
+- `roll` names a recipe in `rolls.json` that is not made with an item. It rolls for the selected token's actor with `args`, which the recipe reads as `@args.<name>`. Shift and Ctrl pick the choices that name them, as on a sheet; other options take their defaults.
+- Only members who may edit the selected token's actor can use its actions. The GM selects the goblin and applies the damage, and a player selects their own character to take it. A token with no actor takes none.
+- A custom card component gets the buttons under it too.
+
 ### Combat
 
 `combat.json` lets the GM roll initiative in the combat tracker:

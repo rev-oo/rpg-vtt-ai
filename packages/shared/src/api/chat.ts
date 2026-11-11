@@ -100,6 +100,34 @@ export const cardRowSchema = z.object({
   error: z.string().optional(),
 });
 
+/** A scalar a recipe reads as `@args.<name>`. */
+const cardActionArg = z.union([z.string(), z.number(), z.boolean()]);
+
+/**
+ * A card action worked out when the roll was made (T-1617): it acts on the token the clicker
+ * has selected. `error` says why it cannot be used.
+ */
+export const cardActionSchema = z.discriminatedUnion('kind', [
+  z.object({
+    kind: z.literal('apply'),
+    label: z.string(),
+    /** A counter of the actor, such as `hp.value`. */
+    field: z.string(),
+    /** How far to step it. */
+    amount: z.number().int(),
+    error: z.string().optional(),
+  }),
+  z.object({
+    kind: z.literal('roll'),
+    label: z.string(),
+    /** A recipe of the card's system, rolled for the selected token's actor. */
+    roll: z.string(),
+    args: z.record(z.string(), cardActionArg),
+    error: z.string().optional(),
+  }),
+]);
+export type CardAction = z.infer<typeof cardActionSchema>;
+
 /**
  * The `card` of a recipe roll message: what the plugin engine resolved when it rolled.
  * Texts are the plugin's lang keys; `text` of the message is the plain-text fallback
@@ -119,10 +147,25 @@ export const recipeCardSchema = z.object({
       title: z.string(),
       rows: z.array(cardRowSchema),
       outcome: z.boolean(),
+      /** Absent on cards that declare none, and on cards rolled before T-1617. */
+      actions: z.array(cardActionSchema).optional(),
     })
     .nullable(),
 });
 export type RecipeCard = z.infer<typeof recipeCardSchema>;
+
+/**
+ * `POST /messages/:id/apply` (T-1617): applies the card's apply action at `action` to the
+ * actor of the token the caller has selected, which they must be able to edit.
+ */
+export const cardApplyBody = z.object({
+  action: z.number().int().min(0).max(31),
+  actorId: z.uuid(),
+});
+export type CardApplyInput = z.input<typeof cardApplyBody>;
+
+/** The counter's value after the step. */
+export const cardApplyResponseSchema = z.object({ value: z.number() });
 
 /** `GET /tables/:id/messages?before=…&limit=…`: newest first. */
 export const chatHistoryQuery = z.object({

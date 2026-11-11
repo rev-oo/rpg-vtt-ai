@@ -785,6 +785,17 @@ export function validatePlugin(
     }
   }
 
+  /** A card's apply action steps a counter that some actor type has (T-1617). */
+  const checkActionField = (dotPath: string, at: JsonPath, file: string) => {
+    const found = Object.values(actorTypes)
+      .map((type) => fieldAt(type.schema, dotPath, false))
+      .filter((field) => field !== undefined);
+    if (found.length === 0)
+      error('unknown_field', file, at, { field: dotPath, scope: 'any actor type' });
+    else if (!found.some((field) => field['x-counter'] === true))
+      error('field_mismatch', file, at, { field: dotPath, expected: 'a counter (x-counter)' });
+  };
+
   // 5. Cards, dice, settings and combat.
   for (const [name, card] of Object.entries(cards)) {
     const file = `cards/${name}.json`;
@@ -794,6 +805,25 @@ export function validatePlugin(
       useText(row.label, file, ['rows', index, 'label']);
       for (const scope of scopes)
         formula(row.value, { ...scope, roll: true }, false, file, ['rows', index, 'value']);
+    });
+    card.actions?.forEach((action, index) => {
+      const at = ['actions', index];
+      useText(action.label, file, [...at, 'label']);
+      const read = (source: string, key: JsonPath) => {
+        for (const scope of scopes) formula(source, { ...scope, roll: true }, false, file, key);
+      };
+      if (action.when !== undefined) read(action.when, [...at, 'when']);
+      if ('field' in action) {
+        read(action.amount, [...at, 'amount']);
+        checkActionField(action.field, [...at, 'field'], file);
+        return;
+      }
+      for (const [arg, source] of Object.entries(action.args ?? {}))
+        read(source, [...at, 'args', arg]);
+      const rolled = Object.hasOwn(rolls, action.roll) ? rolls[action.roll] : undefined;
+      if (!rolled)
+        error('missing_target', file, [...at, 'roll'], { target: 'roll', name: action.roll });
+      else if (rolled.item) error('card_item_roll', file, [...at, 'roll'], { roll: action.roll });
     });
   }
   for (const [name, die] of Object.entries(dice)) useText(die.label, 'dice.json', [name, 'label']);
