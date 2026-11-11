@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 88%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 78%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1615` (targets and token statuses)
+- **Next task:** `T-1615` (targets)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -72,6 +72,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-10 | T-1613 done (ADR-080): `@vtt/sdk/testing` gives handlers a fake `ctx` (`fakeHandler`: scripted or real rolls, bounded counters, recorded posts and steps) and loads a system's files for its rules (`loadTestSystem`); `@vtt/sdk/client/testing` renders overlays and panels in a test frame (`createTestFrame`) that sends events and records actions. Lint allows the kits only in plugin tests. Server tests can load a reference plugin's code packed by the CLI (`packedReferencePlugin`), which becomes a server dev dependency. dnd5e-srd and dice-3d test with the kits; rolling real formulas found that the death save had failed since T-1609 (`@derived.saveEdge`), so it now rolls `1d20 - @derived.d20Penalty`. |
 | 2026-11-10 | T-1614 done: a manifest `attribution` (text and an optional `http(s)` link) shows on the Plugins page and in each compendium entry's preview; the admin plugin view and compendium packs return it. Pack entries accept collections as rows keyed by id (the stored form), keeping row ids and sort keys. `dnd5e-srd` is renamed `srd5` (folder, id, package, tests, docs; the study answers Q2), and its SRD credit moves from the description to its attribution.                                                                                                                                                                                                                                                           |
 | 2026-11-10 | T-1611 done (ADR-081): `enumLabels` gives type fields and settings a lang key per value, so stored values stay plain; card rows translate values that are lang keys; server code posts by lang key with parameters (`ctx.chat.post({ key, params })`), each viewer reading it in their language while the message stores the English (`chat_messages.translation`). String settings may be colours (`"format": "colour"`, a colour picker), and `vtt-plugin types` writes typed settings for plugin code. srd5 drops `saveText()`, posts its rest and death save messages by key and ships pt-BR; dice-3d labels its colours and reads its settings typed.                                                                    |
+| 2026-11-11 | T-1615 is split at the user's request into T-1615 (targets), T-1617 (card actions on targets, such as applying damage) and T-1618 (token statuses), each delivered on its own.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 ---
 
@@ -816,7 +817,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
 
 ### M16 — Modules, a 5e study and the interface
 
-Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1615), and a review of the interface before the 1.0 freeze.
+Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1615, T-1617 and T-1618), and a review of the interface before the 1.0 freeze.
 
 - [x] **T-1601 · Module plugins**
   - **Deps:** none
@@ -888,10 +889,20 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P12, and its Q2. A manifest `attribution` (text and a link) shows on the Plugins page and in the Compendium beside each entry from the plugin's packs. Packs accept collections in the stored form (maps by id) as well as lists. Rename `dnd5e-srd` to `srd5` (folder, id, tests and docs), and give it its SRD attribution.
   - **Done when:** tests cover the attribution and both pack forms; e2e sees the attribution in the Compendium; nothing named `dnd5e-srd` is left.
 
-- [ ] **T-1615 · Targets and token statuses**
+- [ ] **T-1615 · Targets**
   - **Deps:** T-1608
-  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14 and P15. A roll may carry the viewer's selected tokens as targets; recipes read `@target` (such as its AC) and cards offer "apply damage" to the targets, for those who may edit them. An actor type declares boolean fields as statuses with an icon; tokens and the combat tracker show those that are on. `srd5` compares attacks with the target's AC and shows its conditions on tokens.
-  - **Done when:** tests cover targets, their rights and statuses; e2e attacks a selected token, applies damage and sees a condition on the token.
+  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14. Members target tokens on the map, apart from selecting them. A recipe that lists the actor types it targets carries the roller's targets with the roll, and reads the first as `@target` (such as its AC) and their count as `@targets`, never their secret fields; the server takes only tokens of actors the roller sees. `srd5` compares attacks with the target's AC.
+  - **Done when:** tests cover targets, the checks on them and their secret fields; e2e targets a token and attacks it, the card showing Hit or Miss.
+
+- [ ] **T-1617 · Card actions on targets**
+  - **Deps:** T-1615
+  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14. A card of a recipe that targets offers actions, such as "Apply damage", that step a counter of each target by an amount worked out when the roll is made, once per target, for those who may edit it. `srd5` applies attack damage or half of it, and spell damage or healing.
+  - **Done when:** tests cover the actions, their rights and that each is done once; e2e applies an attack's damage to its target.
+
+- [ ] **T-1618 · Token statuses**
+  - **Deps:** none
+  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P15. An actor type declares boolean fields as statuses with an icon from the plugin's files; tokens, the token list and the combat tracker show those that are on, a secret field's only to GMs and assistants, and follow the sheet as it changes. `srd5` shows its conditions on tokens.
+  - **Done when:** tests cover the declaration, who sees each status and their updates; e2e sets a condition on a sheet and sees it on the token.
 
 - [ ] **T-1606 · Interface review**
   - **Deps:** none
