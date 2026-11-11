@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 89%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 94%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1615` (targets)
+- **Next task:** `T-1606` (interface review)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -75,6 +75,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-11 | T-1615 is split at the user's request into T-1617 (card actions, such as applying damage to the selected token), T-1618 (token statuses) and T-1615 (targets, which then carry the card's actions to each target), done in that order.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 2026-11-11 | T-1617 done (ADR-082): cards declare `actions` (at most 6), worked out when the roll is made: apply actions step a counter of the actor of the token the clicker has selected on the map, through `POST /messages/:id/apply`, if they may edit it; roll actions roll another recipe with arguments from the card, for the selected token or, with `"for": "roller"`, for the actor that rolled the card, with its item. srd5's attack cards offer **Roll damage** (new `weaponDamage`, `npcDamage` and `spellDamage` recipes, doubled on a critical hit), damage cards apply it or half of it, its spell card applies damage or healing, and spells that ask for a save offer **Roll saving throw** through a new `save` recipe that reads the ability and DC. |
 | 2026-11-11 | T-1618 done (ADR-083): actor types list true/false fields as `statuses`, each with a label and an icon of the plugin (SVG allowed). Token views and combatants carry the statuses that are on, a secret field's only to GMs and assistants; the map draws their icons on the token, and the token list and combat tracker show them named. When a stored sheet changes its statuses, those who see its tokens or combatants get `token.updated` or `combat.updated` (a secret status's change only GMs and assistants). srd5 shows its 14 conditions, with icons of its own.                                                                                                                                                                                   |
+| 2026-11-11 | T-1615 (targets) moves from M16 to LATER at the user's request, to be thought through first. M16 now has T-1606 left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 
 ---
 
@@ -819,7 +820,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
 
 ### M16 — Modules, a 5e study and the interface
 
-Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1615, T-1617 and T-1618), and a review of the interface before the 1.0 freeze.
+Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1614, T-1617 and T-1618), and a review of the interface before the 1.0 freeze.
 
 - [x] **T-1601 · Module plugins**
   - **Deps:** none
@@ -902,11 +903,6 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P15. An actor type declares boolean fields as statuses with an icon from the plugin's files; tokens, the token list and the combat tracker show those that are on, a secret field's only to GMs and assistants, and follow the sheet as it changes. `srd5` shows its conditions on tokens.
   - **Done when:** tests cover the declaration, who sees each status and their updates; e2e sets a condition on a sheet and sees it on the token.
 
-- [ ] **T-1615 · Targets**
-  - **Deps:** T-1617
-  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14. Members target tokens on the map, apart from selecting them. A recipe that lists the actor types it targets carries the roller's targets with the roll, and reads the first as `@target` (such as its AC) and their count as `@targets`, never their secret fields; the server takes only tokens of actors the roller sees. The card keeps its targets and offers its actions by each of them, once per target, to those who may edit it. `srd5` compares attacks with the target's AC.
-  - **Done when:** tests cover targets, the checks on them, their secret fields and actions done once per target; e2e targets a token and attacks it, the card showing Hit or Miss, and applies the damage to the target from the card.
-
 - [ ] **T-1606 · Interface review**
   - **Deps:** none
   - **Do:** Review every screen on desktop and phone (layout, consistency, empty states, feedback, keyboard and screen-reader use) and write it up with screenshots in `docs/studies/interface-review.md`. The changes the user picks join M16 as tasks.
@@ -958,6 +954,7 @@ Declarative systems built in the browser, for people who do not write plugins by
 - A book-style journal view: entries laid out as pages, with text flowing onto the next page
 - Workers in plugin frames (`worker-src blob:` in the frame page's policy, after a security review), so modules can run heavy work off the main thread ([dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P2)
 - Overlay regions: an overlay draws over a named part such as `map` and follows it as panels move ([dice-3d study](docs/studies/dice-3d.md#proposed-tasks), P4)
+- Targets (T-1615, to think through): members target tokens apart from selecting them; a roll carries the roller's targets and reads the first as `@target` and their count as `@targets`, never their secret fields; the card offers its actions once per target; `srd5` compares attacks with the target's AC ([5e study](docs/studies/srd5.md#proposed-tasks), P14)
 
 ---
 
