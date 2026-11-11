@@ -105,7 +105,8 @@ const cardActionArg = z.union([z.string(), z.number(), z.boolean()]);
 
 /**
  * A card action worked out when the roll was made (T-1617): it acts on the token the clicker
- * has selected. `error` says why it cannot be used.
+ * has selected, or a roll action with `for: 'roller'` rolls for the message's actor, with the
+ * card's item. `error` says why it cannot be used.
  */
 export const cardActionSchema = z.discriminatedUnion('kind', [
   z.object({
@@ -123,6 +124,8 @@ export const cardActionSchema = z.discriminatedUnion('kind', [
     /** A recipe of the card's system, rolled for the selected token's actor. */
     roll: z.string(),
     args: z.record(z.string(), cardActionArg),
+    /** Rolled for the actor that rolled the card instead, with its item if the recipe takes one. */
+    for: z.literal('roller').optional(),
     error: z.string().optional(),
   }),
 ]);
@@ -137,6 +140,8 @@ export const recipeCardSchema = z.object({
   /** The system plugin that rolled it. */
   system: z.string(),
   recipe: z.string(),
+  /** The item the recipe was made with (ADR-063), which `roller` card actions roll with. */
+  itemId: z.string().optional(),
   label: z.string().nullable(),
   outcome: z
     .object({ index: z.number().int(), label: z.string(), class: z.string().optional() })

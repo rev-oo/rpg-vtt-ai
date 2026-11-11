@@ -591,7 +591,7 @@ How a recipe roll shows in chat.
 | `title` | [text](#text) | yes | A lang key or literal text. |
 | `rows` | list of [Card row](#card-card-row) | yes |  |
 | `outcome` | true or false |  | Shows the recipe's outcome. |
-| `actions` | list of one of [Apply action](#card-apply-action), [Roll action](#card-roll-action) (at most 6 items) |  | Buttons under the card. Each acts on the token the clicker has selected on the map: an apply action steps one of its counters, such as taking damage, and a roll action rolls a recipe for it, such as a saving throw. |
+| `actions` | list of one of [Apply action](#card-apply-action), [Roll action](#card-roll-action) (at most 6 items) |  | Buttons under the card. An apply action steps a counter of the token the clicker has selected on the map, such as taking damage; a roll action rolls a recipe for that token, such as a saving throw, or for the actor that rolled the card, such as the damage of a hit. |
 
 <a id="card-card-row"></a>
 
@@ -620,12 +620,13 @@ Steps a counter of the actor of the token the clicker has selected, within its b
 
 ### Roll action
 
-Rolls another recipe for the selected token, such as the saving throw a spell asks for.
+Rolls another recipe for the selected token, such as the saving throw a spell asks for, or for the actor that rolled the card, such as the damage of an attack.
 
 | Key | Value | Required | About |
 | --- | --- | --- | --- |
 | `label` | [text](#text) | yes | The button's text; a lang key or literal text. |
-| `roll` | [name](#name) | yes | A recipe in `rolls.json`, without an item, rolled for the actor of the token the clicker has selected, if they may roll for it. |
+| `roll` | [name](#name) | yes | A recipe in `rolls.json`, rolled for the actor `for` names, if the clicker may roll for it. Only a `roller` action may name a recipe made with an item: it rolls with the item the card was rolled with. |
+| `for` | one of `"selected"`, `"roller"` |  | Whom it rolls for: `selected` (the default), the actor of the token the clicker has selected, such as a saving throw; `roller`, the actor that made this roll, such as the damage of a hit. |
 | `args` | map from [identifier](#identifier) to [formula](#formula) |  | Values the recipe reads as `@args.<name>`, worked out when this card is rolled, such as `{ "dc": "@derived.spellDc" }`. |
 | `when` | [formula](#formula) |  | A true/false formula worked out when the roll is made, reading what rows read; the card offers the action only when it is true. |
 

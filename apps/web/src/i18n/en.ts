@@ -334,7 +334,7 @@ export const en = {
   'pluginIssue.item_required':
     'The roll “{roll}” is made with an item: put its button in an items row or on an item sheet.',
   'pluginIssue.card_item_roll':
-    'The roll “{roll}” is made with an item, so a card action cannot roll it.',
+    'The roll “{roll}” is made with an item: only a card action “for”: “roller” on a card rolled with an item can roll it.',
   'pluginIssue.item_mismatch':
     'The roll “{roll}” is not made with items of type “{type}”; list it in the roll’s item.',
   'pluginIssue.actor_mismatch':

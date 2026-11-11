@@ -95,6 +95,13 @@ describe('rollRecipe() (specs §8.7)', () => {
           { label: 'Not a number', field: 'hp.value', amount: "'many'" },
           { label: 'Bad arg', roll: 'save', args: { dc: '@nope' } },
           { label: 'Hidden', roll: 'save', when: '@nope' },
+          {
+            label: 'Damage',
+            roll: 'damage',
+            for: 'roller' as const,
+            args: { crit: '@total == 20' },
+          },
+          { label: 'Mine', roll: 'save', for: 'selected' as const },
         ],
       },
     };
@@ -132,6 +139,9 @@ describe('rollRecipe() (specs §8.7)', () => {
         args: {},
         error: expect.stringContaining('nope') as unknown,
       },
+      // Only a roller action says whom it rolls for; the selected token is the default.
+      { kind: 'roll', label: 'Damage', roll: 'damage', args: { crit: false }, for: 'roller' },
+      { kind: 'roll', label: 'Mine', roll: 'save', args: {} },
     ]);
     // A card without actions resolves none.
     expect(rollSkill(12).card).not.toHaveProperty('actions');

@@ -659,6 +659,8 @@ export function validatePlugin(
 
   // 4. Roll recipes, checked against the types whose sheets roll them.
   const cardUsers = new Map<string, FormulaScope[]>();
+  /** The item types each recipe that shows a card is made with; `[]` when made without one. */
+  const cardItems = new Map<string, (readonly string[])[]>();
   for (const [name, recipe] of Object.entries(rolls)) {
     const file = 'rolls.json';
     useText(recipe.label, file, [name, 'label']);
@@ -782,6 +784,7 @@ export function validatePlugin(
       if (!names.card?.has(recipe.card))
         error('missing_target', file, [name, 'card'], { target: 'card', name: recipe.card });
       cardUsers.set(recipe.card, [...(cardUsers.get(recipe.card) ?? []), ...scopes.map(rolled)]);
+      cardItems.set(recipe.card, [...(cardItems.get(recipe.card) ?? []), recipe.item ?? []]);
     }
   }
 
@@ -823,7 +826,18 @@ export function validatePlugin(
       const rolled = Object.hasOwn(rolls, action.roll) ? rolls[action.roll] : undefined;
       if (!rolled)
         error('missing_target', file, [...at, 'roll'], { target: 'roll', name: action.roll });
-      else if (rolled.item) error('card_item_roll', file, [...at, 'roll'], { roll: action.roll });
+      else if (rolled.item) {
+        // A roller action rolls with the card's item, so every recipe showing the card has one
+        // of a type the rolled recipe takes.
+        const taken = rolled.item;
+        const users = cardItems.get(name) ?? [];
+        if (action.for !== 'roller' || users.some((types) => types.length === 0))
+          error('card_item_roll', file, [...at, 'roll'], { roll: action.roll });
+        else
+          for (const type of new Set(users.flat()))
+            if (!taken.includes(type))
+              error('item_mismatch', file, [...at, 'roll'], { roll: action.roll, type });
+      }
     });
   }
   for (const [name, die] of Object.entries(dice)) useText(die.label, 'dice.json', [name, 'label']);

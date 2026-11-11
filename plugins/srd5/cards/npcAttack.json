@@ -14,32 +14,19 @@
       "label": "card.total",
       "value": "@rolls.attack.total",
       "class": "total"
-    },
-    {
-      "label": "card.damage",
-      "value": "@rolls.damage.resolved"
-    },
-    {
-      "label": "card.damageTotal",
-      "value": "@rolls.damage.total",
-      "class": "total"
-    },
-    {
-      "label": "card.damageType",
-      "value": "'damage.' + @actions[@args.id].damageType"
     }
   ],
   "outcome": true,
   "actions": [
     {
-      "label": "card.applyDamage",
-      "field": "hp.value",
-      "amount": "-@rolls.damage.total"
-    },
-    {
-      "label": "card.applyHalf",
-      "field": "hp.value",
-      "amount": "-floor(@rolls.damage.total / 2)"
+      "label": "card.rollDamage",
+      "roll": "npcDamage",
+      "for": "roller",
+      "args": {
+        "crit": "@rolls.attack.natural == 20",
+        "id": "@args.id"
+      },
+      "when": "@rolls.attack.natural != 1"
     }
   ]
 }

@@ -46,25 +46,35 @@ function CoreCard({
 }
 
 /**
- * The card's actions (T-1617), acting on the token the viewer has selected on the map: an
- * apply action steps one of its actor's counters, a roll action rolls a recipe for that actor.
- * The server checks that the viewer may do either.
+ * The card's actions (T-1617). An apply action steps a counter of the actor of the token the
+ * viewer has selected on the map, and a roll action rolls a recipe for that actor or, `for`
+ * the roller, for the card's actor with the card's item; only those who may roll for that
+ * actor see it. The server checks that the viewer may do either.
  */
 function CardActions({
   message,
   actions,
+  mayRoll,
   translate,
 }: {
   message: ChatMessage;
   actions: readonly CardAction[];
+  /** Whether the viewer may roll for the card's actor. */
+  mayRoll: boolean;
   translate: (text: string) => string;
-}): ReactElement {
+}): ReactElement | null {
   const host = useSystem();
   const selected = useSelectedToken(message.tableId);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ text: string; failed: boolean } | null>(null);
   const actorId = selected?.actorId ?? null;
   const rolls = host.status === 'ready' ? host.system.definition.rolls : {};
+  const roller = message.speaker.actorId;
+  const forRoller = (action: CardAction) => action.kind === 'roll' && action.for === 'roller';
+  const shown = actions
+    .map((action, index) => ({ action, index }))
+    .filter(({ action }) => !forRoller(action) || (mayRoll && roller !== null));
+  if (shown.length === 0) return null;
 
   const run = (work: Promise<string>) => {
     setBusy(true);
@@ -102,18 +112,44 @@ function CardActions({
 
   return (
     <div data-vtt-part="card-actions" className="flex flex-col gap-1">
-      <p className="text-xs text-muted">
-        {selected ? t('chat.actionsOn', { name: selected.name }) : t('chat.actionsSelect')}
-      </p>
+      {shown.some(({ action }) => !forRoller(action)) && (
+        <p className="text-xs text-muted">
+          {selected ? t('chat.actionsOn', { name: selected.name }) : t('chat.actionsSelect')}
+        </p>
+      )}
       <div className="flex flex-wrap gap-1">
-        {actions.map((action, index) => (
+        {shown.map(({ action, index }) => (
           <Button
             key={index}
             variant="ghost"
             className="vtt-card-action"
-            disabled={busy || actorId === null || action.error !== undefined}
+            disabled={
+              busy || (!forRoller(action) && actorId === null) || action.error !== undefined
+            }
             title={action.error}
             onClick={(event) => {
+              const key = event.shiftKey ? 'shift' : event.ctrlKey || event.metaKey ? 'ctrl' : null;
+              if (action.kind === 'roll' && action.for === 'roller') {
+                if (roller === null) return;
+                const options = picked(action.roll, key);
+                // The card's item goes along when the recipe is made with one (ADR-063).
+                const recipe = Object.hasOwn(rolls, action.roll) ? rolls[action.roll] : undefined;
+                const itemId = recipe?.item ? message.card?.itemId : undefined;
+                run(
+                  api
+                    .roll(message.tableId, {
+                      recipe: {
+                        name: action.roll,
+                        args: action.args,
+                        ...(itemId !== undefined && { itemId }),
+                        ...(options && { options }),
+                      },
+                      actorId: roller,
+                    })
+                    .then(() => t('chat.actionRolled', { name: message.speaker.name })),
+                );
+                return;
+              }
               if (actorId === null || !selected) return;
               if (action.kind === 'apply') {
                 run(
@@ -125,7 +161,6 @@ function CardActions({
                 );
                 return;
               }
-              const key = event.shiftKey ? 'shift' : event.ctrlKey || event.metaKey ? 'ctrl' : null;
               const options = picked(action.roll, key);
               run(
                 api
@@ -158,10 +193,13 @@ function CardActions({
 export function CardMessage({
   message,
   canAct,
+  mayRoll = false,
 }: {
   message: ChatMessage;
   /** Whether the viewer may use the card's actions; spectators may not. */
   canAct: boolean;
+  /** Whether the viewer may roll for the card's actor, as its `roller` actions do. */
+  mayRoll?: boolean;
 }): ReactElement {
   const host = useSystem();
   const recipe = message.card;
@@ -200,7 +238,12 @@ export function CardMessage({
         <CoreCard card={card} outcome={recipe.outcome} translate={translate} />
       )}
       {canAct && card.actions && card.actions.length > 0 && (
-        <CardActions message={message} actions={card.actions} translate={translate} />
+        <CardActions
+          message={message}
+          actions={card.actions}
+          mayRoll={mayRoll}
+          translate={translate}
+        />
       )}
       {message.rolls.map((roll, index) => (
         <RollView key={index} roll={roll} />

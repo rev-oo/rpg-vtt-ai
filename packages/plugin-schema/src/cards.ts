@@ -32,8 +32,14 @@ const rollAction = z
   .strictObject({
     label: text.describe("The button's text; a lang key or literal text."),
     roll: name.describe(
-      'A recipe in `rolls.json`, without an item, rolled for the actor of the token the clicker has selected, if they may roll for it.',
+      'A recipe in `rolls.json`, rolled for the actor `for` names, if the clicker may roll for it. Only a `roller` action may name a recipe made with an item: it rolls with the item the card was rolled with.',
     ),
+    for: z
+      .enum(['selected', 'roller'])
+      .optional()
+      .describe(
+        'Whom it rolls for: `selected` (the default), the actor of the token the clicker has selected, such as a saving throw; `roller`, the actor that made this roll, such as the damage of a hit.',
+      ),
     args: z
       .record(identifier, formula)
       .optional()
@@ -45,7 +51,7 @@ const rollAction = z
   .meta({
     title: 'Roll action',
     description:
-      'Rolls another recipe for the selected token, such as the saving throw a spell asks for.',
+      'Rolls another recipe for the selected token, such as the saving throw a spell asks for, or for the actor that rolled the card, such as the damage of an attack.',
   });
 
 export const cardActionSchema = z.union([applyAction, rollAction]);
@@ -75,7 +81,7 @@ export const cardSchema = z
       .max(MAX_CARD_ACTIONS)
       .optional()
       .describe(
-        'Buttons under the card. Each acts on the token the clicker has selected on the map: an apply action steps one of its counters, such as taking damage, and a roll action rolls a recipe for it, such as a saving throw.',
+        'Buttons under the card. An apply action steps a counter of the token the clicker has selected on the map, such as taking damage; a roll action rolls a recipe for that token, such as a saving throw, or for the actor that rolled the card, such as the damage of a hit.',
       ),
   })
   .describe('How a recipe roll shows in chat.');

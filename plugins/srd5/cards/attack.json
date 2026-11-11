@@ -14,32 +14,18 @@
       "label": "card.total",
       "value": "@rolls.attack.total",
       "class": "total"
-    },
-    {
-      "label": "card.damage",
-      "value": "@rolls.damage.resolved"
-    },
-    {
-      "label": "card.damageTotal",
-      "value": "@rolls.damage.total",
-      "class": "total"
-    },
-    {
-      "label": "card.damageType",
-      "value": "'damage.' + @item.damageType"
     }
   ],
   "outcome": true,
   "actions": [
     {
-      "label": "card.applyDamage",
-      "field": "hp.value",
-      "amount": "-@rolls.damage.total"
-    },
-    {
-      "label": "card.applyHalf",
-      "field": "hp.value",
-      "amount": "-floor(@rolls.damage.total / 2)"
+      "label": "card.rollDamage",
+      "roll": "weaponDamage",
+      "for": "roller",
+      "args": {
+        "crit": "@rolls.attack.natural >= @critRange"
+      },
+      "when": "@rolls.attack.natural != 1"
     }
   ]
 }

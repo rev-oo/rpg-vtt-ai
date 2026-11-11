@@ -338,7 +338,7 @@ export const ptBR: Messages = {
   'pluginIssue.item_required':
     'A rolagem “{roll}” é feita com um item: coloque o botão numa linha de itens ou na ficha de um item.',
   'pluginIssue.card_item_roll':
-    'A rolagem “{roll}” é feita com um item, então uma ação de cartão não pode rolá-la.',
+    'A rolagem “{roll}” é feita com um item: só uma ação de cartão “for”: “roller” num cartão rolado com um item pode rolá-la.',
   'pluginIssue.item_mismatch':
     'A rolagem “{roll}” não é feita com itens do tipo “{type}”; liste-o em item da rolagem.',
   'pluginIssue.nested_items':

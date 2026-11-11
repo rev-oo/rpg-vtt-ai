@@ -1339,12 +1339,12 @@ A value that is a lang key is translated, like labels (T-1611). Build the key in
 
 #### Card actions
 
-A card can offer up to six buttons, `actions`, that act on the token the clicker has selected on the map (T-1617). An **apply** action steps a counter of that token's actor; a **roll** action rolls another recipe for it:
+A card can offer up to six buttons, `actions`, that act on the token the clicker has selected on the map (T-1617). An **apply** action steps a counter of that token's actor; a **roll** action rolls another recipe for it, or, with `"for": "roller"`, for the actor that rolled the card:
 
 ```json
 "actions": [
-  { "label": "card.applyDamage", "field": "hp.value", "amount": "-@rolls.damage.total" },
-  { "label": "card.applyHalf", "field": "hp.value", "amount": "-floor(@rolls.damage.total / 2)" },
+  { "label": "card.applyDamage", "field": "hp.value", "amount": "-@total" },
+  { "label": "card.applyHalf", "field": "hp.value", "amount": "-floor(@total / 2)" },
   {
     "label": "card.rollSave",
     "roll": "save",
@@ -1358,7 +1358,19 @@ A card can offer up to six buttons, `actions`, that act on the token the clicker
 - `when` leaves an action off the card unless it is true, as `visibleIf` does on a sheet.
 - `amount` is rounded as `round()` does. A negative amount takes away. The step stays within the counter's bounds, so damage stops at 0 and healing at `@hp.max`.
 - `field` must be a counter (`x-counter`) of some actor type. The validator checks this. An actor of a type without that counter refuses the action.
-- `roll` names a recipe in `rolls.json` that is not made with an item. It rolls for the selected token's actor with `args`, which the recipe reads as `@args.<name>`. Shift and Ctrl pick the choices that name them, as on a sheet; other options take their defaults.
+- `roll` names a recipe in `rolls.json`. It rolls for the selected token's actor with `args`, which the recipe reads as `@args.<name>`. Shift and Ctrl pick the choices that name them, as on a sheet; other options take their defaults.
+- `"for": "roller"` rolls for the actor that rolled the card instead, such as an attack's damage, and only those who may roll for that actor see the button. Such an action may name a recipe made with an item: it rolls with the card's item, so every recipe that shows the card must be made with an item of a type that recipe takes. srd5's attack card rolls the weapon's damage this way, passing the critical hit on:
+
+  ```json
+  {
+    "label": "card.rollDamage",
+    "roll": "weaponDamage",
+    "for": "roller",
+    "args": { "crit": "@rolls.attack.natural >= @critRange" },
+    "when": "@rolls.attack.natural != 1"
+  }
+  ```
+
 - Only members who may edit the selected token's actor can use its actions. The GM selects the goblin and applies the damage, and a player selects their own character to take it. A token with no actor takes none.
 - A custom card component gets the buttons under it too.
 

@@ -1183,4 +1183,31 @@ export const CASES: FixtureCase[] = [
     },
     issues: ['error card_item_roll cards/roll.json $.actions[0].roll'],
   },
+  {
+    name: 'card actions rolling for the roller, with the item the card was rolled with',
+    change: (f: PluginFixture): void => {
+      f['sheets/item.json'] = { layout: { type: 'column', children: [] } };
+      const type = { sheet: 'item', schema: { type: 'object', properties: {} } };
+      f['types/items/gem.json'] = { label: 'Gem', ...type };
+      f['types/items/stone.json'] = { label: 'Stone', ...type };
+      const rolls = at(f, 'rolls.json');
+      rolls.cut = { formula: '1d6', item: ['gem', 'stone'], card: 'cut' };
+      rolls.polish = { formula: '1d4', item: ['gem', 'stone'] };
+      rolls.shine = { formula: '1d4', item: ['gem'] };
+      f['cards/cut.json'] = {
+        title: 'Cut',
+        rows: [{ label: 'Total', value: '@total' }],
+        actions: [
+          { label: 'Polish', roll: 'polish', for: 'roller' },
+          { label: 'Again', roll: 'skill', for: 'roller', args: { id: "'a'" } },
+          { label: 'Shine', roll: 'shine', for: 'roller' },
+        ],
+      };
+      at(f, 'cards/roll.json').actions = [{ label: 'Shine', roll: 'shine', for: 'roller' }];
+    },
+    issues: [
+      'error card_item_roll cards/roll.json $.actions[0].roll',
+      'error item_mismatch cards/cut.json $.actions[2].roll',
+    ],
+  },
 ];

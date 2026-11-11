@@ -16,12 +16,13 @@ export interface ResolvedCardRow {
 export type CardActionArg = string | number | boolean;
 
 /**
- * A card action worked out when the roll was made (T-1617): the counter step to apply, or the
- * recipe to roll with its arguments, on the token the clicker has selected.
+ * A card action worked out when the roll was made (T-1617): the counter step to apply to the
+ * token the clicker has selected, or the recipe to roll with its arguments, for that token or,
+ * with `for: 'roller'`, for the actor that rolled the card.
  */
 export type ResolvedCardAction = { label: string; error?: string } & (
   | { kind: 'apply'; field: string; amount: number }
-  | { kind: 'roll'; roll: string; args: Record<string, CardActionArg> }
+  | { kind: 'roll'; roll: string; args: Record<string, CardActionArg>; for?: 'roller' }
 );
 
 /** A card with its rows computed, ready for the core renderer or a custom component. */
@@ -72,22 +73,25 @@ function resolveAction(action: CardAction, run: Evaluate): ResolvedCardAction | 
       };
     return { kind: 'apply', label, field: action.field, amount: Math.round(amount.value) };
   }
+  const base = {
+    kind: 'roll' as const,
+    label,
+    roll: action.roll,
+    ...(action.for === 'roller' && { for: action.for }),
+  };
   const args: Record<string, CardActionArg> = {};
   for (const [name, source] of Object.entries(action.args ?? {})) {
     const result = attempt(() => run(source));
-    if ('error' in result)
-      return { kind: 'roll', label, roll: action.roll, args: {}, error: result.error };
+    if ('error' in result) return { ...base, args: {}, error: result.error };
     if (typeof result.value === 'object')
       return {
-        kind: 'roll',
-        label,
-        roll: action.roll,
+        ...base,
         args: {},
         error: `Expected text, a number or true/false, got ${formatValue(result.value)}`,
       };
     args[name] = result.value;
   }
-  return { kind: 'roll', label, roll: action.roll, args };
+  return { ...base, args };
 }
 
 /**

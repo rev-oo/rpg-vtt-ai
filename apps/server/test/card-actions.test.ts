@@ -20,9 +20,10 @@ import {
 import { copyReferencePlugin } from './support/reference.js';
 import { createActorAs, tableWithPlayer } from './support/systems.js';
 
-// T-1617: card actions. srd5's attack and spell cards apply damage or healing to the actor of
-// the token the clicker has selected, if they may edit it, and spells that ask for a save
-// offer to roll it.
+// T-1617: card actions. srd5's attack cards offer to roll the damage for the attacker, with the
+// weapon it attacked with; damage and spell cards apply it, or healing, to the actor of the
+// token the clicker has selected, if they may edit it; spells that ask for a save offer to
+// roll it.
 
 let dir: string;
 let t: TestApp;
@@ -32,6 +33,7 @@ let tableId: string;
 let goblinId: string;
 let miraId: string;
 let spellId: string;
+let swordId: string;
 let rolls: number[];
 
 beforeAll(async () => {
@@ -94,6 +96,19 @@ beforeAll(async () => {
       dataVersion: '0.1.0',
     })
     .run();
+  swordId = randomUUID();
+  t.db
+    .insert(items)
+    .values({
+      id: swordId,
+      tableId,
+      actorId: miraId,
+      type: 'weapon',
+      name: 'Longsword',
+      system: { dice: 1, die: 8, damageType: 'slashing', extraDamage: '', magic: 0 },
+      dataVersion: '0.1.0',
+    })
+    .run();
 }, 60_000);
 
 afterAll(async () => {
@@ -121,10 +136,25 @@ const apply = (client: Client, message: ChatMessage, action: number, actorId: st
 
 describe('card actions (T-1617)', () => {
   it('applies an attack’s damage, or half of it, to an actor the clicker may edit', async () => {
-    rolls = [15, 4];
-    const attack = await rolled(gm, {
+    rolls = [15];
+    const hit = await rolled(gm, {
       actorId: goblinId,
       recipe: { name: 'npcAttack', args: { id: 'a1' } },
+    });
+    // The attack offers to roll its damage for the goblin; a natural 15 is no critical hit.
+    expect(hit.card?.card?.actions).toEqual([
+      {
+        kind: 'roll',
+        label: 'card.rollDamage',
+        roll: 'npcDamage',
+        args: { crit: false, id: 'a1' },
+        for: 'roller',
+      },
+    ]);
+    rolls = [4];
+    const attack = await rolled(gm, {
+      actorId: goblinId,
+      recipe: { name: 'npcDamage', args: { crit: false, id: 'a1' } },
     });
     // 1d6 + 2 = 6 damage, worked out when the roll was made.
     expect(attack.card?.card?.actions).toEqual([
@@ -151,12 +181,84 @@ describe('card actions (T-1617)', () => {
     expect(unknownActor.statusCode).toBe(404);
   });
 
+  it('rolls a weapon’s damage with the weapon the card was rolled with, doubled on a crit', async () => {
+    rolls = [20];
+    const attack = await rolled(bob, {
+      actorId: miraId,
+      recipe: { name: 'weaponAttack', args: {}, itemId: swordId },
+    });
+    expect(attack.card?.itemId).toBe(swordId);
+    const [damage] = attack.card?.card?.actions ?? [];
+    if (damage?.kind !== 'roll') throw new Error('expected the damage to roll');
+    expect(damage).toMatchObject({ roll: 'weaponDamage', for: 'roller', args: { crit: true } });
+
+    // As the web app does for a roller action: the card's actor, with the card's item.
+    rolls = [5, 3];
+    const rolledDamage = await rolled(bob, {
+      actorId: miraId,
+      recipe: { name: damage.roll, args: damage.args, itemId: swordId },
+    });
+    expect(rolledDamage.card?.outcome?.label).toBe('outcome.crit');
+    // Two d8, 5 + 3, with no Strength bonus.
+    expect(rolledDamage.rolls[0]?.total).toBe(8);
+    expect(rolledDamage.rolls[0]?.dice[0]).toMatchObject({ count: 2, die: 'd8' });
+    expect(rolledDamage.card?.card?.actions?.[0]).toMatchObject({ label: 'card.applyDamage' });
+
+    // A natural 1 misses, so there is no damage to roll.
+    rolls = [1];
+    const fumble = await rolled(bob, {
+      actorId: miraId,
+      recipe: { name: 'weaponAttack', args: {}, itemId: swordId },
+    });
+    expect(fumble.card?.card?.actions).toEqual([]);
+  });
+
+  it('rolls a spell attack’s damage at the slot it was cast with', async () => {
+    const boltId = randomUUID();
+    t.db
+      .insert(items)
+      .values({
+        id: boltId,
+        tableId,
+        actorId: miraId,
+        type: 'spell',
+        name: 'Fire Bolt',
+        system: { level: 0, attack: 'spell.attack', dice: 1, die: 10, effectType: 'fire' },
+        dataVersion: '0.1.0',
+      })
+      .run();
+    rolls = [12];
+    const cast = await rolled(bob, {
+      actorId: miraId,
+      recipe: { name: 'spellCast', args: {}, itemId: boltId },
+    });
+    expect(cast.card?.card?.actions).toEqual([
+      {
+        kind: 'roll',
+        label: 'card.rollDamage',
+        roll: 'spellDamage',
+        args: { crit: false, slot: 0 },
+        for: 'roller',
+      },
+    ]);
+
+    rolls = [7];
+    const damage = await rolled(bob, {
+      actorId: miraId,
+      recipe: { name: 'spellDamage', args: { crit: false, slot: 0 }, itemId: boltId },
+    });
+    expect(damage.card?.card?.actions?.map((action) => action.label)).toEqual([
+      'card.applyDamage',
+      'card.applyHalf',
+    ]);
+  });
+
   it('keeps a message the clicker cannot see out of reach', async () => {
-    rolls = [15, 4];
+    rolls = [4];
     const secret = await rolled(gm, {
       actorId: goblinId,
       audience: 'gm',
-      recipe: { name: 'npcAttack', args: { id: 'a1' } },
+      recipe: { name: 'npcDamage', args: { crit: false, id: 'a1' } },
     });
     const res = await apply(bob, secret, 0, miraId);
     expect(res.statusCode).toBe(404);

@@ -35,6 +35,16 @@
   "outcome": true,
   "actions": [
     {
+      "label": "card.rollDamage",
+      "roll": "spellDamage",
+      "for": "roller",
+      "args": {
+        "crit": "@roll.natural >= @critRange",
+        "slot": "@options.slot"
+      },
+      "when": "not @let.effect and @item.dice > 0 and @roll.natural != 1"
+    },
+    {
       "label": "card.rollSave",
       "roll": "save",
       "args": {

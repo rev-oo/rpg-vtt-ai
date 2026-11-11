@@ -145,7 +145,7 @@ const DESCRIPTIONS: Record<PluginIssueCode, (params: Params) => string> = {
   item_required: (x) =>
     `The roll "${p(x, 'roll')}" is made with an item: put its button in an items row or on an item sheet`,
   card_item_roll: (x) =>
-    `The roll "${p(x, 'roll')}" is made with an item, so a card action cannot roll it`,
+    `The roll "${p(x, 'roll')}" is made with an item: only a card action "for": "roller" on a card rolled with an item can roll it`,
   item_mismatch: (x) =>
     `The roll "${p(x, 'roll')}" is not made with items of type "${p(x, 'type')}"; list it in the roll's item`,
   actor_mismatch: (x) =>
