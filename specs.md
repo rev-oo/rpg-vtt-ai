@@ -891,7 +891,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
 
 - [ ] **T-1617 · Card actions**
   - **Deps:** T-1608
-  - **Do:** From the [5e study](docs/studies/srd5.md#proposed-tasks), P14. A card offers actions, such as "Apply damage" or "Take healing", that step a counter by an amount worked out when the roll is made. Whoever clicks applies it to the token they have selected on the map, if they may edit its actor: the GM selects the goblin and applies the damage, a player selects their own token and takes the healing. `srd5` applies attack damage or half of it, and spell damage or healing.
+  - **Do:** A card offers actions, such as "Apply damage" or "Take healing", that step a counter by an amount worked out when the roll is made. Whoever clicks applies it to the token they have selected on the map, if they may edit its actor: the GM selects the goblin and applies the damage, a player selects their own token and takes the healing. `srd5` applies attack damage or half of it, and spell damage or healing.
   - **Done when:** tests cover the actions and their rights; e2e applies an attack's damage to a selected token.
 
 - [ ] **T-1618 · Token statuses**
