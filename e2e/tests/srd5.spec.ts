@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
-import { installPlugin, packPlugin, setActorData } from './support/plugins.js';
+import { installPlugin, packPlugin, setActorData, setItemData } from './support/plugins.js';
 import { showPanel } from './support/workspace.js';
 
 // T-1605: the SRD 5.2 system, packed from plugins/ like an author would. A player's wizard
@@ -16,6 +16,7 @@ import { showPanel } from './support/workspace.js';
 // T-1610: casting a spell spends its slot through the Cast roll's `then` server code.
 // T-1616: a player who turns the asking off at the table rolls with a click.
 // T-1611: a Portuguese player reads the sheet, cards and server messages in pt-BR.
+// T-1617: cards apply damage to the token selected on the map, and roll the save a spell asks for.
 
 const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
@@ -101,21 +102,39 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await sheet.getByRole('tab', { name: 'Main' }).click();
   });
 
-  await test.step('one Attack button rolls the attack and its damage (T-1608)', async () => {
+  /**
+   * Rolls the damage from the last attack card (T-1617). Attacks here roll with Advantage, so
+   * a natural 1, which misses and offers no damage, is rare.
+   */
+  const rollDamage = async () => {
+    const cards = log.locator('[data-plugin="srd5"]');
+    await expect(cards.last().getByText('Weapon attack')).toBeVisible();
+    // The attack card by its place, as the damage card comes after it.
+    const at = await cards.count();
+    const attack = cards.nth(at - 1);
+    await attack.getByRole('button', { name: 'Roll damage' }).click();
+    await expect(attack.getByRole('status')).toHaveText('Rolled for Elowen.');
+    const damage = cards.nth(at);
+    await expect(damage.getByText('Weapon damage')).toBeVisible();
+    return damage;
+  };
+
+  await test.step('the Attack button rolls the attack, and its card the damage (T-1608)', async () => {
     await sheet.getByRole('tab', { name: 'Attacks' }).click();
     const sword = sheet.getByRole('listitem', { name: 'Longsword' });
     // Shift picks Advantage and rolls at once (T-1609).
     await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Shift'] });
     const card = log.locator('[data-plugin="srd5"]').last();
-    await expect(card.getByText('Weapon attack')).toBeVisible();
     await expect(card.locator('dd').nth(0)).toHaveText('Longsword');
     await expect(card.locator('dd').nth(1)).toHaveText(/^2d20kh1 \+ \d+$/);
-    // Only the branches the formula took, with their values (T-1607); a natural 20 doubles
+    const damage = await rollDamage();
+    await expect(damage.locator('dd').nth(0)).toHaveText('Longsword');
+    // Only the branches the formula took, with their values (T-1607); a critical hit doubles
     // the dice.
-    await expect(card.locator('dd').nth(3)).toHaveText(/^[12]d8 \+ 3$/);
+    await expect(damage.locator('dd').nth(1)).toHaveText(/^[12]d8 \+ 3$/);
     // The damage type is a lang key the card translates (T-1611).
-    await expect(card.locator('dd').nth(5)).toHaveText('Slashing');
-    await expect(card.getByRole('list', { name: /Dice of [12]d8/ })).toBeVisible();
+    await expect(damage.locator('dd').nth(3)).toHaveText('Slashing');
+    await expect(damage.getByRole('list', { name: /Dice of [12]d8/ })).toBeVisible();
 
     // Versatile: with two hands the longsword deals 1d10. Only versatile weapons ask.
     await sword.getByLabel('Two hands').check();
@@ -123,10 +142,11 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     await sword.getByRole('button', { name: 'Attack' }).click();
     const options = page.getByRole('dialog', { name: 'Attack' });
     await expect(options.getByRole('radio', { name: 'Normal' })).toBeChecked();
+    await options.getByRole('radio', { name: 'Advantage', exact: true }).check();
     await options.getByRole('button', { name: 'Roll' }).click();
     await expect(options).toBeHidden();
-    const versatile = log.locator('[data-plugin="srd5"]').last();
-    await expect(versatile.locator('dd').nth(3)).toHaveText(/^[12]d10 \+ 3$/);
+    const versatile = await rollDamage();
+    await expect(versatile.locator('dd').nth(1)).toHaveText(/^[12]d10 \+ 3$/);
   });
 
   await test.step('a critical hit doubles every die, extra damage too', async () => {
@@ -140,10 +160,13 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
 
     // Improved Critical, taken to the limit: every attack is a critical hit.
     await sheet.getByRole('textbox', { name: 'Critical hit on' }).fill('1');
-    await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Control'] });
-    const crit = log.locator('[data-plugin="srd5"]').last();
+    await sword.getByRole('button', { name: 'Attack' }).click({ modifiers: ['Shift'] });
+    await expect(
+      log.locator('[data-plugin="srd5"]').last().getByText('Critical hit!'),
+    ).toBeVisible();
+    const crit = await rollDamage();
     await expect(crit.getByText('Critical hit!')).toBeVisible();
-    await expect(crit.locator('dd').nth(3)).toHaveText('2d10 + 3 + 2d6');
+    await expect(crit.locator('dd').nth(1)).toHaveText('2d10 + 3 + 2d6');
     await expect(crit.getByRole('list', { name: 'Dice of 2d6' })).toBeVisible();
   });
 
@@ -285,10 +308,14 @@ test('a Portuguese player reads the SRD sheet, cards and rest messages in pt-BR'
     await sheet.getByRole('tab', { name: 'Ataques' }).click();
     const sword = sheet.getByRole('listitem', { name: 'Longsword' });
     await sword.getByRole('button', { name: 'Atacar' }).click({ modifiers: ['Shift'] });
+    const attack = log.locator('[data-plugin="srd5"]').last();
+    await expect(attack.getByText('Ataque com arma')).toBeVisible();
+    // Advantage makes a natural 1, which offers no damage, rare.
+    await attack.getByRole('button', { name: 'Rolar dano' }).click();
     const card = log.locator('[data-plugin="srd5"]').last();
-    await expect(card.getByText('Ataque com arma')).toBeVisible();
+    await expect(card.getByText('Dano da arma')).toBeVisible();
     await expect(card.getByText('Tipo', { exact: true })).toBeVisible();
-    await expect(card.locator('dd').nth(5)).toHaveText('Cortante');
+    await expect(card.locator('dd').nth(3)).toHaveText('Cortante');
   });
 
   await test.step("the server code's rest message is in Portuguese", async () => {
@@ -302,4 +329,158 @@ test('a Portuguese player reads the SRD sheet, cards and rest messages in pt-BR'
 
   expect(errors).toEqual([]);
   await context.close();
+});
+
+test('cards roll damage for the attacker, apply it to the selected token and roll the save a spell asks for', async ({
+  browser,
+}) => {
+  const gm = await signIn(browser, ADMIN);
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5-actions.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
+  const player = await createPlayer(browser, gm, 'tamsin', 'Tamsin');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Card Actions',
+    systemId: 'srd5',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor: elowen } = await post<{ actor: { id: string } }>(
+    player,
+    `/tables/${table.id}/actors`,
+    { type: 'character', name: 'Elowen' },
+  );
+  setActorData(elowen.id, {
+    class: 'class.wizard',
+    level: 5,
+    int: 16,
+    hp: { value: 20, max: 27, temp: 0 },
+  });
+  const { actor: goblin } = await post<{ actor: { id: string } }>(
+    gm,
+    `/tables/${table.id}/actors`,
+    {
+      type: 'npc',
+      name: 'Goblin',
+    },
+  );
+  setActorData(goblin.id, {
+    hp: { value: 7, max: 7 },
+    actions: {
+      a1: {
+        name: 'Scimitar',
+        bonus: 4,
+        dice: 1,
+        die: 6,
+        damageBonus: 2,
+        damageType: 'slashing',
+        extraDamage: '',
+        sort: 'a0',
+      },
+    },
+  });
+  // A save spell the wizard holds.
+  const { item: library } = await post<{ item: { id: string } }>(gm, `/tables/${table.id}/items`, {
+    type: 'spell',
+    name: 'Burning Hands',
+  });
+  const { item: spell } = await post<{ item: { id: string } }>(
+    player,
+    `/actors/${elowen.id}/items`,
+    { itemId: library.id },
+  );
+  setItemData(spell.id, {
+    level: 1,
+    attack: 'spell.save',
+    save: 'ability.dex',
+    dice: 3,
+    die: 6,
+    effectType: 'fire',
+  });
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Ambush',
+    columns: 8,
+    rows: 6,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: elowen.id, column: 1, row: 1 });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: goblin.id, column: 4, row: 2 });
+
+  const open = async (who: typeof gm): Promise<Page> => {
+    const page = await who.context.newPage();
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(`/tables/${table.id}`);
+    await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+    await expect(page.getByRole('application', { name: 'Ambush' })).toHaveAttribute(
+      'aria-busy',
+      'false',
+    );
+    return page;
+  };
+  const gmPage = await open(gm);
+  const playerPage = await open(player);
+  const errors: string[] = [];
+  for (const page of [gmPage, playerPage])
+    page.on('pageerror', (error) => errors.push(error.message));
+  const tokens = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+  const cards = (page: Page) =>
+    page.getByRole('log', { name: 'Messages' }).locator('[data-plugin="srd5"]');
+
+  await test.step('the GM rolls a goblin’s damage, which the player takes on their token', async () => {
+    // A natural 1 misses and offers no damage, so roll until the goblin does not fumble.
+    for (let tries = 0; tries < 20; tries += 1) {
+      const { message } = await post<{ message: { card: { card: { actions: unknown[] } } } }>(
+        gm,
+        `/tables/${table.id}/rolls`,
+        { actorId: goblin.id, recipe: { name: 'npcAttack', args: { id: 'a1' } } },
+      );
+      if (message.card.card.actions.length > 0) break;
+    }
+    const rollDamage = (scope: Page | Locator) =>
+      scope.getByRole('button', { name: 'Roll damage' });
+    const attack = cards(gmPage)
+      .filter({ has: rollDamage(gmPage) })
+      .last();
+    // Only those who may roll for the goblin see its damage button.
+    await expect(cards(playerPage).filter({ hasText: 'Scimitar' }).last()).toBeVisible();
+    await expect(rollDamage(playerPage)).toHaveCount(0);
+    await rollDamage(attack).click();
+    await expect(attack.getByRole('status')).toHaveText('Rolled for Goblin.');
+
+    const damage = cards(playerPage)
+      .filter({ has: playerPage.getByRole('button', { name: 'Apply damage' }) })
+      .last();
+    await expect(damage.getByText('Select a token on the map to use these.')).toBeVisible();
+    await expect(damage.getByRole('button', { name: 'Apply damage' })).toBeDisabled();
+    await tokens(playerPage)
+      .getByRole('button', { name: /^Elowen/ })
+      .click();
+    await expect(damage.getByText('Acts on Elowen')).toBeVisible();
+    await damage.getByRole('button', { name: 'Apply damage' }).click();
+    // 20 hit points less 1d6 + 2.
+    await expect(damage.getByRole('status')).toHaveText(/^Done: Elowen is now at 1[2-7]\.$/);
+  });
+
+  await test.step('the GM rolls the goblin’s save from the spell card, then applies half', async () => {
+    await post(player, `/tables/${table.id}/rolls`, {
+      actorId: elowen.id,
+      recipe: { name: 'spellEffect', args: {}, itemId: spell.id },
+    });
+    const card = cards(gmPage).filter({ hasText: 'Burning Hands' });
+    await tokens(gmPage)
+      .getByRole('button', { name: /^Goblin/ })
+      .click();
+    await expect(card.getByText('Acts on Goblin')).toBeVisible();
+    await card.getByRole('button', { name: 'Roll saving throw' }).click();
+    const save = cards(gmPage).filter({ hasText: 'Saving throw' }).last();
+    await expect(save.getByText(/^(Success|Failure)$/)).toBeVisible();
+    // Intelligence 16 and a Proficiency Bonus of 3: DC 14.
+    await expect(save.locator('dd').nth(0)).toHaveText('Dexterity');
+    await expect(save.locator('dd').nth(1)).toHaveText('14');
+    await card.getByRole('button', { name: 'Apply half damage' }).click();
+    await expect(card.getByRole('status')).toHaveText(/^Done: Goblin is now at \d\.$/);
+  });
+
+  expect(errors).toEqual([]);
 });

@@ -1,12 +1,15 @@
 import { z } from 'zod';
 
-import { cssClass, formula, identifier, name, schemaUrl, text } from './common.js';
+import {
+  cssClass,
+  fieldPath as path,
+  formula,
+  identifier,
+  name,
+  schemaUrl,
+  text,
+} from './common.js';
 
-/** A dot path into the data (`hp.value`); inside a `list`, relative to the row. */
-const path = z
-  .string()
-  .regex(/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/)
-  .meta({ title: 'Path' });
 /** Spacing steps; sizes come from the core's tokens. */
 const gap = z.enum(['none', 'sm', 'md', 'lg']);
 

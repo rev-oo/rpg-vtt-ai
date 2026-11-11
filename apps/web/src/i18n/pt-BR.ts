@@ -260,6 +260,10 @@ export const ptBR: Messages = {
   'chat.unknownCommand':
     'Comando desconhecido {command}. Comece com // para enviar uma mensagem que começa com “/”.',
   'chat.invalidSpeaker': 'Você só pode falar como um ator que é seu.',
+  'chat.actionsOn': 'Age sobre {name}',
+  'chat.actionsSelect': 'Selecione um token no mapa para usar estes botões.',
+  'chat.actionApplied': 'Feito: {name} agora está em {value}.',
+  'chat.actionRolled': 'Rolado para {name}.',
   'chat.invalidRecipient': 'Sussurros só podem ir para outros membros desta mesa.',
 
   'plugins.title': 'Plugins',
@@ -333,6 +337,8 @@ export const ptBR: Messages = {
     'O nó “{type}” só pode ser usado em fichas de atores, mas {scope} usa esta ficha.',
   'pluginIssue.item_required':
     'A rolagem “{roll}” é feita com um item: coloque o botão numa linha de itens ou na ficha de um item.',
+  'pluginIssue.card_item_roll':
+    'A rolagem “{roll}” é feita com um item: só uma ação de cartão “for”: “roller” num cartão rolado com um item pode rolá-la.',
   'pluginIssue.item_mismatch':
     'A rolagem “{roll}” não é feita com itens do tipo “{type}”; liste-o em item da rolagem.',
   'pluginIssue.nested_items':

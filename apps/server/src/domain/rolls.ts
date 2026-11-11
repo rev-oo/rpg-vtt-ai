@@ -282,6 +282,7 @@ export async function sendRollMessages(
     const card: RecipeCard = {
       system: system.plugin.manifest.id,
       recipe: result.recipe,
+      ...(item && { itemId: item.id }),
       label: result.label ?? null,
       outcome: result.outcome,
       card: result.card ?? null,

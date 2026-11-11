@@ -185,6 +185,7 @@ export function ChatPanel({
               message={message}
               names={names}
               subject={subject}
+              speakers={speakers}
               now={now}
               onEdited={(edited) => {
                 setMessages((current) => replaceMessage(current, edited));
@@ -248,6 +249,8 @@ interface MessageItemProps {
   names: ReadonlyMap<string, string>;
   /** The viewer, or `null` when they are not a member. */
   subject: Subject | null;
+  /** Actors the viewer may roll for, as a card's `roller` actions do. */
+  speakers: readonly ActorView[];
   now: number;
   onEdited: (message: ChatMessage) => void;
   onDeleted: (id: string) => void;
@@ -258,6 +261,7 @@ function MessageItem({
   message,
   names,
   subject,
+  speakers,
   now,
   onEdited,
   onDeleted,
@@ -397,7 +401,11 @@ function MessageItem({
           </span>
         </form>
       ) : message.kind === 'card' ? (
-        <CardMessage message={message} />
+        <CardMessage
+          message={message}
+          canAct={subject !== null && canSendChat(subject.role)}
+          mayRoll={speakers.some((actor) => actor.id === message.speaker.actorId)}
+        />
       ) : message.kind === 'roll' && message.rolls.length > 0 ? (
         <>
           {/* A typed roll's text is its formula, which the roll shows; plugin code may add more. */}

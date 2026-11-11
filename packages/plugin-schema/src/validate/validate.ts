@@ -659,6 +659,8 @@ export function validatePlugin(
 
   // 4. Roll recipes, checked against the types whose sheets roll them.
   const cardUsers = new Map<string, FormulaScope[]>();
+  /** The item types each recipe that shows a card is made with; `[]` when made without one. */
+  const cardItems = new Map<string, (readonly string[])[]>();
   for (const [name, recipe] of Object.entries(rolls)) {
     const file = 'rolls.json';
     useText(recipe.label, file, [name, 'label']);
@@ -782,8 +784,20 @@ export function validatePlugin(
       if (!names.card?.has(recipe.card))
         error('missing_target', file, [name, 'card'], { target: 'card', name: recipe.card });
       cardUsers.set(recipe.card, [...(cardUsers.get(recipe.card) ?? []), ...scopes.map(rolled)]);
+      cardItems.set(recipe.card, [...(cardItems.get(recipe.card) ?? []), recipe.item ?? []]);
     }
   }
+
+  /** A card's apply action steps a counter that some actor type has (T-1617). */
+  const checkActionField = (dotPath: string, at: JsonPath, file: string) => {
+    const found = Object.values(actorTypes)
+      .map((type) => fieldAt(type.schema, dotPath, false))
+      .filter((field) => field !== undefined);
+    if (found.length === 0)
+      error('unknown_field', file, at, { field: dotPath, scope: 'any actor type' });
+    else if (!found.some((field) => field['x-counter'] === true))
+      error('field_mismatch', file, at, { field: dotPath, expected: 'a counter (x-counter)' });
+  };
 
   // 5. Cards, dice, settings and combat.
   for (const [name, card] of Object.entries(cards)) {
@@ -794,6 +808,36 @@ export function validatePlugin(
       useText(row.label, file, ['rows', index, 'label']);
       for (const scope of scopes)
         formula(row.value, { ...scope, roll: true }, false, file, ['rows', index, 'value']);
+    });
+    card.actions?.forEach((action, index) => {
+      const at = ['actions', index];
+      useText(action.label, file, [...at, 'label']);
+      const read = (source: string, key: JsonPath) => {
+        for (const scope of scopes) formula(source, { ...scope, roll: true }, false, file, key);
+      };
+      if (action.when !== undefined) read(action.when, [...at, 'when']);
+      if ('field' in action) {
+        read(action.amount, [...at, 'amount']);
+        checkActionField(action.field, [...at, 'field'], file);
+        return;
+      }
+      for (const [arg, source] of Object.entries(action.args ?? {}))
+        read(source, [...at, 'args', arg]);
+      const rolled = Object.hasOwn(rolls, action.roll) ? rolls[action.roll] : undefined;
+      if (!rolled)
+        error('missing_target', file, [...at, 'roll'], { target: 'roll', name: action.roll });
+      else if (rolled.item) {
+        // A roller action rolls with the card's item, so every recipe showing the card has one
+        // of a type the rolled recipe takes.
+        const taken = rolled.item;
+        const users = cardItems.get(name) ?? [];
+        if (action.for !== 'roller' || users.some((types) => types.length === 0))
+          error('card_item_roll', file, [...at, 'roll'], { roll: action.roll });
+        else
+          for (const type of new Set(users.flat()))
+            if (!taken.includes(type))
+              error('item_mismatch', file, [...at, 'roll'], { roll: action.roll, type });
+      }
     });
   }
   for (const [name, die] of Object.entries(dice)) useText(die.label, 'dice.json', [name, 'label']);

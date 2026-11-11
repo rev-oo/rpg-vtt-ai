@@ -44,3 +44,13 @@ export function setActorData(actorId: string, system: Record<string, unknown>): 
     db.close();
   }
 }
+
+/** Sets an item's stored plugin data, like `setActorData`, for items never opened (ADR-029). */
+export function setItemData(itemId: string, system: Record<string, unknown>): void {
+  const db = new Database(databaseFile());
+  try {
+    db.prepare('update items set system = ? where id = ?').run(JSON.stringify(system), itemId);
+  } finally {
+    db.close();
+  }
+}

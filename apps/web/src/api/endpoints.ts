@@ -37,7 +37,9 @@ import {
   upgradeSystemResponseSchema,
   type UpgradeSystemResponse,
   chatHistoryResponseSchema,
+  cardApplyResponseSchema,
   chatMessageResponseSchema,
+  type CardApplyInput,
   membersResponseSchema,
   pluginResponseSchema,
   pluginsResponseSchema,
@@ -345,6 +347,9 @@ export const api = {
   /** The author's new text (FR-CHAT-09). */
   editChat: async (messageId: string, text: string): Promise<ChatMessage> =>
     (await request('PATCH', `/messages/${messageId}`, chatMessageResponseSchema, { text })).message,
+  /** Applies a card's action to the selected token's actor (T-1617); its counter's new value. */
+  applyCardAction: async (messageId: string, input: CardApplyInput): Promise<number> =>
+    (await request('POST', `/messages/${messageId}/apply`, cardApplyResponseSchema, input)).value,
   deleteChat: (messageId: string): Promise<void> =>
     requestNoContent('DELETE', `/messages/${messageId}`),
   /** The actor's sheet history the caller may restore, newest first (FR-SHEET-11). */

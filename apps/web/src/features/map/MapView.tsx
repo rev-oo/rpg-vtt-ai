@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react';
 
 import { canManageScenes } from '@vtt/shared';
 import type { ActorView, FogInput, SceneView, TableView, TokenView } from '@vtt/shared/api';
@@ -11,6 +11,7 @@ import { ICON } from '../../icons.js';
 
 import { AddTokenDialog } from './AddTokenDialog.js';
 import type { Cell } from './geometry.js';
+import { setSelectedToken } from './selection.js';
 import { TokenList } from './TokenList.js';
 import type { MenuAction } from './TokenMenu.js';
 import { useScenes } from './use-scenes.js';
@@ -109,6 +110,24 @@ interface SceneStageProps {
 function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStageProps): ReactElement {
   const { tokens, error, move, change } = useTokens(table.id, scene.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Card actions in the chat act on the selected token (T-1617).
+  const selected = tokens.find((token) => token.id === selectedId);
+  const selectedActor = selected?.actorId ?? null;
+  const selectedName = selected?.name;
+  useEffect(() => {
+    setSelectedToken(
+      table.id,
+      selectedId !== null && selectedName !== undefined
+        ? { tokenId: selectedId, actorId: selectedActor, name: selectedName }
+        : null,
+    );
+  }, [table.id, selectedId, selectedActor, selectedName]);
+  useEffect(
+    () => () => {
+      setSelectedToken(table.id, null);
+    },
+    [table.id],
+  );
   const [adding, setAdding] = useState(false);
   const [placeError, setPlaceError] = useState<string | null>(null);
   /** GMs and assistants reveal and hide areas; `scene.updated` brings the new fog (ADR-070). */

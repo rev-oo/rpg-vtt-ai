@@ -28,6 +28,12 @@ export const formula = z
   .max(2000)
   .meta({ title: 'Formula', description: 'A formula (specs §8.9).' });
 
+/** A dot path into an entity's data (`hp.value`); inside a sheet `list`, relative to the row. */
+export const fieldPath = z
+  .string()
+  .regex(/^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*$/)
+  .meta({ title: 'Path' });
+
 /** A lang key such as `type.character`, or literal text when no lang file has the key. */
 export const text = z.string().min(1).max(500).meta({ title: 'Text' });
 
