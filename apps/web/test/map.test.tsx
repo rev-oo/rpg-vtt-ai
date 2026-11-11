@@ -518,6 +518,7 @@ const token = (id: string, name: string, fields: Partial<TokenView> = {}): Token
   row: 3,
   hidden: false,
   movable: false,
+  statuses: [],
   ...fields,
 });
 
@@ -525,6 +526,20 @@ const tokenButton = async (name: RegExp) =>
   within(await screen.findByRole('list', { name: 'Tokens' })).findByRole('button', { name });
 
 describe('tokens on the map (FR-MAP-03)', () => {
+  it('names the statuses of a token that are on (T-1618)', async () => {
+    const prone = { field: 'conditions.prone', label: 'Prone', icon: '/plugins/x/icons/prone.svg' };
+    const tokens = [token('k1', 'Goblin', { statuses: [prone] }), token('k2', 'Boulder')];
+    openTable('player', () => [scene('s1', 'Cave', true)], {
+      'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
+    });
+    const goblin = await tokenButton(/^Goblin \(3, 4\) Prone$/);
+    expect(within(goblin).getByRole('img', { name: 'Prone' })).toHaveAttribute(
+      'src',
+      '/plugins/x/icons/prone.svg',
+    );
+    expect(within(await tokenButton(/^Boulder/)).queryByRole('img')).toBeNull();
+  });
+
   it('lets a player move their token by keyboard, and follows token.updated', async () => {
     let tokens = [
       token('k1', 'Ayla', { actorId: 'a1', movable: true }),

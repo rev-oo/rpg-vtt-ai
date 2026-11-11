@@ -19,6 +19,7 @@ const ayla: TokenView = {
   row: 3,
   hidden: false,
   movable: true,
+  statuses: [],
 };
 
 describe('token menu (T-1405)', () => {

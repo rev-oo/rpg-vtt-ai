@@ -7,6 +7,7 @@ import { t } from '../../i18n/index.js';
 import { ICON } from '../../icons.js';
 
 import { stepCell, type Cell } from './geometry.js';
+import { StatusIcons } from './StatusIcons.js';
 
 export interface TokenListProps {
   scene: SceneView;
@@ -80,6 +81,8 @@ export function TokenList({
                 row: place(token.row),
               })}
               {token.hidden && ` · ${t('tokens.hidden')}`}
+              {token.statuses.length > 0 && ' '}
+              <StatusIcons statuses={token.statuses} />
             </button>
           </li>
         ))}

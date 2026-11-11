@@ -28,8 +28,8 @@ const ENCOUNTER: EncounterView = {
   round: 1,
   currentId: 'c1',
   combatants: [
-    { id: 'c1', actorId: null, name: 'Goblin', initiative: 15, hidden: false },
-    { id: 'c2', actorId: HERO.id, name: 'Goblin King', initiative: 12, hidden: true },
+    { id: 'c1', actorId: null, name: 'Goblin', initiative: 15, hidden: false, statuses: [] },
+    { id: 'c2', actorId: HERO.id, name: 'Goblin King', initiative: 12, hidden: true, statuses: [] },
   ],
 };
 
