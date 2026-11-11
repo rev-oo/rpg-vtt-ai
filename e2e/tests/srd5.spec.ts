@@ -17,6 +17,7 @@ import { showPanel } from './support/workspace.js';
 // T-1616: a player who turns the asking off at the table rolls with a click.
 // T-1611: a Portuguese player reads the sheet, cards and server messages in pt-BR.
 // T-1617: cards apply damage to the token selected on the map, and roll the save a spell asks for.
+// T-1618: a condition set on a sheet shows on the actor's token.
 
 const plugin = fileURLToPath(new URL('../../plugins/srd5', import.meta.url));
 
@@ -481,6 +482,61 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
     await card.getByRole('button', { name: 'Apply half damage' }).click();
     await expect(card.getByRole('status')).toHaveText(/^Done: Goblin is now at \d\.$/);
   });
+
+  expect(errors).toEqual([]);
+});
+
+test('a condition set on a sheet shows on the token', async ({ browser }) => {
+  const gm = await signIn(browser, ADMIN);
+  await installPlugin(gm, packPlugin(plugin, path.join(temp, 'srd5-statuses.vttplugin')));
+  await post(gm, '/plugins/srd5/enable', { acknowledgeCode: true });
+  const player = await createPlayer(browser, gm, 'ysolde', 'Ysolde');
+  const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
+    name: 'Statuses',
+    systemId: 'srd5',
+  });
+  const { token } = await post<{ token: string }>(gm, `/tables/${table.id}/invites`, {
+    role: 'player',
+  });
+  await post(player, `/invites/${token}/accept`);
+  const { actor: mira } = await post<{ actor: { id: string } }>(
+    player,
+    `/tables/${table.id}/actors`,
+    { type: 'character', name: 'Mira' },
+  );
+  const { scene } = await post<{ scene: { id: string } }>(gm, `/tables/${table.id}/scenes`, {
+    name: 'Crossroads',
+    columns: 6,
+    rows: 4,
+  });
+  await post(gm, `/tables/${table.id}/scenes/active`, { sceneId: scene.id });
+  await post(gm, `/scenes/${scene.id}/tokens`, { actorId: mira.id, column: 2, row: 1 });
+
+  const gmPage = await gm.context.newPage();
+  await gmPage.goto(`/tables/${table.id}`);
+  await expect(gmPage.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  const miraToken = gmPage.getByRole('list', { name: 'Tokens' }).getByRole('button', {
+    name: /^Mira/,
+  });
+  await expect(miraToken).toBeVisible();
+  await expect(miraToken.getByRole('img')).toHaveCount(0);
+
+  const page = await player.context.newPage();
+  const errors: string[] = [];
+  for (const each of [gmPage, page]) each.on('pageerror', (error) => errors.push(error.message));
+  await openSheet(page, table.id, 'Mira');
+  const sheet = page.locator('[data-plugin="srd5"]');
+  await sheet.getByRole('tab', { name: 'Features' }).click();
+  const prone = sheet.getByRole('checkbox', { name: 'Prone' });
+  await prone.check();
+  // The GM's map follows the sheet once it is stored.
+  await expect(miraToken.getByRole('img', { name: 'Prone' })).toBeVisible();
+  await expect(miraToken).toHaveAccessibleName(/^Mira \(3, 2\) Prone$/);
+  await sheet.getByRole('checkbox', { name: 'Poisoned' }).check();
+  await expect(miraToken.getByRole('img')).toHaveCount(2);
+  await prone.uncheck();
+  await expect(miraToken.getByRole('img', { name: 'Prone' })).toHaveCount(0);
+  await expect(miraToken.getByRole('img', { name: 'Poisoned' })).toBeVisible();
 
   expect(errors).toEqual([]);
 });

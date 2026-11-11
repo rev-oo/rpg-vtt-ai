@@ -153,7 +153,9 @@ export async function buildApp({
     now,
   });
   registerAuth(app, sessions);
-  const events = await registerEvents(app, { db, sessions });
+  /** Statuses on tokens and combatants follow the sheet (T-1618), once the event hub exists. */
+  let actorStored: (actorId: string, before: Readonly<Record<string, unknown>>) => void = () =>
+    undefined;
   const collab = registerCollab(app, {
     db,
     sessions,
@@ -161,11 +163,14 @@ export async function buildApp({
     now,
     timing: collabTiming,
     code: (id) => plugins.code(id),
-    // Statuses on tokens and combatants follow the sheet (T-1618).
     onActorStored: (actorId, before) => {
-      publishStatusChanges(db, events, (id) => plugins.definition(id), actorId, before);
+      actorStored(actorId, before);
     },
   });
+  const events = await registerEvents(app, { db, sessions });
+  actorStored = (actorId, before) => {
+    publishStatusChanges(db, events, (id) => plugins.definition(id), actorId, before);
+  };
 
   const context: AppContext = {
     app,
