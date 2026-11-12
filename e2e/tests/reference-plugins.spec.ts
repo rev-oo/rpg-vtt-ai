@@ -292,7 +292,9 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await message.fill('/check str');
     await message.press('Enter');
     await expect(log.getByText('Ayla: Strength check')).toBeVisible();
-    await expect(log.getByText('1d20 + @derived.strMod → 1d20 + 3')).toBeVisible();
+    // The formula as rolled; the recipe's own one only on request (T-1620).
+    await expect(log.getByText('1d20 + 3', { exact: true })).toBeVisible();
+    await expect(log.getByText('1d20 + @derived.strMod')).toBeHidden();
     await expect(message).toHaveValue('');
   });
 
