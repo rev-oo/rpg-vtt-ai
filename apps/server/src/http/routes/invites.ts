@@ -1,10 +1,10 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 import { canManageInvites } from '@vtt/shared';
 import { createInviteBody, signupBody, type InviteView } from '@vtt/shared/api';
 
-import { gameTables, invites, members } from '../../db/schema.js';
+import { gameTables, invites, members, users } from '../../db/schema.js';
 import { generateId, generateToken, hashToken } from '../../domain/auth/tokens.js';
 import { requireUnarchived } from '../../domain/entities.js';
 import { findMembership, findTable, toTableView } from '../../domain/tables.js';
@@ -124,10 +124,12 @@ export function inviteRoutes({
     return reply.code(204).send();
   });
 
-  /** Lets the join page show which table and role a link is for before accepting. */
+  /**
+   * Lets the join page show which table, GM and role a link is for before accepting. Anyone
+   * holding a usable link may see them, signed in or not (T-1620): they could join after
+   * signing in anyway. Unknown, expired and revoked links reveal nothing.
+   */
   app.get('/api/v1/invites/:token', (request) => {
-    // Without an account, only someone who may sign up needs to know where a link leads.
-    if (instance().registration !== 'invite') requireSession(request);
     const { token } = parseInput(tokenParams, request.params);
     const invite = findUsableInvite(token);
     const table = db
@@ -136,7 +138,15 @@ export function inviteRoutes({
       .where(eq(gameTables.id, invite.tableId))
       .get();
     if (!table) throw notFound('Invite not found.');
-    return { invite: { role: invite.role, table } };
+    // The table's first GM, as members see them.
+    const gm = db
+      .select({ name: users.displayName })
+      .from(members)
+      .innerJoin(users, eq(users.id, members.userId))
+      .where(and(eq(members.tableId, table.id), eq(members.role, 'gm')))
+      .orderBy(asc(members.joinedAt))
+      .get();
+    return { invite: { role: invite.role, table: { ...table, gm: gm?.name ?? null } } };
   });
 
   app.post('/api/v1/invites/:token/accept', (request) => {

@@ -78,11 +78,10 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     });
   });
 
-  it('has no other table URLs: they lead home', async () => {
+  it('has no other table URLs: they say the page was not found (T-1620)', async () => {
     openTable('/tables/t1/actors/a1');
-    await waitFor(() => {
-      expect(location()).toBe('/');
-    });
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to your tables' })).toHaveAttribute('href', '/');
   });
 
   it('opens documents in place, leaving the URL on the table', async () => {

@@ -114,8 +114,8 @@ describe('sign-up through an invite link (FR-ADMIN-01)', () => {
     const res = await t.call(null, 'POST', `/invites/${t.token}/signup`, newcomer);
     expect(res.statusCode).toBe(403);
     expect(res.json()).toMatchObject({ error: { code: 'registration_closed' } });
-    // Nor can anyone see where the link leads without an account.
-    expect((await t.call(null, 'GET', `/invites/${t.token}`)).statusCode).toBe(401);
+    // The link still says where it leads, so its holder knows to sign in (T-1620).
+    expect((await t.call(null, 'GET', `/invites/${t.token}`)).statusCode).toBe(200);
   });
 
   it('creates a signed-in account that joins the table with the invite role', async () => {

@@ -652,8 +652,12 @@ export const ptBR: Messages = {
   'invites.noExpiry': 'nunca expira',
   'invites.revoke': 'Revogar',
 
+  'notFound.title': 'Página não encontrada',
+  'notFound.body':
+    'Não há nada neste endereço. O link pode estar errado, ou a página pode ter mudado de lugar.',
   'invite.title': 'Convite para a mesa',
   'invite.intro': 'Você foi convidado para entrar em {table} como {role}.',
+  'invite.introGm': 'Você foi convidado para entrar em {table}, mestrada por {gm}, como {role}.',
   'invite.join': 'Entrar na mesa',
   'invite.signup': 'Criar conta e entrar',
   'invite.signIn': 'Entrar',

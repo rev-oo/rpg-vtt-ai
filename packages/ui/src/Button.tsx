@@ -16,6 +16,13 @@ const VARIANTS: Record<ButtonVariant, string> = {
   ghost: 'border-transparent bg-transparent text-fg hover:enabled:bg-canvas',
 };
 
+const BASE =
+  'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60';
+
+/** A button's look, for a link that leads somewhere but should read as an action. */
+export const buttonClass = (variant: ButtonVariant = 'secondary'): string =>
+  cn(BASE, 'no-underline', VARIANTS[variant]);
+
 /** An icon, sized to sit in a line of text and hidden from screen readers. */
 export function IconSlot({ children }: { children: ReactNode }): ReactElement {
   return (
@@ -37,11 +44,7 @@ export function Button({
     <button
       type={type}
       data-variant={variant}
-      className={cn(
-        'inline-flex min-h-10 cursor-pointer items-center justify-center gap-2 rounded-lg border px-4 font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-60',
-        VARIANTS[variant],
-        className,
-      )}
+      className={cn(BASE, VARIANTS[variant], className)}
       {...props}
     >
       {icon !== undefined && <IconSlot>{icon}</IconSlot>}

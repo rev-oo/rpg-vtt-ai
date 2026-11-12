@@ -644,8 +644,12 @@ export const en = {
   'invites.noExpiry': 'never expires',
   'invites.revoke': 'Revoke',
 
+  'notFound.title': 'Page not found',
+  'notFound.body':
+    'Nothing is at this address. The link may be mistyped, or the page may have moved.',
   'invite.title': 'Table invitation',
   'invite.intro': 'You are invited to join {table} as {role}.',
+  'invite.introGm': 'You are invited to join {table}, run by {gm}, as {role}.',
   'invite.join': 'Join the table',
   'invite.signup': 'Create account and join',
   'invite.signIn': 'Sign in',
