@@ -159,3 +159,56 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, false))).toBeNull();
   });
 });
+
+describe('moving between panels by keyboard (T-1620)', () => {
+  const groupOf = () => document.activeElement?.closest('.dv-groupview') ?? null;
+
+  it('puts the dock in the main landmark', async () => {
+    openTable('/tables/t1');
+    const chat = await panel('Chat');
+    expect(screen.getByRole('main')).toContainElement(chat);
+  });
+
+  it('moves to the next and previous panel group with F6 and Shift+F6', async () => {
+    openTable('/tables/t1');
+    await panel('Chat');
+    const user = userEvent.setup();
+    screen.getByRole('link', { name: 'Tables' }).focus();
+
+    await user.keyboard('{F6}');
+    const first = groupOf();
+    expect(first).not.toBeNull();
+    expect(screen.getByRole('main')).toContainElement(first instanceof HTMLElement ? first : null);
+
+    await user.keyboard('{F6}');
+    const second = groupOf();
+    expect(second).not.toBeNull();
+    expect(second).not.toBe(first);
+
+    await user.keyboard('{Shift>}{F6}{/Shift}');
+    expect(groupOf()).toBe(first);
+    // Back from the first group, Shift+F6 wraps to the last.
+    await user.keyboard('{Shift>}{F6}{/Shift}');
+    const groups = document.querySelectorAll('.vtt-dock .dv-groupview');
+    expect(groupOf()).toBe(groups[groups.length - 1]);
+  });
+
+  it('skips straight to a panel, landing in the chat on its message box', async () => {
+    openTable('/tables/t1');
+    await panel('Chat');
+    const user = userEvent.setup();
+    const skip = screen.getByRole('navigation', { name: 'Skip to panel' });
+    // One entry per open panel, before the header's own controls.
+    expect(await within(skip).findByRole('button', { name: 'Go to Chat' })).toBeInTheDocument();
+    expect(within(skip).getByRole('button', { name: 'Go to Map' })).toBeInTheDocument();
+    await user.tab();
+    expect(skip).toContainElement(
+      document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    );
+
+    await user.click(within(skip).getByRole('button', { name: 'Go to Chat' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message')).toHaveFocus();
+    });
+  });
+});

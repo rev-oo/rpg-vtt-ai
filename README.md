@@ -115,6 +115,10 @@ Back up a running instance with `pnpm backup <folder>`; [docs/backup.md](docs/ba
 
 On a fresh instance the app opens the setup screen. Creating a table needs an enabled system plugin: install one from **Plugins** in the admin menu, or copy a plugin folder into `DATA_DIR/plugins` and press **Rescan**.
 
+### Using the table
+
+The [user guide](docs/user-guide.md) covers what isn't obvious from the screen, starting with the keyboard: F6 moves between panels, and **Skip to panel** goes straight to one.
+
 ### Writing plugins
 
 The [plugin authoring guide](docs/plugin-authoring.md) walks through building a system from an empty folder, then covers the format file by file. Every key of every file is in the generated [plugin file reference](docs/plugin-reference.md).

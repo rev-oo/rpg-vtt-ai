@@ -69,6 +69,8 @@ export const ptBR: Messages = {
   'workspace.tables': 'Mesas',
   'workspace.panels': 'Painéis',
   'workspace.resetLayout': 'Restaurar layout',
+  'workspace.skipTo': 'Pular para o painel',
+  'workspace.goTo': 'Ir para {title}',
   'workspace.isOpen': 'aberto',
   'workspace.overview': 'Mesa',
   'workspace.chat': 'Chat',

@@ -66,6 +66,8 @@ export const en = {
   'workspace.tables': 'Tables',
   'workspace.panels': 'Panels',
   'workspace.resetLayout': 'Reset layout',
+  'workspace.skipTo': 'Skip to panel',
+  'workspace.goTo': 'Go to {title}',
   'workspace.isOpen': 'open',
   'workspace.overview': 'Table',
   'workspace.chat': 'Chat',
