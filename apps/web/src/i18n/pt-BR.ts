@@ -252,6 +252,7 @@ export const ptBR: Messages = {
   'chat.cancel': 'Cancelar',
   'chat.rollTotal': 'Total {total}',
   'chat.rollDice': 'Dados de {formula}',
+  'chat.rollFormula': 'Fórmula',
   'chat.die.rerolled': 'rolado de novo',
   'chat.die.exploded': 'explodiu',
   'chat.die.dropped': 'descartado',

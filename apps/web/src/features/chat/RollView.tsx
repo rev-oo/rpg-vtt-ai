@@ -29,35 +29,44 @@ function Die({ die }: { die: DieResult }): ReactElement {
   );
 }
 
-/** A roll in the chat: what was rolled, every die and the total (FR-DICE-04). */
+/**
+ * A roll in the chat: the formula as rolled, every die and the total, on one line when they fit
+ * (FR-DICE-04). A recipe's own formula, with its references, shows only when asked (T-1620).
+ */
 export function RollView({ roll }: { roll: Roll }): ReactElement {
   return (
     <div className="flex flex-col gap-1">
-      <p className="font-mono text-sm break-words">
-        {roll.expression}
-        {roll.resolved !== roll.expression && (
-          <span className="text-muted"> → {roll.resolved}</span>
-        )}
-      </p>
-      {roll.dice.map((term, index) => (
-        <div key={index} className="flex flex-wrap items-center gap-1 text-sm">
-          {/* A lone term already reads in the expression above. */}
-          {term.formula !== roll.expression && (
-            <span className="font-mono text-muted">{term.formula}</span>
-          )}
-          <ul
-            className="flex flex-wrap gap-1"
-            aria-label={t('chat.rollDice', { formula: term.formula })}
-          >
-            {term.results.map((die, at) => (
-              <Die key={at} die={die} />
-            ))}
-          </ul>
-        </div>
-      ))}
-      <p className="text-2xl font-bold" aria-label={t('chat.rollTotal', { total: roll.total })}>
-        {roll.total}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="font-mono text-sm break-words">{roll.resolved}</span>
+        {roll.dice.map((term, index) => (
+          <span key={index} className="flex flex-wrap items-center gap-1 text-sm">
+            {/* A lone term already reads in the formula before it. */}
+            {term.formula !== roll.resolved && (
+              <span className="font-mono text-muted">{term.formula}</span>
+            )}
+            <ul
+              className="flex flex-wrap gap-1"
+              aria-label={t('chat.rollDice', { formula: term.formula })}
+            >
+              {term.results.map((die, at) => (
+                <Die key={at} die={die} />
+              ))}
+            </ul>
+          </span>
+        ))}
+        <span
+          className="ml-auto text-2xl font-bold"
+          aria-label={t('chat.rollTotal', { total: roll.total })}
+        >
+          {roll.total}
+        </span>
+      </div>
+      {roll.expression !== roll.resolved && (
+        <details className="text-sm text-muted">
+          <summary className="cursor-pointer">{t('chat.rollFormula')}</summary>
+          <code className="font-mono break-words">{roll.expression}</code>
+        </details>
+      )}
     </div>
   );
 }

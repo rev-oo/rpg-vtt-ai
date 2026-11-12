@@ -247,6 +247,7 @@ export const en = {
   'chat.cancel': 'Cancel',
   'chat.rollTotal': 'Total {total}',
   'chat.rollDice': 'Dice of {formula}',
+  'chat.rollFormula': 'Formula',
   'chat.die.rerolled': 'rerolled',
   'chat.die.exploded': 'exploded',
   'chat.die.dropped': 'dropped',
