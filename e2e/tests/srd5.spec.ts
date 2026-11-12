@@ -86,6 +86,7 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
   await test.step('the player copies a longsword and Fire Bolt from the SRD pack', async () => {
     await showPanel(page, 'Compendium');
     for (const name of ['Longsword', 'Fire Bolt', 'Magic Missile']) {
+      await page.getByLabel(`Actor to copy ${name} onto`).selectOption(actor.id);
       await page.getByRole('button', { name: `Copy ${name} onto the chosen actor` }).click();
       await expect(page.getByText(`${name} was copied onto Elowen.`)).toBeVisible();
     }
