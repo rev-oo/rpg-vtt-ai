@@ -57,7 +57,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
   - The default layout puts Chat, Dice and Combat in one group on the right, Chat in front; **Reset layout** brings it to tables already laid out.
   - Compendium entries open as a read-only sheet in a panel of their own, in place of the inline preview; the pack's credit shows there. `GET /tables/:id/compendium/entries/:ref` returns one entry and its pack.
   - On a read-only sheet, every field dims as its selects do (text and number fields, text boxes and checkboxes included), so it is clear none of them can be changed.
-  - **Open** and **Open sheet** in the actor, item, journal and compendium lists, and on an actor's items, are buttons with an icon instead of links.
+  - **Open** in the actor, item, journal and compendium lists, and on an actor's items, is a button with an icon instead of a link, with the same label everywhere (the actor list said **Open sheet**).
   - Actor and item sheets have **Rename**, as journal entries do, for whoever may edit them; the lists and the panel's tab follow the new name.
   - The map gets more room: the token list under it folds away (the browser remembers whether it is open) and scrolls when long, and a GM's scene picker and **Add token** share one row. The drag hint shows when the panel is wide.
   - The plugins page says "1 error, 1 warning", and on a narrow card **Enable** follows the badges. Each form has one filled button; table Settings offers **Save modules** only when there are modules. Card actions, **History** and **Choose image** look like the other panel buttons.

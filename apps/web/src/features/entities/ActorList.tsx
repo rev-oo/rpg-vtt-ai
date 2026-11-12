@@ -141,7 +141,7 @@ export function ActorList({
                     target={{ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id }}
                     label={`${t('sheet.open')}: ${actor.name}`}
                   >
-                    {t('sheet.open')}
+                    {t('entities.open')}
                   </OpenButton>
                   {canDuplicate(actor) && (
                     <IconButton

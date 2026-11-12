@@ -142,7 +142,7 @@ export function ItemList({
                     }}
                     label={t('items.openItem', { name: item.name })}
                   >
-                    {t('items.open')}
+                    {t('entities.open')}
                   </OpenButton>
                   {targets.length > 0 && (
                     <GiveToActor

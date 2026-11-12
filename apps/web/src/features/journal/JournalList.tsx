@@ -130,7 +130,7 @@ export function JournalList({
                     target={{ kind: 'entry', id: entryPanelId(entry.id), entryId: entry.id }}
                     label={`${t('journal.open')}: ${entry.title}`}
                   >
-                    {t('journal.open')}
+                    {t('entities.open')}
                   </OpenButton>
                   {manages && (
                     <IconButton

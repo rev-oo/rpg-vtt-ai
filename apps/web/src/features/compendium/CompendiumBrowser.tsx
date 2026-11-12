@@ -153,7 +153,7 @@ export function CompendiumBrowser(): ReactElement {
                   }}
                   label={t('compendium.openEntry', { name: entry.name })}
                 >
-                  {t('items.open')}
+                  {t('entities.open')}
                 </OpenButton>
                 {toTable && (
                   <Button
