@@ -78,6 +78,8 @@ async function rollsInitiative(
   }
   await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  // Combat shares a group with Chat, which is in front (T-1620).
+  await page.getByRole('tab', { name: 'Combat' }).click();
   const rows = page.getByRole('list', { name: 'Turn order' }).getByRole('listitem');
   await expect(rows).toHaveCount(combatants.length);
   await page.getByRole('button', { name: 'Roll initiative' }).click();
@@ -86,8 +88,10 @@ async function rollsInitiative(
   for (const row of await rows.all()) {
     await expect(row.getByRole('spinbutton', { name: /^Initiative of / })).toHaveValue(/^-?\d+$/);
   }
+  const order = await rows.allTextContents();
+  await page.getByRole('tab', { name: 'Chat' }).click();
   await expect(page.getByRole('log', { name: 'Messages' })).toContainText(formula);
-  return rows.allTextContents();
+  return order;
 }
 
 async function openSheet(page: Page, tableId: string, name: string): Promise<void> {

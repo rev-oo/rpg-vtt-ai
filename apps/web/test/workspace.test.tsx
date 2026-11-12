@@ -55,7 +55,7 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
     expect(screen.getByRole('banner')).toHaveTextContent('Tiny d20');
     expect(screen.getByRole('banner')).not.toHaveTextContent('1.0.0');
-    for (const name of ['Actors', 'Map', 'Combat', 'Chat']) {
+    for (const name of ['Actors', 'Map', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }
     expect(tabs()).toEqual([
@@ -67,9 +67,9 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Scenes',
       'Map',
       'Table',
-      'Combat',
       'Chat',
       'Dice',
+      'Combat',
     ]);
     // Each tab shows its panel's icon, hidden from screen readers (ADR-071).
     await waitFor(() => {
@@ -112,14 +112,16 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     // Another visit to the table finds it as it was left.
     cleanup();
     openTable('/tables/t1');
-    await panel('Combat');
+    await panel('Map');
     expect(tabs()).not.toContain('Chat');
     await user.click((await panelsMenu(user)).getByRole('button', { name: /^Chat/ }));
     expect(await panel('Chat')).toBeInTheDocument();
 
     await user.click(await screen.findByRole('button', { name: 'Close Combat' }));
     await user.click(screen.getByRole('button', { name: 'Reset layout' }));
-    expect(await panel('Combat')).toBeInTheDocument();
+    // The default puts Chat in front of Dice and Combat (T-1620).
+    expect(await panel('Chat')).toBeInTheDocument();
+    expect(tabs()).toContain('Combat');
   });
 
   it('starts from the default layout when the stored one is broken', async () => {

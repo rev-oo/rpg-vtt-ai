@@ -13,6 +13,7 @@ import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
 import { fakeWebSocket, serverEvent, type FakeSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
+import { openPanel } from './support/workspace.js';
 
 // T-0801 (FR-COMBAT-01, 03, 04): the combat tracker beside the chat.
 
@@ -66,7 +67,7 @@ const SYSTEM = {
   },
 };
 
-function openTable(
+async function openTable(
   role: string,
   encounter: () => EncounterView | null,
   handlers: Parameters<typeof fakeApi>[0] = {},
@@ -87,6 +88,8 @@ function openTable(
     ...handlers,
   });
   renderApp('/tables/t1');
+  // Combat shares a group with Chat, which is in front (T-1620).
+  await openPanel('Combat');
   return { ...api, sockets };
 }
 
@@ -114,7 +117,7 @@ describe('combat tracker', () => {
       ...ENCOUNTER,
       combatants: ENCOUNTER.combatants.slice(0, 1),
     };
-    const { sockets } = openTable('player', () => encounter);
+    const { sockets } = await openTable('player', () => encounter);
     const socket = await connected(sockets);
 
     expect(await screen.findByText('Round 1')).toBeInTheDocument();
@@ -131,7 +134,7 @@ describe('combat tracker', () => {
 
   it('lets the GM add a combatant and pass the turn', async () => {
     const after: EncounterView = { ...ENCOUNTER, currentId: 'c2' };
-    const { calls } = openTable('gm', () => ENCOUNTER, {
+    const { calls } = await openTable('gm', () => ENCOUNTER, {
       'POST /tables/t1/encounter/combatants': { status: 201, body: { encounter: ENCOUNTER } },
       'POST /tables/t1/encounter/turn': { body: { encounter: after } },
     });
@@ -168,7 +171,7 @@ describe('combat tracker', () => {
       currentId: null,
       combatants: ENCOUNTER.combatants.map((c) => ({ ...c, initiative: null })),
     };
-    const { calls } = openTable('gm', () => unrolled, {
+    const { calls } = await openTable('gm', () => unrolled, {
       'GET /systems/tiny-d20': { body: SYSTEM },
       'POST /tables/t1/encounter/initiative': { body: { encounter: ENCOUNTER } },
     });
@@ -190,7 +193,7 @@ describe('combat tracker', () => {
   });
 
   it('offers the GM to start an encounter', async () => {
-    const { calls } = openTable('gm', () => null, {
+    const { calls } = await openTable('gm', () => null, {
       'POST /tables/t1/encounter': {
         status: 201,
         body: { encounter: { id: 'e1', round: 0, currentId: null, combatants: [] } },
@@ -204,7 +207,7 @@ describe('combat tracker', () => {
   });
 
   it('asks before ending the encounter (T-1620)', async () => {
-    const { calls } = openTable('gm', () => ENCOUNTER, {
+    const { calls } = await openTable('gm', () => ENCOUNTER, {
       'DELETE /tables/t1/encounter': { status: 204 },
     });
     const user = userEvent.setup();

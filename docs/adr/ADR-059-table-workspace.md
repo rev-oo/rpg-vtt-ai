@@ -21,7 +21,7 @@ A first version with two fixed side panels (collapse and resize only) was built 
 
    Every panel can be closed, dragged into a tab strip, split to any side or floated. Pop-out browser windows are not offered. The **Panels** menu opens a closed panel, or brings an open one forward, near where the default layout keeps it. **Reset layout** restores the default.
 
-3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Combat sits on the right (384 px), above Chat and Dice as tabs.
+3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Chat, Dice and Combat sit on the right (384 px) as tabs of one group, Chat in front (T-1620; before, Combat sat above Chat and Dice).
 4. **One URL per table.**
    - `/tables/:id` is the table's only URL. The old child routes are removed: `/actors/:actorId`, `/journal/:entryId`, `/items`, `/journal`, `/members` and `/settings`. Like any unknown path, they now lead to the tables list.
    - Opening, switching or closing panels never changes the URL. The saved layout, not the URL, brings the open documents back after a reload.
@@ -42,7 +42,7 @@ A first version with two fixed side panels (collapse and resize only) was built 
 
 ## Consequences
 
-- **Keyboard gaps.** Keyboard docking, keyboard resizing of the dividers and group-to-group shortcuts (F6) are in dockview's paid `dockview-enterprise` modules, so they are not available. Keyboard users get the default layout, its tabs and the Panels menu, but cannot rearrange it (§15).
+- **Keyboard gaps.** Keyboard docking, keyboard resizing of the dividers and group-to-group shortcuts (F6) are in dockview's paid `dockview-enterprise` modules, so they are not available. Keyboard users get the default layout, its tabs and the Panels menu, but cannot rearrange it (§15). T-1620 adds our own F6 and Shift+F6 between groups, and a **Skip to panel** list.
 - **Live regions.** dockview's two live regions (`role="status"` and `role="alert"`) are always on the page. Tests look for the app's messages inside their panel, or among non-empty alerts.
 - **Saved layouts.** They stay in one browser. Their format belongs to dockview, so a major dockview upgrade may drop them back to the default; the fallback covers it.
 - **Dependency.** dockview-react, dockview and dockview-core are MIT, have no further dependencies, and are pinned to an exact version. They release often, so upgrades are deliberate.

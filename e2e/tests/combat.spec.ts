@@ -21,6 +21,8 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
     await page.goto(`/tables/${table.id}`);
     await expect(page.getByRole('heading', { name: 'Skirmish Table' })).toBeVisible();
     await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+    // Combat shares a group with Chat, which is in front (T-1620).
+    await page.getByRole('tab', { name: 'Combat' }).click();
     return page;
   };
   const [gmPage, playerPage] = await Promise.all([open(gm), open(player)]);

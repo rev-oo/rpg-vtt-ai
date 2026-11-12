@@ -54,6 +54,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
   - Journal, combat and member rows wrap long names instead of cutting them; lists and filters show types by their label; the tracker shows initiative once, as a field for whoever runs combat; **Give** and **Copy** wait for an actor to be chosen.
   - The invite page names the table and its GM, to anyone holding a usable link, signed in or not; **Sign in** is a button.
   - **End encounter** sits apart from the turn buttons and asks first; **Add combatant** opens the form.
+  - The default layout puts Chat, Dice and Combat in one group on the right, Chat in front; **Reset layout** brings it to tables already laid out.
   - The plugins page says "1 error, 1 warning", and on a narrow card **Enable** follows the badges. Each form has one filled button; table Settings offers **Save modules** only when there are modules. Card actions, **History** and **Choose image** look like the other panel buttons.
   - Table cards, the table header and the Table panel name the system without its version, which stays on Settings and Plugins.
 
