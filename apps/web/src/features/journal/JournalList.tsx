@@ -103,8 +103,9 @@ export function JournalList({
             key={entry.id}
             className="flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface p-3"
           >
-            <div className="flex min-w-0 flex-1 flex-col">
-              <h3 className="truncate font-semibold">{entry.title}</h3>
+            {/* The title keeps room and wraps; the buttons move under it when narrow (T-1620). */}
+            <div className="flex min-w-40 flex-1 flex-col">
+              <h3 className="font-semibold break-words">{entry.title}</h3>
               <p className="flex flex-wrap gap-x-2 text-sm text-muted">
                 {entry.hidden && <span>{t('journal.hidden')}</span>}
                 {entry.hidden && <span aria-hidden="true">·</span>}

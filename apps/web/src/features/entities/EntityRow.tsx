@@ -49,7 +49,7 @@ export function EntityRow({
           <span aria-hidden="true" className="size-10 shrink-0 rounded-lg bg-info-soft" />
         )}
         <div className="flex min-w-40 flex-1 flex-col">
-          <Heading className="truncate font-semibold">{name}</Heading>
+          <Heading className="font-semibold break-words">{name}</Heading>
           <p className="flex flex-wrap gap-x-2 text-sm text-muted">
             <span>{t('entities.typeLabel', { type })}</span>
             {details && <span aria-hidden="true">·</span>}

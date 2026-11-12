@@ -62,8 +62,9 @@ export function MemberList({ data, userId }: { data: TableData; userId: string }
               key={member.userId}
               className="flex flex-wrap items-end gap-3 rounded-lg border border-line bg-surface p-3"
             >
-              <div className="flex min-w-0 flex-1 flex-col">
-                <h3 className="truncate font-semibold">
+              {/* The name keeps room and wraps; the controls move under it when narrow (T-1620). */}
+              <div className="flex min-w-40 flex-1 flex-col">
+                <h3 className="font-semibold break-words">
                   {self ? t('members.you', { name: member.displayName }) : member.displayName}
                 </h3>
                 <p className="text-sm text-muted">@{member.username}</p>
