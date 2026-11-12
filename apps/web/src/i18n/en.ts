@@ -591,6 +591,12 @@ export const en = {
   'combat.freeForm': 'None (free-form)',
   'combat.name': 'Name',
   'combat.add': 'Add combatant',
+  'combat.addSubmit': 'Add',
+  'combat.close': 'Close',
+  'combat.cancel': 'Cancel',
+  'combat.endConfirmTitle': 'End the encounter?',
+  'combat.endConfirm':
+    'The turn order, its initiative and the round are cleared for everyone at the table.',
 
   'journal.title': 'Journal',
   'journal.search': 'Search the journal',

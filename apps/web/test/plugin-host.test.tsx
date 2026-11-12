@@ -267,7 +267,9 @@ describe('plugin host (T-0409)', () => {
   it('lists the sheet history and restores a snapshot (T-0806)', async () => {
     const { calls } = openTable('/tables/t1');
     await openSheet('Goblin King');
-    await userEvent.click(await screen.findByRole('button', { name: 'History' }));
+    const history = await screen.findByRole('button', { name: 'History' });
+    expect(history).toHaveAttribute('data-variant', 'secondary');
+    await userEvent.click(history);
     const dialog = await screen.findByRole('dialog', { name: 'Sheet history' });
     const restores = await within(dialog).findAllByRole('button', { name: /^Restore / });
     expect(restores).toHaveLength(2);

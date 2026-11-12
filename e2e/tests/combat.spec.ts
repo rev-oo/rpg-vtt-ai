@@ -29,6 +29,7 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
 
   await test.step('the GM sets up the encounter', async () => {
     await gmPage.getByRole('button', { name: 'Start an encounter' }).click();
+    await gmPage.getByRole('button', { name: 'Add combatant' }).click();
     for (const [name, initiative, hidden] of [
       ['Hero', '14', false],
       ['Orc', '9', false],
@@ -36,7 +37,7 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
     ] as const) {
       await gmPage.getByLabel('Name', { exact: true }).fill(name);
       if (hidden) await gmPage.getByLabel('Hidden', { exact: true }).check();
-      await gmPage.getByRole('button', { name: 'Add combatant' }).click();
+      await gmPage.getByRole('button', { name: 'Add', exact: true }).click();
       const field = gmPage.getByLabel(`Initiative of ${name}`);
       await field.fill(initiative);
       await field.blur();
@@ -70,6 +71,10 @@ test('a GM runs two rounds of combat with a player watching', async ({ browser }
 
   await test.step('ending the encounter removes it for the player', async () => {
     await gmPage.getByRole('button', { name: 'End encounter' }).click();
+    await gmPage
+      .getByRole('dialog', { name: 'End the encounter?' })
+      .getByRole('button', { name: 'End encounter' })
+      .click();
     await expect(
       playerPage.getByRole('tabpanel', { name: 'Combat' }).getByText(/^Round/),
     ).toBeHidden();

@@ -139,9 +139,12 @@ describe('combat tracker', () => {
 
     await screen.findByRole('list', { name: 'Turn order' });
     expect(order()[1]).toContain('Hidden');
+    // The form opens from Add combatant, below the order (T-1620).
+    expect(screen.queryByLabelText('Actor')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Add combatant' }));
     await user.selectOptions(screen.getByLabelText('Actor'), HERO.id);
     await user.click(screen.getByLabelText('Hidden'));
-    await user.click(screen.getByRole('button', { name: 'Add combatant' }));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => {
       expect(calls.find((c) => c.path === '/tables/t1/encounter/combatants')?.body).toEqual({
         actorId: HERO.id,
@@ -198,5 +201,35 @@ describe('combat tracker', () => {
     expect(await screen.findByText('No combatants yet.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Begin' })).toBeInTheDocument();
     expect(calls.some((c) => c.method === 'POST' && c.path === '/tables/t1/encounter')).toBe(true);
+  });
+
+  it('asks before ending the encounter (T-1620)', async () => {
+    const { calls } = openTable('gm', () => ENCOUNTER, {
+      'DELETE /tables/t1/encounter': { status: 204 },
+    });
+    const user = userEvent.setup();
+    await screen.findByRole('list', { name: 'Turn order' });
+    // Apart from the turn buttons, next to Add combatant.
+    const end = screen.getByRole('button', { name: 'End encounter' });
+    expect(screen.getByRole('button', { name: 'Next turn' }).parentElement).not.toContainElement(
+      end,
+    );
+
+    await user.click(end);
+    const dialog = screen.getByRole('dialog', { name: 'End the encounter?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'End encounter' }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'End the encounter?' })).getByRole('button', {
+        name: 'End encounter',
+      }),
+    );
+    await waitFor(() => {
+      expect(calls.some((c) => c.method === 'DELETE' && c.path === '/tables/t1/encounter')).toBe(
+        true,
+      );
+    });
   });
 });

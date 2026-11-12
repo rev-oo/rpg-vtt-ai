@@ -205,9 +205,10 @@ describe('the image picker (T-1302)', () => {
   it("sets an actor's portrait from the table's images, or from a URL", async () => {
     const api = openTable();
     await openSheet('Goblin King');
-    await userEvent.click(
-      await screen.findByRole('button', { name: 'Choose image for Goblin King' }),
-    );
+    const choose = await screen.findByRole('button', { name: 'Choose image for Goblin King' });
+    // Panel actions share one look (T-1620).
+    expect(choose).toHaveAttribute('data-variant', 'secondary');
+    await userEvent.click(choose);
     const picker = screen.getByRole('dialog', { name: 'Choose an image' });
     await userEvent.click(await within(picker).findByRole('button', { name: 'Use cave.png' }));
     expect(api.calls).toContainEqual(

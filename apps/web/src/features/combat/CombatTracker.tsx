@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState, type ReactElement, type SyntheticEven
 
 import { canRunCombat } from '@vtt/shared';
 import type { ActorView, EncounterView, TableView } from '@vtt/shared/api';
-import { Alert, Button, cn, Select, TextField } from '@vtt/ui';
+import { Alert, Button, cn, Dialog, Select, TextField } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import { useSystem } from '../../plugin-host/system-context.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 import { StatusIcons } from '../map/StatusIcons.js';
@@ -109,14 +110,6 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
                 </Button>
               </>
             )}
-            <Button
-              variant="ghost"
-              onClick={() => {
-                change(() => api.endEncounter(table.id).then(() => null));
-              }}
-            >
-              {t('combat.end')}
-            </Button>
           </div>
         )}
       </div>
@@ -189,10 +182,13 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
             </ol>
           )}
           {runs && (
-            <AddCombatant
+            <EncounterFooter
               actors={actors}
               onAdd={(input) => {
                 change(() => api.addCombatant(table.id, input));
+              }}
+              onEnd={() => {
+                change(() => api.endEncounter(table.id).then(() => null));
               }}
             />
           )}
@@ -258,13 +254,98 @@ function CombatantControls({
   );
 }
 
-/** Adds an actor of the table, or a free-form entry by name. */
+interface NewCombatant {
+  actorId?: string;
+  name?: string;
+  hidden: boolean;
+}
+
+/**
+ * Below the turn order, away from the turn buttons (T-1620): Add combatant opens the form, and
+ * End encounter asks first.
+ */
+function EncounterFooter({
+  actors,
+  onAdd,
+  onEnd,
+}: {
+  actors: readonly ActorView[];
+  onAdd: (input: NewCombatant) => void;
+  onEnd: () => void;
+}): ReactElement {
+  const [adding, setAdding] = useState(false);
+  const [ending, setEnding] = useState(false);
+  return (
+    <div className="flex flex-col gap-2 border-t border-line pt-2">
+      {adding ? (
+        <AddCombatant
+          actors={actors}
+          onAdd={onAdd}
+          onClose={() => {
+            setAdding(false);
+          }}
+        />
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {!adding && (
+          <Button
+            icon={<ICON.add />}
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            {t('combat.add')}
+          </Button>
+        )}
+        <Button
+          className="ml-auto"
+          onClick={() => {
+            setEnding(true);
+          }}
+        >
+          {t('combat.end')}
+        </Button>
+      </div>
+      <Dialog
+        open={ending}
+        title={t('combat.endConfirmTitle')}
+        onClose={() => {
+          setEnding(false);
+        }}
+      >
+        <p>{t('combat.endConfirm')}</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => {
+              setEnding(false);
+            }}
+          >
+            {t('combat.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setEnding(false);
+              onEnd();
+            }}
+          >
+            {t('combat.end')}
+          </Button>
+        </div>
+      </Dialog>
+    </div>
+  );
+}
+
+/** Adds an actor of the table, or a free-form entry by name; stays open for the next one. */
 function AddCombatant({
   actors,
   onAdd,
+  onClose,
 }: {
   actors: readonly ActorView[];
-  onAdd: (input: { actorId?: string; name?: string; hidden: boolean }) => void;
+  onAdd: (input: NewCombatant) => void;
+  onClose: () => void;
 }): ReactElement {
   const [actorId, setActorId] = useState('');
   const [name, setName] = useState('');
@@ -285,7 +366,7 @@ function AddCombatant({
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-2 border-t border-line pt-2">
+    <form onSubmit={submit} aria-label={t('combat.add')} className="flex flex-wrap items-end gap-2">
       <Select
         label={t('combat.actor')}
         value={actorId}
@@ -318,7 +399,10 @@ function AddCombatant({
         />
         {t('combat.hidden')}
       </label>
-      <Button type="submit">{t('combat.add')}</Button>
+      <Button type="submit" variant="primary">
+        {t('combat.addSubmit')}
+      </Button>
+      <Button onClick={onClose}>{t('combat.close')}</Button>
     </form>
   );
 }

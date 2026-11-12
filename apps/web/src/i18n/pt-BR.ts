@@ -598,6 +598,12 @@ export const ptBR: Messages = {
   'combat.freeForm': 'Nenhum (livre)',
   'combat.name': 'Nome',
   'combat.add': 'Adicionar combatente',
+  'combat.addSubmit': 'Adicionar',
+  'combat.close': 'Fechar',
+  'combat.cancel': 'Cancelar',
+  'combat.endConfirmTitle': 'Encerrar o encontro?',
+  'combat.endConfirm':
+    'A ordem de turnos, as iniciativas e a rodada são apagadas para todos na mesa.',
 
   'journal.title': 'Diário',
   'journal.search': 'Buscar no diário',

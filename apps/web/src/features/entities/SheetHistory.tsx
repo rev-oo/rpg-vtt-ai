@@ -47,7 +47,6 @@ export function SheetHistory({ actorId }: { actorId: string }): ReactElement {
   return (
     <>
       <Button
-        variant="ghost"
         onClick={() => {
           setOpen(true);
           setSnapshots(null);

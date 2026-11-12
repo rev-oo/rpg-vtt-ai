@@ -113,6 +113,11 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     // The attack card by its place, as the damage card comes after it.
     const at = await cards.count();
     const attack = cards.nth(at - 1);
+    // A card's actions look like the panels' buttons (T-1620).
+    await expect(attack.getByRole('button', { name: 'Roll damage' })).toHaveAttribute(
+      'data-variant',
+      'secondary',
+    );
     await attack.getByRole('button', { name: 'Roll damage' }).click();
     await expect(attack.getByRole('status')).toHaveText('Rolled for Elowen.');
     const damage = cards.nth(at);

@@ -42,7 +42,6 @@ export function EntityImage({
       {editable && (
         <>
           <Button
-            variant="ghost"
             aria-label={t(imageUrl ? 'image.changeFor' : 'image.chooseFor', { name })}
             onClick={() => {
               setOpen(true);

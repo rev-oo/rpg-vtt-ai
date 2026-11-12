@@ -121,7 +121,6 @@ function CardActions({
         {shown.map(({ action, index }) => (
           <Button
             key={index}
-            variant="ghost"
             className="vtt-card-action"
             disabled={
               busy || (!forRoller(action) && actorId === null) || action.error !== undefined
