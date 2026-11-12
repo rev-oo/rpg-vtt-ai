@@ -74,7 +74,7 @@ function RowNode({ node, row }: { node: NodeOf<'row'>; row: RowScope | undefined
         // with the inputs next to them.
         // Fields ask for the width their input needs, other children for 4rem (T-1620), and the
         // row wraps once they do not fit, so a counter keeps room for its value.
-        'vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end',
+        'vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end',
         GAPS[node.gap ?? 'md'],
         node.class,
       )}

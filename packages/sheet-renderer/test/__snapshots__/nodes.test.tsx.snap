@@ -360,7 +360,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
@@ -444,7 +444,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
@@ -585,7 +585,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
@@ -639,7 +639,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
@@ -764,7 +764,7 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
     data-plugin="tiny-test"
   >
     <div
-      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-sm) stats"
+      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-sm) stats"
     >
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
