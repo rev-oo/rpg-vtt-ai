@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 71%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 89%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -76,7 +76,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-11 | T-1617 done (ADR-082): cards declare `actions` (at most 6), worked out when the roll is made: apply actions step a counter of the actor of the token the clicker has selected on the map, through `POST /messages/:id/apply`, if they may edit it; roll actions roll another recipe with arguments from the card, for the selected token or, with `"for": "roller"`, for the actor that rolled the card, with its item. srd5's attack cards offer **Roll damage** (new `weaponDamage`, `npcDamage` and `spellDamage` recipes, doubled on a critical hit), damage cards apply it or half of it, its spell card applies damage or healing, and spells that ask for a save offer **Roll saving throw** through a new `save` recipe that reads the ability and DC. |
 | 2026-11-11 | T-1618 done (ADR-083): actor types list true/false fields as `statuses`, each with a label and an icon of the plugin (SVG allowed). Token views and combatants carry the statuses that are on, a secret field's only to GMs and assistants; the map draws their icons on the token, and the token list and combat tracker show them named. When a stored sheet changes its statuses, those who see its tokens or combatants get `token.updated` or `combat.updated` (a secret status's change only GMs and assistants). srd5 shows its 14 conditions, with icons of its own.                                                                                                                                                                                   |
 | 2026-11-11 | T-1615 (targets) moves from M16 to LATER at the user's request, to be thought through first. M16 now has T-1606 left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| 2026-11-12 | T-1606 done: the [interface review](docs/studies/interface-review.md) covers every screen at desktop and phone sizes, with 62 screenshots from `e2e/scripts/capture-screens.mjs`, a keyboard pass and the table's accessibility tree. The user picked P1 to P5, P7 and P8, now T-1619 (users page), T-1620 (sheet grids), T-1621 (roll lines), T-1622 (map legibility), T-1623 (narrow panels), T-1624 (keyboard between panels) and T-1625 (small fixes). The phone table (P6) and a fuller Table page (P9) go to LATER.                                                                                                                                                                                                                                      |
+| 2026-11-12 | T-1606 done: the [interface review](docs/studies/interface-review.md) covers every screen at desktop and phone sizes, with 62 screenshots from `e2e/scripts/capture-screens.mjs`, a keyboard pass and the table's accessibility tree. The user picked P1 to P5, P7 and P8: T-1619 (users page), and T-1620 (interface fixes), which groups the others at the user's request. The phone table (P6) and a fuller Table page (P9) go to LATER.                                                                                                                                                                                                                                                                                                                    |
 
 ---
 
@@ -821,7 +821,7 @@ Plugin data that follows system upgrades, and plugin code that runs contained.
 
 ### M16 — Modules, a 5e study and the interface
 
-Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1614, T-1617 and T-1618), and a review of the interface before the 1.0 freeze with the changes it found (T-1619 to T-1625).
+Module plugins, a generic way to extend any table, a full system built as a test of the plugin format, the changes the two studies found (T-1607 to T-1614, T-1617 and T-1618), and a review of the interface before the 1.0 freeze with the changes it found (T-1619 and T-1620).
 
 - [x] **T-1601 · Module plugins**
   - **Deps:** none
@@ -909,42 +909,23 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** Review every screen on desktop and phone (layout, consistency, empty states, feedback, keyboard and screen-reader use) and write it up with screenshots in `docs/studies/interface-review.md`. The changes the user picks join M16 as tasks.
   - **Done when:** the review covers each screen at both sizes, and the chosen changes are tasks in M16.
 
-  - **Also:** the review is [`docs/studies/interface-review.md`](docs/studies/interface-review.md), with 62 screenshots taken by `e2e/scripts/capture-screens.mjs`. The user picked P1 to P5, P7 and P8, which follow as T-1619 to T-1625; P6 and P9 go to LATER.
+  - **Also:** the review is [`docs/studies/interface-review.md`](docs/studies/interface-review.md), with 62 screenshots taken by `e2e/scripts/capture-screens.mjs`. The user picked P1 to P5, P7 and P8: P1 is T-1619, and the rest are grouped in T-1620. P6 and P9 go to LATER.
 
 - [ ] **T-1619 · Users page**
   - **Deps:** T-1606
   - **Do:** From the [interface review](docs/studies/interface-review.md), P1 (R1). An admin page lists the instance's users and creates one with a one-time password shown once, resets a user's password to a new one-time password, and disables or enables a user. A disabled user cannot sign in and their sessions end. The last enabled admin cannot be disabled.
   - **Done when:** server tests cover each action, its rights and the last-admin rule; web tests cover the page; e2e creates a player who then signs in and joins a table.
 
-- [ ] **T-1620 · Sheet grids fit their fields**
+- [ ] **T-1620 · Interface fixes**
   - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P2 (R9). In `sheet-renderer`, a counter keeps a minimum width for its value, a grid wraps to fewer columns when its cells are narrower than its fields need, and long labels wrap without overlapping the field below, for every system.
-  - **Done when:** component tests cover a counter in a narrow grid; the srd5 character sheet shows its Hit Points in the default desktop layout (e2e or screenshot check).
-
-- [ ] **T-1621 · Readable roll lines**
-  - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P3 (R10). A roll in chat shows its resolved formula (`1d20 + 4`), then the dice and the total. The recipe's formula, with its references, shows only on request, such as in a "Formula" disclosure. Plain `/r` rolls take one line for the formula and dice.
-  - **Done when:** web tests cover a recipe roll and a plain roll; no `@` reference shows in a roll line by default.
-
-- [ ] **T-1622 · Map legibility**
-  - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P4 (R11, R12). Token names draw on a solid pill readable in both themes and hide below a zoom where they cannot be read; status icons keep a minimum size on screen and get a ring that shows them in the dark theme; the grid's colour comes from the theme.
-  - **Done when:** tests cover the label and icon sizes by zoom and the theme's grid colour; screenshots of both themes show the names, statuses and grid.
-
-- [ ] **T-1623 · Narrow panels**
-  - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P5 (R13, R16, R19). In narrow panels, journal, combat and member rows put their controls below the name rather than truncating it; the tracker shows a combatant's initiative once, as a field the GM edits. Actor, item and compendium rows and the type filters show the system's translated type label. An item's **Give** list starts on "Choose an actor" and gives nothing until one is chosen.
-  - **Done when:** web tests cover the type labels, the initiative shown once and **Give** without a choice; screenshots show full names in a 320 px side panel.
-
-- [ ] **T-1624 · Keyboard between panels**
-  - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P7 (R22, R23). Panel tabs show the app's focus ring. F6 and Shift+F6 move focus to the next or previous panel group; a "Skip to panel" menu at the top of the table lists the open panels; the dock sits in a `main` landmark. Document the keys in the user guide.
-  - **Done when:** web tests cover F6 in both directions and the skip menu; e2e reaches the chat input from the header in a few keys.
-
-- [ ] **T-1625 · Small interface fixes**
-  - **Deps:** T-1606
-  - **Do:** From the [interface review](docs/studies/interface-review.md), P8 (R2, R3, R6, R7, R8, R15, R20, R21). A "Page not found" page for unknown paths. The invite page names the table and its GM, with **Sign in** as a button. The plugin issue count uses plural forms, and **Enable** follows the badges on narrow screens. One filled button per form, and no save button for an empty section. **End encounter** asks first and sits apart from the turn buttons; adding a combatant opens from an **Add** button. Invite links can be copied from the list and show when they were made and how often used, without seconds. Card and panel actions share one button style. The system's version shows only on the Settings and Plugins pages.
-  - **Done when:** web tests cover each change; the capture script's screenshots show them at both sizes.
+  - **Do:** From the [interface review](docs/studies/interface-review.md), P2 to P5, P7 and P8:
+    - **Sheet grids** (R9): in `sheet-renderer`, a counter keeps a minimum width for its value, a grid wraps to fewer columns when its cells are narrower than its fields need, and long labels wrap without overlapping the field below, for every system.
+    - **Roll lines** (R10): a roll in chat shows its resolved formula (`1d20 + 4`), then the dice and the total. The recipe's formula, with its references, shows only on request, such as in a "Formula" disclosure.
+    - **Map legibility** (R11, R12): token names draw on a solid pill readable in both themes and hide below a zoom where they cannot be read; status icons keep a minimum size and get a ring that shows them in the dark theme; the grid's colour comes from the theme.
+    - **Narrow panels** (R13, R16, R19): journal, combat and member rows put their controls below the name rather than truncating it; the tracker shows initiative once, as a field the GM edits; rows and type filters show the system's translated type label; an item's **Give** list starts on "Choose an actor".
+    - **Keyboard** (R22, R23): panel tabs show the focus ring; F6 and Shift+F6 move between panel groups; a "Skip to panel" menu lists the open panels; the dock sits in a `main` landmark. The keys are documented in the user guide.
+    - **Small fixes** (R2, R3, R6, R7, R8, R15, R20, R21): a "Page not found" page; the invite page names the table and its GM, with **Sign in** as a button; plural issue counts, and **Enable** after the badges on narrow screens; one filled button per form, and no save button for an empty section; **End encounter** asks first and sits apart from the turn buttons, and adding a combatant opens from an **Add** button; invite links can be copied from the list and show when they were made and how often used, without seconds; one button style for card and panel actions; the system's version only on the Settings and Plugins pages.
+  - **Done when:** component and web tests cover each part (a counter in a narrow grid, no `@` reference in a default roll line, label and icon sizes by zoom, type labels, initiative shown once, **Give** without a choice, F6 both ways and the skip menu, and each small fix); e2e reaches the chat input from the header in a few keys; the capture script's screenshots show the changes at both sizes and in both themes.
 
 ### M17 — 1.0
 

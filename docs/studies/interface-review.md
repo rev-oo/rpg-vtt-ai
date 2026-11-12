@@ -254,16 +254,6 @@ Pick the ones to add to M16. Each one lists the findings it closes.
 
 ## Outcome
 
-The user picked P1 to P5, P7 and P8. They are T-1619 to T-1625 in M16:
-
-| Proposal | Task   | Name                    |
-| -------- | ------ | ----------------------- |
-| P1       | T-1619 | Users page              |
-| P2       | T-1620 | Sheet grids             |
-| P3       | T-1621 | Roll lines              |
-| P4       | T-1622 | Map legibility          |
-| P5       | T-1623 | Narrow panels           |
-| P7       | T-1624 | Keyboard between panels |
-| P8       | T-1625 | Small fixes             |
+The user picked P1 to P5, P7 and P8. P1 is T-1619 (users page) in M16. The others are grouped, at the user's request, in T-1620 (interface fixes): P2 (sheet grids), P3 (roll lines), P4 (map legibility), P5 (narrow panels), P7 (keyboard between panels) and P8 (small fixes).
 
 The phone table (P6) and a fuller Table page (P9) went to LATER, so the phone stays a way to follow a game and check one's sheet for 1.0. The capture script stays in the repo, so the review can be repeated after the fixes.
