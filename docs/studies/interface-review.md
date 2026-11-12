@@ -252,7 +252,18 @@ Pick the ones to add to M16. Each one lists the findings it closes.
 | P8  | **Small fixes:** a not-found page, an invite page that names the table, the plural count, asking before ending an encounter, copying invites from the list, one filled button per form, versions out of the play screens, consistent button styles. | R2, R3, R6–R8, R15, R20, R21 | Medium |
 | P9  | **A fuller Table page:** members and who is online, the shown scene, the encounter. Optional.                                                                                                                                                       | R17                          | Small  |
 
-## Questions
+## Outcome
 
-- **Q1.** Should the phone become a first-class way to play (P6), or stay a way to follow a game and check one's sheet? P6 is the largest task here, and the answer sets how far it goes.
-- **Q2.** Should the capture script stay in the repo to repeat this review after the fixes? It is included, under `e2e/scripts/`.
+The user picked P1 to P5, P7 and P8. They are T-1619 to T-1625 in M16:
+
+| Proposal | Task   | Name                    |
+| -------- | ------ | ----------------------- |
+| P1       | T-1619 | Users page              |
+| P2       | T-1620 | Sheet grids             |
+| P3       | T-1621 | Roll lines              |
+| P4       | T-1622 | Map legibility          |
+| P5       | T-1623 | Narrow panels           |
+| P7       | T-1624 | Keyboard between panels |
+| P8       | T-1625 | Small fixes             |
+
+The phone table (P6) and a fuller Table page (P9) went to LATER, so the phone stays a way to follow a game and check one's sheet for 1.0. The capture script stays in the repo, so the review can be repeated after the fixes.
