@@ -79,6 +79,8 @@ export const updateUserBody = z
   })
   .partial()
   .refine(atLeastOneField, AT_LEAST_ONE_FIELD);
+export type CreateUserInput = z.input<typeof createUserBody>;
+export type UpdateUserInput = z.input<typeof updateUserBody>;
 
 // Tables (FR-TABLE-01, 02, 07)
 

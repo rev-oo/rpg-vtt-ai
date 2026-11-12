@@ -4,6 +4,7 @@ import { ApiError } from './client.js';
 
 const MESSAGES: Partial<Record<string, MessageKey>> = {
   invalid_credentials: 'login.invalidCredentials',
+  username_taken: 'users.usernameTaken',
   account_disabled: 'login.disabled',
   wrong_password: 'account.wrongPassword',
   system_unavailable: 'createTable.systemUnavailable',

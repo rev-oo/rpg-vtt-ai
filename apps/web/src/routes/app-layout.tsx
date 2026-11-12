@@ -45,6 +45,11 @@ export default function AppLayout(): ReactElement {
             {t('nav.account')}
           </NavLink>
           {user?.isAdmin && (
+            <NavLink to="/admin/users" className={navLinkClass}>
+              {t('nav.users')}
+            </NavLink>
+          )}
+          {user?.isAdmin && (
             <NavLink to="/admin/plugins" className={navLinkClass}>
               {t('nav.plugins')}
             </NavLink>

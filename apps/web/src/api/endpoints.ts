@@ -1,4 +1,10 @@
 import {
+  adminUserResponseSchema,
+  adminUsersResponseSchema,
+  type AdminUser,
+  type AdminUserResponse,
+  type CreateUserInput,
+  type UpdateUserInput,
   assetListResponseSchema,
   assetResponseSchema,
   type AssetView,
@@ -505,6 +511,20 @@ export const api = {
 
   disablePlugin: async (id: string): Promise<AdminPlugin> =>
     (await request('POST', `/plugins/${id}/disable`, pluginResponseSchema)).plugin,
+
+  /** The instance's users, for admins (FR-AUTH-02, T-1619). */
+  listUsers: async (): Promise<AdminUser[]> =>
+    (await request('GET', '/users', adminUsersResponseSchema)).users,
+
+  /** Creates a user; the response carries their one-time password, shown once. */
+  createUser: (input: CreateUserInput): Promise<AdminUserResponse> =>
+    request('POST', '/users', adminUserResponseSchema, input),
+
+  /** Changes a user; `resetPassword` returns a new one-time password, shown once. */
+  updateUser: (id: string, input: UpdateUserInput): Promise<AdminUserResponse> =>
+    request('PATCH', `/users/${id}`, adminUserResponseSchema, input),
+
+  deleteUser: (id: string): Promise<void> => requestNoContent('DELETE', `/users/${id}`),
 
   /** The site name and registration policy; needs no session. */
   instanceInfo: async (): Promise<InstanceInfo> =>

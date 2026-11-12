@@ -21,7 +21,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 89%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 95%      |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
@@ -29,7 +29,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 ### 0.2 Current focus
 
 - **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1619` (users page)
+- **Next task:** `T-1620` (interface fixes)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -77,6 +77,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-11 | T-1618 done (ADR-083): actor types list true/false fields as `statuses`, each with a label and an icon of the plugin (SVG allowed). Token views and combatants carry the statuses that are on, a secret field's only to GMs and assistants; the map draws their icons on the token, and the token list and combat tracker show them named. When a stored sheet changes its statuses, those who see its tokens or combatants get `token.updated` or `combat.updated` (a secret status's change only GMs and assistants). srd5 shows its 14 conditions, with icons of its own.                                                                                                                                                                                   |
 | 2026-11-11 | T-1615 (targets) moves from M16 to LATER at the user's request, to be thought through first. M16 now has T-1606 left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 2026-11-12 | T-1606 done: the [interface review](docs/studies/interface-review.md) covers every screen at desktop and phone sizes, with 62 screenshots from `e2e/scripts/capture-screens.mjs`, a keyboard pass and the table's accessibility tree. The user picked P1 to P5, P7 and P8: T-1619 (users page), and T-1620 (interface fixes), which groups the others at the user's request. The phone table (P6) and a fuller Table page (P9) go to LATER.                                                                                                                                                                                                                                                                                                                    |
+| 2026-11-12 | T-1619 done: admins manage users on a **Users** page (create with a one-time password shown once, reset a password, disable or enable, make admin, delete). The API already had these routes; its responses now have schemas in `@vtt/shared/api`. Admins cannot disable, demote or delete themselves, which keeps an enabled admin; a server test states that rule.                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ---
 
@@ -911,7 +912,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
 
   - **Also:** the review is [`docs/studies/interface-review.md`](docs/studies/interface-review.md), with 62 screenshots taken by `e2e/scripts/capture-screens.mjs`. The user picked P1 to P5, P7 and P8: P1 is T-1619, and the rest are grouped in T-1620. P6 and P9 go to LATER.
 
-- [ ] **T-1619 · Users page**
+- [x] **T-1619 · Users page**
   - **Deps:** T-1606
   - **Do:** From the [interface review](docs/studies/interface-review.md), P1 (R1). An admin page lists the instance's users and creates one with a one-time password shown once, resets a user's password to a new one-time password, and disables or enables a user. A disabled user cannot sign in and their sessions end. The last enabled admin cannot be disabled.
   - **Done when:** server tests cover each action, its rights and the last-admin rule; web tests cover the page; e2e creates a player who then signs in and joins a table.

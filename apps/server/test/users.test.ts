@@ -172,6 +172,26 @@ describe('user administration (FR-AUTH-02, FR-AUTH-06)', () => {
     }
   });
 
+  it('always leaves an enabled admin: the last one cannot be disabled, demoted or deleted (T-1619)', async () => {
+    const { app, admin, adminId } = await setup();
+    const bea = await createUserClient(app, admin, 'bea', { isAdmin: true });
+    // Either admin may disable the other, which ends that admin's sessions…
+    expect((await patchUser(app, admin, bea.userId, { disabled: true })).statusCode).toBe(200);
+    const asBea = await patchUser(app, bea.client, adminId, { disabled: true });
+    expect(asBea.statusCode).toBe(401);
+    // …and the one left cannot remove themselves by any route.
+    for (const change of [{ disabled: true }, { isAdmin: false }]) {
+      expect((await patchUser(app, admin, adminId, change)).statusCode).toBe(400);
+    }
+    expect((await deleteUser(app, admin, adminId)).statusCode).toBe(400);
+    const enabledAdmins = (
+      await app.inject({ method: 'GET', url: '/api/v1/users', headers: authHeaders(admin) })
+    )
+      .json<{ users: { isAdmin: boolean; disabled: boolean }[] }>()
+      .users.filter((user) => user.isAdmin && !user.disabled);
+    expect(enabledAdmins).toHaveLength(1);
+  });
+
   it('validates the id and body', async () => {
     const { app, admin, adminId } = await setup();
     expect((await patchUser(app, admin, 'not-a-uuid', { disabled: true })).statusCode).toBe(400);
