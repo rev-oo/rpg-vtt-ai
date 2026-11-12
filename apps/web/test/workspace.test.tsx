@@ -175,6 +175,8 @@ describe('moving between panels by keyboard (T-1620)', () => {
   it('moves to the next and previous panel group with F6 and Shift+F6', async () => {
     openTable('/tables/t1');
     await panel('Chat');
+    // The keys work once the dock is ready, as the skip list shows.
+    await screen.findByRole('button', { name: 'Go to Chat' });
     const user = userEvent.setup();
     screen.getByRole('link', { name: 'Tables' }).focus();
 
@@ -200,9 +202,11 @@ describe('moving between panels by keyboard (T-1620)', () => {
     openTable('/tables/t1');
     await panel('Chat');
     const user = userEvent.setup();
+    // The list shows once the dock is ready: one entry per open panel, before the header's
+    // own controls.
+    const goToChat = await screen.findByRole('button', { name: 'Go to Chat' });
     const skip = screen.getByRole('navigation', { name: 'Skip to panel' });
-    // One entry per open panel, before the header's own controls.
-    expect(await within(skip).findByRole('button', { name: 'Go to Chat' })).toBeInTheDocument();
+    expect(skip).toContainElement(goToChat);
     expect(within(skip).getByRole('button', { name: 'Go to Map' })).toBeInTheDocument();
     await user.tab();
     expect(skip).toContainElement(
