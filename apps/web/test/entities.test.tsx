@@ -355,10 +355,14 @@ describe('item library (FR-ENT-05, 06)', () => {
       within(give)
         .getAllByRole('option')
         .map((o) => o.textContent),
-    ).toEqual(['Bob the Brave']);
+    ).toEqual(['Choose an actor', 'Bob the Brave']);
     expect(screen.queryByRole('button', { name: 'New item' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
 
+    // Nothing is given until an actor is chosen (T-1620).
+    expect(give).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Give' })).toBeDisabled();
+    await user.selectOptions(give, 'Bob the Brave');
     await user.click(screen.getByRole('button', { name: 'Give' }));
     expect(await screen.findByText('Bob the Brave received a copy of Sword.')).toBeVisible();
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ itemId: 'i1' });

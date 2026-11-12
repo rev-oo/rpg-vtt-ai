@@ -159,6 +159,7 @@ export const en = {
   'items.trashEmpty': 'The trash is empty.',
   'items.giveTo': 'Give {name} to',
   'items.give': 'Give',
+  'items.chooseActor': 'Choose an actor',
   'items.open': 'Open',
   'items.openItem': 'Open item: {name}',
   'items.notFound': 'This item does not exist, or you cannot see it.',

@@ -375,7 +375,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(entries.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
     // Players browse every entry but copy nothing into the table.
     await expect(page.getByRole('button', { name: /to the table$/ })).toHaveCount(0);
-    await expect(page.getByLabel('Actor to copy Shortsword onto')).toHaveValue(actor.id);
+    await page.getByLabel('Actor to copy Shortsword onto').selectOption(actor.id);
     await page.getByRole('button', { name: 'Copy Shortsword onto the chosen actor' }).click();
     await expect(page.getByText('Shortsword was copied onto Ayla.')).toBeVisible();
     const owned = await player.context.request.get(`/api/v1/actors/${actor.id}/items`);

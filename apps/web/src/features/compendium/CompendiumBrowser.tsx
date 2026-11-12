@@ -305,8 +305,9 @@ function CopyOnto({
   targets: readonly { id: string; name: string }[];
   onCopy: (onto: { id: string; name: string }) => Promise<void>;
 }): ReactElement {
-  const [actorId, setActorId] = useState(targets[0]?.id ?? '');
-  const target = targets.find((actor) => actor.id === actorId) ?? targets[0];
+  // Nothing is chosen at first, as with Give on items (T-1620).
+  const [actorId, setActorId] = useState('');
+  const target = targets.find((actor) => actor.id === actorId);
   const id = `copy-onto-${entry.ref}`;
   return (
     <div className="flex items-center gap-2">
@@ -321,6 +322,7 @@ function CopyOnto({
           setActorId(e.target.value);
         }}
       >
+        <option value="">{t('items.chooseActor')}</option>
         {targets.map((actor) => (
           <option key={actor.id} value={actor.id}>
             {actor.name}
@@ -328,6 +330,7 @@ function CopyOnto({
         ))}
       </select>
       <Button
+        disabled={!target}
         aria-label={t('compendium.copyOntoButton', { name: entry.name })}
         onClick={() => {
           if (target) void onCopy(target);

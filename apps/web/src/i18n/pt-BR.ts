@@ -163,6 +163,7 @@ export const ptBR: Messages = {
   'items.trashEmpty': 'A lixeira está vazia.',
   'items.giveTo': 'Dar {name} para',
   'items.give': 'Dar',
+  'items.chooseActor': 'Escolha um ator',
   'items.open': 'Abrir',
   'items.openItem': 'Abrir item: {name}',
   'items.notFound': 'Este item não existe, ou você não pode vê-lo.',
