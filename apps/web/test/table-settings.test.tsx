@@ -231,6 +231,12 @@ const GLOW = {
 };
 
 describe('modules and settings by scope (T-1601)', () => {
+  it('offers no Save modules when there are no modules to choose (T-1620)', async () => {
+    await openSettings({});
+    expect(await screen.findByText('No modules are enabled on this server.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save modules' })).not.toBeInTheDocument();
+  });
+
   it('lets the GM choose modules and set their table settings', async () => {
     let table: TableView = TABLE;
     const { calls } = await openSettings(

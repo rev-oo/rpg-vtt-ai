@@ -160,6 +160,10 @@ describe('account (FR-AUTH-05)', () => {
     const field = await screen.findByLabelText('Display name');
     await user.clear(field);
     await user.type(field, 'Al');
+    // Each form on the page has one filled button (T-1620).
+    for (const form of document.querySelectorAll('form')) {
+      expect(form.querySelectorAll('button[data-variant="primary"]')).toHaveLength(1);
+    }
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await screen.findByText('Profile saved.');
