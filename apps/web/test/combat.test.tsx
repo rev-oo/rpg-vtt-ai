@@ -173,10 +173,14 @@ describe('combat tracker', () => {
     await user.click(await screen.findByRole('button', { name: 'Roll initiative' }));
     await waitFor(() => {
       expect(order()).toEqual([
-        expect.stringMatching(/^15Goblin/),
-        expect.stringMatching(/^12Goblin King/),
+        expect.stringMatching(/^Goblin/),
+        expect.stringMatching(/^Goblin King/),
       ]);
     });
+    // The GM sees each initiative once, in the field that edits it (T-1620).
+    expect(screen.getByLabelText('Initiative of Goblin')).toHaveValue(15);
+    expect(screen.getByLabelText('Initiative of Goblin King')).toHaveValue(12);
+    expect(order().join()).not.toMatch(/\d/);
     expect(calls.some((c) => c.path === '/tables/t1/encounter/initiative')).toBe(true);
     // Everyone has initiative now.
     expect(screen.queryByRole('button', { name: 'Roll initiative' })).not.toBeInTheDocument();
