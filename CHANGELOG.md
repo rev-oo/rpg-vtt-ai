@@ -6,6 +6,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- The table page can be used from the keyboard (T-1620). F6 and Shift+F6 move to the next or previous panel group, landing in the chat's message box; **Skip to panel**, the page's first stop, goes straight to any open panel; the panels sit in a `main` landmark, and their tabs show the focus ring. The new [user guide](docs/user-guide.md) lists the keys.
+
+- An address the app does not know shows **Page not found** with the way back, instead of the tables list (T-1620).
+
 - Admins manage the instance's users on a new **Users** page (T-1619). They create a user, who signs in with a one-time password shown once and then chooses their own; reset a password to a new one-time password; disable or re-enable a user, which signs them out; make a user admin or not; and delete a user. Admins change their own account on the Account page, so there is always an enabled admin.
 
 - Tokens show their actor's statuses, such as conditions (T-1618). A system lists true/false fields as statuses, each with an icon; while one is on, its icon shows on the token on the map, and the token list and combat tracker name it. A secret field's status shows only to the GM and assistants, and statuses follow the sheet as it changes. In `srd5`, the 14 conditions show on tokens, with icons of their own.
@@ -43,6 +47,16 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- The interface fixes of the review (T-1620):
+  - Sheet fields in a row keep the width their input needs, and a grid with counters gets wider columns, in every system.
+  - A roll in chat reads as rolled (`1d20 + 4`, the dice, the total); the recipe's formula with its `@` references shows under **Formula**.
+  - On the map, token names sit on a pill readable in both themes and hide when too small to read; status icons keep a minimum size and get a ring; the grid takes the theme's colour.
+  - Journal, combat and member rows wrap long names instead of cutting them; lists and filters show types by their label; the tracker shows initiative once, as a field for whoever runs combat; **Give** and **Copy** wait for an actor to be chosen.
+  - The invite page names the table and its GM, to anyone holding a usable link, signed in or not; **Sign in** is a button.
+  - **End encounter** sits apart from the turn buttons and asks first; **Add combatant** opens the form.
+  - The plugins page says "1 error, 1 warning", and on a narrow card **Enable** follows the badges. Each form has one filled button; table Settings offers **Save modules** only when there are modules. Card actions, **History** and **Choose image** look like the other panel buttons.
+  - Table cards, the table header and the Table panel name the system without its version, which stays on Settings and Plugins.
+
 - A module's overlay is made interactive, and a panel given its title, in `plugin.json` under `frames`, no longer in `defineClient`. A module whose `plugin.json` does not declare its overlays and panels no longer shows them (T-1612, ADR-079).
 - The formula shown next to a roll in the chat keeps only the branches the formula took, the dice a `roll()` rolled, and no `+ 0`: a longsword's damage reads `1d10 + 3` instead of every die size it might have used (T-1607).
 - The app has icons. Dock tabs and the Panels menu show each panel's icon; the map's tools and zoom buttons, and the row actions in the Actors, Items, Journal and Scenes lists, are icon buttons with a tooltip and the same names for screen readers; New, Add token, Send, Roll, Upload and other common actions show an icon beside their text (ADR-071).
@@ -50,6 +64,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Dragging with the middle mouse button pans the map whatever tool is picked, so the ruler, circle, cone and fog tools no longer need a switch back to Select to move the map (ADR-069).
 
 ### Fixed
+
+- Roll buttons in a sheet row keep their width instead of covering the controls beside the row (T-1620).
 
 - A plugin's custom sheet parts and chat cards no longer show "failed to show" after their tab is hidden behind another one and shown again, or after their panel is moved. The app now starts the plugin's frame again (ADR-074).
 - The Panels menu is no longer covered by the workspace's resize bars.
