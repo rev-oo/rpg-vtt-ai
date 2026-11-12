@@ -466,8 +466,9 @@ export const en = {
   'compendium.copyOntoButton': 'Copy {name} onto the chosen actor',
   'compendium.copied': '{name} was copied to the table.',
   'compendium.copiedOnto': '{name} was copied onto {actor}.',
-  'compendium.preview': 'Preview',
-  'compendium.noPreview': 'The system is not loaded, so there is no preview.',
+  'compendium.openEntry': 'Open compendium entry: {name}',
+  'compendium.sheetOf': '{type} · {pack} · compendium, read-only',
+  'compendium.notFound': 'This compendium entry is gone.',
 
   'map.title': 'Map',
   'map.role': 'map',

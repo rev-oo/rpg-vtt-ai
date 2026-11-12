@@ -82,15 +82,15 @@ const SWORD: CompendiumEntry = {
   inTable: true,
 };
 
+const BESTIARY = {
+  name: 'bestiary',
+  label: 'pack.bestiary',
+  attribution: { text: 'From the Tiny SRD.', url: null },
+};
+
 const page = (...entries: CompendiumEntry[]) => ({
   body: {
-    packs: [
-      {
-        name: 'bestiary',
-        label: 'pack.bestiary',
-        attribution: { text: 'From the Tiny SRD.', url: null },
-      },
-    ],
+    packs: [BESTIARY],
     entries,
     nextCursor: null,
   },
@@ -124,6 +124,9 @@ async function openCompendium(role: TableRole, handlers: Parameters<typeof fakeA
       },
     },
     'GET /tables/t1/compendium?limit=50': page(OGRE, SWORD),
+    'GET /tables/t1/compendium/entries/tiny-d20%3Abestiary%3Aogre': {
+      body: { entry: OGRE, pack: BESTIARY },
+    },
     ...handlers,
   });
   renderApp('/tables/t1');
@@ -138,7 +141,7 @@ const row = async (name: string) =>
     .find((item) => within(item).queryByRole('heading', { name }) !== null) ?? null;
 
 describe('compendium browser', () => {
-  it('lists entries with their pack and whether the table has them, and previews a sheet', async () => {
+  it('lists entries with their pack and whether the table has them, and opens a sheet', async () => {
     await openCompendium('gm');
     const user = userEvent.setup();
     expect(await within(await entries()).findByRole('heading', { name: 'Ogre' })).toBeVisible();
@@ -150,12 +153,14 @@ describe('compendium browser', () => {
     expect(await row('Ogre')).toHaveTextContent('Type: Creature');
     expect(sword).toHaveTextContent('Type: Weapon');
 
-    const ogre = await row('Ogre');
-    if (!ogre) throw new Error('no Ogre row');
-    await user.click(within(ogre).getByText('Preview', { selector: 'summary', exact: false }));
-    expect(await within(ogre).findByLabelText('Strength')).toHaveValue('19');
+    // An entry opens as a read-only sheet in a panel of its own (T-1620).
+    await user.click(screen.getByRole('button', { name: 'Open compendium entry: Ogre' }));
+    const sheet = await screen.findByRole('tabpanel', { name: 'Ogre' });
+    expect(await within(sheet).findByLabelText('Strength')).toHaveValue('19');
+    expect(within(sheet).getByLabelText('Strength')).toHaveAttribute('readonly');
+    expect(sheet).toHaveTextContent('Creature · Bestiary · compendium, read-only');
     // The pack's credit shows beside the entry it credits (T-1614).
-    expect(within(ogre).getByText('From the Tiny SRD.')).toBeVisible();
+    expect(within(sheet).getByText('From the Tiny SRD.')).toBeVisible();
   });
 
   it('lets the GM copy an entry into the table', async () => {

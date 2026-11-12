@@ -89,10 +89,12 @@ import {
   type FogInput,
   type SceneView,
   compendiumCopyResponseSchema,
+  compendiumEntryResponseSchema,
   compendiumPageSchema,
   type CompendiumCopyInput,
   type CompendiumCopyResponse,
   type CompendiumEntry,
+  type CompendiumEntryResponse,
   type CompendiumPack,
   type CompendiumQuery,
   type EncounterView,
@@ -370,6 +372,13 @@ export const api = {
   ): Promise<ListPage<CompendiumEntry> & { packs: CompendiumPack[] }> =>
     request('GET', `/tables/${tableId}/compendium${toQuery(query)}`, compendiumPageSchema).then(
       ({ entries, nextCursor, packs }) => ({ rows: entries, nextCursor, packs }),
+    ),
+  /** One compendium entry, for its read-only sheet (T-1620). */
+  compendiumEntry: (tableId: string, ref: string): Promise<CompendiumEntryResponse> =>
+    request(
+      'GET',
+      `/tables/${tableId}/compendium/entries/${encodeURIComponent(ref)}`,
+      compendiumEntryResponseSchema,
     ),
   copyFromCompendium: (
     tableId: string,

@@ -90,14 +90,12 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
       await page.getByRole('button', { name: `Copy ${name} onto the chosen actor` }).click();
       await expect(page.getByText(`${name} was copied onto Elowen.`)).toBeVisible();
     }
-    // The SRD's credit shows beside each entry, linked to the SRD (T-1614).
-    const longsword = page
-      .getByRole('group', { name: 'Compendium entries' })
-      .getByRole('listitem')
-      .filter({ has: page.getByRole('heading', { name: 'Longsword', exact: true }) });
-    await longsword.getByText('Preview').click();
+    // The SRD's credit shows on each entry's sheet, linked to the SRD (T-1614, T-1620).
+    await page.getByRole('button', { name: 'Open compendium entry: Longsword' }).click();
     await expect(
-      longsword.getByRole('link', { name: /material from the System Reference Document 5\.2/ }),
+      page
+        .getByRole('tabpanel', { name: 'Longsword' })
+        .getByRole('link', { name: /material from the System Reference Document 5\.2/ }),
     ).toHaveAttribute('href', 'https://www.dndbeyond.com/srd');
     await showPanel(page, 'Actors');
     await page.getByRole('button', { name: 'Open sheet: Elowen' }).click();

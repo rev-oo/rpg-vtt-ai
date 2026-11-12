@@ -1,23 +1,22 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
-import { canCopyCompendiumToTable, canSeeGmContent } from '@vtt/shared';
+import { canCopyCompendiumToTable } from '@vtt/shared';
 import type { CompendiumEntry, CompendiumPack, CompendiumQuery } from '@vtt/shared/api';
 import { Alert, Button, Select, TextField } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
-import { PluginSheet } from '../../plugin-host/PluginSheet.js';
-import { useSystem } from '../../plugin-host/system-context.js';
 import { EntityRow } from '../entities/EntityRow.js';
 import { GroupedList } from '../entities/GroupedList.js';
 import { groupItems, useItemTypes, type OtherRows } from '../entities/item-groups.js';
 import { LoadMore } from '../entities/LoadMore.js';
 import { LIST_PAGE, usePagedList } from '../entities/paging.js';
 import { useTypeLabels } from '../entities/type-labels.js';
-import { Attribution } from '../plugins/Attribution.js';
 import { useTableData } from '../table/table-data.js';
+import { OpenButton } from '../workspace/OpenButton.js';
+import { packEntryPanelId } from '../workspace/panel-ids.js';
 import { usePanelList } from '../workspace/use-panel-list.js';
 
 /** Typing pauses this long before the list reloads. */
@@ -43,14 +42,13 @@ function toQuery({ search, pack, type }: Filters): CompendiumQuery {
 }
 
 /**
- * The compendium (FR-PLUGIN-09, ADR-060): every entry of the system's packs, with a preview of
- * its sheet. GMs and assistants copy entries into the table; anyone copies items onto an actor
+ * The compendium (FR-PLUGIN-09, ADR-060): every entry of the system's packs, each opening its
+ * sheet read-only in a panel (T-1620). GMs and assistants copy entries into the table; anyone copies items onto an actor
  * they own.
  */
 export function CompendiumBrowser(): ReactElement {
   const data = useTableData();
   const { table, types, actors } = data;
-  const system = useSystem();
   const labels = useTypeLabels();
   const { itemTypes, translate } = useItemTypes();
   const revalidator = useRevalidator();
@@ -94,9 +92,8 @@ export function CompendiumBrowser(): ReactElement {
     }
   };
 
-  const packOf = (name: string) => packs.find((candidate) => candidate.name === name);
   const packLabel = (name: string) => {
-    const pack = packOf(name);
+    const pack = packs.find((candidate) => candidate.name === name);
     return pack ? translate(pack.label) : name;
   };
 
@@ -147,6 +144,18 @@ export function CompendiumBrowser(): ReactElement {
             }
             actions={
               <>
+                <OpenButton
+                  target={{
+                    kind: 'packEntry',
+                    id: packEntryPanelId(entry.ref),
+                    ref: entry.ref,
+                    name: entry.name,
+                  }}
+                  className="self-center"
+                  label={t('compendium.openEntry', { name: entry.name })}
+                >
+                  {t('items.open')}
+                </OpenButton>
                 {toTable && (
                   <Button
                     aria-label={t('compendium.copyToTableOf', { name: entry.name })}
@@ -160,44 +169,12 @@ export function CompendiumBrowser(): ReactElement {
                 )}
               </>
             }
-          >
-            <details>
-              <summary className="cursor-pointer text-sm">
-                {t('compendium.preview')}
-                <span className="sr-only">: {entry.name}</span>
-              </summary>
-              <div className="mt-2">
-                {system.status === 'ready' ? (
-                  <PluginSheet
-                    host={system}
-                    actor={{
-                      id: entry.ref,
-                      name: entry.name,
-                      type: entry.type,
-                      system: entry.system,
-                    }}
-                    kind={entry.kind}
-                    readOnly
-                    secret={canSeeGmContent(table.role)}
-                  />
-                ) : (
-                  <p className="text-sm text-muted">{t('compendium.noPreview')}</p>
-                )}
-              </div>
-              <PackAttribution pack={packOf(entry.pack)} />
-            </details>
-          </EntityRow>
+          />
         )}
       />
       {paged.more && <LoadMore loading={paged.loading} onLoad={paged.loadMore} />}
     </div>
   );
-}
-
-/** The credit a pack's plugin needs, beside the entry it credits (T-1614). */
-function PackAttribution({ pack }: { pack: CompendiumPack | undefined }): ReactElement | null {
-  if (!pack?.attribution) return null;
-  return <Attribution attribution={pack.attribution} className="mt-2 text-xs text-muted" />;
 }
 
 /** Pack actors come before the item groups, under one heading (ADR-061). */

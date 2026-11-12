@@ -411,7 +411,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(owned.getByRole('list', { name: 'Spells' })).toContainText('Spark (spell)');
   });
 
-  await test.step('the GM previews a pack actor and copies it into the table (T-1202)', async () => {
+  await test.step('the GM opens a pack actor as a sheet and copies it into the table (T-1202)', async () => {
     const gmPage = await gm.context.newPage();
     await gmPage.goto(`/tables/${table.id}`);
     await showPanel(gmPage, 'Compendium');
@@ -419,9 +419,11 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const ogre = entries.getByRole('listitem').filter({
       has: gmPage.getByRole('heading', { name: 'Ogre' }),
     });
-    await ogre.getByText('Preview').click();
-    // GMs see the entry's secret field in the preview.
-    await expect(ogre.getByText('Hates bright light.')).toBeVisible();
+    // The entry opens read-only in a panel of its own (T-1620); GMs see its secret field.
+    await gmPage.getByRole('button', { name: 'Open compendium entry: Ogre' }).click();
+    await expect(
+      gmPage.getByRole('tabpanel', { name: 'Ogre' }).getByText('Hates bright light.'),
+    ).toBeVisible();
     await gmPage.getByRole('button', { name: 'Copy Ogre to the table' }).click();
     await expect(gmPage.getByText('Ogre was copied to the table.')).toBeVisible();
     await expect(ogre).toContainText('In the table');

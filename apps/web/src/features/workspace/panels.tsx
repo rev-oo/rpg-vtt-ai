@@ -9,6 +9,7 @@ import { AssetGallery } from '../assets/AssetGallery.js';
 import { ChatPanel } from '../chat/ChatPanel.js';
 import { CombatTracker } from '../combat/CombatTracker.js';
 import { CompendiumBrowser } from '../compendium/CompendiumBrowser.js';
+import { CompendiumSheetPanel } from '../compendium/CompendiumSheet.js';
 import { ActorList } from '../entities/ActorList.js';
 import { ActorSheetPanel } from '../entities/ActorSheet.js';
 import { readFilters, toListQuery, type EntityFilters } from '../entities/filters.js';
@@ -188,6 +189,14 @@ export function ItemPanel({ params, api: panel }: IDockviewPanelProps): ReactEle
           panel.setTitle(next);
         }}
       />
+    </Body>
+  );
+}
+
+export function PackEntryPanel({ params }: IDockviewPanelProps): ReactElement {
+  return (
+    <Body>
+      <CompendiumSheetPanel entryRef={stringParam(params, 'ref')} />
     </Body>
   );
 }

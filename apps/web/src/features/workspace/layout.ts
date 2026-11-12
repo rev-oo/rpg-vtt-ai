@@ -151,7 +151,9 @@ export function showTarget(
       ? { component: 'sheet', params: { actorId: target.actorId } }
       : target.kind === 'item'
         ? { component: 'item', params: { itemId: target.itemId } }
-        : { component: 'entry', params: { entryId: target.entryId } }),
+        : target.kind === 'packEntry'
+          ? { component: 'packEntry', params: { ref: target.ref } }
+          : { component: 'entry', params: { entryId: target.entryId } }),
     title,
     ...(position && { position }),
   });

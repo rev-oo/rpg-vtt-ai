@@ -473,8 +473,9 @@ export const ptBR: Messages = {
   'compendium.copyOntoButton': 'Copiar {name} para o ator escolhido',
   'compendium.copied': '{name} foi copiado para a mesa.',
   'compendium.copiedOnto': '{name} foi copiado para {actor}.',
-  'compendium.preview': 'Prévia',
-  'compendium.noPreview': 'O sistema não foi carregado, então não há prévia.',
+  'compendium.openEntry': 'Abrir entrada do compêndio: {name}',
+  'compendium.sheetOf': '{type} · {pack} · compêndio, somente leitura',
+  'compendium.notFound': 'Esta entrada do compêndio não existe mais.',
 
   'map.title': 'Mapa',
   'map.role': 'mapa',
