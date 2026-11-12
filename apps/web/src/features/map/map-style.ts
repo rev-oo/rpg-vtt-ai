@@ -55,12 +55,13 @@ export function useMapColors(): MapColors {
 
 /** The smallest name, in screen pixels, worth drawing; below it names hide. */
 export const MIN_LABEL_PX = 9;
-/** The smallest status icon, in screen pixels, worth drawing; below it statuses hide. */
+/** The smallest status icon, in screen pixels. */
 export const MIN_STATUS_PX = 14;
 
 /** Whether a name of `fontSize` world pixels can be read at `zoom`. */
 export const labelReadable = (fontSize: number, zoom: number): boolean =>
   fontSize * zoom >= MIN_LABEL_PX;
 
-/** Whether status icons of `size` world pixels can be made out at `zoom`, as names do. */
-export const statusReadable = (size: number, zoom: number): boolean => size * zoom >= MIN_STATUS_PX;
+/** How much to enlarge status icons of `size` world pixels so they keep their minimum at `zoom`. */
+export const statusScale = (size: number, zoom: number): number =>
+  Math.max(1, MIN_STATUS_PX / (size * zoom));
