@@ -113,7 +113,7 @@ function TablePage({ data, userId }: { data: TableData; userId: string }): React
             version: table.installedVersion ?? '',
             current: table.systemVersion,
           })}{' '}
-          <OpenButton target={{ kind: 'page', id: 'settings' }}>
+          <OpenButton target={{ kind: 'page', id: 'settings' }} look="link">
             {t('table.upgradeLink')}
           </OpenButton>
         </Alert>

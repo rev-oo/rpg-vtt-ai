@@ -151,7 +151,6 @@ export function CompendiumBrowser(): ReactElement {
                     ref: entry.ref,
                     name: entry.name,
                   }}
-                  className="self-center"
                   label={t('compendium.openEntry', { name: entry.name })}
                 >
                   {t('items.open')}

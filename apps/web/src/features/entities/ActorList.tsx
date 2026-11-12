@@ -139,7 +139,6 @@ export function ActorList({
                 <>
                   <OpenButton
                     target={{ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id }}
-                    className="self-center"
                     label={`${t('sheet.open')}: ${actor.name}`}
                   >
                     {t('sheet.open')}
@@ -258,6 +257,7 @@ function ActorItems({ actor }: { actor: ActorView }): ReactElement {
                   name: item.name,
                 }}
                 label={t('items.openItem', { name: item.name })}
+                look="link"
               >
                 {item.name}
               </OpenButton>{' '}

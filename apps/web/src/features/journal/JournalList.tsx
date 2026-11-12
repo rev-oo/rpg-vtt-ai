@@ -128,7 +128,6 @@ export function JournalList({
                 <>
                   <OpenButton
                     target={{ kind: 'entry', id: entryPanelId(entry.id), entryId: entry.id }}
-                    className="self-center"
                     label={`${t('journal.open')}: ${entry.title}`}
                   >
                     {t('journal.open')}

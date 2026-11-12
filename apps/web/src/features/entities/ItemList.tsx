@@ -140,7 +140,6 @@ export function ItemList({
                       itemId: item.id,
                       name: item.name,
                     }}
-                    className="self-center"
                     label={t('items.openItem', { name: item.name })}
                   >
                     {t('items.open')}
