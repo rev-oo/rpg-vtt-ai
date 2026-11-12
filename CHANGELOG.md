@@ -50,7 +50,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - The interface fixes of the review (T-1620):
   - Sheet fields in a row keep the width their input needs, and a grid with counters gets wider columns, in every system.
   - A roll in chat reads as rolled (`1d20 + 4`, the dice, the total); the recipe's formula with its `@` references shows under **Formula**.
-  - On the map, token names sit on a pill readable in both themes and hide when too small to read; status icons keep a minimum size and get a ring; the grid takes the theme's colour.
+  - On the map, token names sit on a pill readable in both themes and hide when too small to read; status icons get a ring and, like names, hide when too small to make out; the grid takes the theme's colour.
   - Journal, combat and member rows wrap long names instead of cutting them; lists and filters show types by their label; the tracker shows initiative once, as a field for whoever runs combat; **Give** and **Copy** wait for an actor to be chosen.
   - The invite page names the table and its GM, to anyone holding a usable link, signed in or not; **Sign in** is a button.
   - **End encounter** sits apart from the turn buttons and asks first; **Add combatant** opens the form.

@@ -5,7 +5,7 @@ import type { TokenView } from '@vtt/shared/api';
 
 import { cellAt, cellCentre, type Cell, type Point, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
-import { labelReadable, statusScale, type MapColors } from './map-style.js';
+import { labelReadable, statusReadable, type MapColors } from './map-style.js';
 import type { Size } from './view.js';
 
 export interface TokenHandlers {
@@ -42,13 +42,13 @@ export class TokenLayer {
   private lastTap = { id: '', at: 0 };
   private radius = 0;
   private destroyed = false;
-  /** Names and status rows, sized again on zoom (T-1620). */
+  /** Names and status rows, hidden on zoom when too small to make out (T-1620). */
   private labels: { label: Container; fontSize: number }[] = [];
   private statusRows: { row: Container; size: number }[] = [];
   private readonly fit = () => {
     const zoom = this.viewport.scaled;
     for (const { label, fontSize } of this.labels) label.visible = labelReadable(fontSize, zoom);
-    for (const { row, size } of this.statusRows) row.scale.set(statusScale(size, zoom));
+    for (const { row, size } of this.statusRows) row.visible = statusReadable(size, zoom);
     this.viewport.dirty = true;
   };
 

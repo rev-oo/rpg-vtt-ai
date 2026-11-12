@@ -5,7 +5,7 @@ import {
   labelReadable,
   MIN_STATUS_PX,
   readMapColors,
-  statusScale,
+  statusReadable,
 } from '../src/features/map/map-style.js';
 
 describe('map style (T-1620)', () => {
@@ -33,10 +33,11 @@ describe('map style (T-1620)', () => {
     expect(labelReadable(12, 0.5)).toBe(false);
   });
 
-  it('keeps status icons at their minimum size on screen', () => {
-    // 22 px icons are big enough at full zoom; zoomed out to a quarter, they grow back.
-    expect(statusScale(22, 1)).toBe(1);
-    expect(statusScale(22, 2)).toBe(1);
-    expect(22 * 0.25 * statusScale(22, 0.25)).toBeCloseTo(MIN_STATUS_PX);
+  it('hides status icons too small to make out at the zoom, as names', () => {
+    // 22 px icons show at full zoom and at 0.75, not at 0.5.
+    expect(statusReadable(22, 1)).toBe(true);
+    expect(statusReadable(22, 0.75)).toBe(true);
+    expect(statusReadable(22, 0.5)).toBe(false);
+    expect(statusReadable(MIN_STATUS_PX, 1)).toBe(true);
   });
 });
