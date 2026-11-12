@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
@@ -202,6 +202,8 @@ describe('users page (T-1619, FR-AUTH-02)', () => {
     const dialog = screen.getByRole('dialog', { name: 'Delete Lena?' });
     await user.click(within(dialog).getByRole('button', { name: 'Delete' }));
     await screen.findByText('Lena was deleted.');
-    expect(screen.queryByRole('heading', { name: 'Lena' })).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: 'Lena' })).toBeNull();
+    });
   });
 });
