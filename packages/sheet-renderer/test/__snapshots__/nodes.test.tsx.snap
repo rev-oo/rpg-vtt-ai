@@ -83,7 +83,7 @@ exports[`node snapshots (specs §8.5) > field (checkbox) 1`] = `
     >
       <input
         checked=""
-        class="size-5 accent-(--vtt-accent)"
+        class="size-5 accent-(--vtt-accent) disabled:opacity-60"
         id="_r_a_"
         type="checkbox"
       />
@@ -303,7 +303,7 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       >
         <input
           checked=""
-          class="size-5 accent-(--vtt-accent)"
+          class="size-5 accent-(--vtt-accent) disabled:opacity-60"
           id="_r_4_"
           type="checkbox"
         />

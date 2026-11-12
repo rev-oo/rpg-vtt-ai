@@ -218,7 +218,7 @@ export function FieldNode({
         <input
           id={id}
           type="checkbox"
-          className="size-5 accent-(--vtt-accent)"
+          className="size-5 accent-(--vtt-accent) disabled:opacity-60"
           checked={field.value === true}
           disabled={readOnly}
           onChange={(event) => {
