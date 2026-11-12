@@ -86,6 +86,8 @@ export class TokenLayer {
       this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
+    // The map renders on demand: draw the new tokens, and place them for pointer hits.
+    this.viewport.dirty = true;
   }
 
   destroy(): void {
