@@ -6,6 +6,7 @@ import { startEntityDrag, type EntityDrag } from './entity-drag.js';
 
 export interface EntityRowProps {
   name: string;
+  /** The type's label, as `useTypeLabels` gives it. */
   type: string;
   imageUrl: string | null;
   /** Extra facts under the name, e.g. the caller's access. */

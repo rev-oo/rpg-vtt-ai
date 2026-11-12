@@ -15,6 +15,7 @@ import { GroupedList } from '../entities/GroupedList.js';
 import { groupItems, useItemTypes, type OtherRows } from '../entities/item-groups.js';
 import { LoadMore } from '../entities/LoadMore.js';
 import { LIST_PAGE, usePagedList } from '../entities/paging.js';
+import { useTypeLabels } from '../entities/type-labels.js';
 import { Attribution } from '../plugins/Attribution.js';
 import { useTableData } from '../table/table-data.js';
 import { usePanelList } from '../workspace/use-panel-list.js';
@@ -50,6 +51,7 @@ export function CompendiumBrowser(): ReactElement {
   const data = useTableData();
   const { table, types, actors } = data;
   const system = useSystem();
+  const labels = useTypeLabels();
   const { itemTypes, translate } = useItemTypes();
   const revalidator = useRevalidator();
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
@@ -129,7 +131,7 @@ export function CompendiumBrowser(): ReactElement {
             key={entry.ref}
             nested={nested}
             name={entry.name}
-            type={entry.type}
+            type={labels[entry.kind](entry.type)}
             imageUrl={null}
             drag={entry.kind === 'item' ? { kind: 'compendium', ref: entry.ref } : undefined}
             details={
@@ -221,6 +223,7 @@ function CompendiumFilters({
   translate: (text: string) => string;
   onChange: (filters: Filters) => void;
 }): ReactElement {
+  const labels = useTypeLabels();
   const formRef = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(
@@ -276,14 +279,14 @@ function CompendiumFilters({
         <optgroup label={t('actors.title')}>
           {actorTypes.map((type) => (
             <option key={`actor:${type}`} value={`actor:${type}`}>
-              {type}
+              {labels.actor(type)}
             </option>
           ))}
         </optgroup>
         <optgroup label={t('items.title')}>
           {itemTypes.map((type) => (
             <option key={`item:${type}`} value={`item:${type}`}>
-              {type}
+              {labels.item(type)}
             </option>
           ))}
         </optgroup>

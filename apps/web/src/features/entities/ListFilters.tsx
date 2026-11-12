@@ -15,6 +15,8 @@ export interface ListFiltersProps {
   onChange: (filters: Filters) => void;
   /** Omitted for lists without types, such as the journal. */
   types?: readonly string[];
+  /** What each type shows as; its id by default. */
+  typeLabel?: (type: string) => string;
 }
 
 /**
@@ -26,6 +28,7 @@ export function ListFilters({
   value,
   onChange,
   types,
+  typeLabel = (type) => type,
 }: ListFiltersProps): ReactElement {
   const formRef = useRef<HTMLFormElement>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -83,7 +86,7 @@ export function ListFilters({
           <option value="">{t('entities.allTypes')}</option>
           {types.map((option) => (
             <option key={option} value={option}>
-              {option}
+              {typeLabel(option)}
             </option>
           ))}
         </Select>

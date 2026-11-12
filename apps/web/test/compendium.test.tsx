@@ -59,7 +59,7 @@ const DEFINITION: PluginDefinition = {
   dice: {},
   cards: {},
   settings: {},
-  lang: { en: { 'pack.bestiary': 'Bestiary' } },
+  lang: { en: { 'pack.bestiary': 'Bestiary', 'type.npc': 'Creature', 'type.weapon': 'Weapon' } },
   styles: [],
 };
 
@@ -146,6 +146,9 @@ describe('compendium browser', () => {
     expect(sword).toHaveTextContent('Bestiary');
     expect(sword).toHaveTextContent('In the table');
     expect(await row('Ogre')).not.toHaveTextContent('In the table');
+    // Types show by the system's label, not their id (T-1620).
+    expect(await row('Ogre')).toHaveTextContent('Type: Creature');
+    expect(sword).toHaveTextContent('Type: Weapon');
 
     const ogre = await row('Ogre');
     if (!ogre) throw new Error('no Ogre row');
@@ -198,6 +201,7 @@ describe('compendium browser', () => {
       expect(screen.queryByRole('heading', { name: 'Shortsword' })).toBeNull();
     });
     await user.clear(screen.getByLabelText('Search the compendium'));
+    expect(screen.getByRole('option', { name: 'Creature' })).toHaveValue('actor:npc');
     await user.selectOptions(screen.getByLabelText('Type'), 'item:weapon');
     await waitFor(() => {
       expect(screen.queryByRole('heading', { name: 'Ogre' })).toBeNull();

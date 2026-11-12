@@ -21,6 +21,7 @@ import { groupItems, useItemTypes } from './item-groups.js';
 import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { usePagedList } from './paging.js';
+import { useTypeLabels } from './type-labels.js';
 
 export interface ItemListProps {
   data: TableData;
@@ -49,6 +50,7 @@ export function ItemList({
 }: ItemListProps): ReactElement {
   const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const labels = useTypeLabels();
   const items = paged.rows;
   const { table, types, actors } = data;
   const revalidator = useRevalidator();
@@ -77,6 +79,7 @@ export function ItemList({
           <ListFilters
             searchLabel={t('items.search')}
             types={types.itemTypes}
+            typeLabel={labels.item}
             value={filters}
             onChange={onFilters}
           />
@@ -113,7 +116,7 @@ export function ItemList({
             key={item.id}
             nested={nested}
             name={item.name}
-            type={item.type}
+            type={labels.item(item.type)}
             imageUrl={item.imageUrl}
             drag={trash ? undefined : { kind: 'library', itemId: item.id }}
             actions={
