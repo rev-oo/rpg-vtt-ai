@@ -178,6 +178,16 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await expect(page.getByRole('textbox', { name: 'Message' })).toBeFocused();
   });
 
+  await test.step('panels follow the dark scheme, scrollbars included', async () => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    // Dockview's theme no longer pins the light scheme, so the browser's scrollbars go dark.
+    await expect(page.getByRole('log', { name: 'Messages' })).toHaveCSS(
+      'color-scheme',
+      'light dark',
+    );
+    await page.emulateMedia({ colorScheme: null });
+  });
+
   await test.step('a phone shows one panel at a time, with its own layout', async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await expect(page.getByRole('tablist')).toHaveCount(1);

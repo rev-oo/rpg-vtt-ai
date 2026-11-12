@@ -122,5 +122,10 @@
   --dv-active-sash-color: var(--color-primary);
   --dv-drag-over-background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
   --dv-tabs-and-actions-container-font-size: 0.875rem;
+  /*
+   * Dockview's theme pins the light scheme, which kept the panels' scrollbars light in the
+   * dark scheme. The dock follows the page's, so the browser draws its own scrollbars for it.
+   */
+  color-scheme: inherit;
   color: var(--color-fg);
 }

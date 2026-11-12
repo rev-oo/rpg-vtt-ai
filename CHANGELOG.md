@@ -66,6 +66,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Fixed
 
 - Roll buttons in a sheet row keep their width instead of covering the controls beside the row (T-1620).
+- Scrollbars inside the table's panels follow the dark scheme, as the rest of the page's do (T-1620).
 
 - A plugin's custom sheet parts and chat cards no longer show "failed to show" after their tab is hidden behind another one and shown again, or after their panel is moved. The app now starts the plugin's frame again (ADR-074).
 - The Panels menu is no longer covered by the workspace's resize bars.
