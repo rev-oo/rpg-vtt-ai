@@ -1,7 +1,12 @@
 import { asc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-import { createUserBody, updateUserBody } from '@vtt/shared/api';
+import {
+  createUserBody,
+  updateUserBody,
+  type AdminUser,
+  type AdminUserResponse,
+} from '@vtt/shared/api';
 
 import { users } from '../../db/schema.js';
 import { generatePassword, hashPassword } from '../../domain/auth/password.js';
@@ -14,7 +19,7 @@ import { parseInput } from '../validation.js';
 const userIdParams = z.object({ id: z.uuid() });
 
 /** What admins see about a user. */
-function toAdminUser(user: User) {
+function toAdminUser(user: User): AdminUser {
   return {
     id: user.id,
     username: user.username,
@@ -51,10 +56,11 @@ export function userRoutes({ app, db, sessions }: AppContext): void {
       db,
       await prepareUser({ ...body, password: oneTimePassword, mustChangePassword: true }),
     );
-    return reply.code(201).send({ user: toAdminUser(user), oneTimePassword });
+    const response: AdminUserResponse = { user: toAdminUser(user), oneTimePassword };
+    return reply.code(201).send(response);
   });
 
-  app.patch('/api/v1/users/:id', async (request) => {
+  app.patch('/api/v1/users/:id', async (request): Promise<AdminUserResponse> => {
     const session = requireAdmin(request);
     const { id } = parseInput(userIdParams, request.params);
     const body = parseInput(updateUserBody, request.body);

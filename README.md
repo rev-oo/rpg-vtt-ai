@@ -52,7 +52,7 @@ To build the image from a checkout instead, use the example compose file:
 docker compose -f docker/docker-compose.example.yml up -d --build
 ```
 
-Open http://localhost:3000 and create the admin account. The data (database, plugins) lives in the one volume, `vtt-data`.
+Open http://localhost:3000 and create the admin account. Add players on the **Users** page, or invite them to a table with a link. The data (database, plugins) lives in the one volume, `vtt-data`.
 
 - **Public address:** behind a domain, set `PUBLIC_URL` in the compose file.
 - **HTTPS:** [`docker/Caddyfile.example`](docker/Caddyfile.example) shows Caddy in front, with HTTPS and both WebSockets passed through.

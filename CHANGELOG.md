@@ -6,6 +6,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- Admins manage the instance's users on a new **Users** page (T-1619). They create a user, who signs in with a one-time password shown once and then chooses their own; reset a password to a new one-time password; disable or re-enable a user, which signs them out; make a user admin or not; and delete a user. Admins change their own account on the Account page, so there is always an enabled admin.
+
 - Tokens show their actor's statuses, such as conditions (T-1618). A system lists true/false fields as statuses, each with an icon; while one is on, its icon shows on the token on the map, and the token list and combat tracker name it. A secret field's status shows only to the GM and assistants, and statuses follow the sheet as it changes. In `srd5`, the 14 conditions show on tokens, with icons of their own.
 
 - Plugins can be translated end to end (T-1611). A field or setting's choices show labels in the viewer's language (`enumLabels`) while the stored values stay as they are; chat card rows translate values that are lang keys; and plugin server code can post messages by lang key, so each member reads them in their own language. Settings can be colours, picked with a colour picker, and `vtt-plugin types` gives plugin code its settings typed. The `srd5` system is now in Portuguese (Brazil) too, and `dice-3d` names its colours in both languages.

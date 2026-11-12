@@ -8,6 +8,7 @@ export default [
     layout('routes/app-layout.tsx', [
       index('routes/tables.tsx'),
       route('account', 'routes/account.tsx'),
+      route('admin/users', 'routes/admin-users.tsx'),
       route('admin/plugins', 'routes/admin-plugins.tsx'),
       route('admin/settings', 'routes/admin-settings.tsx'),
     ]),

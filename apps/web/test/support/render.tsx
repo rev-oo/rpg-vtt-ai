@@ -5,6 +5,7 @@ import { TABLE_ROUTE_ID } from '../../src/features/table/table-data.js';
 import * as root from '../../src/root.js';
 import * as account from '../../src/routes/account.js';
 import * as adminPlugins from '../../src/routes/admin-plugins.js';
+import * as adminUsers from '../../src/routes/admin-users.js';
 import * as appLayout from '../../src/routes/app-layout.js';
 import * as catchAll from '../../src/routes/catch-all.js';
 import * as login from '../../src/routes/login.js';
@@ -52,6 +53,11 @@ const Stub = createRoutesStub([
             children: [
               { index: true, Component: tables.default, loader: tables.clientLoader },
               { path: 'account', Component: account.default },
+              {
+                path: 'admin/users',
+                Component: adminUsers.default,
+                loader: asLoader(adminUsers.clientLoader),
+              },
               {
                 path: 'admin/plugins',
                 Component: adminPlugins.default,

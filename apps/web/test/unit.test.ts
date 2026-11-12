@@ -125,8 +125,12 @@ describe('API client', () => {
     expect(errorMessage(new ApiError(401, 'invalid_credentials', 'x'))).toBe(
       'Wrong username or password.',
     );
-    expect(errorMessage(new ApiError(409, 'username_taken', 'That username is taken.'))).toBe(
-      'That username is taken.',
+    expect(errorMessage(new ApiError(409, 'username_taken', 'x'))).toBe(
+      'That username is already taken.',
+    );
+    // Other client errors keep the server's message, which is already user-facing.
+    expect(errorMessage(new ApiError(409, 'some_conflict', 'That name is in use.'))).toBe(
+      'That name is in use.',
     );
     expect(errorMessage(new ApiError(500, 'internal_error', 'stack trace'))).toBe(
       'Something went wrong. Please try again.',

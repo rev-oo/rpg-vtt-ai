@@ -26,6 +26,26 @@ export const setupStatusSchema = z.object({ needsSetup: z.boolean() });
 
 export const userResponseSchema = z.object({ user: publicUserSchema });
 
+/** A user as instance admins see them (FR-AUTH-02, FR-AUTH-06; T-1619). */
+export const adminUserSchema = publicUserSchema.extend({
+  disabled: z.boolean(),
+  createdAt: z.string(),
+});
+export type AdminUser = z.infer<typeof adminUserSchema>;
+
+/** `GET /users`. */
+export const adminUsersResponseSchema = z.object({ users: z.array(adminUserSchema) });
+
+/**
+ * `POST /users` and `PATCH /users/:id`. The one-time password comes back once: when the user
+ * is created and when an admin resets it.
+ */
+export const adminUserResponseSchema = z.object({
+  user: adminUserSchema,
+  oneTimePassword: z.string().optional(),
+});
+export type AdminUserResponse = z.infer<typeof adminUserResponseSchema>;
+
 /** The table fields members may see, plus the caller's own role. */
 export const tableSchema = z.object({
   id: z.string(),
