@@ -15,23 +15,23 @@ test('an admin adds a player who signs in and joins a table', async ({ browser }
     await expect(admin.getByRole('heading', { name: 'Users', level: 1 })).toBeVisible();
     await admin.getByRole('button', { name: 'New user' }).click();
     const dialog = admin.getByRole('dialog', { name: 'New user' });
-    await dialog.getByLabel('Username').fill('nora');
-    await dialog.getByLabel('Display name').fill('Nora');
+    await dialog.getByLabel('Username').fill('odile');
+    await dialog.getByLabel('Display name').fill('Odile');
     await dialog.getByRole('button', { name: 'Create user' }).click();
 
-    await expect(admin.getByRole('heading', { name: 'Nora can now sign in' })).toBeVisible();
+    await expect(admin.getByRole('heading', { name: 'Odile can now sign in' })).toBeVisible();
     oneTimePassword = await admin.getByLabel('One-time password').inputValue();
     expect(oneTimePassword).not.toBe('');
     const card = admin
       .getByRole('listitem')
-      .filter({ has: admin.getByRole('heading', { name: 'Nora' }) });
+      .filter({ has: admin.getByRole('heading', { name: 'Odile' }) });
     await expect(card).toContainText('Has not chosen a password yet');
     await admin.getByRole('button', { name: 'Done' }).click();
     await expect(admin.getByLabel('One-time password')).toBeHidden();
   });
 
   const { table } = await post<{ table: { id: string } }>(gm, '/tables', {
-    name: 'Nora Table',
+    name: 'Odile Table',
     systemId: 'e2e-system',
   });
   const { url } = await post<{ url: string }>(gm, `/tables/${table.id}/invites`, {
@@ -42,18 +42,18 @@ test('an admin adds a player who signs in and joins a table', async ({ browser }
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.goto('/login');
-    await page.getByLabel('Username').fill('nora');
+    await page.getByLabel('Username').fill('odile');
     await page.getByLabel('Password').fill(oneTimePassword);
     await page.getByRole('button', { name: 'Log in' }).click();
     await expect(page.getByText('Choose a new password before you continue.')).toBeVisible();
     await page.getByLabel('Current password').fill(oneTimePassword);
-    await page.getByLabel('New password').fill('nora-password-1');
+    await page.getByLabel('New password').fill('odile-password-1');
     await page.getByRole('button', { name: 'Change password' }).click();
     await expect(page.getByText('Choose a new password before you continue.')).toBeHidden();
 
     await page.goto(url);
     await page.getByRole('button', { name: 'Join the table' }).click();
-    await expect(page.getByRole('heading', { name: 'Nora Table' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Odile Table' })).toBeVisible();
     await context.close();
   });
 
@@ -61,12 +61,12 @@ test('an admin adds a player who signs in and joins a table', async ({ browser }
     await admin.reload();
     const card = admin
       .getByRole('listitem')
-      .filter({ has: admin.getByRole('heading', { name: 'Nora' }) });
+      .filter({ has: admin.getByRole('heading', { name: 'Odile' }) });
     await card.getByRole('button', { name: 'Disable' }).click();
-    await expect(admin.getByText('Nora is disabled and has been signed out.')).toBeVisible();
+    await expect(admin.getByText('Odile is disabled and has been signed out.')).toBeVisible();
     const context = await browser.newContext();
     const res = await context.request.post('/api/v1/auth/login', {
-      data: { username: 'nora', password: 'nora-password-1' },
+      data: { username: 'odile', password: 'odile-password-1' },
     });
     expect(res.status()).toBe(403);
     await context.close();
