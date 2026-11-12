@@ -1,4 +1,12 @@
-import { lazy, Suspense, useEffect, useState, type ReactElement } from 'react';
+import {
+  lazy,
+  Suspense,
+  useEffect,
+  useId,
+  useState,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 
 import { canManageScenes } from '@vtt/shared';
 import type { ActorView, FogInput, SceneView, TableView, TokenView } from '@vtt/shared/api';
@@ -63,35 +71,38 @@ export function MapView({
     );
   }
 
+  // The GM's scene controls share one row with placing tokens (T-1620).
+  const sceneControls = manages && (
+    <>
+      <Select
+        label={t('map.scene')}
+        value={scene.id}
+        className="min-w-48"
+        onChange={(event) => {
+          onSceneId(event.target.value);
+        }}
+      >
+        {scenes.map((option) => (
+          <option key={option.id} value={option.id}>
+            {option.name}
+          </option>
+        ))}
+      </Select>
+      <p className="pb-2 text-sm text-muted" role="status">
+        {scene.active ? t('map.shownToPlayers') : t('map.preview')}
+      </p>
+    </>
+  );
+
   return (
-    <div data-vtt-part="map" className="flex h-full flex-col">
-      {manages && (
-        <div className="flex flex-wrap items-end gap-2 border-b border-line bg-surface px-3 py-2">
-          <Select
-            label={t('map.scene')}
-            value={scene.id}
-            className="min-w-48"
-            onChange={(event) => {
-              onSceneId(event.target.value);
-            }}
-          >
-            {scenes.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name}
-              </option>
-            ))}
-          </Select>
-          <p className="pb-2 text-sm text-muted" role="status">
-            {scene.active ? t('map.shownToPlayers') : t('map.preview')}
-          </p>
-        </div>
-      )}
+    <div data-vtt-part="map" className="@container flex h-full flex-col">
       {/* A new grid may move the tokens to whole cells (ADR-068), so they are fetched again. */}
       <SceneStage
         key={`${scene.id}:${scene.gridType}`}
         table={table}
         scene={scene}
         manages={manages}
+        sceneControls={sceneControls}
         {...rest}
       />
     </div>
@@ -102,12 +113,21 @@ interface SceneStageProps {
   table: TableView;
   scene: SceneView;
   manages: boolean;
+  /** The GM's scene picker and its status, drawn at the start of the toolbar row. */
+  sceneControls: ReactNode;
   actors: readonly ActorView[];
   onOpenActor: (actor: ActorView) => void;
 }
 
 /** One scene: its canvas, its tokens and, for GMs, placing them (FR-MAP-03, ADR-068). */
-function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStageProps): ReactElement {
+function SceneStage({
+  table,
+  scene,
+  manages,
+  sceneControls,
+  actors,
+  onOpenActor,
+}: SceneStageProps): ReactElement {
   const { tokens, error, move, change } = useTokens(table.id, scene.id);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Card actions in the chat act on the selected token (T-1617).
@@ -129,6 +149,7 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
     [table.id],
   );
   const [adding, setAdding] = useState(false);
+  const hintId = useId();
   const [placeError, setPlaceError] = useState<string | null>(null);
   /** GMs and assistants reveal and hide areas; `scene.updated` brings the new fog (ADR-070). */
   const changeFog = (input: FogInput) => {
@@ -201,17 +222,24 @@ function SceneStage({ table, scene, manages, actors, onOpenActor }: SceneStagePr
   return (
     <>
       {manages && (
-        <div className="flex flex-wrap items-center justify-end gap-2 border-b border-line bg-surface px-3 py-1">
-          <p className="text-sm text-muted">{t('tokens.dropHint')}</p>
-          <Button
-            icon={<ICON.add />}
-            variant="ghost"
-            onClick={() => {
-              setAdding(true);
-            }}
-          >
-            {t('tokens.add')}
-          </Button>
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2">
+          {sceneControls}
+          <div className="ml-auto flex items-end gap-3">
+            {/* The hint shows when the panel has room; it describes Add token either way. */}
+            <p id={hintId} className="hidden pb-2 text-sm text-muted @4xl:block">
+              {t('tokens.dropHint')}
+            </p>
+            <Button
+              icon={<ICON.add />}
+              variant="ghost"
+              aria-describedby={hintId}
+              onClick={() => {
+                setAdding(true);
+              }}
+            >
+              {t('tokens.add')}
+            </Button>
+          </div>
         </div>
       )}
       {error && <Alert tone="error">{error}</Alert>}

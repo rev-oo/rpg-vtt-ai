@@ -526,6 +526,30 @@ const tokenButton = async (name: RegExp) =>
   within(await screen.findByRole('list', { name: 'Tokens' })).findByRole('button', { name });
 
 describe('tokens on the map (FR-MAP-03)', () => {
+  it('folds the token list away, remembered per browser, and puts GM controls on one row (T-1620)', async () => {
+    const tokens = [token('k1', 'Goblin'), token('k2', 'Boulder')];
+    openTable('gm', () => [scene('s1', 'Cave', true)], {
+      'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
+    });
+    const user = userEvent.setup();
+    const summary = await screen.findByText('Tokens (2)', { selector: 'summary' });
+    const fold = summary.closest('details');
+    expect(fold).not.toHaveAttribute('open');
+    await user.click(summary);
+    expect(fold).toHaveAttribute('open');
+    expect(localStorage.getItem('vtt.tokens.open')).toBe('1');
+    await user.click(summary);
+    expect(localStorage.getItem('vtt.tokens.open')).toBeNull();
+
+    // The scene picker, its status and placing tokens share one row.
+    const add = screen.getByRole('button', { name: 'Add token' });
+    expect(add).toHaveAccessibleDescription('Or drag an actor from Actors onto the map.');
+    // Add token sits with its hint at the end of the row.
+    const row = add.parentElement?.parentElement;
+    expect(row).toContainElement(screen.getByLabelText('Scene'));
+    expect(row).toContainElement(screen.getByText('Players see this scene.'));
+  });
+
   it('names the statuses of a token that are on (T-1618)', async () => {
     const prone = { field: 'conditions.prone', label: 'Prone', icon: '/plugins/x/icons/prone.svg' };
     const tokens = [token('k1', 'Goblin', { statuses: [prone] }), token('k2', 'Boulder')];

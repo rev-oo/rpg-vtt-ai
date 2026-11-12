@@ -59,6 +59,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
   - On a read-only sheet, every field dims as its selects do (text and number fields, text boxes and checkboxes included), so it is clear none of them can be changed.
   - **Open** and **Open sheet** in the actor, item, journal and compendium lists, and on an actor's items, are buttons with an icon instead of links.
   - Actor and item sheets have **Rename**, as journal entries do, for whoever may edit them; the lists and the panel's tab follow the new name.
+  - The map gets more room: the token list under it folds away (the browser remembers whether it is open) and scrolls when long, and a GM's scene picker and **Add token** share one row. The drag hint shows when the panel is wide.
   - The plugins page says "1 error, 1 warning", and on a narrow card **Enable** follows the badges. Each form has one filled button; table Settings offers **Save modules** only when there are modules. Card actions, **History** and **Choose image** look like the other panel buttons.
   - Table cards, the table header and the Table panel name the system without its version, which stays on Settings and Plugins.
 

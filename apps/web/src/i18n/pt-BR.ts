@@ -564,6 +564,7 @@ export const ptBR: Messages = {
   'scenes.deleteConfirm': 'Excluir cena',
 
   'tokens.title': 'Tokens',
+  'tokens.summary': 'Tokens ({count})',
   'tokens.at': '{name} ({column}, {row})',
   'tokens.hidden': 'oculto',
   'tokens.moveHint': 'As setas movem o token selecionado.',

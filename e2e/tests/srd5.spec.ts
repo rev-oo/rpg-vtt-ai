@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData, setItemData } from './support/plugins.js';
-import { showPanel } from './support/workspace.js';
+import { showPanel, showTokens } from './support/workspace.js';
 
 // T-1605: the SRD 5.2 system, packed from plugins/ like an author would. A player's wizard
 // gets its numbers from the class tables, copies a sword and a cantrip from the SRD pack,
@@ -421,6 +421,7 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
       'aria-busy',
       'false',
     );
+    await showTokens(page);
     return page;
   };
   const gmPage = await open(gm);
@@ -519,6 +520,7 @@ test('a condition set on a sheet shows on the token', async ({ browser }) => {
   const gmPage = await gm.context.newPage();
   await gmPage.goto(`/tables/${table.id}`);
   await expect(gmPage.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  await showTokens(gmPage);
   const miraToken = gmPage.getByRole('list', { name: 'Tokens' }).getByRole('button', {
     name: /^Mira/,
   });

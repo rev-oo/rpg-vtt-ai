@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
-import { showPanel } from './support/workspace.js';
+import { showPanel, showTokens } from './support/workspace.js';
 
 // T-1402 (FR-MAP-01, 02; ADR-067): the GM makes a scene with an uploaded background and shows
 // it; the map pans and zooms by mouse, keyboard and buttons, on desktop and on a phone.
@@ -267,6 +267,7 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/tables/${table.id}`);
     await drawn(page, 'Bridge');
+    await showTokens(page);
     return page;
   };
   const gmPage = await open(gm);
@@ -428,6 +429,7 @@ test('the fog of war shows players only what the GM reveals', async ({ browser }
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto(`/tables/${table.id}`);
     await drawn(page, 'Crypt');
+    await showTokens(page);
     return page;
   };
   const gmPage = await open(gm);

@@ -557,6 +557,7 @@ export const en = {
   'scenes.deleteConfirm': 'Delete scene',
 
   'tokens.title': 'Tokens',
+  'tokens.summary': 'Tokens ({count})',
   'tokens.at': '{name} ({column}, {row})',
   'tokens.hidden': 'hidden',
   'tokens.moveHint': 'Arrow keys move the selected token.',
