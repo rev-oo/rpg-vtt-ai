@@ -5,7 +5,7 @@ import type { TokenView } from '@vtt/shared/api';
 
 import { cellAt, cellCentre, type Cell, type Point, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
-import { labelReadable, statusScale, type MapColors } from './map-style.js';
+import type { MapColors } from './map-style.js';
 import type { Size } from './view.js';
 
 export interface TokenHandlers {
@@ -42,19 +42,9 @@ export class TokenLayer {
   private lastTap = { id: '', at: 0 };
   private radius = 0;
   private destroyed = false;
-  /** Names and status rows, sized again on zoom (T-1620). */
-  private labels: { label: Container; fontSize: number }[] = [];
-  private statusRows: { row: Container; size: number }[] = [];
-  private readonly fit = () => {
-    const zoom = this.viewport.scaled;
-    for (const { label, fontSize } of this.labels) label.visible = labelReadable(fontSize, zoom);
-    for (const { row, size } of this.statusRows) row.scale.set(statusScale(size, zoom));
-    this.viewport.dirty = true;
-  };
 
   constructor(private readonly viewport: Viewport) {
     viewport.addChild(this.container);
-    viewport.on('zoomed', this.fit);
   }
 
   draw(
@@ -67,8 +57,6 @@ export class TokenLayer {
     colors: MapColors,
   ): void {
     for (const child of this.container.removeChildren()) child.destroy({ children: true });
-    this.labels = [];
-    this.statusRows = [];
     const radius = grid.gridSize * 0.42;
     this.radius = radius;
     for (const token of tokens) {
@@ -98,12 +86,10 @@ export class TokenLayer {
       this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
-    this.fit();
   }
 
   destroy(): void {
     this.destroyed = true;
-    this.viewport.off('zoomed', this.fit);
     for (const texture of this.textures.values()) {
       void texture.then((loaded) => loaded?.destroy(true));
     }
@@ -143,15 +129,14 @@ export class TokenLayer {
       .fill({ color: colors.surface, alpha: 0.9 });
     label.addChild(pill, text);
     label.y = radius + 2 + padY;
-    this.labels.push({ label, fontSize });
     return label;
   }
 
   /**
    * The statuses that are on (T-1618): the system's icons in a row along the top of the disc,
    * the last replaced by a count when there are too many. Each icon has a ring in the theme's
-   * foreground colour, which keeps a dark icon visible on a dark map, and the row keeps a
-   * minimum size on screen (T-1620).
+   * foreground colour, which keeps a dark icon visible on a dark map (T-1620). Names and
+   * statuses keep their size on the map at every zoom.
    */
   private addStatuses(piece: Container, token: TokenView, radius: number, colors: MapColors): void {
     const { statuses } = token;
@@ -163,7 +148,6 @@ export class TokenLayer {
     const row = new Container();
     row.y = -radius + size * 0.2;
     piece.addChild(row);
-    this.statusRows.push({ row, size });
     statuses.slice(0, shown).forEach((status, slot) => {
       row.addChild(
         new Graphics()
