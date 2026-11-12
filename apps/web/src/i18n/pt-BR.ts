@@ -136,6 +136,8 @@ export const ptBR: Messages = {
   'entities.imageUrl': 'URL da imagem',
   'entities.imageUrlHint': 'Opcional. O endereço web de uma imagem.',
   'entities.cancel': 'Cancelar',
+  'entities.rename': 'Renomear',
+  'entities.save': 'Salvar',
   'entities.delete': 'Excluir',
   'entities.restore': 'Restaurar',
   'entities.created': '{name} foi criado.',
@@ -624,7 +626,6 @@ export const ptBR: Messages = {
   'journal.revealed': '{name} agora está visível para os jogadores.',
   'journal.hiddenNow': '{name} agora está oculta dos jogadores.',
   'journal.rename': 'Renomear',
-  'journal.save': 'Salvar',
   'journal.notFound': 'Esta entrada não existe, ou você não pode vê-la.',
 
   'members.title': 'Membros',

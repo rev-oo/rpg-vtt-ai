@@ -132,6 +132,8 @@ export const en = {
   'entities.imageUrl': 'Image URL',
   'entities.imageUrlHint': 'Optional. A web address of a picture.',
   'entities.cancel': 'Cancel',
+  'entities.rename': 'Rename',
+  'entities.save': 'Save',
   'entities.delete': 'Delete',
   'entities.restore': 'Restore',
   'entities.created': '{name} was created.',
@@ -616,7 +618,6 @@ export const en = {
   'journal.revealed': '{name} is now visible to players.',
   'journal.hiddenNow': '{name} is now hidden from players.',
   'journal.rename': 'Rename',
-  'journal.save': 'Save',
   'journal.notFound': 'This entry does not exist, or you cannot see it.',
 
   'members.title': 'Members',
