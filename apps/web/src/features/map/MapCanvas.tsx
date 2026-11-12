@@ -44,7 +44,7 @@ import {
   type SceneGrid,
 } from './geometry.js';
 import { loadImage } from './image.js';
-import { useMapColors } from './map-style.js';
+import { useMapColors, type MapColors } from './map-style.js';
 import { coneOutline, measure, type Measure } from './measure.js';
 import { menuPosition } from './menu-position.js';
 import { RulerLayer } from './ruler-layer.js';
@@ -272,7 +272,7 @@ export default function MapCanvas({
 
   // The grid's lines; a gridless scene has none.
   useEffect(() => {
-    if (stage) drawGrid(stage, { columns, rows, gridType, gridSize }, colors.fg);
+    if (stage) drawGrid(stage, { columns, rows, gridType, gridSize }, colors);
   }, [stage, columns, rows, gridType, gridSize, colors]);
 
   // The view frames the grid and the background, which may reach beyond it.
@@ -797,13 +797,25 @@ const viewOf = (viewport: Viewport): View => ({
   zoom: viewport.scaled,
 });
 
-/** The grid's lines in the theme's foreground colour, which shows in both schemes (T-1620). */
-function drawGrid({ grid, viewport }: Stage, scene: SceneGrid, color: number): void {
+/**
+ * The grid's lines in the theme's foreground colour, each over a wider casing in its surface
+ * colour (T-1620). The two have opposite lightness, so the grid shows on a light or a dark
+ * background image in either scheme.
+ */
+function drawGrid({ grid, viewport }: Stage, scene: SceneGrid, colors: MapColors): void {
   grid.clear();
-  for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
-  grid.stroke({ width: 1, color, alpha: 0.45, pixelLine: true });
+  const path = () => {
+    for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
+  };
+  path();
+  grid.stroke({ width: GRID_CASING, color: colors.surface, alpha: 0.5 });
+  path();
+  grid.stroke({ width: 1, color: colors.fg, alpha: 0.6, pixelLine: true });
   viewport.dirty = true;
 }
+
+/** The grid casing's width, in map pixels. */
+const GRID_CASING = 3;
 
 /**
  * A drag with the middle button pans the map whatever the tool: it adds no ruler point, marks
