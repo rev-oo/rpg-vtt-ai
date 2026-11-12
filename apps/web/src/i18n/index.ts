@@ -67,3 +67,24 @@ export function t(key: MessageKey, params: Record<string, string | number> = {})
     name in params ? String(params[name]) : match,
   );
 }
+
+/** Keys with a `.one` and an `.other` form, for `tn`. */
+type PluralKey = {
+  [K in MessageKey]: K extends `${infer Base}.other`
+    ? `${Base}.one` extends MessageKey
+      ? Base
+      : never
+    : never;
+}[MessageKey];
+
+const pluralRules = new Intl.PluralRules(LOCALE);
+
+/** A UI string that changes with a count (T-1620): `{count}` and the other placeholders. */
+export function tn(
+  key: PluralKey,
+  count: number,
+  params: Record<string, string | number> = {},
+): string {
+  const form = pluralRules.select(count) === 'one' ? 'one' : 'other';
+  return t(`${key}.${form}`, { ...params, count });
+}

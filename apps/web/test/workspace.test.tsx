@@ -53,6 +53,8 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     openTable('/tables/t1');
     expect(await screen.findByRole('heading', { name: 'Goblin King' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
+    expect(screen.getByRole('banner')).toHaveTextContent('Tiny d20');
+    expect(screen.getByRole('banner')).not.toHaveTextContent('1.0.0');
     for (const name of ['Actors', 'Map', 'Combat', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }

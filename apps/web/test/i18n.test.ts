@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import { catalogueProblems } from '../src/i18n/check.js';
 import { en } from '../src/i18n/en.js';
-import { pickLocale } from '../src/i18n/index.js';
+import { pickLocale, tn } from '../src/i18n/index.js';
 import { ptBR } from '../src/i18n/pt-BR.js';
 
 describe('message catalogues (T-0606, NFR-11)', () => {
@@ -36,5 +36,13 @@ describe('pickLocale', () => {
     expect(pickLocale(null, ['pt-PT'])).toBe('pt-BR');
     expect(pickLocale(null, ['fr-FR', 'en-GB'])).toBe('en');
     expect(pickLocale('klingon', ['de'])).toBe('en');
+  });
+});
+
+describe('tn (T-1620)', () => {
+  it('picks the singular for one and the plural otherwise', () => {
+    expect(tn('plugins.errors', 1)).toBe('1 error');
+    expect(tn('plugins.errors', 0)).toBe('0 errors');
+    expect(tn('plugins.warnings', 3)).toBe('3 warnings');
   });
 });

@@ -64,9 +64,7 @@ export default function TablesRoute({ loaderData }: Route.ComponentProps): React
                       {t('tables.archived')}
                     </span>
                   )}
-                  <span>
-                    {t('tables.system', { name: table.systemName, version: table.systemVersion })}
-                  </span>
+                  <span>{table.systemName}</span>
                 </p>
               </Card>
             </li>

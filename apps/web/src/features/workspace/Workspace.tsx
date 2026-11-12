@@ -200,8 +200,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
           </Link>
           <h1 className="min-w-0 truncate text-lg font-bold">{table.name}</h1>
           <span className="hidden text-sm text-muted sm:inline">
-            {t(`tables.role.${table.role}`)} ·{' '}
-            {t('tables.system', { name: table.systemName, version: table.systemVersion })}
+            {t(`tables.role.${table.role}`)} · {table.systemName}
           </span>
           <div className="ml-auto flex items-center gap-1">
             <PanelsMenu
