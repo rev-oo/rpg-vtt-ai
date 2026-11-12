@@ -44,6 +44,7 @@ import {
   type SceneGrid,
 } from './geometry.js';
 import { loadImage } from './image.js';
+import { useMapColors } from './map-style.js';
 import { coneOutline, measure, type Measure } from './measure.js';
 import { menuPosition } from './menu-position.js';
 import { RulerLayer } from './ruler-layer.js';
@@ -108,8 +109,6 @@ interface ToolHandlers {
   control: RulerControl;
 }
 
-const GRID_COLOR = 0x1f2937;
-
 /** How the last background load went. */
 interface Loaded {
   url: string;
@@ -145,6 +144,7 @@ export default function MapCanvas({
 }: MapCanvasProps): ReactElement {
   const host = useRef<HTMLDivElement>(null);
   const [stage, setStage] = useState<Stage | null>(null);
+  const colors = useMapColors();
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const keysId = useId();
@@ -272,8 +272,8 @@ export default function MapCanvas({
 
   // The grid's lines; a gridless scene has none.
   useEffect(() => {
-    if (stage) drawGrid(stage, { columns, rows, gridType, gridSize });
-  }, [stage, columns, rows, gridType, gridSize]);
+    if (stage) drawGrid(stage, { columns, rows, gridType, gridSize }, colors.fg);
+  }, [stage, columns, rows, gridType, gridSize, colors]);
 
   // The view frames the grid and the background, which may reach beyond it.
   const shownImage = url !== null && loaded?.url === url && loaded.shown ? loaded : null;
@@ -359,13 +359,15 @@ export default function MapCanvas({
   };
   const menuOf = useEffectEvent(openMenu);
   useEffect(() => {
-    stage?.tokens.draw(tokens, { columns, rows, gridType, gridSize }, content, selectedId, {
-      select,
-      open,
-      move,
-      menu: menuOf,
-    });
-  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content]);
+    stage?.tokens.draw(
+      tokens,
+      { columns, rows, gridType, gridSize },
+      content,
+      selectedId,
+      { select, open, move, menu: menuOf },
+      colors,
+    );
+  }, [stage, tokens, selectedId, columns, rows, gridType, gridSize, content, colors]);
 
   // The ruler measures a path (ADR-069). A click or press starts it, each click adds a point and
   // a drag adds the point it ends on; until it ends, a last leg follows the pointer. Enter or a
@@ -795,10 +797,11 @@ const viewOf = (viewport: Viewport): View => ({
   zoom: viewport.scaled,
 });
 
-function drawGrid({ grid, viewport }: Stage, scene: SceneGrid): void {
+/** The grid's lines in the theme's foreground colour, which shows in both schemes (T-1620). */
+function drawGrid({ grid, viewport }: Stage, scene: SceneGrid, color: number): void {
   grid.clear();
   for (const [x1, y1, x2, y2] of gridSegments(scene)) grid.moveTo(x1, y1).lineTo(x2, y2);
-  grid.stroke({ width: 1, color: GRID_COLOR, alpha: 0.45, pixelLine: true });
+  grid.stroke({ width: 1, color, alpha: 0.45, pixelLine: true });
   viewport.dirty = true;
 }
 
