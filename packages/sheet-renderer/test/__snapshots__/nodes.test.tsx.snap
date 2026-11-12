@@ -128,7 +128,7 @@ exports[`node snapshots (specs §8.5) > field (counter) 1`] = `
           −
         </button>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0 text-center"
           id="_r_c_"
           inputmode="numeric"
           type="text"
@@ -167,7 +167,7 @@ exports[`node snapshots (specs §8.5) > field (number) 1`] = `
         Strength
       </label>
       <input
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
         id="_r_9_"
         inputmode="numeric"
         type="text"
@@ -197,7 +197,7 @@ exports[`node snapshots (specs §8.5) > field (select) 1`] = `
         size
       </label>
       <select
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60"
         id="_r_b_"
       >
         <option
@@ -235,7 +235,7 @@ exports[`node snapshots (specs §8.5) > field (text) 1`] = `
         Name
       </label>
       <input
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
         id="_r_8_"
         type="text"
         value="Ayla"
@@ -268,7 +268,7 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
           str
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_2_"
           inputmode="numeric"
           type="text"
@@ -288,7 +288,7 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
           speed
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_3_"
           inputmode="decimal"
           type="text"
@@ -375,7 +375,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
                   name
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_e_"
                   type="text"
                   value="Climb"
@@ -394,7 +394,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
                   rank
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_f_"
                   inputmode="numeric"
                   type="text"
@@ -459,7 +459,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
                   name
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_g_"
                   type="text"
                   value="Swim"
@@ -478,7 +478,7 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
                   rank
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_h_"
                   inputmode="numeric"
                   type="text"
@@ -552,7 +552,7 @@ exports[`node snapshots (specs §8.5) > longText 1`] = `
         Notes
       </label>
       <textarea
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 min-h-24 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 min-h-24 w-full min-w-0"
         id="_r_d_"
       />
     </div>
@@ -600,7 +600,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                     name
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_j_"
                     readonly=""
                     type="text"
@@ -620,7 +620,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                     rank
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_k_"
                     inputmode="numeric"
                     readonly=""
@@ -654,7 +654,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                     name
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_l_"
                     readonly=""
                     type="text"
@@ -674,7 +674,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                     rank
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_m_"
                     inputmode="numeric"
                     readonly=""
@@ -712,7 +712,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
             −
           </button>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0 text-center"
             id="_r_n_"
             inputmode="numeric"
             readonly=""
@@ -779,7 +779,7 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
           str
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_0_"
           inputmode="numeric"
           type="text"
@@ -799,7 +799,7 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
           speed
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_1_"
           inputmode="decimal"
           type="text"
@@ -864,7 +864,7 @@ exports[`node snapshots (specs §8.5) > section 1`] = `
             hp.max
           </label>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
             id="_r_7_"
             inputmode="numeric"
             type="text"
@@ -932,7 +932,7 @@ exports[`node snapshots (specs §8.5) > tabs 1`] = `
             Strength
           </label>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
             id="_r_6_"
             inputmode="numeric"
             type="text"

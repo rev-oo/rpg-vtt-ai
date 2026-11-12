@@ -12,6 +12,16 @@ import { valueAt, type FieldPath } from './store.js';
 import { fill } from './strings.js';
 import { SharedTextarea } from './text.js';
 
+/**
+ * A sheet's controls. On a sheet the caller may only view, text dims as the disabled selects
+ * and checkboxes do (T-1620): a `readonly` input or textarea, or a rich text editor that is
+ * not editable.
+ */
+const sheetControlClass = cn(
+  controlClass,
+  '[&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60',
+);
+
 type NodeOf<T extends SheetNode['type']> = Extract<SheetNode, { type: T }>;
 
 export interface ResolvedField {
@@ -232,7 +242,7 @@ export function FieldNode({
       <FieldShell {...shell} labelFor={id}>
         <select
           id={id}
-          className={controlClass}
+          className={sheetControlClass}
           value={asText(field.value)}
           disabled={readOnly}
           onChange={(event) => {
@@ -265,7 +275,7 @@ export function FieldNode({
       id={id}
       type="text"
       inputMode={numeric ? (field.schema?.type === 'integer' ? 'numeric' : 'decimal') : undefined}
-      className={cn(controlClass, 'w-full min-w-0', input === 'counter' && 'text-center')}
+      className={cn(sheetControlClass, 'w-full min-w-0', input === 'counter' && 'text-center')}
       value={shown}
       readOnly={readOnly}
       aria-invalid={error ? true : undefined}
@@ -337,7 +347,7 @@ export function LongTextNode({
   if (field.hidden) return null;
   const label = node.label ? sheet.translate(node.label) : node.path;
   const shared = sheet.store.text?.(field.path);
-  const className = cn(controlClass, 'min-h-24 w-full min-w-0');
+  const className = cn(sheetControlClass, 'min-h-24 w-full min-w-0');
   const labelId = `${id}-label`;
   // The host renders nothing when it cannot edit the field richly, such as without its text.
   const rich =
