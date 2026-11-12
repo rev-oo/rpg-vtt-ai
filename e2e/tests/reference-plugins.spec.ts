@@ -82,7 +82,10 @@ async function rollsInitiative(
   await expect(rows).toHaveCount(combatants.length);
   await page.getByRole('button', { name: 'Roll initiative' }).click();
   await expect(page.getByRole('button', { name: 'Roll initiative' })).toBeHidden();
-  for (const row of await rows.all()) await expect(row).toHaveText(/^-?\d+/);
+  // A running encounter shows each initiative in its field (T-1620).
+  for (const row of await rows.all()) {
+    await expect(row.getByRole('spinbutton', { name: /^Initiative of / })).toHaveValue(/^-?\d+$/);
+  }
   await expect(page.getByRole('log', { name: 'Messages' })).toContainText(formula);
   return rows.allTextContents();
 }
@@ -388,6 +391,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const spells = page.getByRole('list', { name: 'Spells' });
     await expect(spells.getByRole('heading')).toHaveText(['Mend', 'Spark']);
     await expect(page.getByRole('list', { name: 'Gear' })).toContainText('Shortsword');
+    await page.getByLabel('Actor to copy Spark onto').selectOption(actor.id);
     await page.getByRole('button', { name: 'Copy Spark onto the chosen actor' }).click();
     await expect(page.getByText('Spark was copied onto Ayla.')).toBeVisible();
 
@@ -473,7 +477,7 @@ test('tiny-pool works without code', async ({ browser }) => {
     [{ actorId: actor.id }, { name: 'Shade', initiative: 3 }],
     '1d6 + @wits',
   );
-  expect(order.map((row) => row.replace(/^\d+/, '').slice(0, 5))).toEqual(['Brask', 'Shade']);
+  expect(order.map((row) => row.slice(0, 5))).toEqual(['Brask', 'Shade']);
   await gm.context.close();
 });
 
