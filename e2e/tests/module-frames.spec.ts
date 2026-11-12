@@ -79,13 +79,14 @@ test('a module overlay and panel act as the viewer and see only what the viewer 
   });
 
   await test.step('the viewer can turn the overlays off', async () => {
-    await page.getByRole('button', { name: 'Overlays' }).click();
+    // The switch is among the member's own settings (T-1620).
+    await showPanel(page, 'Settings');
+    const overlays = page.getByRole('checkbox', { name: /overlays on this table/ });
+    await overlays.uncheck();
     await expect(page.locator('iframe[title="E2E Frames: lastRoll"]')).toHaveCount(0);
     await page.reload();
-    await expect(page.getByRole('button', { name: 'Overlays' })).toHaveAttribute(
-      'aria-pressed',
-      'false',
-    );
+    await showPanel(page, 'Settings');
+    await expect(overlays).not.toBeChecked();
     await expect(page.locator('iframe[title="E2E Frames: lastRoll"]')).toHaveCount(0);
   });
 

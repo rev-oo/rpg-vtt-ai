@@ -451,7 +451,6 @@ export const ptBR: Messages = {
   'module.badAction': 'O módulo pediu algo que o app não oferece.',
   'module.notFound': 'Isso não é algo que você pode ver nesta mesa.',
   'module.tooFast': 'O módulo agiu vezes demais; tente de novo em alguns segundos.',
-  'module.overlays': 'Sobreposições',
   'module.overlaysHint': 'Mostrar as sobreposições dos módulos nesta mesa',
   'module.panelGone': 'O painel deste módulo não está disponível nesta mesa.',
   'plugin.componentFailed': 'O componente de plugin “{name}” não pôde ser exibido.',

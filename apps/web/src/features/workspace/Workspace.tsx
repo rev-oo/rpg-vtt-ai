@@ -39,7 +39,7 @@ import {
   showTarget,
   titleOf,
 } from './layout.js';
-import { modulePanelId, overlaysShown, setOverlaysShown } from './module-ids.js';
+import { modulePanelId, useOverlaysShown } from './module-ids.js';
 import { ModuleOverlays } from './ModuleFrames.js';
 import { PANEL_COMPONENTS } from './panel-components.js';
 import { cycleGroups, focusPanel } from './panel-focus.js';
@@ -101,8 +101,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
   const modules = useFramedModules();
-  const hasOverlays = modules.some((module) => module.frames.overlays.length > 0);
-  const [overlays, setOverlays] = useState(() => overlaysShown(userId, table.id));
+  const overlays = useOverlaysShown(userId, table.id);
   const modulePanels = modules.flatMap((module) =>
     module.frames.panels.map((panel) => ({
       id: modulePanelId(module.id, panel.name),
@@ -190,13 +189,18 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         {dock && <SkipToPanel dock={dock} openIds={openIds} />}
         <header
           data-vtt-part="table-header"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-line bg-surface px-2 py-1"
         >
-          <Link to="/" className="inline-flex items-center gap-1 text-sm">
+          {/* Back to the tables: the icon alone, named for screen readers and on hover. */}
+          <Link
+            to="/"
+            aria-label={t('workspace.tables')}
+            title={t('workspace.tables')}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-fg hover:bg-canvas"
+          >
             <IconSlot>
               <ICON.back />
             </IconSlot>
-            {t('workspace.tables')}
           </Link>
           <h1 className="min-w-0 truncate text-lg font-bold">{table.name}</h1>
           <span className="hidden text-sm text-muted sm:inline">
@@ -211,20 +215,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
                 if (dock) item.pick(dock);
               }}
             />
-            {hasOverlays && (
-              <Button
-                variant="ghost"
-                icon={overlays ? <ICON.show /> : <ICON.hide />}
-                aria-pressed={overlays}
-                title={t('module.overlaysHint')}
-                onClick={() => {
-                  setOverlaysShown(userId, table.id, !overlays);
-                  setOverlays(!overlays);
-                }}
-              >
-                {t('module.overlays')}
-              </Button>
-            )}
             <Button
               variant="ghost"
               icon={<ICON.reset />}

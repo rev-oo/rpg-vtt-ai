@@ -55,6 +55,11 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
     expect(screen.getByRole('banner')).toHaveTextContent('Tiny d20');
     expect(screen.getByRole('banner')).not.toHaveTextContent('1.0.0');
+    // Back to the tables is an icon, named for screen readers (T-1620).
+    const back = screen.getByRole('link', { name: 'Tables' });
+    expect(back).toHaveAttribute('href', '/');
+    expect(back).toHaveTextContent('');
+    expect(screen.queryByRole('button', { name: 'Overlays' })).toBeNull();
     for (const name of ['Actors', 'Map', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }
