@@ -1076,7 +1076,7 @@ An actor type can list true/false fields as `statuses`, such as conditions (T-16
 
 | Node            | Shows                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------ |
-| `column`, `row` | Children stacked, or side by side (`gap`: `none`, `sm`, `md`, `lg`; `row` can `wrap`)            |
+| `column`, `row` | Children stacked, or side by side (`gap`: `none`, `sm`, `md`, `lg`; a `row` wraps when full)     |
 | `grid`          | Children in up to `columns` columns (1–12), fewer when a column would be narrower than 7rem      |
 | `tabs`          | One of several `tabs`, each with a `label` and `children`                                        |
 | `section`       | A `title` over its `children`; `collapsible` lets viewers fold it                                |

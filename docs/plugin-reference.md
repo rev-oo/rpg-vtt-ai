@@ -271,7 +271,7 @@ Lays its children out side by side.
 | `type` | `"row"` | yes |  |
 | `children` | list of [Node](#sheet-node) | yes | The nodes inside, in order. |
 | `gap` | one of `"none"`, `"sm"`, `"md"`, `"lg"` |  | The space between children. |
-| `wrap` | true or false |  | Wraps children onto more lines when narrow. |
+| `wrap` | true or false |  | Kept for older sheets: every row wraps its children once their fields do not fit. |
 
 <a id="sheet-node-column"></a>
 

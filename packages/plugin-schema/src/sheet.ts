@@ -88,7 +88,12 @@ export const sheetNode: z.ZodType<SheetNode> = z.lazy(() =>
             type: z.literal('row'),
             children: children(),
             gap: gap.optional().describe('The space between children.'),
-            wrap: z.boolean().optional().describe('Wraps children onto more lines when narrow.'),
+            wrap: z
+              .boolean()
+              .optional()
+              .describe(
+                'Kept for older sheets: every row wraps its children once their fields do not fit.',
+              ),
           })
           .describe('Lays its children out side by side.'),
         z

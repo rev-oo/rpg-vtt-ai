@@ -78,6 +78,8 @@ exports[`node snapshots (specs §8.5) > field (checkbox) 1`] = `
     <div
       class="vtt-field flex min-w-0 items-center gap-2"
       data-field="alive"
+      data-input="checkbox"
+      style="--vtt-basis: auto;"
     >
       <input
         checked=""
@@ -86,7 +88,7 @@ exports[`node snapshots (specs §8.5) > field (checkbox) 1`] = `
         type="checkbox"
       />
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_a_"
       >
         alive
@@ -105,9 +107,11 @@ exports[`node snapshots (specs §8.5) > field (counter) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="hp.value"
+      data-input="counter"
+      style="--vtt-basis: 9rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_c_"
       >
         Hit points
@@ -153,9 +157,11 @@ exports[`node snapshots (specs §8.5) > field (number) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="str"
+      data-input="number"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_9_"
       >
         Strength
@@ -181,9 +187,11 @@ exports[`node snapshots (specs §8.5) > field (select) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="size"
+      data-input="select"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_b_"
       >
         size
@@ -217,9 +225,11 @@ exports[`node snapshots (specs §8.5) > field (text) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="name"
+      data-input="text"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_8_"
       >
         Name
@@ -248,9 +258,11 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="str"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_2_"
         >
           str
@@ -266,9 +278,11 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="speed"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_3_"
         >
           speed
@@ -284,6 +298,8 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field flex min-w-0 items-center gap-2"
         data-field="alive"
+        data-input="checkbox"
+        style="--vtt-basis: auto;"
       >
         <input
           checked=""
@@ -292,7 +308,7 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
           type="checkbox"
         />
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_4_"
         >
           alive
@@ -344,14 +360,16 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="name"
+                data-input="text"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_e_"
                 >
                   name
@@ -366,9 +384,11 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="rank"
+                data-input="number"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_f_"
                 >
                   rank
@@ -424,14 +444,16 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="name"
+                data-input="text"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_g_"
                 >
                   name
@@ -446,9 +468,11 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="rank"
+                data-input="number"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_h_"
                 >
                   rank
@@ -522,7 +546,7 @@ exports[`node snapshots (specs §8.5) > longText 1`] = `
       data-field="notes"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_d_"
       >
         Notes
@@ -561,14 +585,16 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="name"
+                  data-input="text"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_j_"
                   >
                     name
@@ -584,9 +610,11 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="rank"
+                  data-input="number"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_k_"
                   >
                     rank
@@ -611,14 +639,16 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="name"
+                  data-input="text"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_l_"
                   >
                     name
@@ -634,9 +664,11 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="rank"
+                  data-input="number"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_m_"
                   >
                     rank
@@ -658,9 +690,11 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="hp.value"
+        data-input="counter"
+        style="--vtt-basis: 9rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_n_"
         >
           Hit points
@@ -730,14 +764,16 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
     data-plugin="tiny-test"
   >
     <div
-      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end @md:flex-wrap gap-(--vtt-gap-sm) stats"
+      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>[data-input]]:basis-(--vtt-basis)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-sm) stats"
     >
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="str"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_0_"
         >
           str
@@ -753,9 +789,11 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="speed"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_1_"
         >
           speed
@@ -816,9 +854,11 @@ exports[`node snapshots (specs §8.5) > section 1`] = `
         <div
           class="vtt-field relative flex min-w-0 flex-col gap-1"
           data-field="hp.max"
+          data-input="number"
+          style="--vtt-basis: 6rem;"
         >
           <label
-            class="text-sm font-semibold"
+            class="text-sm font-semibold wrap-anywhere"
             for="_r_7_"
           >
             hp.max
@@ -882,9 +922,11 @@ exports[`node snapshots (specs §8.5) > tabs 1`] = `
         <div
           class="vtt-field relative flex min-w-0 flex-col gap-1"
           data-field="str"
+          data-input="number"
+          style="--vtt-basis: 6rem;"
         >
           <label
-            class="text-sm font-semibold"
+            class="text-sm font-semibold wrap-anywhere"
             for="_r_6_"
           >
             Strength

@@ -13,7 +13,14 @@ import type { SheetNode } from '@vtt/plugin-schema';
 import { Button, cn } from '@vtt/ui';
 
 import { formulaScope, useSheet, type RowScope, type SheetEnvironment } from './context.js';
-import { DerivedNode, FieldNode, ImageNode, LongTextNode, resolveField } from './fields.js';
+import {
+  DerivedNode,
+  FieldNode,
+  ImageNode,
+  inputOf,
+  LongTextNode,
+  resolveField,
+} from './fields.js';
 import { RollOptionsDialog } from './roll-options.js';
 import { fill } from './strings.js';
 
@@ -58,14 +65,16 @@ function Children({
 }
 
 function RowNode({ node, row }: { node: NodeOf<'row'>; row: RowScope | undefined }): ReactElement {
-  // Narrow sheets stack the row (FR-SHEET-10); the sheet root is a size container.
+  // Narrow sheets stack the row (FR-SHEET-10); the sheet root is a size container. Every row
+  // wraps when its fields need the room, so `wrap` no longer changes anything.
   return (
     <div
       className={cn(
         // Children share the width, except images, which keep their size; roll buttons line up
         // with the inputs next to them.
-        'vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end',
-        node.wrap && '@md:flex-wrap',
+        // Fields ask for the width their input needs, other children for 4rem (T-1620), and the
+        // row wraps once they do not fit, so a counter keeps room for its value.
+        'vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end',
         GAPS[node.gap ?? 'md'],
         node.class,
       )}
@@ -89,6 +98,18 @@ function ColumnNode({
   );
 }
 
+/** Whether a node is, or lays out, a counter field: lists and nested grids size themselves. */
+function holdsCounter(
+  sheet: SheetEnvironment,
+  row: RowScope | undefined,
+  node: SheetNode,
+): boolean {
+  if (node.type === 'field') return inputOf(sheet, row, node) === 'counter';
+  if (node.type === 'row' || node.type === 'column' || node.type === 'section')
+    return node.children.some((child) => holdsCounter(sheet, row, child));
+  return false;
+}
+
 function GridNode({
   node,
   row,
@@ -96,9 +117,12 @@ function GridNode({
   node: NodeOf<'grid'>;
   row: RowScope | undefined;
 }): ReactElement {
+  const sheet = useSheet();
   const gaps = String(node.columns - 1);
-  // At most `columns` columns, fewer once a column would be narrower than 7rem.
-  const columns = `repeat(auto-fill, minmax(max(7rem, calc((100% - ${gaps} * var(--vtt-gap-md)) / ${String(node.columns)})), 1fr))`;
+  // At most `columns` columns, fewer once a column would be narrower than its fields need:
+  // 7rem, or 9rem with a counter in it (T-1620).
+  const min = node.children.some((child) => holdsCounter(sheet, row, child)) ? '9rem' : '7rem';
+  const columns = `repeat(auto-fill, minmax(max(${min}, calc((100% - ${gaps} * var(--vtt-gap-md)) / ${String(node.columns)})), 1fr))`;
   return (
     <div
       className={cn('vtt-grid grid min-w-0 gap-(--vtt-gap-md)', node.class)}

@@ -1,4 +1,4 @@
-import { useId, useState, type ReactElement, type ReactNode } from 'react';
+import { useId, useState, type CSSProperties, type ReactElement, type ReactNode } from 'react';
 
 import { isDiceText, type Value } from '@vtt/formula';
 import { fieldBounds } from '@vtt/plugin-engine';
@@ -47,12 +47,38 @@ const asText = (value: unknown): string =>
     ? String(value)
     : '';
 
-const inputFor = (schema: FieldSchema | undefined): NonNullable<NodeOf<'field'>['input']> => {
+type FieldInput = NonNullable<NodeOf<'field'>['input']>;
+
+const inputFor = (schema: FieldSchema | undefined): FieldInput => {
   if (schema?.enum) return 'select';
   if (schema?.['x-counter']) return 'counter';
   if (schema?.type === 'boolean') return 'checkbox';
   if (schema?.type === 'integer' || schema?.type === 'number') return 'number';
   return 'text';
+};
+
+/** The input a field node shows: the one it names, or the one its schema calls for. */
+export const inputOf = (
+  sheet: SheetEnvironment,
+  row: RowScope | undefined,
+  node: NodeOf<'field'>,
+): FieldInput => node.input ?? inputFor(resolveField(sheet, row, node.path).schema);
+
+/**
+ * The width a field asks for in a row (T-1620): enough for an input's value, more for a
+ * counter's buttons around it, and only its own for a checkbox. Rows wrap once their fields'
+ * widths do not fit.
+ */
+const BASIS: Record<FieldInput, string> = {
+  text: '6rem',
+  number: '6rem',
+  select: '6rem',
+  counter: '9rem',
+  checkbox: 'auto',
+};
+const basisStyle = (input: FieldInput): CSSProperties => {
+  const style: Record<string, string> = { '--vtt-basis': BASIS[input] };
+  return style;
 };
 
 /** Why `text` cannot be stored in the field, or undefined (FR-SHEET-09). */
@@ -104,6 +130,8 @@ interface FieldShellProps {
   labelId?: string;
   errorId: string;
   error: string | undefined;
+  /** A field's input, which sets the width it asks for in a row; other nodes have none. */
+  input?: FieldInput;
   children: ReactNode;
 }
 
@@ -115,6 +143,7 @@ function FieldShell({
   labelId,
   errorId,
   error,
+  input,
   children,
 }: FieldShellProps): ReactElement {
   const presence = usePresence(path);
@@ -122,15 +151,16 @@ function FieldShell({
     <div
       className={cn(`vtt-${node.type} relative flex min-w-0 flex-col gap-1`, node.class)}
       data-field={node.path}
-      style={presence.style}
+      data-input={input}
+      style={{ ...presence.style, ...(input && basisStyle(input)) }}
       {...presence.handlers}
     >
       {labelFor ? (
-        <label className="text-sm font-semibold" htmlFor={labelFor}>
+        <label className="text-sm font-semibold wrap-anywhere" htmlFor={labelFor}>
           {label}
         </label>
       ) : (
-        <span id={labelId} className="text-sm font-semibold">
+        <span id={labelId} className="text-sm font-semibold wrap-anywhere">
           {label}
         </span>
       )}
@@ -165,13 +195,15 @@ export function FieldNode({
   const label = node.label ? sheet.translate(node.label) : node.path;
   const errorId = `${id}-error`;
   const described = error ? errorId : undefined;
-  const shell = { node, path: field.path, label, errorId, error };
+  const shell = { node, path: field.path, label, errorId, error, input };
 
   if (input === 'checkbox') {
     return (
       <div
         className={cn('vtt-field flex min-w-0 items-center gap-2', node.class)}
         data-field={node.path}
+        data-input={input}
+        style={basisStyle(input)}
       >
         <input
           id={id}
@@ -183,7 +215,7 @@ export function FieldNode({
             store.set(field.path, event.target.checked);
           }}
         />
-        <label className="text-sm font-semibold" htmlFor={id}>
+        <label className="text-sm font-semibold wrap-anywhere" htmlFor={id}>
           {label}
         </label>
       </div>
