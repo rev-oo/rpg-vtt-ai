@@ -84,7 +84,7 @@ export default function AccountRoute(): ReactElement {
           <div>
             <profile.Subscribe selector={(s) => s.isSubmitting}>
               {(isSubmitting) => (
-                <Button type="submit" disabled={isSubmitting}>
+                <Button type="submit" variant="primary" disabled={isSubmitting}>
                   {t('account.saveProfile')}
                 </Button>
               )}

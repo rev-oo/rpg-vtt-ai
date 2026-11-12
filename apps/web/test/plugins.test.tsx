@@ -105,7 +105,13 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     const broken = card('Broken');
     expect(broken.getByText('Invalid')).toBeInTheDocument();
     expect(broken.getByRole('button', { name: 'Enable' })).toBeDisabled();
-    expect(broken.getByText('1 errors, 1 warnings')).toBeInTheDocument();
+    expect(broken.getByText('1 error, 1 warning')).toBeInTheDocument();
+    // On a narrow card, Enable comes after the badges (T-1620).
+    const status = broken.getByText('Invalid');
+    expect(
+      status.compareDocumentPosition(broken.getByRole('button', { name: 'Enable' })) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(broken.getByText('sheets/main.json $.layout.children[0].label')).toBeInTheDocument();
     expect(broken.getByText('“label” is required.')).toBeInTheDocument();
     expect(

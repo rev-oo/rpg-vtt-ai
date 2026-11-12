@@ -371,8 +371,16 @@ describe('sending messages (FR-CHAT-01, 02)', () => {
     openTable({ history: page([roll]) });
     expect(await screen.findByLabelText('Total 17')).toHaveTextContent('17');
     const item = within(log());
+    // The formula as rolled, with no reference left (T-1620); the recipe's own formula only
+    // on request.
+    expect(item.getByText('4d6kh3 + 2')).toBeVisible();
+    const references = item.queryAllByText(/@/);
+    expect(references.length).toBeGreaterThan(0);
+    for (const element of references)
+      expect(element.closest('details')).not.toHaveAttribute('open');
+    expect(item.getByText('4d6kh3 + @mod')).not.toBeVisible();
+    await userEvent.click(item.getByText('Formula'));
     expect(item.getByText('4d6kh3 + @mod')).toBeVisible();
-    expect(item.getByText('→ 4d6kh3 + 2')).toBeVisible();
     const dice = screen.getByRole('list', { name: 'Dice of 4d6kh3' });
     expect(
       within(dice)

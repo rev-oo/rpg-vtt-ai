@@ -4,7 +4,7 @@ import type { AdminPlugin } from '@vtt/shared/api';
 import { Button, Card, cn } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
-import { t, type MessageKey } from '../../i18n/index.js';
+import { t, tn, type MessageKey } from '../../i18n/index.js';
 import { PluginSettingsForm } from '../settings/PluginSettingsForm.js';
 
 import { Attribution } from './Attribution.js';
@@ -72,7 +72,8 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
 
   return (
     <Card className="flex flex-col gap-3" aria-labelledby={`plugin-${plugin.id}`}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      {/* On a narrow card the switch follows the badges; from sm it sits top right (T-1620). */}
+      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
         <div className="flex min-w-0 flex-col gap-1">
           <h2 id={`plugin-${plugin.id}`} className="text-lg font-semibold break-words">
             {plugin.name}
@@ -83,29 +84,34 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
             {plugin.coreApi && <span>{t('plugins.coreApi', { range: plugin.coreApi })}</span>}
           </p>
         </div>
-        {plugin.enabled ? (
-          <Button onClick={onDisable} disabled={busy}>
-            {t('plugins.disable')}
-          </Button>
-        ) : (
-          <Button variant="primary" onClick={onEnable} disabled={busy || plugin.status !== 'ready'}>
-            {t('plugins.enable')}
-          </Button>
-        )}
+        <p className="flex flex-wrap gap-2 sm:col-span-2 sm:row-start-2">
+          <Badge className="bg-canvas text-fg">{t(`plugins.kind.${plugin.kind}`)}</Badge>
+          <Badge className={STATUS_CLASS[plugin.status]}>
+            {t(`plugins.status.${plugin.status}`)}
+          </Badge>
+          <Badge className={plugin.enabled ? 'bg-info-soft text-fg' : 'bg-canvas text-muted'}>
+            {t(plugin.enabled ? 'plugins.enabled' : 'plugins.disabled')}
+          </Badge>
+          {plugin.hasCode && (
+            <Badge className="bg-danger-soft text-danger">{t('plugins.hasCode')}</Badge>
+          )}
+        </p>
+        <div className="justify-self-start sm:col-start-2 sm:row-start-1 sm:justify-self-end">
+          {plugin.enabled ? (
+            <Button onClick={onDisable} disabled={busy}>
+              {t('plugins.disable')}
+            </Button>
+          ) : (
+            <Button
+              variant="primary"
+              onClick={onEnable}
+              disabled={busy || plugin.status !== 'ready'}
+            >
+              {t('plugins.enable')}
+            </Button>
+          )}
+        </div>
       </div>
-
-      <p className="flex flex-wrap gap-2">
-        <Badge className="bg-canvas text-fg">{t(`plugins.kind.${plugin.kind}`)}</Badge>
-        <Badge className={STATUS_CLASS[plugin.status]}>
-          {t(`plugins.status.${plugin.status}`)}
-        </Badge>
-        <Badge className={plugin.enabled ? 'bg-info-soft text-fg' : 'bg-canvas text-muted'}>
-          {t(plugin.enabled ? 'plugins.enabled' : 'plugins.disabled')}
-        </Badge>
-        {plugin.hasCode && (
-          <Badge className="bg-danger-soft text-danger">{t('plugins.hasCode')}</Badge>
-        )}
-      </p>
 
       {plugin.description && <p>{plugin.description}</p>}
       {plugin.attribution && <Attribution attribution={plugin.attribution} />}
@@ -130,7 +136,10 @@ export function PluginCard({ plugin, busy, onEnable, onDisable }: PluginCardProp
       {plugin.issues.length > 0 && (
         <details open={errors > 0}>
           <summary className="cursor-pointer text-sm font-semibold">
-            {t('plugins.issues', { errors, warnings })}
+            {t('plugins.issues', {
+              errors: tn('plugins.errors', errors),
+              warnings: tn('plugins.warnings', warnings),
+            })}
           </summary>
           <IssueList issues={plugin.issues} className="mt-2" />
         </details>

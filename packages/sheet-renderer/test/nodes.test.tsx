@@ -96,3 +96,42 @@ describe('node snapshots (specs §8.5)', () => {
     expect(asFragment()).toMatchSnapshot();
   });
 });
+
+// A counter keeps room for its value between its buttons (T-1620).
+describe('field widths in rows and grids', () => {
+  it('asks a row for more room for a counter than for an input, and none for a checkbox', () => {
+    const { container } = renderSheet({
+      type: 'row',
+      children: [field('hp.value'), field('str'), field('alive')],
+    });
+    const basis = (path: string) =>
+      container
+        .querySelector<HTMLElement>(`[data-field="${path}"]`)
+        ?.style.getPropertyValue('--vtt-basis');
+    // The counter comes from the schema's `x-counter`, without `input` on the node.
+    expect(container.querySelector('[data-field="hp.value"]')).toHaveAttribute(
+      'data-input',
+      'counter',
+    );
+    expect(basis('hp.value')).toBe('9rem');
+    expect(basis('str')).toBe('6rem');
+    expect(basis('alive')).toBe('auto');
+    expect(container.querySelector('.vtt-row')).toHaveClass('@md:flex-wrap');
+  });
+
+  it('gives a grid holding a counter wider columns, so it wraps to fewer', () => {
+    const columns = (layout: SheetNode) =>
+      renderSheet(layout).container.querySelector<HTMLElement>('.vtt-grid')?.style
+        .gridTemplateColumns ?? '';
+    expect(
+      columns({ type: 'grid', columns: 8, children: [field('str'), field('speed')] }),
+    ).toContain('max(7rem');
+    expect(
+      columns({
+        type: 'grid',
+        columns: 8,
+        children: [field('str'), { type: 'column', children: [field('hp.value')] }],
+      }),
+    ).toContain('max(9rem');
+  });
+});

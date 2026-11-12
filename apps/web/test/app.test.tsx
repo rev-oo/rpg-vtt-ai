@@ -160,6 +160,10 @@ describe('account (FR-AUTH-05)', () => {
     const field = await screen.findByLabelText('Display name');
     await user.clear(field);
     await user.type(field, 'Al');
+    // Each form on the page has one filled button (T-1620).
+    for (const form of document.querySelectorAll('form')) {
+      expect(form.querySelectorAll('button[data-variant="primary"]')).toHaveLength(1);
+    }
     await user.click(screen.getByRole('button', { name: 'Save' }));
 
     await screen.findByText('Profile saved.');
@@ -179,7 +183,9 @@ describe('tables (FR-TABLE-01)', () => {
     const card = (await screen.findByRole('heading', { name: 'Crimson Throne' })).closest('li');
     expect(card).not.toBeNull();
     expect(within(card as HTMLElement).getByText('GM')).toBeInTheDocument();
-    expect(within(card as HTMLElement).getByText('Tiny d20 1.0.0')).toBeInTheDocument();
+    // The version is for the Settings and Plugins pages, not where people play (T-1620).
+    expect(within(card as HTMLElement).getByText('Tiny d20')).toBeInTheDocument();
+    expect(card).not.toHaveTextContent('1.0.0');
   });
 
   it('creates a table from the dialog and refreshes the list', async () => {

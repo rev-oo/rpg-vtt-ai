@@ -9,6 +9,7 @@ import { AssetGallery } from '../assets/AssetGallery.js';
 import { ChatPanel } from '../chat/ChatPanel.js';
 import { CombatTracker } from '../combat/CombatTracker.js';
 import { CompendiumBrowser } from '../compendium/CompendiumBrowser.js';
+import { CompendiumSheetPanel } from '../compendium/CompendiumSheet.js';
 import { ActorList } from '../entities/ActorList.js';
 import { ActorSheetPanel } from '../entities/ActorSheet.js';
 import { readFilters, toListQuery, type EntityFilters } from '../entities/filters.js';
@@ -192,6 +193,14 @@ export function ItemPanel({ params, api: panel }: IDockviewPanelProps): ReactEle
   );
 }
 
+export function PackEntryPanel({ params }: IDockviewPanelProps): ReactElement {
+  return (
+    <Body>
+      <CompendiumSheetPanel entryRef={stringParam(params, 'ref')} />
+    </Body>
+  );
+}
+
 export function EntryPanel({ params, api: panel }: IDockviewPanelProps): ReactElement {
   return (
     <Body>
@@ -212,8 +221,7 @@ export function OverviewPanel(): ReactElement {
       <div className="mx-auto flex max-w-2xl flex-col gap-3 py-3">
         <h2 className="text-2xl font-bold">{t('workspace.about')}</h2>
         <p className="text-sm text-muted">
-          {t(`tables.role.${table.role}`)} ·{' '}
-          {t('tables.system', { name: table.systemName, version: table.systemVersion })}
+          {t(`tables.role.${table.role}`)} · {table.systemName}
         </p>
         {table.description && <p>{table.description}</p>}
         <p className="text-muted">{t('workspace.hint')}</p>

@@ -5,6 +5,7 @@ import type { TokenView } from '@vtt/shared/api';
 
 import { cellAt, cellCentre, type Cell, type Point, type SceneGrid } from './geometry.js';
 import { loadImage } from './image.js';
+import type { MapColors } from './map-style.js';
 import type { Size } from './view.js';
 
 export interface TokenHandlers {
@@ -53,6 +54,7 @@ export class TokenLayer {
     area: Size,
     selectedId: string | null,
     handlers: TokenHandlers,
+    colors: MapColors,
   ): void {
     for (const child of this.container.removeChildren()) child.destroy({ children: true });
     const radius = grid.gridSize * 0.42;
@@ -79,21 +81,12 @@ export class TokenLayer {
         initial.anchor.set(0.5);
         piece.addChild(initial);
       }
-      const label = new Text({
-        text: token.name,
-        style: {
-          fill: 0xffffff,
-          fontSize: Math.max(10, grid.gridSize * 0.18),
-          stroke: { color: 0x111827, width: 3 },
-        },
-      });
-      label.anchor.set(0.5, 0);
-      label.y = radius + 2;
-      piece.addChild(label);
-      this.addStatuses(piece, token, radius);
+      piece.addChild(this.nameLabel(token.name, grid, radius, colors));
+      this.addStatuses(piece, token, radius, colors);
       this.listen(piece, token, grid, area, handlers);
       this.container.addChild(piece);
     }
+    // The map renders on demand: draw the new tokens, and place them for pointer hits.
     this.viewport.dirty = true;
   }
 
@@ -117,25 +110,59 @@ export class TokenLayer {
   }
 
   /**
-   * The statuses that are on (T-1618): the system's icons in a row along the top of the disc,
-   * the last replaced by a count when there are too many.
+   * The token's name under the disc, on a pill in the theme's colours so it reads on any
+   * background (T-1620); it hides while too small to read.
    */
-  private addStatuses(piece: Container, token: TokenView, radius: number): void {
+  private nameLabel(name: string, grid: SceneGrid, radius: number, colors: MapColors): Container {
+    const fontSize = Math.max(10, grid.gridSize * 0.18);
+    const label = new Container();
+    const text = new Text({ text: name, style: { fill: colors.fg, fontSize } });
+    text.anchor.set(0.5, 0);
+    const padX = fontSize * 0.4;
+    const padY = fontSize * 0.15;
+    const pill = new Graphics()
+      .roundRect(
+        -text.width / 2 - padX,
+        -padY,
+        text.width + padX * 2,
+        text.height + padY * 2,
+        (text.height + padY * 2) / 2,
+      )
+      .fill({ color: colors.surface, alpha: 0.9 });
+    label.addChild(pill, text);
+    label.y = radius + 2 + padY;
+    return label;
+  }
+
+  /**
+   * The statuses that are on (T-1618): the system's icons in a row along the top of the disc,
+   * the last replaced by a count when there are too many. Each icon has a ring in the theme's
+   * foreground colour, which keeps a dark icon visible on a dark map (T-1620). Names and
+   * statuses keep their size on the map at every zoom.
+   */
+  private addStatuses(piece: Container, token: TokenView, radius: number, colors: MapColors): void {
     const { statuses } = token;
     if (statuses.length === 0) return;
     const size = radius * 0.55;
     const shown = statuses.length > MAX_STATUS_ICONS ? MAX_STATUS_ICONS - 1 : statuses.length;
     const slots = Math.min(statuses.length, MAX_STATUS_ICONS);
     const x = (slot: number) => (slot - (slots - 1) / 2) * size;
-    const y = -radius + size * 0.2;
+    const row = new Container();
+    row.y = -radius + size * 0.2;
+    piece.addChild(row);
     statuses.slice(0, shown).forEach((status, slot) => {
+      row.addChild(
+        new Graphics()
+          .circle(x(slot), 0, size / 2)
+          .stroke({ width: Math.max(1, size * 0.08), color: colors.fg, alpha: 0.9 }),
+      );
       void this.texture(status.icon).then((loaded) => {
         if (!loaded || piece.destroyed || this.destroyed) return;
         const sprite = new Sprite(loaded);
         sprite.scale.set(size / Math.max(loaded.width, loaded.height));
         sprite.anchor.set(0.5);
-        sprite.position.set(x(slot), y);
-        piece.addChild(sprite);
+        sprite.position.set(x(slot), 0);
+        row.addChildAt(sprite, 0);
         this.viewport.dirty = true;
       });
     });
@@ -143,15 +170,15 @@ export class TokenLayer {
       const more = new Text({
         text: `+${String(statuses.length - shown)}`,
         style: {
-          fill: 0xffffff,
+          fill: colors.fg,
           fontSize: size * 0.6,
           fontWeight: 'bold',
-          stroke: { color: 0x111827, width: 3 },
+          stroke: { color: colors.surface, width: 3 },
         },
       });
       more.anchor.set(0.5);
-      more.position.set(x(shown), y);
-      piece.addChild(more);
+      more.position.set(x(shown), 0);
+      row.addChild(more);
     }
   }
 

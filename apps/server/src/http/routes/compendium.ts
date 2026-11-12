@@ -5,6 +5,8 @@ import {
   compendiumCopyBody,
   compendiumQuery,
   type CompendiumCopyResponse,
+  type CompendiumEntry,
+  type CompendiumEntryResponse,
   type CompendiumPage,
 } from '@vtt/shared/api';
 
@@ -32,6 +34,24 @@ import { listPage, nameKey } from '../pages.js';
 import { parseInput } from '../validation.js';
 
 const idParams = z.object({ id: z.uuid() });
+
+type Listed = ReturnType<typeof compendiumItems>[number];
+
+/** A pack entry as the API shows it, with the data the caller may see. */
+const toEntry = (
+  { ref, pack, entry }: Listed,
+  system: CompendiumEntry['system'],
+  inTable: boolean,
+): CompendiumEntry => ({
+  ref,
+  pack,
+  kind: entry.kind,
+  type: entry.type,
+  name: entry.name,
+  system,
+  inTable,
+});
+const entryParams = z.object({ id: z.uuid(), ref: z.string().min(1).max(300) });
 
 /**
  * The compendium browser (FR-PLUGIN-09, ADR-060): every member browses the system's pack
@@ -66,16 +86,38 @@ export function compendiumRoutes({ app, db, events, now, plugins }: AppContext):
     );
     return {
       packs: compendiumPacks(plugin),
-      entries: views.map(({ ref, pack, entry }) => ({
-        ref,
-        pack,
-        kind: entry.kind,
-        type: entry.type,
-        name: entry.name,
-        system: visible(entry.kind, entry.type, entryData(plugin, entry)),
-        inTable: inTable.has(ref),
-      })),
+      entries: views.map((item) =>
+        toEntry(
+          item,
+          visible(item.entry.kind, item.entry.type, entryData(plugin, item.entry)),
+          inTable.has(item.ref),
+        ),
+      ),
       nextCursor,
+    };
+  });
+
+  /** One entry, as the list gives it, for its read-only sheet (T-1620). */
+  app.get('/api/v1/tables/:id/compendium/entries/:ref', (request): CompendiumEntryResponse => {
+    const { id, ref } = parseInput(entryParams, request.params);
+    const { table, membership } = requireMember(db, request, id);
+    const plugin = systemOf(table);
+    const item = compendiumItems(plugin, nameKey).find((candidate) => candidate.ref === ref);
+    if (!item) throw notFound('Compendium entry not found.');
+    const packOf = (name: string) => {
+      const pack = compendiumPacks(plugin).find((candidate) => candidate.name === name);
+      if (!pack) throw notFound('Compendium entry not found.');
+      return pack;
+    };
+    const visible = dataFilter(plugin, membership.role);
+    const { entry } = item;
+    return {
+      entry: toEntry(
+        item,
+        visible(entry.kind, entry.type, entryData(plugin, entry)),
+        refsInTable(db, table.id, [ref]).has(ref),
+      ),
+      pack: packOf(item.pack),
     };
   });
 

@@ -41,7 +41,8 @@ test('first-run setup, login and table creation', async ({ page }) => {
     await expect(dialog).toBeHidden();
     const card = page.getByRole('listitem').filter({ hasText: 'Curse of the Crimson Throne' });
     await expect(card).toContainText('GM');
-    await expect(card).toContainText('E2E System 1.0.0');
+    await expect(card).toContainText('E2E System');
+    await expect(card).not.toContainText('1.0.0');
   });
 
   await test.step('the session survives a reload', async () => {

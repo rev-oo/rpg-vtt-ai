@@ -53,7 +53,14 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     openTable('/tables/t1');
     expect(await screen.findByRole('heading', { name: 'Goblin King' })).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull();
-    for (const name of ['Actors', 'Map', 'Combat', 'Chat']) {
+    expect(screen.getByRole('banner')).toHaveTextContent('Tiny d20');
+    expect(screen.getByRole('banner')).not.toHaveTextContent('1.0.0');
+    // Back to the tables is an icon, named for screen readers (T-1620).
+    const back = screen.getByRole('link', { name: 'Tables' });
+    expect(back).toHaveAttribute('href', '/');
+    expect(back).toHaveTextContent('');
+    expect(screen.queryByRole('button', { name: 'Overlays' })).toBeNull();
+    for (const name of ['Actors', 'Map', 'Chat']) {
       expect(await panel(name)).toBeInTheDocument();
     }
     expect(tabs()).toEqual([
@@ -65,9 +72,9 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       'Scenes',
       'Map',
       'Table',
-      'Combat',
       'Chat',
       'Dice',
+      'Combat',
     ]);
     // Each tab shows its panel's icon, hidden from screen readers (ADR-071).
     await waitFor(() => {
@@ -78,11 +85,10 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     });
   });
 
-  it('has no other table URLs: they lead home', async () => {
+  it('has no other table URLs: they say the page was not found (T-1620)', async () => {
     openTable('/tables/t1/actors/a1');
-    await waitFor(() => {
-      expect(location()).toBe('/');
-    });
+    expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back to your tables' })).toHaveAttribute('href', '/');
   });
 
   it('opens documents in place, leaving the URL on the table', async () => {
@@ -111,14 +117,16 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
     // Another visit to the table finds it as it was left.
     cleanup();
     openTable('/tables/t1');
-    await panel('Combat');
+    await panel('Map');
     expect(tabs()).not.toContain('Chat');
     await user.click((await panelsMenu(user)).getByRole('button', { name: /^Chat/ }));
     expect(await panel('Chat')).toBeInTheDocument();
 
     await user.click(await screen.findByRole('button', { name: 'Close Combat' }));
     await user.click(screen.getByRole('button', { name: 'Reset layout' }));
-    expect(await panel('Combat')).toBeInTheDocument();
+    // The default puts Chat in front of Dice and Combat (T-1620).
+    expect(await panel('Chat')).toBeInTheDocument();
+    expect(tabs()).toContain('Combat');
   });
 
   it('starts from the default layout when the stored one is broken', async () => {
@@ -157,5 +165,62 @@ describe('table workspace (FR-TABLE-08, ADR-059)', () => {
       expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, true))).not.toBeNull();
     });
     expect(localStorage.getItem(layoutKey(USER.id, TABLE.id, false))).toBeNull();
+  });
+});
+
+describe('moving between panels by keyboard (T-1620)', () => {
+  const groupOf = () => document.activeElement?.closest('.dv-groupview') ?? null;
+
+  it('puts the dock in the main landmark', async () => {
+    openTable('/tables/t1');
+    const chat = await panel('Chat');
+    expect(screen.getByRole('main')).toContainElement(chat);
+  });
+
+  it('moves to the next and previous panel group with F6 and Shift+F6', async () => {
+    openTable('/tables/t1');
+    await panel('Chat');
+    // The keys work once the dock is ready, as the skip list shows.
+    await screen.findByRole('button', { name: 'Go to Chat' });
+    const user = userEvent.setup();
+    screen.getByRole('link', { name: 'Tables' }).focus();
+
+    await user.keyboard('{F6}');
+    const first = groupOf();
+    expect(first).not.toBeNull();
+    expect(screen.getByRole('main')).toContainElement(first instanceof HTMLElement ? first : null);
+
+    await user.keyboard('{F6}');
+    const second = groupOf();
+    expect(second).not.toBeNull();
+    expect(second).not.toBe(first);
+
+    await user.keyboard('{Shift>}{F6}{/Shift}');
+    expect(groupOf()).toBe(first);
+    // Back from the first group, Shift+F6 wraps to the last.
+    await user.keyboard('{Shift>}{F6}{/Shift}');
+    const groups = document.querySelectorAll('.vtt-dock .dv-groupview');
+    expect(groupOf()).toBe(groups[groups.length - 1]);
+  });
+
+  it('skips straight to a panel, landing in the chat on its message box', async () => {
+    openTable('/tables/t1');
+    await panel('Chat');
+    const user = userEvent.setup();
+    // The list shows once the dock is ready: one entry per open panel, before the header's
+    // own controls.
+    const goToChat = await screen.findByRole('button', { name: 'Go to Chat' });
+    const skip = screen.getByRole('navigation', { name: 'Skip to panel' });
+    expect(skip).toContainElement(goToChat);
+    expect(within(skip).getByRole('button', { name: 'Go to Map' })).toBeInTheDocument();
+    await user.tab();
+    expect(skip).toContainElement(
+      document.activeElement instanceof HTMLElement ? document.activeElement : null,
+    );
+
+    await user.click(within(skip).getByRole('button', { name: 'Go to Chat' }));
+    await waitFor(() => {
+      expect(screen.getByLabelText('Message')).toHaveFocus();
+    });
   });
 });

@@ -1,4 +1,3 @@
-import { useForm } from '@tanstack/react-form';
 import {
   lazy,
   Suspense,
@@ -18,7 +17,7 @@ import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { useJournalBody } from '../../collab/use-journal-body.js';
-import { TextInput } from '../../forms/fields.js';
+import { RenameForm } from '../../forms/RenameForm.js';
 import { t } from '../../i18n/index.js';
 import { useTableData } from '../table/table-data.js';
 
@@ -112,7 +111,9 @@ function JournalEntry({
       <div className="flex flex-wrap items-center gap-3">
         {renaming ? (
           <RenameForm
-            title={entry.title}
+            name={entry.title}
+            label={t('journal.entryTitle')}
+            schema={createJournalBody.shape.title}
             onCancel={() => {
               setRenaming(false);
             }}
@@ -157,44 +158,5 @@ function JournalEntry({
         </Suspense>
       )}
     </article>
-  );
-}
-
-const titleSchema = createJournalBody.shape.title;
-
-function RenameForm({
-  title,
-  onCancel,
-  onSave,
-}: {
-  title: string;
-  onCancel: () => void;
-  onSave: (title: string) => Promise<void>;
-}): ReactElement {
-  const form = useForm({
-    defaultValues: { title },
-    onSubmit: async ({ value }) => {
-      await onSave(value.title.trim());
-    },
-  });
-  return (
-    <form
-      className="flex flex-1 flex-wrap items-end gap-2"
-      noValidate
-      onSubmit={(e) => {
-        e.preventDefault();
-        void form.handleSubmit();
-      }}
-    >
-      <form.Field name="title" validators={{ onChange: titleSchema, onSubmit: titleSchema }}>
-        {(field) => (
-          <TextInput field={field} label={t('journal.entryTitle')} className="flex-1" required />
-        )}
-      </form.Field>
-      <Button onClick={onCancel}>{t('entities.cancel')}</Button>
-      <Button type="submit" variant="primary">
-        {t('journal.save')}
-      </Button>
-    </form>
   );
 }

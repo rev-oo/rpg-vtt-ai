@@ -22,6 +22,7 @@ import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { OwnershipDialog } from './OwnershipDialog.js';
 import { usePagedList } from './paging.js';
+import { useTypeLabels } from './type-labels.js';
 
 export interface ActorListProps {
   data: TableData;
@@ -47,6 +48,7 @@ export function ActorList({
 }: ActorListProps): ReactElement {
   const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const labels = useTypeLabels();
   const actors = paged.rows;
   const { table, members, types } = data;
   const revalidator = useRevalidator();
@@ -84,6 +86,7 @@ export function ActorList({
           <ListFilters
             searchLabel={t('actors.search')}
             types={types.actorTypes.map((a) => a.type)}
+            typeLabel={labels.actor}
             value={filters}
             onChange={onFilters}
           />
@@ -116,7 +119,7 @@ export function ActorList({
           <EntityRow
             key={actor.id}
             name={actor.name}
-            type={actor.type}
+            type={labels.actor(actor.type)}
             imageUrl={actor.imageUrl}
             details={<span>{t(`entities.access.${actor.access}`)}</span>}
             drag={trash ? undefined : { kind: 'actor', actorId: actor.id }}
@@ -136,10 +139,9 @@ export function ActorList({
                 <>
                   <OpenButton
                     target={{ kind: 'sheet', id: sheetPanelId(actor.id), actorId: actor.id }}
-                    className="self-center"
                     label={`${t('sheet.open')}: ${actor.name}`}
                   >
-                    {t('sheet.open')}
+                    {t('entities.open')}
                   </OpenButton>
                   {canDuplicate(actor) && (
                     <IconButton
@@ -255,6 +257,7 @@ function ActorItems({ actor }: { actor: ActorView }): ReactElement {
                   name: item.name,
                 }}
                 label={t('items.openItem', { name: item.name })}
+                look="link"
               >
                 {item.name}
               </OpenButton>{' '}

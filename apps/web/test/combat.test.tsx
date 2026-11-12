@@ -13,6 +13,7 @@ import { fakeApi, SESSION, TABLE, USER } from './support/fake-api.js';
 import { fakeWebSocket, serverEvent, type FakeSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS, TYPES } from './support/table-fixtures.js';
+import { openPanel } from './support/workspace.js';
 
 // T-0801 (FR-COMBAT-01, 03, 04): the combat tracker beside the chat.
 
@@ -66,7 +67,7 @@ const SYSTEM = {
   },
 };
 
-function openTable(
+async function openTable(
   role: string,
   encounter: () => EncounterView | null,
   handlers: Parameters<typeof fakeApi>[0] = {},
@@ -87,6 +88,8 @@ function openTable(
     ...handlers,
   });
   renderApp('/tables/t1');
+  // Combat shares a group with Chat, which is in front (T-1620).
+  await openPanel('Combat');
   return { ...api, sockets };
 }
 
@@ -114,7 +117,7 @@ describe('combat tracker', () => {
       ...ENCOUNTER,
       combatants: ENCOUNTER.combatants.slice(0, 1),
     };
-    const { sockets } = openTable('player', () => encounter);
+    const { sockets } = await openTable('player', () => encounter);
     const socket = await connected(sockets);
 
     expect(await screen.findByText('Round 1')).toBeInTheDocument();
@@ -131,7 +134,7 @@ describe('combat tracker', () => {
 
   it('lets the GM add a combatant and pass the turn', async () => {
     const after: EncounterView = { ...ENCOUNTER, currentId: 'c2' };
-    const { calls } = openTable('gm', () => ENCOUNTER, {
+    const { calls } = await openTable('gm', () => ENCOUNTER, {
       'POST /tables/t1/encounter/combatants': { status: 201, body: { encounter: ENCOUNTER } },
       'POST /tables/t1/encounter/turn': { body: { encounter: after } },
     });
@@ -139,9 +142,12 @@ describe('combat tracker', () => {
 
     await screen.findByRole('list', { name: 'Turn order' });
     expect(order()[1]).toContain('Hidden');
+    // The form opens from Add combatant, below the order (T-1620).
+    expect(screen.queryByLabelText('Actor')).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Add combatant' }));
     await user.selectOptions(screen.getByLabelText('Actor'), HERO.id);
     await user.click(screen.getByLabelText('Hidden'));
-    await user.click(screen.getByRole('button', { name: 'Add combatant' }));
+    await user.click(screen.getByRole('button', { name: 'Add' }));
     await waitFor(() => {
       expect(calls.find((c) => c.path === '/tables/t1/encounter/combatants')?.body).toEqual({
         actorId: HERO.id,
@@ -165,7 +171,7 @@ describe('combat tracker', () => {
       currentId: null,
       combatants: ENCOUNTER.combatants.map((c) => ({ ...c, initiative: null })),
     };
-    const { calls } = openTable('gm', () => unrolled, {
+    const { calls } = await openTable('gm', () => unrolled, {
       'GET /systems/tiny-d20': { body: SYSTEM },
       'POST /tables/t1/encounter/initiative': { body: { encounter: ENCOUNTER } },
     });
@@ -173,17 +179,21 @@ describe('combat tracker', () => {
     await user.click(await screen.findByRole('button', { name: 'Roll initiative' }));
     await waitFor(() => {
       expect(order()).toEqual([
-        expect.stringMatching(/^15Goblin/),
-        expect.stringMatching(/^12Goblin King/),
+        expect.stringMatching(/^Goblin/),
+        expect.stringMatching(/^Goblin King/),
       ]);
     });
+    // The GM sees each initiative once, in the field that edits it (T-1620).
+    expect(screen.getByLabelText('Initiative of Goblin')).toHaveValue(15);
+    expect(screen.getByLabelText('Initiative of Goblin King')).toHaveValue(12);
+    expect(order().join()).not.toMatch(/\d/);
     expect(calls.some((c) => c.path === '/tables/t1/encounter/initiative')).toBe(true);
     // Everyone has initiative now.
     expect(screen.queryByRole('button', { name: 'Roll initiative' })).not.toBeInTheDocument();
   });
 
   it('offers the GM to start an encounter', async () => {
-    const { calls } = openTable('gm', () => null, {
+    const { calls } = await openTable('gm', () => null, {
       'POST /tables/t1/encounter': {
         status: 201,
         body: { encounter: { id: 'e1', round: 0, currentId: null, combatants: [] } },
@@ -194,5 +204,35 @@ describe('combat tracker', () => {
     expect(await screen.findByText('No combatants yet.')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Begin' })).toBeInTheDocument();
     expect(calls.some((c) => c.method === 'POST' && c.path === '/tables/t1/encounter')).toBe(true);
+  });
+
+  it('asks before ending the encounter (T-1620)', async () => {
+    const { calls } = await openTable('gm', () => ENCOUNTER, {
+      'DELETE /tables/t1/encounter': { status: 204 },
+    });
+    const user = userEvent.setup();
+    await screen.findByRole('list', { name: 'Turn order' });
+    // Apart from the turn buttons, next to Add combatant.
+    const end = screen.getByRole('button', { name: 'End encounter' });
+    expect(screen.getByRole('button', { name: 'Next turn' }).parentElement).not.toContainElement(
+      end,
+    );
+
+    await user.click(end);
+    const dialog = screen.getByRole('dialog', { name: 'End the encounter?' });
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'End encounter' }));
+    await user.click(
+      within(screen.getByRole('dialog', { name: 'End the encounter?' })).getByRole('button', {
+        name: 'End encounter',
+      }),
+    );
+    await waitFor(() => {
+      expect(calls.some((c) => c.method === 'DELETE' && c.path === '/tables/t1/encounter')).toBe(
+        true,
+      );
+    });
   });
 });

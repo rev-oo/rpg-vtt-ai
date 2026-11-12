@@ -8,7 +8,7 @@ import {
   type InstanceInfo,
   type InvitePreview as Preview,
 } from '@vtt/shared/api';
-import { Alert, Button, Card } from '@vtt/ui';
+import { Alert, Button, buttonClass, Card } from '@vtt/ui';
 
 import { ApiError } from '../api/client.js';
 import { api } from '../api/endpoints.js';
@@ -23,7 +23,7 @@ type InviteData =
   | { kind: 'join'; preview: Preview }
   | { kind: 'signup'; preview: Preview; instance: InstanceInfo }
   /** Signed out on an instance without sign-up: the visitor signs in first. */
-  | { kind: 'login' }
+  | { kind: 'login'; preview: Preview }
   | { kind: 'error'; error: string };
 
 function inviteError(error: unknown): string {
@@ -43,9 +43,12 @@ export async function clientLoader({
   if (session.needsSetup) return redirect('/setup');
   try {
     if (session.user) return { kind: 'join', preview: await api.previewInvite(params.token) };
-    const instance = await api.instanceInfo();
-    if (instance.registration !== 'invite') return { kind: 'login' };
-    return { kind: 'signup', preview: await api.previewInvite(params.token), instance };
+    const [instance, preview] = await Promise.all([
+      api.instanceInfo(),
+      api.previewInvite(params.token),
+    ]);
+    if (instance.registration !== 'invite') return { kind: 'login', preview };
+    return { kind: 'signup', preview, instance };
   } catch (error) {
     return { kind: 'error', error: inviteError(error) };
   }
@@ -65,19 +68,17 @@ export default function InviteRoute({ loaderData, params }: Route.ComponentProps
         )}
         {loaderData.kind === 'login' && (
           <>
+            <Intro preview={loaderData.preview} />
             <p>{t('invite.signInFirst')}</p>
-            <Link to={next}>{t('invite.signIn')}</Link>
+            <Link to={next} className={buttonClass('primary')}>
+              {t('invite.signIn')}
+            </Link>
           </>
         )}
         {loaderData.kind === 'join' && <Join token={params.token} preview={loaderData.preview} />}
         {loaderData.kind === 'signup' && (
           <>
-            <p>
-              {t('invite.intro', {
-                table: loaderData.preview.table.name,
-                role: t(`tables.role.${loaderData.preview.role}`),
-              })}
-            </p>
+            <Intro preview={loaderData.preview} />
             <Signup token={params.token} />
             <p className="text-sm">
               {t('invite.haveAccount')} <Link to={next}>{t('invite.signIn')}</Link>
@@ -86,6 +87,19 @@ export default function InviteRoute({ loaderData, params }: Route.ComponentProps
         )}
       </Card>
     </main>
+  );
+}
+
+/** What the link is for: the table, its GM and the role it gives (T-1620). */
+function Intro({ preview }: { preview: Preview }): ReactElement {
+  const role = t(`tables.role.${preview.role}`);
+  const { name, gm } = preview.table;
+  return (
+    <p>
+      {gm
+        ? t('invite.introGm', { table: name, gm, role })
+        : t('invite.intro', { table: name, role })}
+    </p>
   );
 }
 
@@ -108,12 +122,7 @@ function Join({ token, preview }: { token: string; preview: Preview }): ReactEle
 
   return (
     <>
-      <p>
-        {t('invite.intro', {
-          table: preview.table.name,
-          role: t(`tables.role.${preview.role}`),
-        })}
-      </p>
+      <Intro preview={preview} />
       {error && <Alert tone="error">{error}</Alert>}
       <Button variant="primary" disabled={busy} onClick={() => void join()}>
         {t('invite.join')}

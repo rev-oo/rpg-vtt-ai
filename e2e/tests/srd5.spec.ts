@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData, setItemData } from './support/plugins.js';
-import { showPanel } from './support/workspace.js';
+import { showPanel, showTokens } from './support/workspace.js';
 
 // T-1605: the SRD 5.2 system, packed from plugins/ like an author would. A player's wizard
 // gets its numbers from the class tables, copies a sword and a cantrip from the SRD pack,
@@ -86,17 +86,16 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
   await test.step('the player copies a longsword and Fire Bolt from the SRD pack', async () => {
     await showPanel(page, 'Compendium');
     for (const name of ['Longsword', 'Fire Bolt', 'Magic Missile']) {
+      await page.getByLabel(`Actor to copy ${name} onto`).selectOption(actor.id);
       await page.getByRole('button', { name: `Copy ${name} onto the chosen actor` }).click();
       await expect(page.getByText(`${name} was copied onto Elowen.`)).toBeVisible();
     }
-    // The SRD's credit shows beside each entry, linked to the SRD (T-1614).
-    const longsword = page
-      .getByRole('group', { name: 'Compendium entries' })
-      .getByRole('listitem')
-      .filter({ has: page.getByRole('heading', { name: 'Longsword', exact: true }) });
-    await longsword.getByText('Preview').click();
+    // The SRD's credit shows on each entry's sheet, linked to the SRD (T-1614, T-1620).
+    await page.getByRole('button', { name: 'Open compendium entry: Longsword' }).click();
     await expect(
-      longsword.getByRole('link', { name: /material from the System Reference Document 5\.2/ }),
+      page
+        .getByRole('tabpanel', { name: 'Longsword' })
+        .getByRole('link', { name: /material from the System Reference Document 5\.2/ }),
     ).toHaveAttribute('href', 'https://www.dndbeyond.com/srd');
     await showPanel(page, 'Actors');
     await page.getByRole('button', { name: 'Open sheet: Elowen' }).click();
@@ -113,6 +112,11 @@ test('an SRD wizard attacks, casts a cantrip and takes a Long Rest', async ({ br
     // The attack card by its place, as the damage card comes after it.
     const at = await cards.count();
     const attack = cards.nth(at - 1);
+    // A card's actions look like the panels' buttons (T-1620).
+    await expect(attack.getByRole('button', { name: 'Roll damage' })).toHaveAttribute(
+      'data-variant',
+      'secondary',
+    );
     await attack.getByRole('button', { name: 'Roll damage' }).click();
     await expect(attack.getByRole('status')).toHaveText('Rolled for Elowen.');
     const damage = cards.nth(at);
@@ -417,6 +421,7 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
       'aria-busy',
       'false',
     );
+    await showTokens(page);
     return page;
   };
   const gmPage = await open(gm);
@@ -515,6 +520,7 @@ test('a condition set on a sheet shows on the token', async ({ browser }) => {
   const gmPage = await gm.context.newPage();
   await gmPage.goto(`/tables/${table.id}`);
   await expect(gmPage.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  await showTokens(gmPage);
   const miraToken = gmPage.getByRole('list', { name: 'Tokens' }).getByRole('button', {
     name: /^Mira/,
   });

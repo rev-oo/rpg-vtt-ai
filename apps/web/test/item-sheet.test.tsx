@@ -143,6 +143,7 @@ function openTable(role: TableRole, sword: ItemView) {
       body: { nextCursor: null, items: [item({ id: 'i2', actorId: HERO.id, sourceId: 'i1' })] },
     },
     'GET /items/i1': { body: { item: sword } },
+    'PATCH /items/i1': (body) => ({ body: { item: { ...sword, ...(body as object) } } }),
     'GET /items/i2': { body: { item: item({ id: 'i2', actorId: HERO.id, sourceId: 'i1' }) } },
     'GET /tables/t1/types': {
       body: { actorTypes: [{ type: 'npc', controlledBy: 'gm' }], itemTypes: ['weapon'] },
@@ -190,7 +191,25 @@ describe('item sheets (T-1204)', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
     const sheet = await screen.findByRole('tabpanel', { name: 'Sword' });
     expect(await within(sheet).findByLabelText('Damage')).toHaveAttribute('readonly');
+    expect(within(sheet).queryByRole('button', { name: 'Rename' })).toBeNull();
     expect(collab.opened.at(-1)).toEqual({ kind: 'item', id: 'i1', secret: false });
+  });
+
+  it('renames an item from its sheet (T-1620)', async () => {
+    const { api } = openTable('gm', item());
+    const user = userEvent.setup();
+    await openPanel('Items');
+    await user.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
+    const sheet = await screen.findByRole('tabpanel', { name: 'Sword' });
+    await user.click(await within(sheet).findByRole('button', { name: 'Rename' }));
+    const name = within(sheet).getByLabelText('Name');
+    await user.clear(name);
+    await user.type(name, 'Blade');
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }));
+    expect(api.calls).toContainEqual(
+      expect.objectContaining({ method: 'PATCH', path: '/items/i1', body: { name: 'Blade' } }),
+    );
+    expect(await within(sheet).findByRole('button', { name: 'Rename' })).toBeVisible();
   });
 
   it("opens an actor's item from the actor list", async () => {

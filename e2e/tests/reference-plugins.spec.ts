@@ -78,13 +78,20 @@ async function rollsInitiative(
   }
   await page.goto(`/tables/${tableId}`);
   await expect(page.getByText(/Connecting|Reconnecting/)).toBeHidden();
+  // Combat shares a group with Chat, which is in front (T-1620).
+  await page.getByRole('tab', { name: 'Combat' }).click();
   const rows = page.getByRole('list', { name: 'Turn order' }).getByRole('listitem');
   await expect(rows).toHaveCount(combatants.length);
   await page.getByRole('button', { name: 'Roll initiative' }).click();
   await expect(page.getByRole('button', { name: 'Roll initiative' })).toBeHidden();
-  for (const row of await rows.all()) await expect(row).toHaveText(/^-?\d+/);
+  // A running encounter shows each initiative in its field (T-1620).
+  for (const row of await rows.all()) {
+    await expect(row.getByRole('spinbutton', { name: /^Initiative of / })).toHaveValue(/^-?\d+$/);
+  }
+  const order = await rows.allTextContents();
+  await page.getByRole('tab', { name: 'Chat' }).click();
   await expect(page.getByRole('log', { name: 'Messages' })).toContainText(formula);
-  return rows.allTextContents();
+  return order;
 }
 
 async function openSheet(page: Page, tableId: string, name: string): Promise<void> {
@@ -292,7 +299,9 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await message.fill('/check str');
     await message.press('Enter');
     await expect(log.getByText('Ayla: Strength check')).toBeVisible();
-    await expect(log.getByText('1d20 + @derived.strMod → 1d20 + 3')).toBeVisible();
+    // The formula as rolled; the recipe's own one only on request (T-1620).
+    await expect(log.getByText('1d20 + 3', { exact: true })).toBeVisible();
+    await expect(log.getByText('1d20 + @derived.strMod')).toBeHidden();
     await expect(message).toHaveValue('');
   });
 
@@ -373,7 +382,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(entries.getByRole('heading', { name: 'Greatclub' })).toBeVisible();
     // Players browse every entry but copy nothing into the table.
     await expect(page.getByRole('button', { name: /to the table$/ })).toHaveCount(0);
-    await expect(page.getByLabel('Actor to copy Shortsword onto')).toHaveValue(actor.id);
+    await page.getByLabel('Actor to copy Shortsword onto').selectOption(actor.id);
     await page.getByRole('button', { name: 'Copy Shortsword onto the chosen actor' }).click();
     await expect(page.getByText('Shortsword was copied onto Ayla.')).toBeVisible();
     const owned = await player.context.request.get(`/api/v1/actors/${actor.id}/items`);
@@ -386,6 +395,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const spells = page.getByRole('list', { name: 'Spells' });
     await expect(spells.getByRole('heading')).toHaveText(['Mend', 'Spark']);
     await expect(page.getByRole('list', { name: 'Gear' })).toContainText('Shortsword');
+    await page.getByLabel('Actor to copy Spark onto').selectOption(actor.id);
     await page.getByRole('button', { name: 'Copy Spark onto the chosen actor' }).click();
     await expect(page.getByText('Spark was copied onto Ayla.')).toBeVisible();
 
@@ -401,7 +411,7 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await expect(owned.getByRole('list', { name: 'Spells' })).toContainText('Spark (spell)');
   });
 
-  await test.step('the GM previews a pack actor and copies it into the table (T-1202)', async () => {
+  await test.step('the GM opens a pack actor as a sheet and copies it into the table (T-1202)', async () => {
     const gmPage = await gm.context.newPage();
     await gmPage.goto(`/tables/${table.id}`);
     await showPanel(gmPage, 'Compendium');
@@ -409,9 +419,11 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     const ogre = entries.getByRole('listitem').filter({
       has: gmPage.getByRole('heading', { name: 'Ogre' }),
     });
-    await ogre.getByText('Preview').click();
-    // GMs see the entry's secret field in the preview.
-    await expect(ogre.getByText('Hates bright light.')).toBeVisible();
+    // The entry opens read-only in a panel of its own (T-1620); GMs see its secret field.
+    await gmPage.getByRole('button', { name: 'Open compendium entry: Ogre' }).click();
+    await expect(
+      gmPage.getByRole('tabpanel', { name: 'Ogre' }).getByText('Hates bright light.'),
+    ).toBeVisible();
     await gmPage.getByRole('button', { name: 'Copy Ogre to the table' }).click();
     await expect(gmPage.getByText('Ogre was copied to the table.')).toBeVisible();
     await expect(ogre).toContainText('In the table');
@@ -471,7 +483,7 @@ test('tiny-pool works without code', async ({ browser }) => {
     [{ actorId: actor.id }, { name: 'Shade', initiative: 3 }],
     '1d6 + @wits',
   );
-  expect(order.map((row) => row.replace(/^\d+/, '').slice(0, 5))).toEqual(['Brask', 'Shade']);
+  expect(order.map((row) => row.slice(0, 5))).toEqual(['Brask', 'Shade']);
   await gm.context.close();
 });
 

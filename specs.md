@@ -21,15 +21,15 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M13    | Assets: uploads and asset manager ([history](docs/history/0.4.0.md))                                                             | 0.4.0   | Done        | 100%     |
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
-| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | In progress | 95%      |
+| M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | Done        | 100%     |
 | M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
-- **Active milestone:** M16 (M15 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1620` (interface fixes)
+- **Active milestone:** M17 (M16 done; M14–M17 ship as 1.0.0)
+- **Next task:** `T-1701` (plugin API freeze)
 - **Open blockers:** none
 - **Decisions pending:** Q19 (§14)
 
@@ -78,6 +78,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-11 | T-1615 (targets) moves from M16 to LATER at the user's request, to be thought through first. M16 now has T-1606 left.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | 2026-11-12 | T-1606 done: the [interface review](docs/studies/interface-review.md) covers every screen at desktop and phone sizes, with 62 screenshots from `e2e/scripts/capture-screens.mjs`, a keyboard pass and the table's accessibility tree. The user picked P1 to P5, P7 and P8: T-1619 (users page), and T-1620 (interface fixes), which groups the others at the user's request. The phone table (P6) and a fuller Table page (P9) go to LATER.                                                                                                                                                                                                                                                                                                                    |
 | 2026-11-12 | T-1619 done: admins manage users on a **Users** page (create with a one-time password shown once, reset a password, disable or enable, make admin, delete). The API already had these routes; its responses now have schemas in `@vtt/shared/api`. Admins cannot disable, demote or delete themselves, which keeps an enabled admin; a server test states that rule.                                                                                                                                                                                                                                                                                                                                                                                           |
+| 2026-11-12 | T-1620 done, and with it M16: sheet fields keep the width their input needs; chat rolls show the formula as rolled; map names sit on pills, statuses get rings and the grid follows the theme; narrow panels wrap names and show type labels; F6, Shift+F6 and **Skip to panel** move between panels, documented in the new [user guide](docs/user-guide.md); a Page not found page; the invite page names the table and its GM to anyone holding the link; and the small fixes of the review. R20 (copying invite links later) was dropped at the user's request. M17 is active.                                                                                                                                                                              |
 
 ---
 
@@ -917,16 +918,17 @@ Module plugins, a generic way to extend any table, a full system built as a test
   - **Do:** From the [interface review](docs/studies/interface-review.md), P1 (R1). An admin page lists the instance's users and creates one with a one-time password shown once, resets a user's password to a new one-time password, and disables or enables a user. A disabled user cannot sign in and their sessions end. The last enabled admin cannot be disabled.
   - **Done when:** server tests cover each action, its rights and the last-admin rule; web tests cover the page; e2e creates a player who then signs in and joins a table.
 
-- [ ] **T-1620 · Interface fixes**
+- [x] **T-1620 · Interface fixes**
   - **Deps:** T-1606
   - **Do:** From the [interface review](docs/studies/interface-review.md), P2 to P5, P7 and P8:
     - **Sheet grids** (R9): in `sheet-renderer`, a counter keeps a minimum width for its value, a grid wraps to fewer columns when its cells are narrower than its fields need, and long labels wrap without overlapping the field below, for every system.
     - **Roll lines** (R10): a roll in chat shows its resolved formula (`1d20 + 4`), then the dice and the total. The recipe's formula, with its references, shows only on request, such as in a "Formula" disclosure.
-    - **Map legibility** (R11, R12): token names draw on a solid pill readable in both themes and hide below a zoom where they cannot be read; status icons keep a minimum size and get a ring that shows them in the dark theme; the grid's colour comes from the theme.
+    - **Map legibility** (R11, R12): token names draw on a solid pill readable in both themes; status icons get a ring that shows them in the dark theme; names and statuses stay shown at every zoom and keep their size on the map, at the user's request; the grid's colour comes from the theme.
     - **Narrow panels** (R13, R16, R19): journal, combat and member rows put their controls below the name rather than truncating it; the tracker shows initiative once, as a field the GM edits; rows and type filters show the system's translated type label; an item's **Give** list starts on "Choose an actor".
     - **Keyboard** (R22, R23): panel tabs show the focus ring; F6 and Shift+F6 move between panel groups; a "Skip to panel" menu lists the open panels; the dock sits in a `main` landmark. The keys are documented in the user guide.
-    - **Small fixes** (R2, R3, R6, R7, R8, R15, R20, R21): a "Page not found" page; the invite page names the table and its GM, with **Sign in** as a button; plural issue counts, and **Enable** after the badges on narrow screens; one filled button per form, and no save button for an empty section; **End encounter** asks first and sits apart from the turn buttons, and adding a combatant opens from an **Add** button; invite links can be copied from the list and show when they were made and how often used, without seconds; one button style for card and panel actions; the system's version only on the Settings and Plugins pages.
-  - **Done when:** component and web tests cover each part (a counter in a narrow grid, no `@` reference in a default roll line, label and icon sizes by zoom, type labels, initiative shown once, **Give** without a choice, F6 both ways and the skip menu, and each small fix); e2e reaches the chat input from the header in a few keys; the capture script's screenshots show the changes at both sizes and in both themes.
+    - **Small fixes** (R2, R3, R6, R7, R8, R15, R21): a "Page not found" page; the invite page names the table and its GM, with **Sign in** as a button; plural issue counts, and **Enable** after the badges on narrow screens; one filled button per form, and no save button for an empty section; **End encounter** asks first and sits apart from the turn buttons, and adding a combatant opens from an **Add** button; one button style for card and panel actions; the system's version only on the Settings and Plugins pages.
+    - **Dropped:** R20 (copying invite links from the list, with when they were made and how often used), at the user's request: invites keep only a hash of their token, so a link shows once, when it is made.
+  - **Done when:** component and web tests cover each part (a counter in a narrow grid, no `@` reference in a default roll line, map colours from the theme, type labels, initiative shown once, **Give** without a choice, F6 both ways and the skip menu, and each small fix); e2e reaches the chat input from the header in a few keys; the capture script's screenshots show the changes at both sizes and in both themes.
 
 ### M17 — 1.0
 

@@ -39,9 +39,10 @@ import {
   showTarget,
   titleOf,
 } from './layout.js';
-import { modulePanelId, overlaysShown, setOverlaysShown } from './module-ids.js';
+import { modulePanelId, useOverlaysShown } from './module-ids.js';
 import { ModuleOverlays } from './ModuleFrames.js';
 import { PANEL_COMPONENTS } from './panel-components.js';
+import { cycleGroups, focusPanel } from './panel-focus.js';
 import type { PagePanel, PanelTarget, ToolPanel } from './panel-ids.js';
 import { useDesktop } from './use-desktop.js';
 
@@ -100,8 +101,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
   const [openIds, setOpenIds] = useState<readonly string[]>([]);
   const [diceActorId, setDiceActorId] = useState<string | null>(null);
   const modules = useFramedModules();
-  const hasOverlays = modules.some((module) => module.frames.overlays.length > 0);
-  const [overlays, setOverlays] = useState(() => overlaysShown(userId, table.id));
+  const overlays = useOverlaysShown(userId, table.id);
   const modulePanels = modules.flatMap((module) =>
     module.frames.panels.map((panel) => ({
       id: modulePanelId(module.id, panel.name),
@@ -125,6 +125,18 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     })),
     ...modulePanels,
   ];
+
+  // F6 and Shift+F6 move between panel groups (T-1620).
+  useEffect(() => {
+    if (!dock) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (cycleGroups(dock, event)) event.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [dock]);
 
   const onActive = useEffectEvent((panelId: string | undefined) => {
     if (panelId?.startsWith(ACTOR_PREFIX)) setDiceActorId(panelId.slice(ACTOR_PREFIX.length));
@@ -155,7 +167,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
     const title =
       target.kind === 'sheet'
         ? (data.actors.find((actor) => actor.id === target.actorId)?.name ?? t('workspace.sheet'))
-        : target.kind === 'item'
+        : target.kind === 'item' || target.kind === 'packEntry'
           ? target.name
           : t('journal.title');
     showTarget(api, target, phone, title);
@@ -174,20 +186,25 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
       }}
     >
       <div data-vtt-part="table" className="flex h-dvh flex-col">
+        {dock && <SkipToPanel dock={dock} openIds={openIds} />}
         <header
           data-vtt-part="table-header"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-surface px-3 py-2"
+          className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-line bg-surface px-2 py-1"
         >
-          <Link to="/" className="inline-flex items-center gap-1 text-sm">
+          {/* Back to the tables: the icon alone, named for screen readers and on hover. */}
+          <Link
+            to="/"
+            aria-label={t('workspace.tables')}
+            title={t('workspace.tables')}
+            className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-fg hover:bg-canvas"
+          >
             <IconSlot>
               <ICON.back />
             </IconSlot>
-            {t('workspace.tables')}
           </Link>
           <h1 className="min-w-0 truncate text-lg font-bold">{table.name}</h1>
           <span className="hidden text-sm text-muted sm:inline">
-            {t(`tables.role.${table.role}`)} ·{' '}
-            {t('tables.system', { name: table.systemName, version: table.systemVersion })}
+            {t(`tables.role.${table.role}`)} · {table.systemName}
           </span>
           <div className="ml-auto flex items-center gap-1">
             <PanelsMenu
@@ -198,20 +215,6 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
                 if (dock) item.pick(dock);
               }}
             />
-            {hasOverlays && (
-              <Button
-                variant="ghost"
-                icon={overlays ? <ICON.show /> : <ICON.hide />}
-                aria-pressed={overlays}
-                title={t('module.overlaysHint')}
-                onClick={() => {
-                  setOverlaysShown(userId, table.id, !overlays);
-                  setOverlays(!overlays);
-                }}
-              >
-                {t('module.overlays')}
-              </Button>
-            )}
             <Button
               variant="ghost"
               icon={<ICON.reset />}
@@ -229,7 +232,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
         {notices}
         {/* Its own stacking context: dockview's sashes and groups carry z-indexes of 99 and up,
             which would otherwise cover the header's Panels menu. */}
-        <div data-vtt-part="workspace" className="vtt-dock isolate min-h-0 flex-1">
+        <main data-vtt-part="workspace" className="vtt-dock isolate min-h-0 flex-1">
           <DockviewReact
             theme={themeLight}
             components={PANEL_COMPONENTS}
@@ -250,7 +253,7 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
               setDock(event.api);
             }}
           />
-        </div>
+        </main>
         <ModuleOverlays shown={overlays} />
       </div>
     </DockContext>
@@ -262,6 +265,42 @@ function Dock({ data, userId, notices, phone }: WorkspaceProps & { phone: boolea
  * Dockview's React tab names every close button "Close tab", so the tab is drawn here, its
  * close button named after the panel as the built-in tab names it.
  */
+/**
+ * "Skip to panel" (T-1620): the first stops of the table page, shown only while focused, one
+ * per open panel. Each shows its panel and moves focus into it.
+ */
+function SkipToPanel({
+  dock,
+  openIds,
+}: {
+  dock: DockviewApi;
+  openIds: readonly string[];
+}): ReactElement {
+  return (
+    <nav
+      aria-label={t('workspace.skipTo')}
+      className="sr-only z-50 flex flex-wrap items-center gap-2 bg-surface p-2 focus-within:not-sr-only focus-within:fixed focus-within:inset-x-2 focus-within:top-2 focus-within:rounded-lg focus-within:border focus-within:border-line focus-within:shadow-lg"
+    >
+      <span className="text-sm font-semibold">{t('workspace.skipTo')}</span>
+      {openIds.map((id) => {
+        const title = dock.getPanel(id)?.title ?? id;
+        return (
+          <Button
+            key={id}
+            variant="ghost"
+            aria-label={t('workspace.goTo', { title })}
+            onClick={() => {
+              focusPanel(dock, id);
+            }}
+          >
+            {title}
+          </Button>
+        );
+      })}
+    </nav>
+  );
+}
+
 function IconTab({ api }: IDockviewPanelHeaderProps): ReactElement {
   const title = useSyncExternalStore(
     useCallback(

@@ -134,7 +134,7 @@ describe('accepting invites', () => {
       headers: authHeaders(t.bob.client),
     });
     expect(preview.json()).toEqual({
-      invite: { role: 'player', table: { id: t.table.id, name: 'Test Table' } },
+      invite: { role: 'player', table: { id: t.table.id, name: 'Test Table', gm: 'gamemaster' } },
     });
 
     const res = await accept(t, t.bob.client, token);
@@ -198,6 +198,26 @@ describe('accepting invites', () => {
       expect(res.statusCode).toBe(410);
       expect(res.json()).toMatchObject({ error: { code: 'invite_revoked' } });
     }
+  });
+
+  it('names the table and its GM to someone signed out, but not for a dead link (T-1620)', async () => {
+    const t = await setup();
+    const { token, invite } = await inviteAs(t, { role: 'spectator' });
+    const preview = () => t.app.inject({ method: 'GET', url: `/api/v1/invites/${token}` });
+    expect((await preview()).json()).toEqual({
+      invite: {
+        role: 'spectator',
+        table: { id: t.table.id, name: 'Test Table', gm: 'gamemaster' },
+      },
+    });
+    await t.app.inject({
+      method: 'DELETE',
+      url: `/api/v1/tables/${t.table.id}/invites/${invite.id}`,
+      headers: authHeaders(t.gm.client),
+    });
+    expect((await preview()).statusCode).toBe(410);
+    const unknown = await t.app.inject({ method: 'GET', url: `/api/v1/invites/${'x'.repeat(43)}` });
+    expect(unknown.statusCode).toBe(404);
   });
 
   it('returns 404 for an unknown token and 401 without a session', async () => {

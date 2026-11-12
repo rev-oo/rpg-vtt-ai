@@ -30,7 +30,7 @@ ADR-051 let GMs import a whole pack into a table, once, from the settings page. 
    - a search, and pack and type filters;
    - "Load more" paging;
    - an "In the table" mark on each entry;
-   - a **Preview** that renders the entry's own sheet, read-only, from its data;
+   - an **Open** button that opens the entry's own sheet, read-only, in a panel of its own, with its pack's credit (T-1620; it replaces an inline **Preview**). `GET /tables/:id/compendium/entries/:ref` gives the entry and its pack, with the same data filter as the list;
    - **Copy to the table**, for GMs and assistants;
    - **Copy** onto a chosen actor the caller owns, for item entries.
 

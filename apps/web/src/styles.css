@@ -78,6 +78,16 @@
 }
 
 /*
+ * Dock tabs get the app's focus ring (T-1620); dockview draws a 1px one in the divider colour,
+ * which does not show.
+ */
+.vtt-dock .dv-tab:focus-visible::after,
+.vtt-dock .dv-tab:has(:focus-visible)::after {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: -2px;
+}
+
+/*
  * Panels in a module theme's look (ADR-076): docked ones in its `panel` colour
  * (`--vtt-panel-background`), such as `transparent` to show the page's background; floating
  * ones stay opaque. Both show its panel image (`--vtt-panel-image`) over their colour.
@@ -112,5 +122,10 @@
   --dv-active-sash-color: var(--color-primary);
   --dv-drag-over-background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
   --dv-tabs-and-actions-container-font-size: 0.875rem;
+  /*
+   * Dockview's theme pins the light scheme, which kept the panels' scrollbars light in the
+   * dark scheme. The dock follows the page's, so the browser draws its own scrollbars for it.
+   */
+  color-scheme: inherit;
   color: var(--color-fg);
 }

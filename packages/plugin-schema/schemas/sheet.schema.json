@@ -58,7 +58,7 @@
                   ]
                 },
                 "wrap": {
-                  "description": "Wraps children onto more lines when narrow.",
+                  "description": "Kept for older sheets: every row wraps its children once their fields do not fit.",
                   "type": "boolean"
                 }
               },

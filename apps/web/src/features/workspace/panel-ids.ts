@@ -32,6 +32,7 @@ export const LIST_PANELS = [
 export const sheetPanelId = (actorId: string): string => `actor:${actorId}`;
 export const entryPanelId = (entryId: string): string => `entry:${entryId}`;
 export const itemPanelId = (itemId: string): string => `item:${itemId}`;
+export const packEntryPanelId = (ref: string): string => `pack:${ref}`;
 
 /** A document or page a component asks the workspace to open. */
 export type PanelTarget =
@@ -39,6 +40,8 @@ export type PanelTarget =
   | { kind: 'entry'; id: string; entryId: string }
   /** An item's sheet (ADR-062); `name` titles the panel until the item loads. */
   | { kind: 'item'; id: string; itemId: string; name: string }
+  /** A compendium entry's read-only sheet (T-1620); `name` titles the panel. */
+  | { kind: 'packEntry'; id: string; ref: string; name: string }
   | { kind: 'page'; id: PagePanel }
   | { kind: 'tool'; id: ToolPanel };
 
@@ -47,4 +50,5 @@ export const isDocument = (panelId: string): boolean =>
   (PAGE_PANELS as readonly string[]).includes(panelId) ||
   panelId.startsWith('actor:') ||
   panelId.startsWith('item:') ||
+  panelId.startsWith('pack:') ||
   panelId.startsWith('entry:');

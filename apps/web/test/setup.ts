@@ -1,6 +1,8 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup, configure } from '@testing-library/react';
-import { afterEach } from 'vitest';
+import { afterEach, beforeEach } from 'vitest';
+
+import { closeEventsClient } from '../src/realtime/events-client.js';
 
 // `findBy…` waits 1 s by default, too short for a first render while other suites use the CPU.
 configure({ asyncUtilTimeout: 5000 });
@@ -50,4 +52,11 @@ afterEach(() => {
   cleanup();
   // The workspace saves its layout per user and table (ADR-059).
   localStorage.clear();
+});
+
+// Each test starts without the shared events connection. A file's own `afterEach` closes it,
+// but runs before `cleanup` above; a page unmounting after that could open a new one on the
+// real WebSocket, and the next test would then never reach its fake one.
+beforeEach(() => {
+  closeEventsClient();
 });

@@ -257,3 +257,5 @@ Pick the ones to add to M16. Each one lists the findings it closes.
 The user picked P1 to P5, P7 and P8. P1 is T-1619 (users page) in M16. The others are grouped, at the user's request, in T-1620 (interface fixes): P2 (sheet grids), P3 (roll lines), P4 (map legibility), P5 (narrow panels), P7 (keyboard between panels) and P8 (small fixes).
 
 The phone table (P6) and a fuller Table page (P9) went to LATER, so the phone stays a way to follow a game and check one's sheet for 1.0. The capture script stays in the repo, so the review can be repeated after the fixes.
+
+T-1620 made the fixes, except R20: at the user's request, invite links still show once, when they are made, since invites keep only a hash of their token. Running the capture script again after it showed the changes at desktop and phone sizes and in both themes.

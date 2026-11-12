@@ -60,6 +60,14 @@ export const compendiumPageSchema = z.object({
 });
 export type CompendiumPage = z.infer<typeof compendiumPageSchema>;
 
+/** `GET /tables/:id/compendium/entries/:ref`: one entry, opened as a read-only sheet (T-1620). */
+export const compendiumEntryResponseSchema = z.object({
+  entry: compendiumEntrySchema,
+  /** The entry's pack, for its label and credit. */
+  pack: compendiumPackSchema,
+});
+export type CompendiumEntryResponse = z.infer<typeof compendiumEntryResponseSchema>;
+
 /**
  * `POST /tables/:id/compendium/copy`. Without `actorId`, GMs and assistants copy actors and
  * items into the table; with it, the actor's owners copy items onto it.

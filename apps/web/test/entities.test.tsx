@@ -263,6 +263,48 @@ describe('actor list (FR-ENT-01..04)', () => {
     });
   });
 
+  it('renames an actor from its sheet (T-1620)', async () => {
+    const { calls } = openTable('/tables/t1', {
+      handlers: {
+        'PATCH /actors/a1': (body) => ({ body: { actor: { ...HERO, ...(body as object) } } }),
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Open sheet: Goblin King' }));
+    const sheet = await screen.findByRole('tabpanel', { name: 'Goblin King' });
+    await user.click(within(sheet).getByRole('button', { name: 'Rename' }));
+    const name = within(sheet).getByLabelText('Name');
+    expect(name).toHaveValue('Goblin King');
+
+    // An empty name is not sent.
+    await user.clear(name);
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }));
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(calls.some((c) => c.method === 'PATCH')).toBe(false);
+
+    await user.type(name, '  Goblin Queen ');
+    await user.click(within(sheet).getByRole('button', { name: 'Save' }));
+    await waitFor(() => {
+      expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ name: 'Goblin Queen' });
+    });
+    expect(await within(sheet).findByRole('button', { name: 'Rename' })).toBeVisible();
+  });
+
+  it("offers no rename on an actor's sheet to those who may only view it", async () => {
+    const viewed = { body: { nextCursor: null, actors: [{ ...HERO, access: 'observer' }] } };
+    openTable('/tables/t1', {
+      role: 'spectator',
+      handlers: {
+        'GET /tables/t1/actors': viewed,
+        'GET /tables/t1/actors?trash=live&limit=50': viewed,
+      },
+    });
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: 'Open sheet: Goblin King' }));
+    const sheet = await screen.findByRole('tabpanel', { name: 'Goblin King' });
+    expect(within(sheet).queryByRole('button', { name: 'Rename' })).toBeNull();
+  });
+
   it("shows an actor's own items on demand (FR-ENT-05)", async () => {
     openTable('/tables/t1', {
       handlers: {
@@ -355,10 +397,14 @@ describe('item library (FR-ENT-05, 06)', () => {
       within(give)
         .getAllByRole('option')
         .map((o) => o.textContent),
-    ).toEqual(['Bob the Brave']);
+    ).toEqual(['Choose an actor', 'Bob the Brave']);
     expect(screen.queryByRole('button', { name: 'New item' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Delete' })).toBeNull();
 
+    // Nothing is given until an actor is chosen (T-1620).
+    expect(give).toHaveValue('');
+    expect(screen.getByRole('button', { name: 'Give' })).toBeDisabled();
+    await user.selectOptions(give, 'Bob the Brave');
     await user.click(screen.getByRole('button', { name: 'Give' }));
     expect(await screen.findByText('Bob the Brave received a copy of Sword.')).toBeVisible();
     expect(calls.find((c) => c.method === 'POST')?.body).toEqual({ itemId: 'i1' });

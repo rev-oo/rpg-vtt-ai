@@ -6,6 +6,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Added
 
+- The table page can be used from the keyboard (T-1620). F6 and Shift+F6 move to the next or previous panel group, landing in the chat's message box; **Skip to panel**, the page's first stop, goes straight to any open panel; the panels sit in a `main` landmark, and their tabs show the focus ring. The new [user guide](docs/user-guide.md) lists the keys.
+
+- An address the app does not know shows **Page not found** with the way back, instead of the tables list (T-1620).
+
 - Admins manage the instance's users on a new **Users** page (T-1619). They create a user, who signs in with a one-time password shown once and then chooses their own; reset a password to a new one-time password; disable or re-enable a user, which signs them out; make a user admin or not; and delete a user. Admins change their own account on the Account page, so there is always an enabled admin.
 
 - Tokens show their actor's statuses, such as conditions (T-1618). A system lists true/false fields as statuses, each with an icon; while one is on, its icon shows on the token on the map, and the token list and combat tracker name it. A secret field's status shows only to the GM and assistants, and statuses follow the sheet as it changes. In `srd5`, the 14 conditions show on tokens, with icons of their own.
@@ -28,8 +32,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - A toolbar over the map switches to a Ruler: drag on the map, or click point after point for a path, to measure in the scene's unit (Enter or a double click ends a path, Backspace removes its last point, Escape clears it), or to a Circle or a Cone: drag from the centre or origin to read its radius or length (cones are as wide at their end as they are long). GMs set what a cell measures (5 ft by default), the unit and how diagonals count (one cell each, alternating 1 and 2, or a straight line) in the scene form. Only you see your measures (FR-MAP-05, ADR-069).
 - Module plugins: plugins of `kind: module` extend any table, whatever its system. Admins enable them on the Plugins page, and GMs add them to a table under **Modules** in its Settings panel. A module may hold settings, translations, styles and client code but no types, sheets, rolls or packs, which the validator refuses. (FR-PLUGIN-16, ADR-075).
 - Modules can change the table page's look. A module's `theme.json` sets the app's colours for the light and dark schemes (including the colour behind panels), its font, corners, border width, spacing density, font files, and images inside panels and behind the page for each scheme, and its stylesheets style named parts of the page, such as the chat, dock tabs, map tools and sheets. Both apply only on tables that use the module. The new `parchment-skin` module is an example (ADR-076).
-- Modules can draw overlays over the table page and add panels to the workspace, opened from the Panels menu. Their code runs in sandboxed frames. It hears the chat messages and rolls you see, and combat, scene and token changes, and reads its settings for you. It can act as you: chat, roll, open sheets and journal entries, and take the combat actions you may take. The server checks every action as yours, and a frame can act at most 10 times in 10 seconds. **Overlays** in the table header turns a table's overlays off for you (FR-PLUGIN-16, ADR-077).
-- The new `dice-3d` module throws 3D dice over the table for each roll you see (d4, d6, d8, d10, d12, d20, and d100 as two d10s) and lands them on the results the server rolled; the chat shows the result at once. Each member picks the dice colour, how long they stay and whether to see other people's rolls; admins set the most dice in one throw. **Overlays** in the table header hides them.
+- Modules can draw overlays over the table page and add panels to the workspace, opened from the Panels menu. Their code runs in sandboxed frames. It hears the chat messages and rolls you see, and combat, scene and token changes, and reads its settings for you. It can act as you: chat, roll, open sheets and journal entries, and take the combat actions you may take. The server checks every action as yours, and a frame can act at most 10 times in 10 seconds. A switch in **My settings** turns a table's overlays off for you (FR-PLUGIN-16, ADR-077).
+- The new `dice-3d` module throws 3D dice over the table for each roll you see (d4, d6, d8, d10, d12, d20, and d100 as two d10s) and lands them on the results the server rolled; the chat shows the result at once. Each member picks the dice colour, how long they stay and whether to see other people's rolls; admins set the most dice in one throw. Turning overlays off in **My settings** hides them.
 - The new `srd5` system plays the fifth edition rules of the System Reference Document 5.2 (CC-BY-4.0): characters with a class, abilities, saving throws, skills with Expertise, Armor Class from armour and shields, attacks with weapons, spells with slots from the class tables, conditions and Exhaustion, death saves, Hit Dice and Long Rests; creatures with stat blocks and actions; and an SRD pack of weapons, armour, gear, spells and creatures. It is in English. It is a study of the plugin format (`docs/studies/srd5.md`), so some things are done by hand: Advantage is chosen on the sheet before rolling, casting does not spend the slot, and damage is not applied to targets.
 - Plugin settings can have a scope: `table` (the default, set by the GM), `instance` (set by admins for every table, on the Plugins page) or `user` (each member's own, under **My settings** in the table's Settings panel, kept for every table). The Settings panel now opens for every member; players and spectators see only their own settings. Formulas still read table settings only (ADR-075).
 - Plugins can ship data migrations: `migrations/<version>.json` files with rename, move, set-default and drop steps, and a `migrate` hook in server code for the rest. Upgrading a table in its settings now migrates its actors and items, so their sheets stop showing the older-version notice; any whose data cannot be migrated keep it as it was, the settings list them with the reason, and **Migrate again** retries them (FR-PLUGIN-12, ADR-072).
@@ -43,6 +47,23 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- The interface fixes of the review (T-1620):
+  - Sheet fields in a row keep the width their input needs, and a grid with counters gets wider columns, in every system.
+  - A roll in chat reads as rolled (`1d20 + 4`, the dice, the total); the recipe's formula with its `@` references shows under **Formula**.
+  - On the map, token names sit on a pill readable in both themes, and status icons get a ring; both keep their size on the map at every zoom; the grid takes the theme's colour, over a casing that keeps it visible on light and dark maps.
+  - Journal, combat and member rows wrap long names instead of cutting them; lists and filters show types by their label; the tracker shows initiative once, as a field for whoever runs combat; **Give** and **Copy** wait for an actor to be chosen.
+  - The invite page names the table and its GM, to anyone holding a usable link, signed in or not; **Sign in** is a button.
+  - **End encounter** sits apart from the turn buttons and asks first; **Add combatant** opens the form.
+  - The default layout puts Chat, Dice and Combat in one group on the right, Chat in front; **Reset layout** brings it to tables already laid out.
+  - Compendium entries open as a read-only sheet in a panel of their own, in place of the inline preview; the pack's credit shows there. `GET /tables/:id/compendium/entries/:ref` returns one entry and its pack.
+  - On a read-only sheet, every field dims as its selects do (text and number fields, text boxes and checkboxes included), so it is clear none of them can be changed.
+  - **Open** in the actor, item, journal and compendium lists, and on an actor's items, is a button with an icon instead of a link, with the same label everywhere (the actor list said **Open sheet**).
+  - Actor and item sheets have **Rename**, as journal entries do, for whoever may edit them; the lists and the panel's tab follow the new name.
+  - The map gets more room: the token list under it folds away (the browser remembers whether it is open) and scrolls when long, and a GM's scene picker and **Add token** share one row. The drag hint shows when the panel is wide.
+  - The table page's header is shorter: the way back to the tables is an icon (still named "Tables" for screen readers), and the **Overlays** button moved to **My settings** in the Settings panel.
+  - The plugins page says "1 error, 1 warning", and on a narrow card **Enable** follows the badges. Each form has one filled button; table Settings offers **Save modules** only when there are modules. Card actions, **History** and **Choose image** look like the other panel buttons.
+  - Table cards, the table header and the Table panel name the system without its version, which stays on Settings and Plugins.
+
 - A module's overlay is made interactive, and a panel given its title, in `plugin.json` under `frames`, no longer in `defineClient`. A module whose `plugin.json` does not declare its overlays and panels no longer shows them (T-1612, ADR-079).
 - The formula shown next to a roll in the chat keeps only the branches the formula took, the dice a `roll()` rolled, and no `+ 0`: a longsword's damage reads `1d10 + 3` instead of every die size it might have used (T-1607).
 - The app has icons. Dock tabs and the Panels menu show each panel's icon; the map's tools and zoom buttons, and the row actions in the Actors, Items, Journal and Scenes lists, are icon buttons with a tooltip and the same names for screen readers; New, Add token, Send, Roll, Upload and other common actions show an icon beside their text (ADR-071).
@@ -50,6 +71,9 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Dragging with the middle mouse button pans the map whatever tool is picked, so the ruler, circle, cone and fog tools no longer need a switch back to Select to move the map (ADR-069).
 
 ### Fixed
+
+- Roll buttons in a sheet row keep their width instead of covering the controls beside the row (T-1620).
+- Scrollbars inside the table's panels follow the dark scheme, as the rest of the page's do (T-1620).
 
 - A plugin's custom sheet parts and chat cards no longer show "failed to show" after their tab is hidden behind another one and shown again, or after their panel is moved. The app now starts the plugin's frame again (ADR-074).
 - The Panels menu is no longer covered by the workspace's resize bars.

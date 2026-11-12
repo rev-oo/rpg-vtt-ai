@@ -602,6 +602,8 @@ function Composer({
             </label>
             <textarea
               id={`chat-input-${tableId}`}
+              // Where F6 and "Skip to panel" land in the chat (T-1620).
+              data-vtt-focus-first=""
               rows={2}
               placeholder={t('chat.placeholder')}
               className="min-h-10 min-w-0 flex-1 resize-none rounded-lg border border-line bg-surface px-3 py-2 text-fg"

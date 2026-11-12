@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   compendiumCopyResponseSchema,
+  compendiumEntryResponseSchema,
   compendiumPageSchema,
   pluginsResponseSchema,
   type ActorView,
@@ -136,6 +137,21 @@ describe('compendium browser (T-1202)', () => {
     const seen = asBob.entries.find((entry) => entry.ref === OGRE);
     expect(seen?.system).toMatchObject({ str: 19 });
     expect(seen?.system).not.toHaveProperty('gmNotes');
+  });
+
+  it('gives one entry for its read-only sheet, without secrets for players (T-1620)', async () => {
+    const one = (client: Client, ref: string) =>
+      call(client, 'GET', `/tables/${tableId}/compendium/entries/${encodeURIComponent(ref)}`);
+    const res = await one(gm, OGRE);
+    expect(res.statusCode, res.body).toBe(200);
+    const { entry, pack } = compendiumEntryResponseSchema.parse(res.json());
+    expect(pack).toEqual({ name: 'bestiary', label: 'pack.bestiary', attribution: null });
+    expect(entry).toMatchObject({ ref: OGRE, name: 'Ogre', kind: 'actor', inTable: false });
+    expect(entry.system).toMatchObject({ str: 19, gmNotes: 'Hates bright light.' });
+
+    const asBob = compendiumEntryResponseSchema.parse((await one(bob.client, OGRE)).json());
+    expect(asBob.entry.system).not.toHaveProperty('gmNotes');
+    expect((await one(gm, 'tiny-d20:bestiary:dragon')).statusCode).toBe(404);
   });
 
   it('filters by name, pack, kind and type', async () => {

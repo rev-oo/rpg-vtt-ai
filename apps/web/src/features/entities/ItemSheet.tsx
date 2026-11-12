@@ -1,12 +1,13 @@
 import { useEffect, useEffectEvent, useId, useState, type ReactElement } from 'react';
 
 import { canSendChat, isGmLike } from '@vtt/shared';
-import type { ItemView, TableView } from '@vtt/shared/api';
-import { Alert } from '@vtt/ui';
+import { updateItemBody, type ItemView, type TableView } from '@vtt/shared/api';
+import { Alert, Button } from '@vtt/ui';
 
 import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
+import { RenameForm } from '../../forms/RenameForm.js';
 import { t } from '../../i18n/index.js';
 import { useSystem } from '../../plugin-host/system-context.js';
 import { EntityImage } from '../assets/EntityImage.js';
@@ -67,21 +68,57 @@ function ItemSheet({ table, item }: { table: TableView; item: ItemView }): React
   const mayRoll = owner !== undefined && item.access === 'owner' && canSendChat(table.role);
   // Items are not in the table's data, so the sheet keeps its own copy of the image.
   const [imageUrl, setImageUrl] = useState(item.imageUrl);
+  const editable = item.access === 'owner' && table.archivedAt === null;
+  const [renaming, setRenaming] = useState(false);
+  const [renameFailure, setRenameFailure] = useState<string | null>(null);
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby={titleId}>
-      <div>
-        <h2 id={titleId} className="text-xl font-semibold">
-          {item.name}
-        </h2>
-        <p className="text-sm text-muted">
-          {owner ? t('items.ownedBy', { name: owner.name }) : t('items.inLibrary')}
-        </p>
+      <div className="flex flex-wrap items-center gap-2">
+        {renaming ? (
+          <RenameForm
+            name={item.name}
+            label={t('entities.name')}
+            schema={updateItemBody.shape.name.unwrap()}
+            onCancel={() => {
+              setRenaming(false);
+            }}
+            onSave={async (name) => {
+              setRenameFailure(null);
+              try {
+                // The table's data reloads on the change; the sheet loads the item again.
+                await api.updateItem(item.id, { name });
+                setRenaming(false);
+              } catch (caught) {
+                setRenameFailure(errorMessage(caught));
+              }
+            }}
+          />
+        ) : (
+          <div className="flex-1">
+            <h2 id={titleId} className="text-xl font-semibold">
+              {item.name}
+            </h2>
+            <p className="text-sm text-muted">
+              {owner ? t('items.ownedBy', { name: owner.name }) : t('items.inLibrary')}
+            </p>
+          </div>
+        )}
+        {!renaming && editable && (
+          <Button
+            onClick={() => {
+              setRenaming(true);
+            }}
+          >
+            {t('entities.rename')}
+          </Button>
+        )}
       </div>
+      {renameFailure && <Alert tone="error">{renameFailure}</Alert>}
       <EntityImage
         name={item.name}
         imageUrl={imageUrl}
-        editable={item.access === 'owner' && table.archivedAt === null}
+        editable={editable}
         onChange={async (next) => {
           setImageUrl((await api.updateItem(item.id, { imageUrl: next })).imageUrl);
         }}

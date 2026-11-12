@@ -78,15 +78,17 @@ exports[`node snapshots (specs §8.5) > field (checkbox) 1`] = `
     <div
       class="vtt-field flex min-w-0 items-center gap-2"
       data-field="alive"
+      data-input="checkbox"
+      style="--vtt-basis: auto;"
     >
       <input
         checked=""
-        class="size-5 accent-(--vtt-accent)"
+        class="size-5 accent-(--vtt-accent) disabled:opacity-60"
         id="_r_a_"
         type="checkbox"
       />
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_a_"
       >
         alive
@@ -105,9 +107,11 @@ exports[`node snapshots (specs §8.5) > field (counter) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="hp.value"
+      data-input="counter"
+      style="--vtt-basis: 9rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_c_"
       >
         Hit points
@@ -124,7 +128,7 @@ exports[`node snapshots (specs §8.5) > field (counter) 1`] = `
           −
         </button>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0 text-center"
           id="_r_c_"
           inputmode="numeric"
           type="text"
@@ -153,15 +157,17 @@ exports[`node snapshots (specs §8.5) > field (number) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="str"
+      data-input="number"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_9_"
       >
         Strength
       </label>
       <input
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
         id="_r_9_"
         inputmode="numeric"
         type="text"
@@ -181,15 +187,17 @@ exports[`node snapshots (specs §8.5) > field (select) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="size"
+      data-input="select"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_b_"
       >
         size
       </label>
       <select
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60"
         id="_r_b_"
       >
         <option
@@ -217,15 +225,17 @@ exports[`node snapshots (specs §8.5) > field (text) 1`] = `
     <div
       class="vtt-field relative flex min-w-0 flex-col gap-1"
       data-field="name"
+      data-input="text"
+      style="--vtt-basis: 6rem;"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_8_"
       >
         Name
       </label>
       <input
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
         id="_r_8_"
         type="text"
         value="Ayla"
@@ -248,15 +258,17 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="str"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_2_"
         >
           str
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_2_"
           inputmode="numeric"
           type="text"
@@ -266,15 +278,17 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="speed"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_3_"
         >
           speed
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_3_"
           inputmode="decimal"
           type="text"
@@ -284,15 +298,17 @@ exports[`node snapshots (specs §8.5) > grid 1`] = `
       <div
         class="vtt-field flex min-w-0 items-center gap-2"
         data-field="alive"
+        data-input="checkbox"
+        style="--vtt-basis: auto;"
       >
         <input
           checked=""
-          class="size-5 accent-(--vtt-accent)"
+          class="size-5 accent-(--vtt-accent) disabled:opacity-60"
           id="_r_4_"
           type="checkbox"
         />
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_4_"
         >
           alive
@@ -344,20 +360,22 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="name"
+                data-input="text"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_e_"
                 >
                   name
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_e_"
                   type="text"
                   value="Climb"
@@ -366,15 +384,17 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="rank"
+                data-input="number"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_f_"
                 >
                   rank
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_f_"
                   inputmode="numeric"
                   type="text"
@@ -424,20 +444,22 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
             class="min-w-0 flex-1"
           >
             <div
-              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+              class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
             >
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="name"
+                data-input="text"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_g_"
                 >
                   name
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_g_"
                   type="text"
                   value="Swim"
@@ -446,15 +468,17 @@ exports[`node snapshots (specs §8.5) > list 1`] = `
               <div
                 class="vtt-field relative flex min-w-0 flex-col gap-1"
                 data-field="rank"
+                data-input="number"
+                style="--vtt-basis: 6rem;"
               >
                 <label
-                  class="text-sm font-semibold"
+                  class="text-sm font-semibold wrap-anywhere"
                   for="_r_h_"
                 >
                   rank
                 </label>
                 <input
-                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                  class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                   id="_r_h_"
                   inputmode="numeric"
                   type="text"
@@ -522,13 +546,13 @@ exports[`node snapshots (specs §8.5) > longText 1`] = `
       data-field="notes"
     >
       <label
-        class="text-sm font-semibold"
+        class="text-sm font-semibold wrap-anywhere"
         for="_r_d_"
       >
         Notes
       </label>
       <textarea
-        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 min-h-24 w-full min-w-0"
+        class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 min-h-24 w-full min-w-0"
         id="_r_d_"
       />
     </div>
@@ -561,20 +585,22 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="name"
+                  data-input="text"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_j_"
                   >
                     name
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_j_"
                     readonly=""
                     type="text"
@@ -584,15 +610,17 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="rank"
+                  data-input="number"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_k_"
                   >
                     rank
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_k_"
                     inputmode="numeric"
                     readonly=""
@@ -611,20 +639,22 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
               class="min-w-0 flex-1"
             >
               <div
-                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
+                class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-md)"
               >
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="name"
+                  data-input="text"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_l_"
                   >
                     name
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_l_"
                     readonly=""
                     type="text"
@@ -634,15 +664,17 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
                 <div
                   class="vtt-field relative flex min-w-0 flex-col gap-1"
                   data-field="rank"
+                  data-input="number"
+                  style="--vtt-basis: 6rem;"
                 >
                   <label
-                    class="text-sm font-semibold"
+                    class="text-sm font-semibold wrap-anywhere"
                     for="_r_m_"
                   >
                     rank
                   </label>
                   <input
-                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+                    class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
                     id="_r_m_"
                     inputmode="numeric"
                     readonly=""
@@ -658,9 +690,11 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="hp.value"
+        data-input="counter"
+        style="--vtt-basis: 9rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_n_"
         >
           Hit points
@@ -678,7 +712,7 @@ exports[`node snapshots (specs §8.5) > read-only 1`] = `
             −
           </button>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0 text-center"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0 text-center"
             id="_r_n_"
             inputmode="numeric"
             readonly=""
@@ -730,20 +764,22 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
     data-plugin="tiny-test"
   >
     <div
-      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image)]:flex-1 @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end @md:flex-wrap gap-(--vtt-gap-sm) stats"
+      class="vtt-row flex min-w-0 flex-col @md:flex-row @md:flex-wrap @md:items-start [&>*]:min-w-0 @md:[&>:not(.vtt-image,.vtt-rollButton)]:flex-1 @md:[&>:not(.vtt-image,.vtt-rollButton)]:basis-(--vtt-basis,4rem)! @md:[&>.vtt-rollButton]:flex-none @md:[&>.vtt-rollButton]:self-end gap-(--vtt-gap-sm) stats"
     >
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="str"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_0_"
         >
           str
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_0_"
           inputmode="numeric"
           type="text"
@@ -753,15 +789,17 @@ exports[`node snapshots (specs §8.5) > row 1`] = `
       <div
         class="vtt-field relative flex min-w-0 flex-col gap-1"
         data-field="speed"
+        data-input="number"
+        style="--vtt-basis: 6rem;"
       >
         <label
-          class="text-sm font-semibold"
+          class="text-sm font-semibold wrap-anywhere"
           for="_r_1_"
         >
           speed
         </label>
         <input
-          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+          class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
           id="_r_1_"
           inputmode="decimal"
           type="text"
@@ -816,15 +854,17 @@ exports[`node snapshots (specs §8.5) > section 1`] = `
         <div
           class="vtt-field relative flex min-w-0 flex-col gap-1"
           data-field="hp.max"
+          data-input="number"
+          style="--vtt-basis: 6rem;"
         >
           <label
-            class="text-sm font-semibold"
+            class="text-sm font-semibold wrap-anywhere"
             for="_r_7_"
           >
             hp.max
           </label>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
             id="_r_7_"
             inputmode="numeric"
             type="text"
@@ -882,15 +922,17 @@ exports[`node snapshots (specs §8.5) > tabs 1`] = `
         <div
           class="vtt-field relative flex min-w-0 flex-col gap-1"
           data-field="str"
+          data-input="number"
+          style="--vtt-basis: 6rem;"
         >
           <label
-            class="text-sm font-semibold"
+            class="text-sm font-semibold wrap-anywhere"
             for="_r_6_"
           >
             Strength
           </label>
           <input
-            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 w-full min-w-0"
+            class="min-h-10 rounded-lg border border-line bg-surface px-3 py-2 text-fg aria-invalid:border-danger disabled:opacity-60 [&[readonly]]:opacity-60 [&[contenteditable=false]]:opacity-60 w-full min-w-0"
             id="_r_6_"
             inputmode="numeric"
             type="text"

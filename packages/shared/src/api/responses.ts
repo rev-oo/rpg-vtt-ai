@@ -132,7 +132,8 @@ export const createdInviteResponseSchema = z.object({
 export const invitePreviewResponseSchema = z.object({
   invite: z.object({
     role: z.enum(INVITE_ROLES),
-    table: z.object({ id: z.string(), name: z.string() }),
+    /** `gm`: the display name of the table's first GM, if it has one. */
+    table: z.object({ id: z.string(), name: z.string(), gm: z.string().nullable() }),
   }),
 });
 export type InvitePreview = z.infer<typeof invitePreviewResponseSchema>['invite'];

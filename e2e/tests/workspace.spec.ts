@@ -153,6 +153,41 @@ test('the table workspace on desktop and phone', async ({ browser }) => {
     await expect(panel(page, 'Map')).toBeVisible();
   });
 
+  await test.step('F6 reaches the chat box from the header in a few keys (T-1620)', async () => {
+    await page.getByRole('link', { name: 'Tables' }).focus();
+    const message = page.getByRole('textbox', { name: 'Message' });
+    let presses = 0;
+    const focused = message.and(page.locator(':focus'));
+    while (presses < 6 && (await focused.count()) === 0) {
+      await page.keyboard.press('F6');
+      presses += 1;
+    }
+    await expect(message).toBeFocused();
+    expect(presses).toBeLessThanOrEqual(5);
+    // Shift+F6 goes back the other way.
+    await page.keyboard.press('Shift+F6');
+    await expect(message).not.toBeFocused();
+  });
+
+  await test.step('"Skip to panel" goes straight to a panel (T-1620)', async () => {
+    await page.getByRole('link', { name: 'Tables' }).focus();
+    await page.keyboard.press('Shift+Tab');
+    const skip = page.getByRole('navigation', { name: 'Skip to panel' });
+    await expect(skip).toBeVisible();
+    await skip.getByRole('button', { name: 'Go to Chat' }).click();
+    await expect(page.getByRole('textbox', { name: 'Message' })).toBeFocused();
+  });
+
+  await test.step('panels follow the dark scheme, scrollbars included', async () => {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    // Dockview's theme no longer pins the light scheme, so the browser's scrollbars go dark.
+    await expect(page.getByRole('log', { name: 'Messages' })).toHaveCSS(
+      'color-scheme',
+      'light dark',
+    );
+    await page.emulateMedia({ colorScheme: null });
+  });
+
   await test.step('a phone shows one panel at a time, with its own layout', async () => {
     await page.setViewportSize({ width: 390, height: 800 });
     await expect(page.getByRole('tablist')).toHaveCount(1);

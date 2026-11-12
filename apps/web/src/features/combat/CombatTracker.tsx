@@ -2,11 +2,12 @@ import { useCallback, useEffect, useState, type ReactElement, type SyntheticEven
 
 import { canRunCombat } from '@vtt/shared';
 import type { ActorView, EncounterView, TableView } from '@vtt/shared/api';
-import { Alert, Button, cn, Select, TextField } from '@vtt/ui';
+import { Alert, Button, cn, Dialog, Select, TextField } from '@vtt/ui';
 
 import { api } from '../../api/endpoints.js';
 import { errorMessage } from '../../api/errors.js';
 import { t } from '../../i18n/index.js';
+import { ICON } from '../../icons.js';
 import { useSystem } from '../../plugin-host/system-context.js';
 import { useTableEvents } from '../../realtime/use-table-events.js';
 import { StatusIcons } from '../map/StatusIcons.js';
@@ -109,14 +110,6 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
                 </Button>
               </>
             )}
-            <Button
-              variant="ghost"
-              onClick={() => {
-                change(() => api.endEncounter(table.id).then(() => null));
-              }}
-            >
-              {t('combat.end')}
-            </Button>
           </div>
         )}
       </div>
@@ -141,15 +134,28 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
                   <li
                     key={combatant.id}
                     aria-current={current ? 'step' : undefined}
+                    // The name wraps rather than truncates; in a narrow panel the controls
+                    // move under it (T-1620).
                     className={cn(
-                      'flex items-center gap-2 rounded px-2 py-1',
+                      'flex flex-wrap items-center gap-x-2 gap-y-1 rounded px-2 py-1',
                       current && 'bg-info-soft font-semibold',
                     )}
                   >
-                    <span className="w-10 text-right tabular-nums text-muted">
-                      {combatant.initiative ?? '–'}
-                    </span>
-                    <span className="min-w-0 flex-1 truncate">{combatant.name}</span>
+                    {/* The initiative shows once: a field for whoever runs combat. */}
+                    {runs ? (
+                      <InitiativeField
+                        name={combatant.name}
+                        initiative={combatant.initiative}
+                        onChange={(initiative) => {
+                          change(() => api.updateCombatant(table.id, combatant.id, { initiative }));
+                        }}
+                      />
+                    ) : (
+                      <span className="w-10 text-right tabular-nums text-muted">
+                        {combatant.initiative ?? '–'}
+                      </span>
+                    )}
+                    <span className="min-w-24 flex-1 break-words">{combatant.name}</span>
                     <StatusIcons statuses={combatant.statuses} />
                     {combatant.hidden && (
                       <span className="text-xs text-muted">{t('combat.hidden')}</span>
@@ -158,10 +164,6 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
                       <CombatantControls
                         name={combatant.name}
                         hidden={combatant.hidden}
-                        initiative={combatant.initiative}
-                        onInitiative={(initiative) => {
-                          change(() => api.updateCombatant(table.id, combatant.id, { initiative }));
-                        }}
                         onToggleHidden={() => {
                           change(() =>
                             api.updateCombatant(table.id, combatant.id, {
@@ -180,10 +182,13 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
             </ol>
           )}
           {runs && (
-            <AddCombatant
+            <EncounterFooter
               actors={actors}
               onAdd={(input) => {
                 change(() => api.addCombatant(table.id, input));
+              }}
+              onEnd={() => {
+                change(() => api.endEncounter(table.id).then(() => null));
               }}
             />
           )}
@@ -193,37 +198,48 @@ export function CombatTracker({ table, actors }: CombatTrackerProps): ReactEleme
   );
 }
 
+/** A combatant's initiative, which whoever runs combat types or corrects. */
+function InitiativeField({
+  name,
+  initiative,
+  onChange,
+}: {
+  name: string;
+  initiative: number | null;
+  onChange: (value: number | null) => void;
+}): ReactElement {
+  return (
+    <input
+      type="number"
+      aria-label={t('combat.initiativeOf', { name })}
+      defaultValue={initiative ?? ''}
+      key={initiative ?? 'none'}
+      placeholder="–"
+      className="w-14 rounded border border-line bg-canvas px-1 text-right text-sm tabular-nums"
+      onBlur={(event) => {
+        const raw = event.currentTarget.value.trim();
+        const value = raw === '' ? null : Number(raw);
+        if (value !== initiative && (value === null || Number.isFinite(value))) {
+          onChange(value);
+        }
+      }}
+    />
+  );
+}
+
 function CombatantControls({
   name,
   hidden,
-  initiative,
-  onInitiative,
   onToggleHidden,
   onRemove,
 }: {
   name: string;
   hidden: boolean;
-  initiative: number | null;
-  onInitiative: (value: number | null) => void;
   onToggleHidden: () => void;
   onRemove: () => void;
 }): ReactElement {
   return (
-    <span className="flex items-center gap-1">
-      <input
-        type="number"
-        aria-label={t('combat.initiativeOf', { name })}
-        defaultValue={initiative ?? ''}
-        key={initiative ?? 'none'}
-        className="w-16 rounded border border-line bg-canvas px-1 text-sm"
-        onBlur={(event) => {
-          const raw = event.currentTarget.value.trim();
-          const value = raw === '' ? null : Number(raw);
-          if (value !== initiative && (value === null || Number.isFinite(value))) {
-            onInitiative(value);
-          }
-        }}
-      />
+    <span className="ml-auto flex items-center gap-1">
       <Button
         variant="ghost"
         aria-label={t(hidden ? 'combat.revealOf' : 'combat.hideOf', { name })}
@@ -238,13 +254,98 @@ function CombatantControls({
   );
 }
 
-/** Adds an actor of the table, or a free-form entry by name. */
+interface NewCombatant {
+  actorId?: string;
+  name?: string;
+  hidden: boolean;
+}
+
+/**
+ * Below the turn order, away from the turn buttons (T-1620): Add combatant opens the form, and
+ * End encounter asks first.
+ */
+function EncounterFooter({
+  actors,
+  onAdd,
+  onEnd,
+}: {
+  actors: readonly ActorView[];
+  onAdd: (input: NewCombatant) => void;
+  onEnd: () => void;
+}): ReactElement {
+  const [adding, setAdding] = useState(false);
+  const [ending, setEnding] = useState(false);
+  return (
+    <div className="flex flex-col gap-2 border-t border-line pt-2">
+      {adding ? (
+        <AddCombatant
+          actors={actors}
+          onAdd={onAdd}
+          onClose={() => {
+            setAdding(false);
+          }}
+        />
+      ) : null}
+      <div className="flex flex-wrap gap-2">
+        {!adding && (
+          <Button
+            icon={<ICON.add />}
+            onClick={() => {
+              setAdding(true);
+            }}
+          >
+            {t('combat.add')}
+          </Button>
+        )}
+        <Button
+          className="ml-auto"
+          onClick={() => {
+            setEnding(true);
+          }}
+        >
+          {t('combat.end')}
+        </Button>
+      </div>
+      <Dialog
+        open={ending}
+        title={t('combat.endConfirmTitle')}
+        onClose={() => {
+          setEnding(false);
+        }}
+      >
+        <p>{t('combat.endConfirm')}</p>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => {
+              setEnding(false);
+            }}
+          >
+            {t('combat.cancel')}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => {
+              setEnding(false);
+              onEnd();
+            }}
+          >
+            {t('combat.end')}
+          </Button>
+        </div>
+      </Dialog>
+    </div>
+  );
+}
+
+/** Adds an actor of the table, or a free-form entry by name; stays open for the next one. */
 function AddCombatant({
   actors,
   onAdd,
+  onClose,
 }: {
   actors: readonly ActorView[];
-  onAdd: (input: { actorId?: string; name?: string; hidden: boolean }) => void;
+  onAdd: (input: NewCombatant) => void;
+  onClose: () => void;
 }): ReactElement {
   const [actorId, setActorId] = useState('');
   const [name, setName] = useState('');
@@ -265,7 +366,7 @@ function AddCombatant({
   };
 
   return (
-    <form onSubmit={submit} className="flex flex-wrap items-end gap-2 border-t border-line pt-2">
+    <form onSubmit={submit} aria-label={t('combat.add')} className="flex flex-wrap items-end gap-2">
       <Select
         label={t('combat.actor')}
         value={actorId}
@@ -298,7 +399,10 @@ function AddCombatant({
         />
         {t('combat.hidden')}
       </label>
-      <Button type="submit">{t('combat.add')}</Button>
+      <Button type="submit" variant="primary">
+        {t('combat.addSubmit')}
+      </Button>
+      <Button onClick={onClose}>{t('combat.close')}</Button>
     </form>
   );
 }

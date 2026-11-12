@@ -7,6 +7,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { ADMIN, patch, post, signIn } from './support/api.js';
 import { installPlugin, packPlugin } from './support/plugins.js';
+import { showPanel } from './support/workspace.js';
 
 // T-1604: the dice-3d module, packed from plugins/ like an author would, throws dice for each
 // roll over the table page and lands them on the server's results. The chat shows the result
@@ -132,14 +133,17 @@ test('3D dice land on the results the server rolled, and the viewer can hide the
     await fate.close();
   });
 
-  await test.step('the Overlays switch hides the dice', async () => {
-    await page.getByRole('button', { name: 'Overlays' }).click();
+  await test.step('turning the overlays off in the settings hides the dice', async () => {
+    // The switch is among the member's own settings (T-1620).
+    await showPanel(page, 'Settings');
+    const overlays = page.getByRole('checkbox', { name: /overlays on this table/ });
+    await overlays.uncheck();
     await expect(page.locator('iframe[title="3D dice: dice"]')).toHaveCount(0);
     await type(page, '/r 3d8');
     await expect(log.getByRole('list', { name: 'Dice of 3d8' })).toBeVisible();
     await expect(page.locator('iframe[title="3D dice: dice"]')).toHaveCount(0);
     // Turned back on, the overlay is back and waits for the next roll.
-    await page.getByRole('button', { name: 'Overlays' }).click();
+    await overlays.check();
     await expect(dice).toHaveAttribute('data-state', 'idle');
   });
 

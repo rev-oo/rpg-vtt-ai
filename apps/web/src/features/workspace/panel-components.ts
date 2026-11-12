@@ -9,6 +9,7 @@ import {
   EntryPanel,
   ItemPanel,
   ItemsPanel,
+  PackEntryPanel,
   JournalPanel,
   MapPanel,
   MembersDockPanel,
@@ -30,6 +31,8 @@ export const PANEL_COMPONENTS = {
   sheet: SheetPanel,
   entry: EntryPanel,
   item: ItemPanel,
+  /** A compendium entry's read-only sheet (T-1620). */
+  packEntry: PackEntryPanel,
   overview: OverviewPanel,
   members: MembersDockPanel,
   settings: SettingsPanel,

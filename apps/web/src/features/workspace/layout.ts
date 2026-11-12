@@ -151,15 +151,17 @@ export function showTarget(
       ? { component: 'sheet', params: { actorId: target.actorId } }
       : target.kind === 'item'
         ? { component: 'item', params: { itemId: target.itemId } }
-        : { component: 'entry', params: { entryId: target.entryId } }),
+        : target.kind === 'packEntry'
+          ? { component: 'packEntry', params: { ref: target.ref } }
+          : { component: 'entry', params: { entryId: target.entryId } }),
     title,
     ...(position && { position }),
   });
 }
 
 /**
- * Lists on the left, the map and the overview in the middle, combat over chat and dice on
- * the right. Scenes join the lists for those who manage them.
+ * Lists on the left, the map and the overview in the middle, and chat, dice and combat as
+ * tabs of one group on the right. Scenes join the lists for those who manage them.
  */
 export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean): void {
   const add = (id: ToolPanel | PagePanel, position?: AddPanelPositionOptions) =>
@@ -197,12 +199,13 @@ export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean)
   if (scenes) add('scenes', { referencePanel: 'actors', direction: 'within' });
   add('map', { referencePanel: 'actors', direction: 'right' });
   add('overview', { referencePanel: 'map', direction: 'within' });
-  add('combat', { referencePanel: 'map', direction: 'right' });
-  add('chat', { referencePanel: 'combat', direction: 'below' });
+  // Chat, Dice and Combat share the right-hand group, Chat in front.
+  add('chat', { referencePanel: 'map', direction: 'right' });
   add('dice', { referencePanel: 'chat', direction: 'within' });
+  add('combat', { referencePanel: 'chat', direction: 'within' });
   // `initialWidth` loses to the even split of a new grid, so size the side groups after.
   api.getPanel('actors')?.group.api.setSize({ width: LISTS_WIDTH });
-  api.getPanel('combat')?.group.api.setSize({ width: CHAT_WIDTH });
+  api.getPanel('chat')?.group.api.setSize({ width: CHAT_WIDTH });
   api.getPanel('actors')?.api.setActive();
   api.getPanel('chat')?.api.setActive();
   api.getPanel('map')?.api.setActive();

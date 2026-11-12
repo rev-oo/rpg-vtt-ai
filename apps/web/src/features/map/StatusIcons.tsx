@@ -27,7 +27,8 @@ export function StatusIcons({
           src={status.icon}
           alt={translate(status.label)}
           title={translate(status.label)}
-          className="size-4"
+          // A ring in the text colour keeps a dark icon visible on a dark theme (T-1620).
+          className="size-4 rounded-full ring-1 ring-fg/60"
         />
       ))}
     </span>

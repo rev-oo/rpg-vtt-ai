@@ -8,6 +8,7 @@ import * as adminPlugins from '../../src/routes/admin-plugins.js';
 import * as adminUsers from '../../src/routes/admin-users.js';
 import * as appLayout from '../../src/routes/app-layout.js';
 import * as catchAll from '../../src/routes/catch-all.js';
+import * as invite from '../../src/routes/invite.js';
 import * as login from '../../src/routes/login.js';
 import * as setup from '../../src/routes/setup.js';
 import * as signedIn from '../../src/routes/signed-in.js';
@@ -43,6 +44,13 @@ const Stub = createRoutesStub([
       { path: 'setup', Component: setup.default, loader: setup.clientLoader },
       { path: 'login', Component: login.default, loader: asLoader(login.clientLoader) },
       {
+        path: 'invite/:token',
+        Component: invite.default,
+        loader: asLoader((args) =>
+          invite.clientLoader({ ...args, params: { token: args.params.token ?? '' } }),
+        ),
+      },
+      {
         id: SIGNED_IN_ROUTE_ID,
         Component: signedIn.default,
         loader: asLoader(signedIn.clientLoader),
@@ -75,7 +83,7 @@ const Stub = createRoutesStub([
           },
         ],
       },
-      { path: '*', Component: catchAll.default, loader: catchAll.clientLoader },
+      { path: '*', Component: catchAll.default },
     ],
   },
 ]);

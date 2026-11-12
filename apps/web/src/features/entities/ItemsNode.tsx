@@ -123,7 +123,7 @@ export function ItemsNode({
                   }}
                   label={t('items.openItem', { name: item.name })}
                 >
-                  {t('items.open')}
+                  {t('entities.open')}
                 </OpenButton>
                 {editable && (
                   <Button

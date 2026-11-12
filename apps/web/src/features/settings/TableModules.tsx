@@ -173,9 +173,12 @@ export function TableModules({ table, modules }: TableModulesProps): ReactElemen
           />
         </section>
       ))}
-      <Button type="submit" variant="primary" disabled={busy} className="self-start">
-        {t('settings.saveModules')}
-      </Button>
+      {/* Nothing to choose, nothing to save (T-1620). */}
+      {listed.length > 0 && (
+        <Button type="submit" variant="primary" disabled={busy} className="self-start">
+          {t('settings.saveModules')}
+        </Button>
+      )}
     </form>
   );
 }

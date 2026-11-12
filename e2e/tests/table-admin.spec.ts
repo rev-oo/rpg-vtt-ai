@@ -65,7 +65,9 @@ test('members, invite links and sign-up', async ({ browser }) => {
 
     const page = await erin.context.newPage();
     await page.goto(link);
-    await expect(page.getByText('You are invited to join Guild Table as Player.')).toBeVisible();
+    await expect(
+      page.getByText(/^You are invited to join Guild Table, run by .+, as Player\.$/),
+    ).toBeVisible();
     await page.getByRole('button', { name: 'Join the table' }).click();
     await expect(page.getByRole('heading', { name: 'Guild Table' })).toBeVisible();
     await page.close();
@@ -125,7 +127,9 @@ test('members, invite links and sign-up', async ({ browser }) => {
     const stranger = await browser.newContext();
     const page = await stranger.newPage();
     await page.goto(link);
-    await expect(page.getByText('You are invited to join Guild Table as Player.')).toBeVisible();
+    await expect(
+      page.getByText(/^You are invited to join Guild Table, run by .+, as Player\.$/),
+    ).toBeVisible();
     await page.getByLabel('Username').fill('newcomer');
     await page.getByLabel('Display name').fill('Newcomer');
     await page.getByLabel('Password').fill('newcomer-password-1');

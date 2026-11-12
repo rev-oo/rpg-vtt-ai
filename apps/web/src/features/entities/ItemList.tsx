@@ -21,6 +21,7 @@ import { groupItems, useItemTypes } from './item-groups.js';
 import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { usePagedList } from './paging.js';
+import { useTypeLabels } from './type-labels.js';
 
 export interface ItemListProps {
   data: TableData;
@@ -49,6 +50,7 @@ export function ItemList({
 }: ItemListProps): ReactElement {
   const { trash } = filters;
   const paged = usePagedList(firstPage, nextCursor, fetchPage);
+  const labels = useTypeLabels();
   const items = paged.rows;
   const { table, types, actors } = data;
   const revalidator = useRevalidator();
@@ -77,6 +79,7 @@ export function ItemList({
           <ListFilters
             searchLabel={t('items.search')}
             types={types.itemTypes}
+            typeLabel={labels.item}
             value={filters}
             onChange={onFilters}
           />
@@ -113,7 +116,7 @@ export function ItemList({
             key={item.id}
             nested={nested}
             name={item.name}
-            type={item.type}
+            type={labels.item(item.type)}
             imageUrl={item.imageUrl}
             drag={trash ? undefined : { kind: 'library', itemId: item.id }}
             actions={
@@ -137,10 +140,9 @@ export function ItemList({
                       itemId: item.id,
                       name: item.name,
                     }}
-                    className="self-center"
                     label={t('items.openItem', { name: item.name })}
                   >
-                    {t('items.open')}
+                    {t('entities.open')}
                   </OpenButton>
                   {targets.length > 0 && (
                     <GiveToActor
@@ -203,8 +205,9 @@ function GiveToActor({
   targets: readonly { id: string; name: string }[];
   onGive: (actorId: string, actorName: string) => Promise<void>;
 }): ReactElement {
-  const [actorId, setActorId] = useState(targets[0]?.id ?? '');
-  const target = targets.find((a) => a.id === actorId) ?? targets[0];
+  // Nothing is chosen at first, so one click never gives the item to whoever is first (T-1620).
+  const [actorId, setActorId] = useState('');
+  const target = targets.find((a) => a.id === actorId);
   return (
     <div className="flex items-center gap-2">
       <label className="sr-only" htmlFor={`give-${item.id}`}>
@@ -212,12 +215,13 @@ function GiveToActor({
       </label>
       <select
         id={`give-${item.id}`}
-        className="min-h-10 rounded-lg border border-line bg-surface px-2 text-fg"
+        className="min-h-10 min-w-0 rounded-lg border border-line bg-surface px-2 text-fg"
         value={target?.id ?? ''}
         onChange={(e) => {
           setActorId(e.target.value);
         }}
       >
+        <option value="">{t('items.chooseActor')}</option>
         {targets.map((actor) => (
           <option key={actor.id} value={actor.id}>
             {actor.name}
@@ -225,6 +229,7 @@ function GiveToActor({
         ))}
       </select>
       <Button
+        disabled={!target}
         onClick={() => {
           if (target) void onGive(target.id, target.name);
         }}
