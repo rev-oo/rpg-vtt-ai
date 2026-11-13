@@ -18,6 +18,14 @@ import { BUILT_IN_COMMANDS, COMMAND_NAME } from '@vtt/shared/api';
 
 /** How long a shared function may run before its worker is stopped. */
 export const FUNCTION_TIME_LIMIT_MS = 100;
+/**
+ * How long shared functions may hold the server's main thread in one turn of its event loop,
+ * all calls together (T-1703). One formula may call them thousands of times, each under
+ * `FUNCTION_TIME_LIMIT_MS`; past this, further calls fail until the next turn. A call costs
+ * about 0.15 ms of messaging, so this leaves room for some 3,000 quick calls; a roll or a
+ * counter's bounds makes a few hundred at most.
+ */
+export const FUNCTION_TURN_LIMIT_MS = 500;
 /** How long a handler or command may run in total, `ctx` calls included. */
 export const HANDLER_TIME_LIMIT_MS = 5000;
 const STARTUP_TIME_LIMIT_MS = 5000;
@@ -84,6 +92,21 @@ function workerUrl(): URL {
   return existsSync(built) ? built : new URL('./code-worker.ts', import.meta.url);
 }
 
+/** Time the main thread spent waiting on shared functions in this turn, for every plugin. */
+let turnSpentMs = 0;
+let turnResetPending = false;
+
+/** Counts `ms` of waiting against this turn's budget; it starts again on the next turn. */
+function spendTurn(ms: number): void {
+  turnSpentMs += ms;
+  if (turnResetPending) return;
+  turnResetPending = true;
+  setImmediate(() => {
+    turnSpentMs = 0;
+    turnResetPending = false;
+  });
+}
+
 /** `items` split into those that pass `test` and those that do not. */
 function partition<T>(items: readonly T[], test: (item: T) => boolean): [T[], T[]] {
   return [items.filter(test), items.filter((item) => !test(item))];
@@ -135,10 +158,18 @@ class PluginWorker implements LoadedCode {
   /** A synchronous shared function backed by the worker (ADR-047). */
   #call(name: string): FormulaFunction {
     return (...args) => {
+      if (turnSpentMs >= FUNCTION_TURN_LIMIT_MS) {
+        throw new Error(
+          `shared functions took longer than ${String(FUNCTION_TURN_LIMIT_MS)} ms in total`,
+        );
+      }
       const { port, flag } = this.sync;
       Atomics.store(flag, 0, 0);
       port.postMessage({ name, args });
-      if (Atomics.wait(flag, 0, 0, FUNCTION_TIME_LIMIT_MS) === 'timed-out') {
+      const started = performance.now();
+      const waited = Atomics.wait(flag, 0, 0, FUNCTION_TIME_LIMIT_MS);
+      spendTurn(performance.now() - started);
+      if (waited === 'timed-out') {
         this.stop(`${name}() took longer than ${String(FUNCTION_TIME_LIMIT_MS)} ms`);
         throw new Error(`it took longer than ${String(FUNCTION_TIME_LIMIT_MS)} ms`);
       }
