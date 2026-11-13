@@ -584,6 +584,17 @@ Reserved in 0.1.0, built in 0.2.0:
 - **`combat.json`** (M9, T-0802): `initiative`, a rolling formula each combatant rolls, and `order`: `desc`, `asc` or `sideBased`. Built in T-0802 (ADR-050): [guide, Combat](docs/plugin-authoring.md#combat). An `orderCombatants` hook in `code/server` may order combatants instead (FR-COMBAT-02), and `onTurnStart` runs at the start of each turn (§8.10).
 - **`packs/<name>.json`** (M10, T-0803): compendium entries of the plugin's own actor and item types, each validated against its type's data schema, which members browse and copy into a table or onto their actors (FR-PLUGIN-09). Built in T-0803 (ADR-051); browsed since T-1202 (ADR-060). Collections may be lists of rows or rows keyed by id, as stored (T-1614): [guide, Compendium packs](docs/plugin-authoring.md#compendium-packs).
 
+### 8.15 Plugin API versioning
+
+The core provides plugin API `CORE_API_VERSION` (`@vtt/shared`), `1.0.0` since T-1701. It is versioned apart from releases (ADR-046), and a plugin loads only when its `coreApi` range includes it (FR-PLUGIN-03). ADR-084 sets the rules:
+
+- **What the API is:** plugin files and their keys, formulas, the exports of `@vtt/sdk/client` and `@vtt/sdk`, server `ctx`, the testing kits, module themes, named parts, frame events and actions, and settings scopes.
+- **What it is not:** the app's markup and classes inside named parts, the HTTP API and socket messages, the database, the wording of issues, and limits, which may only grow.
+- **1.x only adds.** A minor adds optional keys, files and features, and validator checks only as warnings. It deprecates with a warning and removes only in `2.0`. Bug and security fixes are allowed.
+- **0.x plugins do not load** (Q19): their range fails `incompatible_core_api`.
+
+[Guide, Compatibility](docs/plugin-authoring.md#compatibility).
+
 ---
 
 ## 9. Live Document Model (CRDT)
@@ -1162,3 +1173,4 @@ If you are an AI coding agent working in this repository:
 9. **Commit style:** conventional commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`), referencing task IDs (for example `feat(formula): add dice keep modifiers (T-0303)`).
 10. **Releasing** (ADR-046): in a PR, bump every `package.json` to the new version and move `[Unreleased]` in `CHANGELOG.md` into a dated section. After it merges, tag the merge commit `v<version>` on main and push the tag; CI publishes the image and the GitHub release once every check passes.
 11. **Past work:** task notes and change logs of released milestones are in `docs/history/`, one file per release (`mvp.md` for 0.1.0, `0.2.0.md`). Read them when a task touches code built then. After each release, move its milestones' tasks and change-log rows there.
+12. **Keep the plugin API promise** (§8.15, ADR-084). A task that adds to the plugin API raises the minor of `CORE_API_VERSION`, unless an earlier task since the last release already did, and documents the addition in the guide and reference. A task that would break the plugin API, or change behaviour plugins rely on, stops and records the conflict in §14.
