@@ -462,8 +462,10 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
     await (await tokens(playerPage)).getByRole('button', { name: /^Elowen/ }).click();
     await expect(damage.getByText('Acts on Elowen')).toBeVisible();
     await damage.getByRole('button', { name: 'Apply damage' }).click();
-    // 20 hit points less 1d6 + 2.
-    await expect(damage.getByRole('status')).toHaveText(/^Done: Elowen is now at 1[2-7]\.$/);
+    // 20 hit points less 1d6 + 2, or 2d6 + 2 when the attack rolled a natural 20 (a critical).
+    await expect(damage.getByRole('status')).toHaveText(
+      /^Done: Elowen is now at ([6-9]|1[0-7])\.$/,
+    );
   });
 
   await test.step('the GM rolls the goblin’s save from the spell card, then applies half', async () => {
