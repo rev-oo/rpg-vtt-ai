@@ -11,6 +11,7 @@ import { actors, members } from '../src/db/schema.js';
 import { createLogger } from '../src/logger/index.js';
 import {
   FUNCTION_TIME_LIMIT_MS,
+  FUNCTION_TURN_LIMIT_MS,
   HANDLER_TIME_LIMIT_MS,
   PluginCodeError,
   PluginCodeRuntime,
@@ -109,6 +110,33 @@ describe('plugin code runtime (T-0809, ADR-047)', () => {
     const fresh = await runtime.load('fns', entries);
     expect(fresh).not.toBe(code);
     expect(fresh?.functions.twice?.(2)).toBe(4);
+  });
+
+  it('bounds how long shared functions hold the server in one turn, all calls together (T-1703)', async () => {
+    const entries = await plugin('slow', {
+      'code/shared.js': `export default {
+        functions: { slow: () => { const end = Date.now() + 40; while (Date.now() < end) {} return 1; } },
+      };`,
+    });
+    const code = await runtime.load('slow', entries);
+    const slow = code?.functions.slow;
+    if (!slow) throw new Error('slow() did not load');
+    const started = Date.now();
+    let calls = 0;
+    expect(() => {
+      for (let i = 0; i < 200; i += 1) {
+        slow();
+        calls += 1;
+      }
+    }).toThrow(`longer than ${String(FUNCTION_TURN_LIMIT_MS)} ms in total`);
+    // Each call stays under the per-call limit, so only the turn's budget stops them.
+    expect(calls).toBeGreaterThan(1);
+    expect(Date.now() - started).toBeLessThan(
+      FUNCTION_TURN_LIMIT_MS + FUNCTION_TIME_LIMIT_MS + 200,
+    );
+    // The next turn has its budget back, and the worker was not stopped.
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(slow()).toBe(1);
   });
 
   it('runs handlers, answering their ctx calls on the main thread', async () => {
