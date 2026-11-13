@@ -22,16 +22,16 @@ Update this section every time a task changes state. Keep the checkboxes and the
 | M14    | Maps: scenes, tokens, fog of war                                                                                                 | 1.0.0   | Done        | 100%     |
 | M15    | Plugin platform: data migrations, client sandbox, server isolation                                                               | 1.0.0   | Done        | 100%     |
 | M16    | Module plugins (themes, overlays, panels), a D&D 5e SRD study, interface review                                                  | 1.0.0   | Done        | 100%     |
-| M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | Not started | 0%       |
+| M17    | 1.0: API freeze, hardening                                                                                                       | 1.0.0   | In progress | 33%      |
 | M18    | System builder                                                                                                                   | 1.x     | Not started | 0%       |
 | LATER  | World export/import, schema composition, other plugin kinds, book-style journal                                                  | —       | Not planned | —        |
 
 ### 0.2 Current focus
 
 - **Active milestone:** M17 (M16 done; M14–M17 ship as 1.0.0)
-- **Next task:** `T-1701` (plugin API freeze)
+- **Next task:** `T-1703` (security review and hardening)
 - **Open blockers:** none
-- **Decisions pending:** Q19 (§14)
+- **Decisions pending:** none
 
 ### 0.3 Change log
 
@@ -79,6 +79,7 @@ Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.
 | 2026-11-12 | T-1606 done: the [interface review](docs/studies/interface-review.md) covers every screen at desktop and phone sizes, with 62 screenshots from `e2e/scripts/capture-screens.mjs`, a keyboard pass and the table's accessibility tree. The user picked P1 to P5, P7 and P8: T-1619 (users page), and T-1620 (interface fixes), which groups the others at the user's request. The phone table (P6) and a fuller Table page (P9) go to LATER.                                                                                                                                                                                                                                                                                                                    |
 | 2026-11-12 | T-1619 done: admins manage users on a **Users** page (create with a one-time password shown once, reset a password, disable or enable, make admin, delete). The API already had these routes; its responses now have schemas in `@vtt/shared/api`. Admins cannot disable, demote or delete themselves, which keeps an enabled admin; a server test states that rule.                                                                                                                                                                                                                                                                                                                                                                                           |
 | 2026-11-12 | T-1620 done, and with it M16: sheet fields keep the width their input needs; chat rolls show the formula as rolled; map names sit on pills, statuses get rings and the grid follows the theme; narrow panels wrap names and show type labels; F6, Shift+F6 and **Skip to panel** move between panels, documented in the new [user guide](docs/user-guide.md); a Page not found page; the invite page names the table and its GM to anyone holding the link; and the small fixes of the review. R20 (copying invite links later) was dropped at the user's request. M17 is active.                                                                                                                                                                              |
+| 2026-11-13 | T-1701 done (ADR-084): the core provides plugin API `1.0.0`, and the reference plugins, fixtures and guide declare `^1.0.0`. The guide's new **Compatibility** section says what 1.x keeps: plugin files, formulas, the SDK and `ctx`, the testing kits, module themes, named parts, frame events and actions, and settings scopes; minors only add, warn, deprecate or fix. Q19 decided no: nobody runs 0.x plugins, so a `0.x` range fails `incompatible_core_api`. 1.0.0 is a major release.                                                                                                                                                                                                                                                                |
 
 ---
 
@@ -934,7 +935,7 @@ Module plugins, a generic way to extend any table, a full system built as a test
 
 The plugin API promise, a security review, then the release. The project has no users to upgrade yet, so 1.0 promises no upgrade path from 0.x data.
 
-- [ ] **T-1701 · Plugin API freeze**
+- [x] **T-1701 · Plugin API freeze**
   - **Deps:** M12–M16, Q19
   - **Do:** Set `CORE_API_VERSION` to `1.0.0` and document what 1.x keeps compatible (manifest, file formats, SDK, `ctx`, module themes, named parts, settings scopes, frame events and actions). Plugins for 0.x load as Q19 decides. The reference plugins and the guide move to `^1.0.0`.
   - **Done when:** the compatibility promise is in the guide and an ADR; tests cover loading plugins declaring each supported range.
@@ -1004,9 +1005,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 
 **Open**
 
-| #   | Question                                                     | Blocks | Proposed default                                                                                                   |
-| --- | ------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------ |
-| Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading? | T-1701 | Yes for one major version: 1.x accepts 0.x plugins whose files validate, and lists them with a "made for 0.x" note |
+None.
 
 **Decided**
 
@@ -1030,6 +1029,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | Q16 | A spell in a compendium is an item of a plugin type `spell`. Should "item" be renamed, since items now cover spells, feats and gear?                                                                              | no rename. "Item" stays the core term; plugins name what players see through type labels and item groups (FR-PLUGIN-11, ADR-061)                                                          |
 | Q17 | How is `code/client` sandboxed?                                                                                                                                                                                   | a sandboxed `<iframe>` per custom node and card, with no `allow-same-origin` and no network, and the SDK hooks over `postMessage`; `code/shared` runs in QuickJS in the browser (ADR-074) |
 | Q18 | Which renderer draws maps?                                                                                                                                                                                        | PixiJS v8 with pixi-viewport, WebGL only (v8 has no canvas fallback); React for the panels around it (ADR-067)                                                                            |
+| Q19 | At 1.0, do plugins declaring `coreApi: ^0.1.0` keep loading?                                                                                                                                                      | no: nobody runs 0.x plugins, so 1.x loads only plugins whose `coreApi` includes it, and 0.x ranges fail `incompatible_core_api` (ADR-084)                                                 |
 
 ---
 
@@ -1141,6 +1141,7 @@ Each open question blocks the tasks it names. Record the decision in `docs/adr/`
 | ADR-081 | [Labels for values, and translated plugin texts](docs/adr/ADR-081-value-labels-and-translation.md)                                              | Accepted                                   |
 | ADR-082 | [Card actions on the selected token](docs/adr/ADR-082-card-actions.md)                                                                          | Accepted                                   |
 | ADR-083 | [Token statuses from actor fields](docs/adr/ADR-083-token-statuses.md)                                                                          | Accepted                                   |
+| ADR-084 | [Plugin API 1.0 and what 1.x keeps](docs/adr/ADR-084-plugin-api-1.md)                                                                           | Accepted                                   |
 
 New decisions are appended here with a number, a one-line summary, and a link to the full ADR in `docs/adr/`.
 

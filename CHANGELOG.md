@@ -47,6 +47,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- **Breaking for plugins:** the core provides plugin API `1.0.0`, and plugins declare `coreApi: "^1.0.0"`; a `0.x` range no longer loads (T-1701). The plugin guide's new **Compatibility** section says what every 1.x release keeps working: plugin files, formulas, the SDK and server `ctx`, the testing kits, module themes, named parts, frame events and actions, and settings scopes (ADR-084).
+
 - The interface fixes of the review (T-1620):
   - Sheet fields in a row keep the width their input needs, and a grid with counters gets wider columns, in every system.
   - A roll in chat reads as rolled (`1d20 + 4`, the dice, the total); the recipe's formula with its `@` references shows under **Formula**.

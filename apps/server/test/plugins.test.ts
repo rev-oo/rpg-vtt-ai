@@ -85,7 +85,7 @@ describe('plugin scanner and registry (T-0403)', () => {
     expect(found['tiny-pool']).toMatchObject({
       name: 'Tiny Pool',
       version: '0.1.0',
-      coreApi: '^0.1.0',
+      coreApi: '^1.0.0',
       status: 'ready',
       enabled: false,
       available: false,
@@ -158,7 +158,7 @@ describe('plugin scanner and registry (T-0403)', () => {
     expect(plugin).toMatchObject({ status: 'incompatible', available: false });
     expect(plugin?.issues[0]).toMatchObject({
       code: 'incompatible_core_api',
-      params: { coreApi: '^9.0.0', core: '0.1.0' },
+      params: { coreApi: '^9.0.0', core: '1.0.0' },
     });
   });
 

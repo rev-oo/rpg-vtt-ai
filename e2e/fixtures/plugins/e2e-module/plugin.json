@@ -3,7 +3,7 @@
   "name": "E2E Module",
   "version": "1.0.0",
   "kind": "module",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "hasCode": false,
   "description": "A module with settings of every scope, for the e2e suite (T-1601).",
   "locales": ["en"]

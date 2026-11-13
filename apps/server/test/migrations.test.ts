@@ -267,7 +267,7 @@ describe('the migrate hook (T-1501)', () => {
           name: 'Coded',
           version,
           kind: 'system',
-          coreApi: '^0.1.0',
+          coreApi: '^1.0.0',
           hasCode: true,
         }),
       ],

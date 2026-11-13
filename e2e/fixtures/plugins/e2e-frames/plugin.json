@@ -3,7 +3,7 @@
   "name": "E2E Frames",
   "version": "1.0.0",
   "kind": "module",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "hasCode": true,
   "description": "A module with an overlay and a panel, for the e2e suite (T-1603).",
   "locales": ["en"],

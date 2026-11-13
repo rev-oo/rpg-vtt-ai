@@ -3,7 +3,7 @@
   "name": "E2E Code",
   "version": "1.0.0",
   "kind": "system",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "description": "A system with code: a custom sheet node and chat card, a shared formula function and a roll handler.",
   "hasCode": true,
   "locales": ["en"],

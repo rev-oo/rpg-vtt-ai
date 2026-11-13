@@ -30,7 +30,7 @@ async function writeModule(dataDir: string): Promise<void> {
     name: 'Glow',
     version: '1.0.0',
     kind: 'module',
-    coreApi: '^0.1.0',
+    coreApi: '^1.0.0',
     hasCode: true,
     locales: ['en'],
   });

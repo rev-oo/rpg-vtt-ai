@@ -32,6 +32,7 @@ Every key of every file is listed in the [plugin file reference](plugin-referenc
   - [Styles](#styles)
   - [Plugin code](#plugin-code)
 - [Checking, previewing and installing](#checking-previewing-and-installing)
+- [Compatibility](#compatibility)
 
 ## Before you start
 
@@ -75,14 +76,14 @@ Every plugin starts with a manifest, `plugin.json`, at the root of its folder:
   "name": "Starter",
   "version": "0.1.0",
   "kind": "system",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "description": "My first system.",
   "hasCode": false
 }
 ```
 
 - `id` is how the server knows the plugin. It must be unique on the instance, and the installed folder is named after it.
-- `coreApi` says which versions of the core the plugin works with. This core provides `0.1.0`.
+- `coreApi` says which versions of the core the plugin works with. This core provides `1.0.0`.
 - `hasCode` must say whether the plugin has a `code/` folder. This one does not.
 - `$schema` is optional. It points your editor at the schema, so it can flag mistakes and show what each key means. The server ignores it.
 
@@ -405,7 +406,7 @@ List the languages in the manifest:
   "name": "Starter",
   "version": "0.1.0",
   "kind": "system",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "description": "My first system.",
   "hasCode": false,
   "locales": ["en", "pt-BR"],
@@ -913,7 +914,7 @@ Names of types, sheets, cards and recipes are [names](plugin-reference.md#name):
 `plugin.json` describes the plugin; the [reference](plugin-reference.md#plugin) lists every key. The rules the validator adds:
 
 - **`id`** is lowercase letters, digits and inner hyphens. An installed plugin's folder is named after it, and a plugin found in a folder with another name is refused. `vtt-plugin validate` does not check the folder name, since uploads name the folder for you. Tables store the id, so do not change it once tables use the plugin.
-- **`coreApi`** is a semver range. A plugin whose range does not include the server's core API version (`0.1.0`) is listed but cannot be enabled.
+- **`coreApi`** is a semver range. A plugin whose range does not include the server's core API version (`1.0.0`) is listed but cannot be enabled. [Compatibility](#compatibility) says what a `1.x` range can rely on.
 - **`kind`** is `system` for a game system, which tables are created with, or `module` for an add-on GMs add to any table (see [Modules](#modules)).
 - **`hasCode`** must be `true` exactly when there is a `code/` folder. Admins must acknowledge code before enabling a plugin that has it.
 - **`locales`** lists the languages in `lang/`; each needs its file, and `en` is always required once there is any. **`defaultLocale`** is the language shown when the viewer's lacks a text.
@@ -2011,3 +2012,24 @@ Admins install a plugin in either of two ways:
 New plugins start disabled until an admin enables them. Disabling a plugin makes the tables that use it read-only until it is enabled again.
 
 To update a plugin, raise `version` and install it again. Tables, actors and their data stay: each table keeps playing its version until a GM upgrades it in the table settings, which runs the plugin's [data migrations](#data-migrations). Fields an entity lacks start at their defaults.
+
+## Compatibility
+
+This core provides plugin API `1.0.0`. A plugin written for it keeps working on every `1.x` server, without changes, as long as `coreApi` includes that server's version (ADR-084). The API is everything a plugin touches:
+
+- **Files:** the manifest, types, sheets, rolls, dice, cards, combat, packs, settings, migrations, translations and styles, as the [reference](plugin-reference.md) lists them, and what each key does.
+- **Formulas:** their grammar, operators, functions and references.
+- **Code:** what `@vtt/sdk/client` and `@vtt/sdk` export, the `ctx` server handlers and hooks receive, and the testing kits.
+- **Modules:** `theme.json`, the [named parts](#named-parts), and the events and actions frames get.
+- **Settings scopes:** `table`, `instance` and `user`.
+
+What a minor version (`1.1`, `1.2`, …) may do:
+
+- **Add:** new optional keys, files, node types, formula functions, `ctx` methods, SDK exports, named parts, theme keys, frame events and actions. A plugin that uses one declares the version that brought it, such as `^1.2.0`, so older servers list it as unusable instead of failing on it.
+- **Warn:** new validator checks report warnings, never errors, so a valid plugin stays valid.
+- **Deprecate:** something that will go in `2.0` keeps working through `1.x`, and the validator warns about it.
+- **Fix:** a bug or a security hole, even where a plugin relied on it. The changelog says so.
+
+What the promise does not cover: the app's own classes and markup inside a part, the HTTP API and socket messages between the app and the server, the database, issue wording, and limits such as file sizes and frame action rates, which may only grow.
+
+A `2.0` may break any of this. Plugins declaring a `0.x` range do not load on `1.x`.

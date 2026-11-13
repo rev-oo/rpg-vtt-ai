@@ -52,7 +52,7 @@ The plugin manifest. Every plugin has one, at the root of its folder.
 | `name` | text (1–100 characters) | yes | The name admins and GMs see. |
 | `version` | [version](#version) | yes | The plugin version, such as `1.0.0`. |
 | `kind` | one of `"system"`, `"module"` | yes | `system` for a game system, which a table is created with; `module` for an add-on that GMs add to any table, whatever its system (themes, overlays, panels). |
-| `coreApi` | text (1–100 characters) | yes | The core API versions the plugin works with, as a semver range such as `^0.1.0`. A server outside the range lists the plugin as unusable. |
+| `coreApi` | text (1–100 characters) | yes | The core API versions the plugin works with, as a semver range such as `^1.0.0`. A server outside the range lists the plugin as unusable. |
 | `description` | text (at most 2000 characters) |  | Shown on the plugin admin page. |
 | `author` | text (at most 200 characters) |  |  |
 | `license` | text (at most 100 characters) |  |  |
