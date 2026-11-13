@@ -141,10 +141,6 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
             )}
           </form.Field>
           <div className="grid grid-cols-2 gap-3">
-            {number('columns', t('scenes.columns'), t('scenes.cellsHint'))}
-            {number('rows', t('scenes.rows'), t('scenes.cellsHint'))}
-          </div>
-          <div className="grid grid-cols-2 gap-3">
             <form.Field name="gridType">
               {(field) => (
                 <SelectInput field={field} label={t('scenes.gridType')}>
@@ -157,6 +153,10 @@ export function SceneDialog({ open, scene, onClose, onSave }: SceneDialogProps):
               )}
             </form.Field>
             {number('gridSize', t('scenes.gridSize'), t('scenes.gridSizeHint'))}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {number('columns', t('scenes.columns'), t('scenes.cellsHint'))}
+            {number('rows', t('scenes.rows'), t('scenes.cellsHint'))}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <form.Field
