@@ -244,7 +244,7 @@ function SceneStage({
       )}
       {error && <Alert tone="error">{error}</Alert>}
       {placeError && <Alert tone="error">{placeError}</Alert>}
-      <div className="min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1">
         <Suspense fallback={<p className="p-3 text-muted">{t('app.loading')}</p>}>
           <MapCanvas
             scene={scene}
@@ -263,21 +263,21 @@ function SceneStage({
             }}
           />
         </Suspense>
+        <TokenList
+          scene={scene}
+          tokens={tokens}
+          selectedId={selectedId}
+          manages={manages}
+          canOpen={(token) => actorOf(token) !== undefined}
+          onSelect={select}
+          onMove={(token, { column, row }) => {
+            move(token, column, row);
+          }}
+          onOpen={open}
+          onHide={hide}
+          onRemove={remove}
+        />
       </div>
-      <TokenList
-        scene={scene}
-        tokens={tokens}
-        selectedId={selectedId}
-        manages={manages}
-        canOpen={(token) => actorOf(token) !== undefined}
-        onSelect={select}
-        onMove={(token, { column, row }) => {
-          move(token, column, row);
-        }}
-        onOpen={open}
-        onHide={hide}
-        onRemove={remove}
-      />
       {adding && (
         <AddTokenDialog
           open
