@@ -4,7 +4,7 @@
   "name": "SRD 5.2 (fifth edition)",
   "version": "0.1.0",
   "kind": "system",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "description": "Characters and creatures from the System Reference Document 5.2: abilities, skills, saving throws, attacks, spells and slots, conditions, rests, and an SRD pack.",
   "author": "VTT contributors",
   "license": "CC-BY-4.0",

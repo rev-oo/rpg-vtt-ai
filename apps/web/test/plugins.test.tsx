@@ -23,7 +23,7 @@ const plugin = (overrides: Record<string, unknown> = {}) => {
     description: 'A tiny d20 system.',
     attribution: null,
     instanceSettings: false,
-    coreApi: '^0.1.0',
+    coreApi: '^1.0.0',
     hasCode: false,
     codeEntries: [],
     enabled: false,
@@ -100,7 +100,7 @@ describe('plugin admin page (T-0406, FR-ADMIN-02)', () => {
     expect(screen.getByRole('link', { name: 'Plugins' })).toHaveAttribute('href', '/admin/plugins');
 
     expect(card('Tiny d20').getByText('Ready')).toBeInTheDocument();
-    expect(card('Tiny d20').getByText('Core API ^0.1.0')).toBeInTheDocument();
+    expect(card('Tiny d20').getByText('Core API ^1.0.0')).toBeInTheDocument();
 
     const broken = card('Broken');
     expect(broken.getByText('Invalid')).toBeInTheDocument();

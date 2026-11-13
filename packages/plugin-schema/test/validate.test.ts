@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { CORE_API_VERSION } from '@vtt/shared';
+
 import {
   describePluginIssue,
   formatJsonPath,
@@ -43,10 +45,10 @@ describe('validatePlugin', () => {
 
   it('checks the id against the folder and coreApi against the given core version', () => {
     const files = toFiles(mini());
-    expect(validatePlugin(files, { folder: 'mini', coreVersion: '0.1.9' }).issues).toEqual([]);
+    expect(validatePlugin(files, { folder: 'mini', coreVersion: '1.4.2' }).issues).toEqual([]);
     const { issues, manifest, plugin } = validatePlugin(files, {
       folder: 'other',
-      coreVersion: '0.2.0',
+      coreVersion: '2.0.0',
     });
     expect(issues.map(summary)).toEqual([
       'error folder_mismatch plugin.json $.id',
@@ -54,6 +56,35 @@ describe('validatePlugin', () => {
     ]);
     expect(manifest?.id).toBe('mini');
     expect(plugin).toBeUndefined();
+  });
+
+  // 1.x keeps the plugin API compatible; 0.x plugins are refused (T-1701, Q19, ADR-084).
+  it.each([
+    ['^1.0.0', true],
+    ['1.x', true],
+    ['>=1.0.0 <2.0.0', true],
+    ['^1.0.0 || ^2.0.0', true],
+    ['^0.1.0', false],
+    ['>=0.1.0 <1.0.0', false],
+    ['^1.1.0', false],
+    ['^2.0.0', false],
+  ])('loads a plugin declaring coreApi %s on core 1.0.0: %s', (coreApi, loads) => {
+    const files = toFiles(mini());
+    const manifest: unknown = JSON.parse(files.get('plugin.json') ?? '{}');
+    files.set('plugin.json', JSON.stringify({ ...Object(manifest), coreApi }));
+    const { issues, plugin } = validatePlugin(files, { coreVersion: '1.0.0' });
+    expect(issues.map(summary)).toEqual(
+      loads ? [] : ['error incompatible_core_api plugin.json $.coreApi'],
+    );
+    expect(plugin !== undefined).toBe(loads);
+  });
+
+  it('checks coreApi against this core, 1.0.0, which the reference plugins target', async () => {
+    expect(CORE_API_VERSION).toBe('1.0.0');
+    for (const id of REFERENCE_PLUGINS) {
+      const { manifest } = validatePlugin(await pluginFiles(id));
+      expect(manifest?.coreApi).toBe('^1.0.0');
+    }
   });
 
   it('accepts a module with settings, texts, styles and client code', () => {

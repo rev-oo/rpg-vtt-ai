@@ -69,7 +69,7 @@ export const manifestSchema = z
       .min(1)
       .max(100)
       .describe(
-        'The core API versions the plugin works with, as a semver range such as `^0.1.0`. A server outside the range lists the plugin as unusable.',
+        'The core API versions the plugin works with, as a semver range such as `^1.0.0`. A server outside the range lists the plugin as unusable.',
       ),
     description: z.string().max(2000).optional().describe('Shown on the plugin admin page.'),
     author: z.string().max(200).optional(),

@@ -197,7 +197,7 @@ describe('responses', () => {
       description: null,
       attribution: { text: 'Includes the Tiny Reference, CC-BY-4.0.', url: null },
       instanceSettings: false,
-      coreApi: '^0.1.0',
+      coreApi: '^1.0.0',
       hasCode: false,
       codeEntries: [],
       enabled: true,

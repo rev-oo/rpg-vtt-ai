@@ -4,7 +4,7 @@
   "name": "Tiny Pool",
   "version": "0.1.0",
   "kind": "system",
-  "coreApi": "^0.1.0",
+  "coreApi": "^1.0.0",
   "description": "A dice-pool system with Fate dice and success counting. No code.",
   "author": "VTT contributors",
   "license": "MIT",

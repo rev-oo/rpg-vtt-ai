@@ -169,7 +169,7 @@ const CODED = {
     name: 'Coded',
     version: '1.0.0',
     kind: 'system',
-    coreApi: '^0.1.0',
+    coreApi: '^1.0.0',
     hasCode: true,
     locales: ['en'],
   }),
