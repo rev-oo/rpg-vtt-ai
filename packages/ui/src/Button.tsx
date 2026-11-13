@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactElement, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactElement, ReactNode, Ref } from 'react';
 
 import { cn } from './cn.js';
 
@@ -8,6 +8,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   /** An icon before the text; screen readers skip it, the text names the button. */
   icon?: ReactNode;
+  ref?: Ref<HTMLButtonElement>;
 }
 
 const VARIANTS: Record<ButtonVariant, string> = {

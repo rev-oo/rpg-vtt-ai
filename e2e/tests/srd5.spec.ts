@@ -7,7 +7,7 @@ import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
 import { installPlugin, packPlugin, setActorData, setItemData } from './support/plugins.js';
-import { showPanel, showTokens } from './support/workspace.js';
+import { showPanel, showTokens, tokenList } from './support/workspace.js';
 
 // T-1605: the SRD 5.2 system, packed from plugins/ like an author would. A player's wizard
 // gets its numbers from the class tables, copies a sword and a cantrip from the SRD pack,
@@ -429,7 +429,7 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
   const errors: string[] = [];
   for (const page of [gmPage, playerPage])
     page.on('pageerror', (error) => errors.push(error.message));
-  const tokens = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+  const tokens = tokenList;
   const cards = (page: Page) =>
     page.getByRole('log', { name: 'Messages' }).locator('[data-plugin="srd5"]');
 
@@ -459,9 +459,7 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
       .last();
     await expect(damage.getByText('Select a token on the map to use these.')).toBeVisible();
     await expect(damage.getByRole('button', { name: 'Apply damage' })).toBeDisabled();
-    await tokens(playerPage)
-      .getByRole('button', { name: /^Elowen/ })
-      .click();
+    await (await tokens(playerPage)).getByRole('button', { name: /^Elowen/ }).click();
     await expect(damage.getByText('Acts on Elowen')).toBeVisible();
     await damage.getByRole('button', { name: 'Apply damage' }).click();
     // 20 hit points less 1d6 + 2.
@@ -474,9 +472,7 @@ test('cards roll damage for the attacker, apply it to the selected token and rol
       recipe: { name: 'spellEffect', args: {}, itemId: spell.id },
     });
     const card = cards(gmPage).filter({ hasText: 'Burning Hands' });
-    await tokens(gmPage)
-      .getByRole('button', { name: /^Goblin/ })
-      .click();
+    await (await tokens(gmPage)).getByRole('button', { name: /^Goblin/ }).click();
     await expect(card.getByText('Acts on Goblin')).toBeVisible();
     await card.getByRole('button', { name: 'Roll saving throw' }).click();
     const save = cards(gmPage).filter({ hasText: 'Saving throw' }).last();
@@ -520,12 +516,12 @@ test('a condition set on a sheet shows on the token', async ({ browser }) => {
   const gmPage = await gm.context.newPage();
   await gmPage.goto(`/tables/${table.id}`);
   await expect(gmPage.getByText(/Connecting|Reconnecting/)).toBeHidden();
-  await showTokens(gmPage);
-  const miraToken = gmPage.getByRole('list', { name: 'Tokens' }).getByRole('button', {
-    name: /^Mira/,
-  });
-  await expect(miraToken).toBeVisible();
-  await expect(miraToken.getByRole('img')).toHaveCount(0);
+  const miraToken = async () =>
+    (await tokenList(gmPage)).getByRole('button', {
+      name: /^Mira/,
+    });
+  await expect(await miraToken()).toBeVisible();
+  await expect((await miraToken()).getByRole('img')).toHaveCount(0);
 
   const page = await player.context.newPage();
   const errors: string[] = [];
@@ -536,13 +532,13 @@ test('a condition set on a sheet shows on the token', async ({ browser }) => {
   const prone = sheet.getByRole('checkbox', { name: 'Prone' });
   await prone.check();
   // The GM's map follows the sheet once it is stored.
-  await expect(miraToken.getByRole('img', { name: 'Prone' })).toBeVisible();
-  await expect(miraToken).toHaveAccessibleName(/^Mira \(3, 2\) Prone$/);
+  await expect((await miraToken()).getByRole('img', { name: 'Prone' })).toBeVisible();
+  await expect(await miraToken()).toHaveAccessibleName(/^Mira \(3, 2\) Prone$/);
   await sheet.getByRole('checkbox', { name: 'Poisoned' }).check();
-  await expect(miraToken.getByRole('img')).toHaveCount(2);
+  await expect((await miraToken()).getByRole('img')).toHaveCount(2);
   await prone.uncheck();
-  await expect(miraToken.getByRole('img', { name: 'Prone' })).toHaveCount(0);
-  await expect(miraToken.getByRole('img', { name: 'Poisoned' })).toBeVisible();
+  await expect((await miraToken()).getByRole('img', { name: 'Prone' })).toHaveCount(0);
+  await expect((await miraToken()).getByRole('img', { name: 'Poisoned' })).toBeVisible();
 
   expect(errors).toEqual([]);
 });

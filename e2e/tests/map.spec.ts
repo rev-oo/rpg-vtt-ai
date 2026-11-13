@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
 import { ADMIN, createPlayer, post, signIn } from './support/api.js';
-import { showPanel, showTokens } from './support/workspace.js';
+import { hideTokens, showPanel, showTokens, tokenList } from './support/workspace.js';
 
 // T-1402 (FR-MAP-01, 02; ADR-067): the GM makes a scene with an uploaded background and shows
 // it; the map pans and zooms by mouse, keyboard and buttons, on desktop and on a phone.
@@ -272,19 +272,23 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
   };
   const gmPage = await open(gm);
   const tessPage = await open(tess);
-  const list = (page: Page) => page.getByRole('list', { name: 'Tokens' });
+  const list = tokenList;
 
   await test.step('the player sees their token, not the hidden one', async () => {
-    await expect(list(tessPage).getByRole('button', { name: /^Wren \(1, 1\)/ })).toBeVisible();
-    await expect(list(tessPage).getByRole('button', { name: /Assassin/ })).toHaveCount(0);
-    await expect(list(gmPage).getByRole('button', { name: /^Assassin/ })).toBeVisible();
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Wren \(1, 1\)/ }),
+    ).toBeVisible();
+    await expect((await list(tessPage)).getByRole('button', { name: /Assassin/ })).toHaveCount(0);
+    await expect((await list(gmPage)).getByRole('button', { name: /^Assassin/ })).toBeVisible();
   });
 
   await test.step('the player moves it by keyboard; the GM sees it move', async () => {
-    await list(tessPage).getByRole('button', { name: /^Wren/ }).click();
+    await (await list(tessPage)).getByRole('button', { name: /^Wren/ }).click();
     await tessPage.keyboard.press('ArrowRight');
     await tessPage.keyboard.press('ArrowDown');
-    await expect(list(gmPage).getByRole('button', { name: /^Wren \(2, 2\)/ })).toBeVisible();
+    await expect(
+      (await list(gmPage)).getByRole('button', { name: /^Wren \(2, 2\)/ }),
+    ).toBeVisible();
   });
 
   await test.step('the GM drags it on the canvas; the player sees it move', async () => {
@@ -297,14 +301,19 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
       x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
       y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
     });
+    await hideTokens(gmPage);
     const from = at(1, 1);
     const to = at(5, 3);
     await gmPage.mouse.move(from.x, from.y);
     await gmPage.mouse.down();
     await gmPage.mouse.move(to.x, to.y, { steps: 10 });
     await gmPage.mouse.up();
-    await expect(list(gmPage).getByRole('button', { name: /^Wren \(6, 4\)/ })).toBeVisible();
-    await expect(list(tessPage).getByRole('button', { name: /^Wren \(6, 4\)/ })).toBeVisible();
+    await expect(
+      (await list(gmPage)).getByRole('button', { name: /^Wren \(6, 4\)/ }),
+    ).toBeVisible();
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Wren \(6, 4\)/ }),
+    ).toBeVisible();
     // The map did not pan while the token was dragged.
     expect((await view(map)).x).toBe(x);
   });
@@ -318,21 +327,28 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
       x: box.x + box.width / 2 + ((column + 0.5) * 70 - x) * zoom,
       y: box.y + box.height / 2 + ((row + 0.5) * 70 - y) * zoom,
     });
-    const wren = list(gmPage).getByRole('button', { name: /^Wren/ });
+    // Opening the list would take the focus the arrows need, so the floating actions of the
+    // selected token tell what is selected.
+    const selected = gmPage.getByRole('button', { name: 'Remove Wren' });
+    await hideTokens(gmPage);
 
     const token = at(5, 3);
     await gmPage.mouse.click(token.x, token.y);
-    await expect(wren).toHaveAttribute('aria-pressed', 'true');
+    await expect(selected).toBeVisible();
     await gmPage.keyboard.press('ArrowLeft');
-    await expect(list(tessPage).getByRole('button', { name: /^Wren \(5, 4\)/ })).toBeVisible();
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Wren \(5, 4\)/ }),
+    ).toBeVisible();
     expect((await view(map)).x).toBe(x);
 
     const empty = at(1, 0);
     await gmPage.mouse.click(empty.x, empty.y);
-    await expect(wren).toHaveAttribute('aria-pressed', 'false');
+    await expect(selected).toHaveCount(0);
     await gmPage.keyboard.press('ArrowLeft');
     await expect.poll(async () => (await view(map)).x).toBeLessThan(x);
-    await expect(wren).toHaveAccessibleName(/^Wren \(5, 4\)/);
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Wren \(5, 4\)/ }),
+    ).toBeVisible();
     await gmPage.keyboard.press('0');
     // The next step reads the view to find a token: wait until the fit undoes the pan.
     await expect.poll(async () => (await view(map)).x).toBe(x);
@@ -343,6 +359,7 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     const box = await map.boundingBox();
     if (!box) throw new Error('the map is not shown');
     const { zoom, x, y } = await view(map);
+    await hideTokens(gmPage);
     // The hidden Assassin stands on cell (7, 5).
     await gmPage.mouse.click(
       box.x + box.width / 2 + (7.5 * 70 - x) * zoom,
@@ -353,7 +370,9 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     await expect(menu.getByRole('menuitem')).toHaveText(['Reveal Assassin', 'Remove Assassin']);
     await expect(menu.getByRole('menuitem', { name: 'Reveal Assassin' })).toBeFocused();
     await gmPage.keyboard.press('Enter');
-    await expect(list(tessPage).getByRole('button', { name: /^Assassin \(8, 6\)/ })).toBeVisible();
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Assassin \(8, 6\)/ }),
+    ).toBeVisible();
     await expect(menu).toHaveCount(0);
 
     // The right click selected it; Shift+F10 on the map opens its menu again.
@@ -366,7 +385,7 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
 
   await test.step("opening the player's token opens the actor's sheet", async () => {
     // Still selected since the player moved it; picking it again would let go of it.
-    await expect(list(tessPage).getByRole('button', { name: /^Wren/ })).toHaveAttribute(
+    await expect((await list(tessPage)).getByRole('button', { name: /^Wren/ })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
@@ -379,6 +398,7 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
     const box = await map.boundingBox();
     if (!box) throw new Error('the map is not shown');
     const { zoom, x, y } = await view(map);
+    await hideTokens(gmPage);
     const row = gmPage
       .getByRole('list', { name: 'Actors' })
       .getByRole('listitem')
@@ -389,10 +409,14 @@ test('tokens move live between a GM and a player', async ({ browser }) => {
         y: box.height / 2 + (4.5 * 70 - y) * zoom,
       },
     });
-    await expect(list(gmPage).getByRole('button', { name: /^Wren \(3, 5\)/ })).toBeVisible();
+    await expect(
+      (await list(gmPage)).getByRole('button', { name: /^Wren \(3, 5\)/ }),
+    ).toBeVisible();
     // The player's sheet is in front of the map since the last step.
     await tessPage.getByRole('tab', { name: 'Map', exact: true }).click();
-    await expect(list(tessPage).getByRole('button', { name: /^Wren \(3, 5\)/ })).toBeVisible();
+    await expect(
+      (await list(tessPage)).getByRole('button', { name: /^Wren \(3, 5\)/ }),
+    ).toBeVisible();
   });
 });
 
@@ -434,13 +458,17 @@ test('the fog of war shows players only what the GM reveals', async ({ browser }
   };
   const gmPage = await open(gm);
   const finnPage = await open(finn);
-  const list = (page: Page) => page.getByRole('list', { name: 'Tokens' });
-  const ghoul = list(finnPage).getByRole('button', { name: /^Ghoul/ });
+  const list = tokenList;
+  const ghoul = async () => (await list(finnPage)).getByRole('button', { name: /^Ghoul/ });
 
   await test.step('the player sees only their own token in the fog, and has no fog tools', async () => {
-    await expect(list(finnPage).getByRole('button', { name: /^Moss \(1, 1\)/ })).toBeVisible();
-    await expect(ghoul).toHaveCount(0);
-    await expect(list(gmPage).getByRole('button', { name: /^Ghoul \(6, 4\)/ })).toBeVisible();
+    await expect(
+      (await list(finnPage)).getByRole('button', { name: /^Moss \(1, 1\)/ }),
+    ).toBeVisible();
+    await expect(await ghoul()).toHaveCount(0);
+    await expect(
+      (await list(gmPage)).getByRole('button', { name: /^Ghoul \(6, 4\)/ }),
+    ).toBeVisible();
     const tools = finnPage.getByRole('toolbar', { name: 'Map tools' });
     await expect(tools.getByRole('button', { name: 'Ruler' })).toBeVisible();
     await expect(tools.getByRole('button', { name: 'Reveal' })).toHaveCount(0);
@@ -459,22 +487,27 @@ test('the fog of war shows players only what the GM reveals', async ({ browser }
       .getByRole('toolbar', { name: 'Map tools' })
       .getByRole('button', { name: 'Reveal' })
       .click();
+    await hideTokens(gmPage);
     const from = at(4, 2);
     const to = at(6, 4);
     await gmPage.mouse.move(from.x, from.y);
     await gmPage.mouse.down();
     await gmPage.mouse.move(to.x, to.y, { steps: 6 });
     await gmPage.mouse.up();
-    await expect(list(finnPage).getByRole('button', { name: /^Ghoul \(6, 4\)/ })).toBeVisible();
+    await expect(
+      (await list(finnPage)).getByRole('button', { name: /^Ghoul \(6, 4\)/ }),
+    ).toBeVisible();
     // The cell the drag started on is revealed too.
-    await expect(list(finnPage).getByRole('button', { name: /^Bat \(5, 3\)/ })).toBeVisible();
+    await expect(
+      (await list(finnPage)).getByRole('button', { name: /^Bat \(5, 3\)/ }),
+    ).toBeVisible();
     // Revealing did not pan the map.
     expect(await view(map)).toEqual({ zoom, x, y });
   });
 
   await test.step('hiding everything takes the ghoul from the player again', async () => {
     await gmPage.getByRole('button', { name: 'Hide all' }).click();
-    await expect(ghoul).toHaveCount(0);
-    await expect(list(finnPage).getByRole('button', { name: /^Moss/ })).toBeVisible();
+    await expect(await ghoul()).toHaveCount(0);
+    await expect((await list(finnPage)).getByRole('button', { name: /^Moss/ })).toBeVisible();
   });
 });

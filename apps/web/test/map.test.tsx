@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import fc from 'fast-check';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -522,24 +522,40 @@ const token = (id: string, name: string, fields: Partial<TokenView> = {}): Token
   ...fields,
 });
 
-const tokenButton = async (name: RegExp) =>
-  within(await screen.findByRole('list', { name: 'Tokens' })).findByRole('button', { name });
+/** A token in the floating list, opening the list first if it is closed. */
+const tokenButton = async (name: RegExp) => {
+  const toggle = await screen.findByRole('button', { name: /^Tokens \(\d+\)$/ });
+  if (toggle.getAttribute('aria-expanded') !== 'true') fireEvent.click(toggle);
+  return within(await screen.findByRole('list', { name: 'Tokens' })).findByRole('button', { name });
+};
 
 describe('tokens on the map (FR-MAP-03)', () => {
-  it('folds the token list away, remembered per browser, and puts GM controls on one row (T-1620)', async () => {
+  it('floats the token list over the map, closed until asked for (T-1620)', async () => {
     const tokens = [token('k1', 'Goblin'), token('k2', 'Boulder')];
     openTable('gm', () => [scene('s1', 'Cave', true)], {
       'GET /scenes/s1/tokens': () => ({ body: { tokens } }),
     });
     const user = userEvent.setup();
-    const summary = await screen.findByText('Tokens (2)', { selector: 'summary' });
-    const fold = summary.closest('details');
-    expect(fold).not.toHaveAttribute('open');
-    await user.click(summary);
-    expect(fold).toHaveAttribute('open');
-    expect(localStorage.getItem('vtt.tokens.open')).toBe('1');
-    await user.click(summary);
-    expect(localStorage.getItem('vtt.tokens.open')).toBeNull();
+    const toggle = await screen.findByRole('button', { name: 'Tokens (2)' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('list', { name: 'Tokens' })).toBeNull();
+
+    // Escape closes the list and gives focus back to the button.
+    await user.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await user.click(await tokenButton(/^Goblin/));
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('list', { name: 'Tokens' })).toBeNull();
+    expect(toggle).toHaveFocus();
+
+    // The selected token's actions stay over the map with the list closed.
+    expect(screen.getByRole('button', { name: 'Remove Goblin' })).toBeVisible();
+
+    // A click elsewhere closes it too.
+    await user.click(toggle);
+    await user.click(screen.getByRole('button', { name: 'Add token' }));
+    expect(screen.queryByRole('list', { name: 'Tokens' })).toBeNull();
+    await user.keyboard('{Escape}');
 
     // The scene picker, its status and placing tokens share one row.
     const add = screen.getByRole('button', { name: 'Add token' });
