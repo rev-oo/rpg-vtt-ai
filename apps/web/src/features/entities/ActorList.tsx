@@ -192,6 +192,7 @@ export function ActorList({
         title={t('actors.new')}
         submitLabel={t('actors.create')}
         types={creatable}
+        typeLabel={labels.actor}
         onClose={() => {
           setCreating(false);
         }}

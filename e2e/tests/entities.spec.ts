@@ -42,7 +42,7 @@ test('actors and items between a GM and a player', async ({ browser }) => {
   await test.step('a player creates a character; the GM sees it appear (FR-ENT-01, 07)', async () => {
     await danaPage.getByRole('button', { name: 'New actor' }).click();
     const types = danaPage.getByRole('dialog').getByLabel('Type').getByRole('option');
-    await expect(types).toHaveText(['character']);
+    await expect(types).toHaveText(['Character']);
     await danaPage.getByRole('dialog').getByRole('button', { name: 'Cancel' }).click();
 
     await create(danaPage, 'actor', 'Dana the Bold');
