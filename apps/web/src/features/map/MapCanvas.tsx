@@ -220,8 +220,11 @@ export default function MapCanvas({
           ticker.start();
 
           observer = new ResizeObserver(() => {
-            const width = Math.max(1, element.clientWidth);
-            const height = Math.max(1, element.clientHeight);
+            // Behind another tab the panel leaves the page and measures 0 × 0; keeping the
+            // last size keeps the member's zoom and position for when the tab comes back.
+            if (element.clientWidth === 0 || element.clientHeight === 0) return;
+            const width = element.clientWidth;
+            const height = element.clientHeight;
             if (width === app.screen.width && height === app.screen.height) return;
             // A panel behind another tab has no size; fit the scene when it first gets one.
             const unseen = viewport.screenWidth <= 1 || viewport.screenHeight <= 1;

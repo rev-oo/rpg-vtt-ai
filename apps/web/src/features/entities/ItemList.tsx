@@ -182,6 +182,7 @@ export function ItemList({
         title={t('items.new')}
         submitLabel={t('items.create')}
         types={types.itemTypes}
+        typeLabel={labels.item}
         onClose={() => {
           setCreating(false);
         }}

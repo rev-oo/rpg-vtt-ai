@@ -9,6 +9,8 @@ import { SelectInput, TextInput } from '../../forms/fields.js';
 import { t } from '../../i18n/index.js';
 import { ImagePicker } from '../assets/ImagePicker.js';
 
+import type { TypeLabel } from './type-labels.js';
+
 /** Actors and items share these fields (FR-ENT-02, 06); the rules come from the API contract. */
 const { name: nameSchema, type: typeSchema, imageUrl: imageUrlSchema } = createItemBody.shape;
 
@@ -24,6 +26,8 @@ export interface CreateEntityDialogProps {
   submitLabel: string;
   /** The types the user may create; the first is preselected. */
   types: readonly string[];
+  /** Names each type in the viewer's language. */
+  typeLabel: TypeLabel;
   onClose: () => void;
   /** Creates the entity; a rejection is shown in the dialog. */
   onCreate: (entity: NewEntity) => Promise<void>;
@@ -35,6 +39,7 @@ export function CreateEntityDialog({
   title,
   submitLabel,
   types,
+  typeLabel,
   onClose,
   onCreate,
 }: CreateEntityDialogProps): ReactElement {
@@ -76,7 +81,7 @@ export function CreateEntityDialog({
             <SelectInput field={field} label={t('entities.type')} required>
               {types.map((type) => (
                 <option key={type} value={type}>
-                  {type}
+                  {typeLabel(type)}
                 </option>
               ))}
             </SelectInput>
