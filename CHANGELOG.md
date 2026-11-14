@@ -1,8 +1,12 @@
 # Changelog
 
-All notable changes to this project are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). While the version is 0.x, minor versions may break plugins and stored data.
+All notable changes to this project are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/). From 1.0.0, every 1.x release keeps plugins written for 1.0 working, as the plugin guide's [Compatibility](docs/plugin-authoring.md#compatibility) section says; before 1.0.0, minor versions could break plugins and stored data.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-14
+
+The first major release. Tables get maps with tokens, fog of war and measuring tools. Plugins migrate their data, and their code runs isolated in the browser and on the server. Modules add themes, overlays and panels to any table, and the D&D 5e SRD system comes as a study of the format. The interface was reviewed screen by screen and fixed. The plugin API is frozen at `1.0.0`: every 1.x release keeps 1.0 plugins working, and plugins declaring a `0.x` core API must move to `^1.0.0`.
 
 ### Added
 
@@ -90,6 +94,12 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Plugin stylesheets can no longer load images from other sites through `image-set("…")`, `-webkit-image-set("…")`, `src("…")` or escaped function names such as `\75 rl(…)`; such declarations are stripped with a warning, as `url()` ones were (T-1703). A plugin without code could use them to send sheet values, secret ones included, to another site.
 - Plugin shared functions can hold the server for at most 500 ms in one turn of its event loop, all calls together; past that, further calls in the same turn fail as formula errors. Before, a formula calling a slow function many times could freeze every table for minutes (T-1703).
 - The [1.0 security review](docs/security-review-1.0.md) lists what was checked, what was fixed and the risks accepted, such as a plugin frame sending what it was given to another site by navigating itself (T-1703).
+
+### Known limitations
+
+- The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
+- Plugin code an admin has enabled can still send what its frames show to another site, by navigating a frame there; the [security review](docs/security-review-1.0.md) lists this and the other accepted risks.
+- On a phone, the table works panel by panel, but is not yet laid out for playing there.
 
 ## [0.4.0] - 2026-10-29
 
@@ -208,7 +218,8 @@ The first release: a self-hosted virtual tabletop where game systems come from p
 - The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 - The image is built for `linux/amd64` only.
 
-[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.4.0...v1.0.0
 [0.4.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.1.0...v0.2.0

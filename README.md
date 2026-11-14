@@ -13,7 +13,7 @@ The full product spec, roadmap and progress tracker are in [`specs.md`](specs.md
 
 ## Roadmap
 
-Early development. Current status is tracked in the [Progress Tracker](specs.md#0-progress-tracker) in `specs.md`.
+1.0.0 is out: the features and the plugin API are stable within 1.x. Current status is tracked in the [Progress Tracker](specs.md#0-progress-tracker) in `specs.md`.
 
 | Milestone | Scope                                                                                              |
 | --------- | -------------------------------------------------------------------------------------------------- |
@@ -28,10 +28,10 @@ Early development. Current status is tracked in the [Progress Tracker](specs.md#
 | M8–M11    | Plugin server code, combat, packs, chat edits, sheet history, archive, backups, arm64 → **v0.2.0** |
 | M12       | Table workspace, compendium browser, item sheets and inventories → **v0.3.0**                      |
 | M13       | Asset uploads and manager → **v0.4.0**                                                             |
-| M14       | Maps: scenes, tokens, fog of war → **1.0.0**                                                       |
-| M15       | Plugin data migrations, client sandbox, server isolation → **1.0.0**                               |
-| M16       | Module plugins (themes, overlays, panels), D&D 5e SRD study, interface review → **1.0.0**          |
-| M17       | API freeze, hardening → **1.0.0**                                                                  |
+| M14       | Maps: scenes, tokens, fog of war → **v1.0.0**                                                      |
+| M15       | Plugin data migrations, client sandbox, server isolation → **v1.0.0**                              |
+| M16       | Module plugins (themes, overlays, panels), D&D 5e SRD study, interface review → **v1.0.0**         |
+| M17       | API freeze, hardening → **v1.0.0**                                                                 |
 | M18       | System builder (after 1.0)                                                                         |
 
 ## Tech stack
@@ -40,10 +40,10 @@ TypeScript (strict) everywhere · pnpm workspaces + Turborepo · React + Vite (R
 
 ## Running with Docker
 
-Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`0.4.0`, `0.4`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
+Releases are published as `ghcr.io/rev-oo/rpg-vtt-ai`, tagged by version (`1.0.0`, `1.0`); [`CHANGELOG.md`](CHANGELOG.md) lists what each one changed. From 0.2.0, each release runs on `linux/amd64` and `linux/arm64` (a Raspberry Pi 4 or 5, for example); 0.1.0 is amd64 only. To run one:
 
 ```bash
-docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:0.4.0
+docker run -d -p 3000:3000 -v vtt-data:/data -e PUBLIC_URL=http://localhost:3000 ghcr.io/rev-oo/rpg-vtt-ai:1.0.0
 ```
 
 To build the image from a checkout instead, use the example compose file:
