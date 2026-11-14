@@ -87,6 +87,9 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 - Plugin shared and server code now runs in a separate JavaScript engine (QuickJS, in WebAssembly) inside its worker, so it can no longer reach Node: no files, environment, network, processes or imports, only the language, `console` and `ctx`. It may use 32 MB of memory. Packed plugins run unchanged, but code is interpreted, so heavy computation is slower (FR-PLUGIN-13, ADR-073).
 - Plugin client code now runs sandboxed: each custom sheet node and chat card renders in a frame of its own, with no access to the page around it, the viewer's cookies or storage, or the network, and reaches the sheet only through the SDK hooks. In the browser, shared code runs in QuickJS too, as on the server. Packed plugins run unchanged; a component's images and fonts can only come from `data:` URLs (FR-PLUGIN-13, ADR-074).
+- Plugin stylesheets can no longer load images from other sites through `image-set("…")`, `-webkit-image-set("…")`, `src("…")` or escaped function names such as `\75 rl(…)`; such declarations are stripped with a warning, as `url()` ones were (T-1703). A plugin without code could use them to send sheet values, secret ones included, to another site.
+- Plugin shared functions can hold the server for at most 500 ms in one turn of its event loop, all calls together; past that, further calls in the same turn fail as formula errors. Before, a formula calling a slow function many times could freeze every table for minutes (T-1703).
+- The [1.0 security review](docs/security-review-1.0.md) lists what was checked, what was fixed and the risks accepted, such as a plugin frame sending what it was given to another site by navigating itself (T-1703).
 
 ## [0.4.0] - 2026-10-29
 

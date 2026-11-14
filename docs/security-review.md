@@ -1,5 +1,7 @@
 # Security review (T-0701)
 
+The surfaces added since 0.2.0 are reviewed in the [1.0 security review](security-review-1.0.md) (T-1703).
+
 - **Date:** 2026-10-23
 - **Scope:** the server (`apps/server`), the web app (`apps/web`), the formula engine and plugin packaging, as of M6. Covers what T-0701 names: CSRF, CSP headers, rate limits, formula sandboxing, audience leaks and path traversal, plus what came up on the way.
 - **Method:** reading the code paths, then a test for each fix. Each finding below is **fixed** (with its test) or **accepted** (with the reason).

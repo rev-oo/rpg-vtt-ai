@@ -17,9 +17,13 @@ import type { PluginIssue } from '../validate/issues.js';
 export const MAX_CSS_BYTES = 256 * 1024;
 
 /** Bump when the output changes, so caches keyed by content drop old results. */
-export const CSS_SCOPE_VERSION = 2;
+export const CSS_SCOPE_VERSION = 3;
 
 const ALLOWED_AT_RULES = new Set(['media', 'supports', 'container', 'layer', 'font-face']);
+/** Functions whose argument is a URL, as `url(…)` and `src("…")`. */
+const URL_FUNCTIONS = new Set(['url', 'src']);
+/** Functions whose string arguments are image URLs, as `image-set("a.png" 1x)` (T-1703). */
+const IMAGE_FUNCTIONS = new Set(['image-set', '-webkit-image-set', 'image', 'cross-fade']);
 const KEYFRAMES = /^(?:-webkit-)?keyframes$/i;
 const DOCUMENT_TAGS = new Set(['html', 'body']);
 
@@ -230,17 +234,33 @@ export function scopePluginCss(
         const value = valueParser(decl.value);
         const url = { leaves: false };
         value.walk((node) => {
-          if (node.type !== 'function' || node.value.toLowerCase() !== 'url') return;
-          const [argument] = node.nodes;
-          const resolved = resolveUrl(argument?.value.trim() ?? '', options);
-          if (resolved === undefined) {
+          // An escape outside a string can spell a function, as `\75 rl(` spells `url(`, and
+          // nothing a stylesheet needs is written that way (T-1703).
+          if (node.type !== 'string' && node.value.includes('\\')) {
             url.leaves = true;
-          } else {
-            node.nodes = [
-              { type: 'string', value: resolved, quote: '"' } as valueParser.StringNode,
-            ];
+            return false;
           }
-          return false;
+          if (node.type !== 'function') return;
+          const name = node.value.toLowerCase();
+          if (URL_FUNCTIONS.has(name)) {
+            const [argument] = node.nodes;
+            const resolved = resolveUrl(argument?.value.trim() ?? '', options);
+            if (resolved === undefined) {
+              url.leaves = true;
+            } else {
+              node.nodes = [
+                { type: 'string', value: resolved, quote: '"' } as valueParser.StringNode,
+              ];
+            }
+            return false;
+          }
+          if (!IMAGE_FUNCTIONS.has(name)) return;
+          for (const argument of node.nodes) {
+            if (argument.type !== 'string') continue;
+            const resolved = resolveUrl(argument.value.trim(), options);
+            if (resolved === undefined) url.leaves = true;
+            else argument.value = resolved;
+          }
         });
         if (url.leaves) {
           strip(`${decl.prop}: ${decl.value}`, decl.source?.start?.line);

@@ -14,8 +14,8 @@ export const PAGE_POLICY = "frame-ancestors 'none'";
 export const FRAME_PAGE = '/plugin-frame.html';
 /**
  * Its policy, on top of the stricter one in the page itself: opened anywhere, even on its own,
- * it gets an opaque origin and no network. It may be framed by any page, since it holds no
- * data and can reach nothing: the code it runs is what its parent sends it.
+ * it gets an opaque origin and cannot fetch. It may be framed by any page, since it holds no
+ * data: the code it runs, and what it knows, is what its parent sends it.
  */
 export const FRAME_PAGE_POLICY = [
   'sandbox allow-scripts',

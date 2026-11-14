@@ -119,6 +119,33 @@ describe('scopeCss (specs §8.6)', () => {
     ]);
   });
 
+  // Each of these loaded an outside address in every browser before T-1703.
+  it('treats image-set strings and src() as URLs, and strips escaped function names', () => {
+    const { rules, stripped } = scoped(
+      [
+        '.a { background: image-set("img/a.png" 1x, url(img/b.png) 2x) }',
+        '.b { background: -webkit-image-set("https://evil.example/x.png" 1x); color: red }',
+        '.c { background: image-set("https://evil.example/x.png" 1x) }',
+        '.d { background: \\75 rl(https://evil.example/x.png) }',
+        '.e { background: image-set("\\68ttps://evil.example/x.png" 1x) }',
+        '.f { background: src("https://evil.example/x.png") }',
+        '.g { content: "\\201C" }',
+      ].join('\n'),
+    );
+    expect(rules).toEqual([
+      `${SCOPE} .a { background: image-set("/plugins/tiny-d20/styles/img/a.png" 1x, url("/plugins/tiny-d20/styles/img/b.png") 2x) }`,
+      `${SCOPE} .b { color: red }`,
+      `${SCOPE} .g { content: "\\201C" }`,
+    ]);
+    expect(stripped).toEqual([
+      'background: -webkit-image-set("https://evil.example/x.png" 1x) @2',
+      'background: image-set("https://evil.example/x.png" 1x) @3',
+      'background: \\75 rl(https://evil.example/x.png) @4',
+      'background: image-set("\\68ttps://evil.example/x.png" 1x) @5',
+      'background: src("https://evil.example/x.png") @6',
+    ]);
+  });
+
   it('keeps @font-face only with sources inside the plugin', () => {
     const { rules } = scoped(
       "@font-face { font-family: A; src: url(https://cdn.example/a.woff2) }\n@font-face { font-family: B; src: url(../fonts/b.woff2) format('woff2') }",

