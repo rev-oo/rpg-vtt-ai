@@ -346,7 +346,11 @@ describe('modules and settings by scope (T-1601)', () => {
 
     await userEvent.setup().click(screen.getByRole('link', { name: 'Tables' }));
     await screen.findByRole('heading', { name: 'Your tables' });
-    expect(root).not.toHaveAttribute('data-vtt-modules');
+    // The look goes in the table page's effect cleanup, which React may run after the next page
+    // is on screen.
+    await waitFor(() => {
+      expect(root).not.toHaveAttribute('data-vtt-modules');
+    });
     expect(links()).toEqual([]);
   });
 });
