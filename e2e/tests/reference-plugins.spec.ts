@@ -399,16 +399,12 @@ test('tiny-d20 renders its sheet, rolls skills and keeps GM notes secret', async
     await page.getByRole('button', { name: 'Copy Spark onto the chosen actor' }).click();
     await expect(page.getByText('Spark was copied onto Ayla.')).toBeVisible();
 
+    // An actor's items are on its sheet: tiny-d20 lists spells in a node of their own.
     await showPanel(page, 'Actors');
-    const ayla = page
-      .getByRole('list', { name: 'Actors' })
-      .getByRole('listitem')
-      .filter({ has: page.getByRole('heading', { name: 'Ayla', exact: true }) })
-      .first();
-    await ayla.getByText('Items', { exact: true }).click();
-    const owned = page.getByRole('group', { name: 'Items of Ayla' });
-    await expect(owned.getByRole('heading')).toHaveText(['Gear', 'Spells']);
-    await expect(owned.getByRole('list', { name: 'Spells' })).toContainText('Spark (spell)');
+    await page.getByRole('button', { name: 'Open sheet: Ayla', exact: true }).click();
+    const sheet = page.getByRole('tabpanel', { name: 'Ayla' });
+    await sheet.getByRole('tab', { name: 'Spells' }).click();
+    await expect(sheet.getByRole('listitem', { name: 'Spark', exact: true })).toBeVisible();
   });
 
   await test.step('the GM opens a pack actor as a sheet and copies it into the table (T-1202)', async () => {

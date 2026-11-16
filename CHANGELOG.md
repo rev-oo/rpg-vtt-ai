@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Changed
+
+- An actor's items moved from the actor list to the actor's sheet. The sheet lists the items its system's layout does not show itself, after the sheet, by name: under **Items** when the layout shows none, or under **Other items**. Each one opens, and those who may edit the actor remove items there, add them from the library or drop them from the library or the compendium.
+
 ## [1.0.0] - 2026-11-14
 
 The first major release. Tables get maps with tokens, fog of war and measuring tools. Plugins migrate their data, and their code runs isolated in the browser and on the server. Modules add themes, overlays and panels to any table, and the D&D 5e SRD system comes as a study of the format. The interface was reviewed screen by screen and fixed. The plugin API is frozen at `1.0.0`: every 1.x release keeps 1.0 plugins working, and plugins declaring a `0.x` core API must move to `^1.0.0`.

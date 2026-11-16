@@ -29,6 +29,8 @@ export function ItemsNode({
   live,
   readOnly,
   reload,
+  label,
+  fields = true,
 }: ItemsNodeProps & {
   host: ReadySystem;
   actor: ActorView | ItemView;
@@ -36,6 +38,13 @@ export function ItemsNode({
   live: ReadonlyMap<string, LiveItem>;
   readOnly: boolean;
   reload: () => void;
+  /** The list's accessible name; "Items of <actor>" by default. */
+  label?: string;
+  /**
+   * Whether rows lay out the node's `item` fields. Off for a list outside the plugin's sheet,
+   * which names each item only.
+   */
+  fields?: boolean;
 }): ReactElement {
   const { definition } = host.system;
   const { translate } = host;
@@ -97,7 +106,7 @@ export function ItemsNode({
       )}
       {shown.length > 0 && (
         <GroupedList
-          label={t('sheet.items.label', { name: actor.name })}
+          label={label ?? t('sheet.items.label', { name: actor.name })}
           groups={groupItems(shown, (item) => item.type, definition.itemTypes, translate)}
           rowKey={(item) => item.id}
           headingLevel={4}
@@ -111,7 +120,14 @@ export function ItemsNode({
               <div className="min-w-0 flex-1">
                 {/* The core names each item, so a plugin's row lays out only its fields. */}
                 <p className="min-w-0 truncate font-semibold">{item.name}</p>
-                <ItemRowView item={item} live={live.get(item.id)} host={host} layout={node.item} />
+                {fields && (
+                  <ItemRowView
+                    item={item}
+                    live={live.get(item.id)}
+                    host={host}
+                    layout={node.item}
+                  />
+                )}
               </div>
               <div className="flex shrink-0 gap-1">
                 <OpenButton

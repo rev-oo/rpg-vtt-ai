@@ -99,9 +99,16 @@ test('actors and items between a GM and a player', async ({ browser }) => {
     await danaPage.getByRole('button', { name: 'Give' }).click();
     await expect(danaPage.getByText('Dana the Bold received a copy of Sword.')).toBeVisible();
 
+    // The copy is on Dana's sheet; the system's sheet lists no items, so it is under Items.
     await danaPage.getByRole('tab', { name: 'Actors' }).click();
-    await row(danaPage, 'Dana the Bold').getByText('Items').click();
-    await expect(row(danaPage, 'Dana the Bold')).toContainText('Sword (weapon)');
+    await expect(row(danaPage, 'Dana the Bold').getByText('Items')).toHaveCount(0);
+    await row(danaPage, 'Dana the Bold')
+      .getByRole('button', { name: /^Open sheet/ })
+      .click();
+    const held = danaPage
+      .getByRole('tabpanel', { name: 'Dana the Bold' })
+      .getByRole('region', { name: 'Items' });
+    await expect(held.getByRole('listitem', { name: 'Sword' })).toBeVisible();
   });
 
   await test.step('items open on a live sheet (FR-ENT-06, T-1204)', async () => {
@@ -113,7 +120,10 @@ test('actors and items between a GM and a player', async ({ browser }) => {
     await expect(sheet(gmPage)).toContainText('In the table’s library');
     await notes(gmPage).fill('Sharp.');
     await danaPage.getByRole('tab', { name: 'Items' }).click();
-    await danaPage.getByRole('button', { name: 'Open item: Sword' }).click();
+    await danaPage
+      .getByRole('tabpanel', { name: 'Items' })
+      .getByRole('button', { name: 'Open item: Sword' })
+      .click();
     await expect(notes(danaPage)).toHaveValue('Sharp.');
     await expect(notes(danaPage)).not.toBeEditable();
     await notes(gmPage).fill('Very sharp.');
@@ -121,7 +131,13 @@ test('actors and items between a GM and a player', async ({ browser }) => {
 
     // The player's own copy is theirs to edit; the library keeps its text.
     await danaPage.getByRole('tab', { name: 'Actors' }).click();
-    await row(danaPage, 'Dana the Bold').getByRole('button', { name: 'Open item: Sword' }).click();
+    await row(danaPage, 'Dana the Bold')
+      .getByRole('button', { name: /^Open sheet/ })
+      .click();
+    await danaPage
+      .getByRole('tabpanel', { name: 'Dana the Bold' })
+      .getByRole('button', { name: 'Open item: Sword' })
+      .click();
     await expect(sheet(danaPage)).toContainText('Held by Dana the Bold');
     await expect(notes(danaPage)).toBeEditable();
     await notes(danaPage).fill('Mine.');

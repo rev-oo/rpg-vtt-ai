@@ -1,5 +1,4 @@
 import { screen, within } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type { ItemType, PluginDefinition } from '@vtt/plugin-schema';
@@ -192,18 +191,6 @@ describe('grouped item lists (T-1203)', () => {
     expect(groupsOf('Items')).toEqual([
       ['Gear', ['Sword']],
       ['Spells', ['Spark']],
-    ]);
-  });
-
-  it("groups an actor's items", async () => {
-    openTable();
-    renderApp('/tables/t1');
-    const user = userEvent.setup();
-    await user.click(await screen.findByText('Items', { selector: 'summary' }));
-    expect(await screen.findByRole('heading', { name: 'Potions' })).toBeVisible();
-    expect(groupsOf('Items of Goblin King')).toEqual([
-      ['Spells', ['Mend (spell)']],
-      ['Potions', ['Tonic (potion)']],
     ]);
   });
 

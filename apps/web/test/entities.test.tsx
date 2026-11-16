@@ -305,20 +305,12 @@ describe('actor list (FR-ENT-01..04)', () => {
     expect(within(sheet).queryByRole('button', { name: 'Rename' })).toBeNull();
   });
 
-  it("shows an actor's own items on demand (FR-ENT-05)", async () => {
-    openTable('/tables/t1', {
-      handlers: {
-        'GET /actors/a1/items': {
-          body: { nextCursor: null, items: [{ ...SWORD, id: 'i9', actorId: 'a1' }] },
-        },
-        'GET /actors/a2/items': { body: { nextCursor: null, items: [] } },
-      },
-    });
-    const user = userEvent.setup();
-    await user.click((await findRow('Goblin King')).getByText('Items'));
-    expect(await row('Goblin King').findByText('Sword')).toBeVisible();
-    await user.click(row('Bob the Brave').getByText('Items'));
-    expect(await row('Bob the Brave').findByText('No items yet.')).toBeVisible();
+  // An actor's items are on its sheet (sheet-items.test.tsx), not in the list.
+  it("leaves an actor's own items out of the list (FR-ENT-05)", async () => {
+    openTable('/tables/t1');
+    const goblin = await findRow('Goblin King');
+    expect(goblin.queryByText('Items')).toBeNull();
+    expect(goblin.queryByRole('group')).toBeNull();
   });
 
   it('reloads when another member changes an entity (FR-ENT-07)', async () => {

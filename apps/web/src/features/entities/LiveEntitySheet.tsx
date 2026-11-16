@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useMemo, useState, type ReactElement } from 'react';
+import { lazy, Suspense, useCallback, useId, useMemo, useState, type ReactElement } from 'react';
 
 import { documentLayout } from '@vtt/plugin-engine';
 import type { ActorView, ItemView } from '@vtt/shared/api';
@@ -54,7 +54,8 @@ export function LiveEntitySheet({
   });
   const store = live.status === 'ready' ? live.store : undefined;
   const readOnly = live.status !== 'ready' || live.readOnly || entity.access !== 'owner';
-  const { itemTotals, renderItems } = useSheetItems({
+  const otherId = useId();
+  const { itemTotals, renderItems, otherItems } = useSheetItems({
     host,
     actor: entity,
     enabled: kind === 'actor',
@@ -106,6 +107,14 @@ export function LiveEntitySheet({
         renderItems={renderItems}
         pickImage={pickImage}
       />
+      {otherItems && (
+        <section aria-labelledby={otherId} className="flex flex-col gap-2">
+          <h3 id={otherId} className="text-lg font-semibold">
+            {t(otherItems.besideListed ? 'sheet.items.other' : 'sheet.items.title')}
+          </h3>
+          {otherItems.content}
+        </section>
+      )}
       <ImagePicker
         open={picking !== null}
         onClose={() => {
