@@ -16,7 +16,7 @@ import { fakeApi, SESSION, TABLE } from './support/fake-api.js';
 import { fakeWebSocket } from './support/fake-socket.js';
 import { renderApp } from './support/render.js';
 import { HERO, MEMBERS } from './support/table-fixtures.js';
-import { openPanel } from './support/workspace.js';
+import { openPanel, openSheet } from './support/workspace.js';
 
 // T-1204 (FR-ENT-06, ADR-062): items open on a live sheet of their own.
 
@@ -212,9 +212,9 @@ describe('item sheets (T-1204)', () => {
     expect(await within(sheet).findByRole('button', { name: 'Rename' })).toBeVisible();
   });
 
-  it("opens an actor's item from the actor list", async () => {
+  it("opens an actor's item from its sheet", async () => {
     openTable('gm', item());
-    await userEvent.click(await screen.findByText('Items', { selector: 'summary' }));
+    await openSheet('Goblin King');
     await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
     const sheet = await screen.findByRole('tabpanel', { name: 'Sword' });
     expect(await within(sheet).findByText('Held by Goblin King')).toBeVisible();
@@ -223,7 +223,7 @@ describe('item sheets (T-1204)', () => {
 
   it('rolls as the holder with the item, and not from the library (T-1207)', async () => {
     const { api } = openTable('gm', item());
-    await userEvent.click(await screen.findByText('Items', { selector: 'summary' }));
+    await openSheet('Goblin King');
     await userEvent.click(await screen.findByRole('button', { name: 'Open item: Sword' }));
     const owned = await screen.findByRole('tabpanel', { name: 'Sword' });
     await userEvent.click(await within(owned).findByRole('button', { name: 'Strike' }));

@@ -1126,6 +1126,7 @@ An `items` node shows the actor's own items on its sheet, so players equip armou
 - **Actions:** the core shows each item's name above its row, so `item` need not lay it out. It adds a button to open each item's own sheet and, for whoever may edit the actor, to remove it and to add one from the table's library (`addLabel` names the button). Items dragged from the library or the compendium can be dropped onto the node.
 - **Totals follow:** [item contributions](#item-contributions) come from the items as they are edited, so ticking "equipped" changes the actor's derived values at once.
 - **Limits:** only actor sheets have `items` nodes, and not inside a `list` or another `items` node. An item's secret fields show on its own sheet only.
+- **Items the layout leaves out:** the core lists them after the sheet, by name, with the same open, remove and add. They sit under **Items** when the sheet has no `items` node, and under **Other items** for the types its nodes do not list. A sheet whose nodes list every item type shows no such section.
 
 ### Formulas
 

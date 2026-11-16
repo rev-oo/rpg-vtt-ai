@@ -2,7 +2,7 @@ import { useState, type ReactElement } from 'react';
 import { useRevalidator } from 'react-router';
 
 import { canCreateActor, canSetOwnership } from '@vtt/shared';
-import type { ActorView, ItemView } from '@vtt/shared/api';
+import type { ActorView } from '@vtt/shared/api';
 import { Alert, Button, IconButton } from '@vtt/ui';
 
 import { api, type ListPage } from '../../api/endpoints.js';
@@ -11,13 +11,11 @@ import { t } from '../../i18n/index.js';
 import { ICON } from '../../icons.js';
 import type { TableData } from '../table/table-data.js';
 import { OpenButton } from '../workspace/OpenButton.js';
-import { itemPanelId, sheetPanelId } from '../workspace/panel-ids.js';
+import { sheetPanelId } from '../workspace/panel-ids.js';
 
 import { CreateEntityDialog } from './CreateEntityDialog.js';
 import { EntityRow } from './EntityRow.js';
 import type { EntityFilters } from './filters.js';
-import { GroupedList } from './GroupedList.js';
-import { groupItems, useItemTypes } from './item-groups.js';
 import { ListFilters } from './ListFilters.js';
 import { LoadMore } from './LoadMore.js';
 import { OwnershipDialog } from './OwnershipDialog.js';
@@ -179,9 +177,7 @@ export function ActorList({
                 </>
               )
             }
-          >
-            {!trash && <ActorItems actor={actor} />}
-          </EntityRow>
+          />
         ))}
       </ul>
       {paged.error && <Alert tone="error">{paged.error}</Alert>}
@@ -218,55 +214,5 @@ export function ActorList({
         }}
       />
     </div>
-  );
-}
-
-/** An actor's own items (FR-ENT-05), loaded when the user expands them. */
-function ActorItems({ actor }: { actor: ActorView }): ReactElement {
-  const [items, setItems] = useState<ItemView[] | null>(null);
-  const { itemTypes, translate } = useItemTypes();
-  const [failure, setFailure] = useState<string | null>(null);
-
-  return (
-    <details
-      className="text-sm"
-      onToggle={(e) => {
-        if (!e.currentTarget.open) return;
-        api.listActorItems(actor.id).then(setItems, (caught: unknown) => {
-          setFailure(errorMessage(caught));
-        });
-      }}
-    >
-      <summary className="cursor-pointer text-muted">{t('actors.items')}</summary>
-      {failure && <Alert tone="error">{failure}</Alert>}
-      {items?.length === 0 && <p className="text-muted">{t('actors.noItems')}</p>}
-      {items && items.length > 0 && (
-        <GroupedList
-          label={t('actors.itemsOf', { name: actor.name })}
-          groups={groupItems(items, (item) => item.type, itemTypes, translate)}
-          rowKey={(item) => item.id}
-          listClassName="list-disc pl-6"
-          headingClassName="mt-1 text-xs font-semibold text-muted uppercase"
-          headingLevel={4}
-          renderRow={(item) => (
-            <li key={item.id}>
-              <OpenButton
-                target={{
-                  kind: 'item',
-                  id: itemPanelId(item.id),
-                  itemId: item.id,
-                  name: item.name,
-                }}
-                label={t('items.openItem', { name: item.name })}
-                look="link"
-              >
-                {item.name}
-              </OpenButton>{' '}
-              <span className="text-muted">({item.type})</span>
-            </li>
-          )}
-        />
-      )}
-    </details>
   );
 }

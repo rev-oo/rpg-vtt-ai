@@ -221,6 +221,12 @@ function openTable({ access = 'owner' }: { access?: 'owner' | 'observer' } = {})
 }
 
 const items = () => screen.findByRole('list', { name: 'Items of Goblin King' });
+/** The armor node, which holds the list above, its add button and its drop target. */
+const armorNode = async () => {
+  const node = (await items()).closest('.vtt-items');
+  if (!(node instanceof HTMLElement)) throw new Error('The items node is missing');
+  return node;
+};
 
 describe('items on actor sheets (T-1206)', () => {
   it("lists the actor's items of the node's types; equipping one changes AC", async () => {
@@ -246,8 +252,8 @@ describe('items on actor sheets (T-1206)', () => {
   it('adds from the library, removes, and takes drops', async () => {
     const api = openTable();
     await openSheet('Goblin King');
-    await items();
-    const choice = await screen.findByRole('combobox', { name: 'Item from the library' });
+    const armor = await armorNode();
+    const choice = await within(armor).findByRole('combobox', { name: 'Item from the library' });
     expect(
       within(choice)
         .getAllByRole('option')
@@ -265,8 +271,7 @@ describe('items on actor sheets (T-1206)', () => {
       expect.objectContaining({ method: 'DELETE', path: '/items/i1' }),
     );
 
-    const node = (await items()).closest('.vtt-items');
-    if (!node) throw new Error('The items node is missing');
+    const node = await armorNode();
     const ref = 'tiny-d20:gear:scale';
     fireEvent.drop(node, {
       dataTransfer: {
@@ -295,6 +300,30 @@ describe('items on actor sheets (T-1206)', () => {
         path: '/tables/t1/rolls',
         body: { recipe: { name: 'brace', args: {}, itemId: 'i1' }, actorId: 'a1' },
       }),
+    );
+  });
+
+  it('lists the items the layout leaves out under Other items, with open, remove and add', async () => {
+    const api = openTable();
+    await openSheet('Goblin King');
+    const other = await screen.findByRole('region', { name: 'Other items' });
+    const list = await within(other).findByRole('list', { name: 'Other items of Goblin King' });
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((row) => row.getAttribute('aria-label')),
+    ).toEqual(['Axe']);
+    expect(within(list).getByRole('button', { name: 'Open item: Axe' })).toBeVisible();
+    // Only the types the layout leaves out are offered.
+    const choice = within(other).getByRole('combobox', { name: 'Item from the library' });
+    expect(
+      within(choice)
+        .getAllByRole('option')
+        .map((o) => o.textContent),
+    ).toEqual(['Sword']);
+    await userEvent.click(within(other).getByRole('button', { name: 'Remove Axe' }));
+    expect(api.calls).toContainEqual(
+      expect.objectContaining({ method: 'DELETE', path: '/items/i2' }),
     );
   });
 
