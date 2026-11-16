@@ -23,7 +23,7 @@ import {
   type MemberView,
   type TableView,
 } from '@vtt/shared/api';
-import { Alert, Button, Select } from '@vtt/ui';
+import { Alert, Button, IconButton, Select } from '@vtt/ui';
 
 import { ApiError } from '../../api/client.js';
 import { api } from '../../api/endpoints.js';
@@ -342,27 +342,27 @@ function MessageItem({
             ) : (
               <>
                 {mayEdit && (
-                  <Button
+                  <IconButton
                     variant="ghost"
-                    aria-label={t('chat.editMessage')}
+                    className="text-muted hover:enabled:text-fg"
+                    icon={<ICON.edit />}
+                    label={t('chat.editMessage')}
                     onClick={() => {
                       setDraft(message.text);
                       setEditing(true);
                     }}
-                  >
-                    {t('chat.edit')}
-                  </Button>
+                  />
                 )}
                 {mayDelete && (
-                  <Button
+                  <IconButton
                     variant="ghost"
-                    aria-label={t('chat.deleteMessage')}
+                    className="text-muted hover:enabled:text-fg"
+                    icon={<ICON.delete />}
+                    label={t('chat.deleteMessage')}
                     onClick={() => {
                       setConfirming(true);
                     }}
-                  >
-                    {t('chat.delete')}
-                  </Button>
+                  />
                 )}
               </>
             )}

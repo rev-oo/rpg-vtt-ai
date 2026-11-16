@@ -6,6 +6,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- **Edit** and **Delete** on your chat messages are icon buttons, a pencil and a bin, as in the other lists; their tooltips and screen-reader names stay "Edit message" and "Delete message".
 - An actor's items moved from the actor list to the actor's sheet. The sheet lists the items its system's layout does not show itself, after the sheet, by name: under **Items** when the layout shows none, or under **Other items**. Each one opens, and those who may edit the actor remove items there, add them from the library or drop them from the library or the compendium.
 
 ## [1.0.0] - 2026-11-14
