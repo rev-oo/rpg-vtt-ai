@@ -161,7 +161,8 @@ export function showTarget(
 
 /**
  * Lists on the left, the map and the overview in the middle, and chat, dice and combat as
- * tabs of one group on the right. Scenes join the lists for those who manage them.
+ * tabs of one group on the right. Scenes join the lists for those who manage them. Images
+ * open from the Panels menu: they are needed now and then, mostly through the image picker.
  */
 export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean): void {
   const add = (id: ToolPanel | PagePanel, position?: AddPanelPositionOptions) =>
@@ -180,7 +181,6 @@ export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean)
       'items',
       'journal',
       'compendium',
-      'assets',
       'chat',
       'combat',
       'dice',
@@ -195,7 +195,6 @@ export function defaultLayout(api: DockviewApi, phone: boolean, scenes: boolean)
   add('items', { referencePanel: 'actors', direction: 'within' });
   add('journal', { referencePanel: 'actors', direction: 'within' });
   add('compendium', { referencePanel: 'actors', direction: 'within' });
-  add('assets', { referencePanel: 'actors', direction: 'within' });
   if (scenes) add('scenes', { referencePanel: 'actors', direction: 'within' });
   add('map', { referencePanel: 'actors', direction: 'right' });
   add('overview', { referencePanel: 'map', direction: 'within' });

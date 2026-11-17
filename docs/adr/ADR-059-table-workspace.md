@@ -21,7 +21,7 @@ A first version with two fixed side panels (collapse and resize only) was built 
 
    Every panel can be closed, dragged into a tab strip, split to any side or floated. Pop-out browser windows are not offered. The **Panels** menu opens a closed panel, or brings an open one forward, near where the default layout keeps it. **Reset layout** restores the default.
 
-3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Chat, Dice and Combat sit on the right (384 px) as tabs of one group, Chat in front (T-1620; before, Combat sat above Chat and Dice).
+3. **Default layout (desktop).** The lists sit on the left as tabs (320 px). The Table overview is in the centre, and documents open there as tabs. Chat, Dice and Combat sit on the right (384 px) as tabs of one group, Chat in front (T-1620; before, Combat sat above Chat and Dice). Images is not in the default layout and opens from the **Panels** menu (amended 2026-11-17).
 4. **One URL per table.**
    - `/tables/:id` is the table's only URL. The old child routes are removed: `/actors/:actorId`, `/journal/:entryId`, `/items`, `/journal`, `/members` and `/settings`. Like any unknown path, they now lead to the tables list.
    - Opening, switching or closing panels never changes the URL. The saved layout, not the URL, brings the open documents back after a reload.

@@ -7,6 +7,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Changed
 
 - Players upload images, in the Images panel or the image picker, and see there only the images they uploaded; they delete those too, while unused. GMs and assistants still see and delete every image of the table, so their uploads no longer show to players until they use them somewhere players see. Spectators upload nothing (ADR-085).
+- The Images panel is no longer open in a table's default layout; open it from the **Panels** menu. **Reset layout** brings this to tables already laid out.
 - **Edit** and **Delete** on your chat messages are icon buttons, a pencil and a bin, as in the other lists; their tooltips and screen-reader names stay "Edit message" and "Delete message".
 - An actor's items moved from the actor list to the actor's sheet. The sheet lists the items its system's layout does not show itself, after the sheet, by name: under **Items** when the layout shows none, or under **Other items**. Each one opens, and those who may edit the actor remove items there, add them from the library or drop them from the library or the compendium.
 
