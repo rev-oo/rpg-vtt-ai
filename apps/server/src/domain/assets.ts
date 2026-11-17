@@ -273,17 +273,22 @@ export function assetUses(db: DbOrTx, asset: Asset, live: ReadonlyMap<string, Y.
   return uses;
 }
 
-/** Deletes an asset no one uses: its row, then its file (ADR-065). */
+/**
+ * Deletes an asset no one uses: its row, then its file (ADR-065). The refusal lists the uses
+ * only when `listUses`: a player deleting their own image is not told the names of hidden
+ * actors or journal entries that use it (ADR-085).
+ */
 export function deleteAsset(
   db: Db,
   dataDir: string,
   asset: Asset,
   live: ReadonlyMap<string, Y.Doc>,
+  { listUses }: { listUses: boolean },
 ): void {
   const uses = assetUses(db, asset, live);
   if (uses.length > 0) {
     throw new AppError(409, 'asset_in_use', 'The image is still used, so it was not deleted.', {
-      uses,
+      uses: listUses ? uses : [],
     });
   }
   db.delete(assets).where(eq(assets.id, asset.id)).run();

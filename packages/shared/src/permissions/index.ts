@@ -1,3 +1,4 @@
+export * from './assets.js';
 export * from './chat.js';
 export * from './entities.js';
 export * from './maps.js';

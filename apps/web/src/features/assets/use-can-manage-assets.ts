@@ -1,9 +1,12 @@
-import { isGmLike } from '@vtt/shared';
+import { canUploadAssets } from '@vtt/shared';
 
 import { useTableData } from '../table/table-data.js';
 
-/** GMs and assistants of a table that is not archived upload and delete images (ADR-064). */
+/**
+ * GMs, assistants and players of a table that is not archived upload images, and delete the
+ * ones they are listed: GMs and assistants every image, players their own (ADR-085).
+ */
 export function useCanManageAssets(): boolean {
   const { table } = useTableData();
-  return isGmLike(table.role) && table.archivedAt === null;
+  return canUploadAssets(table.role) && table.archivedAt === null;
 }

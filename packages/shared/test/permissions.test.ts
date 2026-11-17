@@ -5,6 +5,7 @@ import {
   AUDIENCES,
   canArchiveTable,
   canCreateActor,
+  canManageAsset,
   canCreateJournal,
   canEditActor,
   canEditJournal,
@@ -18,6 +19,7 @@ import {
   canSeeAudience,
   canSeeGmContent,
   canSetOwnership,
+  canUploadAssets,
   canViewActor,
   canViewJournal,
   itemLayerAccess,
@@ -262,5 +264,23 @@ describe('tokens (FR-MAP-03, FR-MAP-04)', () => {
     );
     // Hidden stays hidden, fog or not.
     expect(canSeeToken(subject, { ...fogged, hidden: true, actorOwnership: owned })).toBe(gmLike);
+  });
+});
+
+describe('images (FR-ASSET-01, ADR-085)', () => {
+  const ASSETS: Record<TableRole, [upload: boolean, others: boolean]> = {
+    gm: [true, true],
+    assistant: [true, true],
+    player: [true, false],
+    spectator: [false, false],
+  };
+  it.each(TABLE_ROLES)('%s', (role) => {
+    const [upload, others] = ASSETS[role];
+    const subject = { userId: ME, role };
+    expect(canUploadAssets(role)).toBe(upload);
+    expect(canManageAsset(subject, { uploaderId: ME })).toBe(true);
+    expect(canManageAsset(subject, { uploaderId: 'someone-else' })).toBe(others);
+    // An image whose uploader's account is gone stays with the GMs.
+    expect(canManageAsset(subject, { uploaderId: null })).toBe(others);
   });
 });

@@ -4,7 +4,8 @@ import { ADMIN, createPlayer, post, signIn } from './support/api.js';
 import { openSheet, showPanel } from './support/workspace.js';
 
 // T-1302 (FR-ASSET-02, ADR-065): the GM uploads an image, sets it as an actor's portrait and
-// puts it in a journal entry; a player sees both; an image in use cannot be deleted.
+// puts it in a journal entry; a player sees both, and lists only the images they upload
+// (ADR-085); an image in use cannot be deleted.
 
 /** A 1×1 PNG. */
 const PNG = Buffer.from(
@@ -100,14 +101,25 @@ test('an uploaded image becomes a portrait and a journal picture', async ({ brow
     await loaded(
       noraPage.getByRole('tabpanel', { name: 'The Cave' }).getByRole('img', { name: 'cave.png' }),
     );
-    // Players browse the images but neither upload nor delete.
+    // Players upload too, and list only their own images (ADR-085).
     await showPanel(noraPage, 'Images');
-    await expect(noraPage.getByRole('listitem', { name: 'cave.png' })).toBeVisible();
-    await expect(noraPage.getByRole('button', { name: 'Upload images' })).toHaveCount(0);
+    await expect(
+      noraPage.getByText('No images yet. The images you upload show here.'),
+    ).toBeVisible();
+    await noraPage
+      .getByLabel('Image files')
+      .setInputFiles({ name: 'nora.png', mimeType: 'image/png', buffer: PNG });
+    await expect(noraPage.getByText('Images uploaded: 1.')).toBeVisible();
+    const noraImages = noraPage.getByRole('list', { name: 'Images of the table' });
+    await expect(noraImages.getByRole('listitem')).toHaveCount(1);
+    await expect(noraImages.getByRole('listitem', { name: 'nora.png' })).toBeVisible();
   });
 
   await test.step('an image in use is not deleted', async () => {
+    // The GM lists every image, the player's included, once the panel loads again.
+    await gmPage.reload();
     await showPanel(gmPage, 'Images');
+    await expect(gmPage.getByRole('listitem', { name: 'nora.png' })).toBeVisible();
     await gmPage.getByRole('button', { name: 'Delete cave.png' }).click();
     await gmPage
       .getByRole('dialog', { name: 'Delete this image?' })
