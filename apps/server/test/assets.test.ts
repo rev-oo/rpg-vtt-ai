@@ -118,8 +118,28 @@ describe('asset uploads (T-1301)', () => {
       });
     }
 
-    const list = await t.call(t.bob.client, 'GET', `/tables/${t.table.id}/assets`);
+    const list = await t.call(t.gm.client, 'GET', `/tables/${t.table.id}/assets`);
     expect(list.json<{ assets: AssetView[] }>().assets).toEqual([asset]);
+  });
+
+  it('lists every image to GMs and assistants, and to others only their own (ADR-085)', async () => {
+    const gms = await uploaded(t.gm.client, PNG, { name: 'villain.png' });
+    const bobs = await uploaded(t.bob.client, PNG, { name: 'bob.png' });
+    const carols = await uploaded(t.carol.client, PNG, { name: 'carol.png' });
+    const listed = async (client: Client) => {
+      const res = await t.call(client, 'GET', `/tables/${t.table.id}/assets`);
+      expect(res.statusCode).toBe(200);
+      return res.json<{ assets: AssetView[] }>().assets.map((asset) => asset.name);
+    };
+    // The test clock stands still, so all three share a time and their order is the ids'.
+    expect((await listed(t.gm.client)).toSorted()).toEqual(['bob.png', 'carol.png', 'villain.png']);
+    expect(await listed(t.bob.client)).toEqual(['bob.png']);
+    expect(await listed(t.carol.client)).toEqual(['carol.png']);
+    expect(await listed(t.dave.client)).toEqual([]);
+    // Not listed is not secret: a member may still load an image they come across in use.
+    for (const asset of [gms, bobs, carols]) {
+      expect((await fetchAsset(t.dave.client, asset.url)).statusCode).toBe(200);
+    }
   });
 
   it('judges files by their bytes, not their name or content type, and refuses SVG', async () => {
@@ -153,20 +173,21 @@ describe('asset uploads (T-1301)', () => {
     expect(readdirSync(path.join(dataDir, 'assets', t.table.id))).toHaveLength(3);
   });
 
-  it('lets only GMs and assistants of an unarchived table upload', async () => {
+  it('lets GMs, assistants and players of an unarchived table upload, not spectators', async () => {
     t.db
       .update(members)
       .set({ role: 'assistant' })
       .where(and(eq(members.tableId, t.table.id), eq(members.userId, t.carol.userId)))
       .run();
     expect((await upload(t.carol.client, PNG)).statusCode).toBe(201);
-    expect((await upload(t.bob.client, PNG)).statusCode).toBe(403);
+    expect((await upload(t.bob.client, PNG)).statusCode).toBe(201);
+    expect((await upload(t.dave.client, PNG)).statusCode).toBe(403);
     expect((await upload(t.eve.client, PNG)).statusCode).toBe(404);
 
     expect((await t.call(t.gm.client, 'POST', `/tables/${t.table.id}/archive`)).statusCode).toBe(
       200,
     );
-    const archived = await upload(t.gm.client, PNG);
+    const archived = await upload(t.bob.client, PNG);
     expect(archived.statusCode).toBe(409);
     expect(archived.json()).toMatchObject({ error: { code: 'table_archived' } });
   });
@@ -266,7 +287,14 @@ describe('asset images and deletion (T-1302)', () => {
     expect(relative.statusCode).toBe(400);
   });
 
-  it('deletes unused images, for GMs and assistants only', async () => {
+  it('deletes unused images, for GMs and assistants, and for players their own', async () => {
+    const bobs = await uploaded(t.bob.client, PNG);
+    expect((await remove(t.carol.client, bobs)).statusCode).toBe(403);
+    expect((await remove(t.dave.client, bobs)).statusCode).toBe(403);
+    expect((await remove(t.bob.client, bobs)).statusCode).toBe(204);
+    const carols = await uploaded(t.carol.client, PNG);
+    expect((await remove(t.gm.client, carols)).statusCode).toBe(204);
+
     const asset = await uploaded(t.gm.client, PNG);
     expect((await remove(t.bob.client, asset)).statusCode).toBe(403);
     expect((await remove(t.eve.client, asset)).statusCode).toBe(404);
@@ -274,6 +302,22 @@ describe('asset images and deletion (T-1302)', () => {
     expect(readdirSync(path.join(dataDir, 'assets', t.table.id))).toEqual([]);
     expect((await fetchAsset(t.gm.client, asset.url)).statusCode).toBe(404);
     expect((await remove(t.gm.client, asset)).statusCode).toBe(404);
+  });
+
+  it('tells a player their image is in use without naming what uses it (ADR-085)', async () => {
+    const bobs = await uploaded(t.bob.client, PNG);
+    // The GM's secret NPC wears Bob's picture.
+    await create('actors', { type: 'npc', name: 'The Traitor', imageUrl: bobs.url });
+    const refused = await remove(t.bob.client, bobs);
+    expect(refused.statusCode).toBe(409);
+    expect(refused.json()).toMatchObject({
+      error: { code: 'asset_in_use', details: { uses: [] } },
+    });
+    expect(refused.body).not.toContain('Traitor');
+    const told = await remove(t.gm.client, bobs);
+    expect(told.json()).toMatchObject({
+      error: { details: { uses: [{ kind: 'actor', name: 'The Traitor' }] } },
+    });
   });
 
   it('refuses to delete an image an actor, item or journal entry uses, even in the trash', async () => {

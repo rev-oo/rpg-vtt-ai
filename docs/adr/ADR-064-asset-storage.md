@@ -15,7 +15,7 @@ Uploads are the instance's first user-supplied files. They take disk space, they
 ## Decision
 
 1. **Ownership.** An asset belongs to one table, like actors and items.
-   - GMs and assistants upload.
+   - GMs and assistants upload. (Amended 2026-11-17 by ADR-085: players upload too.)
    - Every member of the table reads the table's assets.
    - Archived tables take no uploads (`409 table_archived`). Tables whose system is unavailable still do: assets need no system.
    - Tables are never deleted, only archived, so an asset lives as long as its table. Deleting assets is T-1302's (ADR-065: unused images only).

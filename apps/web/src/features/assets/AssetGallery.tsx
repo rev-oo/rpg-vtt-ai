@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactElement } from 'react';
 
+import { isGmLike } from '@vtt/shared';
 import {
   ASSET_TYPES,
   assetInUseDetailsSchema,
@@ -23,13 +24,15 @@ export interface AssetGalleryProps {
 }
 
 /**
- * The table's images (FR-ASSET-02, ADR-065): thumbnails, newest first. Those who manage
- * them upload by picking or dropping files, and delete images nothing uses.
+ * The table's images (FR-ASSET-02, ADR-065): thumbnails, newest first. GMs and assistants
+ * get every image, others the ones they uploaded (ADR-085). Those who may upload pick or drop
+ * files, and delete listed images nothing uses.
  */
 export function AssetGallery({ onPick }: AssetGalleryProps): ReactElement {
   const data = useTableData();
   const tableId = data.table.id;
   const canManage = useCanManageAssets();
+  const seesAll = isGmLike(data.table.role);
   const [assets, setAssets] = useState<AssetView[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -146,7 +149,10 @@ export function AssetGallery({ onPick }: AssetGalleryProps): ReactElement {
         </p>
       )}
       {error && <Alert tone="error">{error}</Alert>}
-      {inUse && (
+      {inUse?.uses.length === 0 && (
+        <Alert tone="error">{t('assets.inUseUnnamed', { name: inUse.name })}</Alert>
+      )}
+      {inUse && inUse.uses.length > 0 && (
         <Alert tone="error">
           {t('assets.inUse', { name: inUse.name })}
           <ul className="mt-1 list-disc pl-5">
@@ -159,7 +165,11 @@ export function AssetGallery({ onPick }: AssetGalleryProps): ReactElement {
         </Alert>
       )}
       {assets === null && !error && <p className="text-muted">{t('app.loading')}</p>}
-      {assets?.length === 0 && <p className="text-muted">{t('assets.empty')}</p>}
+      {assets?.length === 0 && (
+        <p className="text-muted">
+          {t(canManage && !seesAll ? 'assets.emptyOwn' : 'assets.empty')}
+        </p>
+      )}
       {assets && assets.length > 0 && (
         <ul
           aria-label={t('assets.list')}

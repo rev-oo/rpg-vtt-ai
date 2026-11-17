@@ -21,7 +21,7 @@ Two choices were made with the user:
    - The path must name an asset of the same table; anything else gets `422 unknown_asset`.
    - The path is relative, so a changed `PUBLIC_URL` keeps working.
    - Validation describes a value that fits neither form by the URL rule (`describeIssue` describes a union by its first branch).
-2. **The Images panel.** A list panel of the workspace (ADR-059), beside the compendium. It shows the table's images as thumbnails, newest first, to every member.
+2. **The Images panel.** A list panel of the workspace (ADR-059), beside the compendium. It shows the table's images as thumbnails, newest first, to every member. (Amended 2026-11-17 by ADR-085: players are shown, upload and delete only their own images.)
    - GMs and assistants of a table that is not archived upload by picking files or dropping them on the panel, and delete images.
    - Deleting asks first and is permanent.
 3. **The image picker.** A dialog with the Images gallery (uploads included) and a URL field. It is used by:

@@ -78,7 +78,10 @@ const CAVE = asset('11111111-1111-4111-8111-111111111111', 'cave.png');
 const MAP = asset('22222222-2222-4222-8222-222222222222', 'map.png');
 const TOWN = asset('33333333-3333-4333-8333-333333333333', 'town.gif');
 
-function openTable({ role = 'gm' }: { role?: 'gm' | 'player' } = {}) {
+function openTable({
+  role = 'gm',
+  assets = [CAVE],
+}: { role?: 'gm' | 'player' | 'spectator'; assets?: AssetView[] } = {}) {
   fakeWebSocket();
   store = createMemoryStore({});
   collab.sheet = {
@@ -98,7 +101,7 @@ function openTable({ role = 'gm' }: { role?: 'gm' | 'player' } = {}) {
     'GET /tables/t1/actors?trash=live&limit=50': actors,
     'GET /tables/t1/types': { body: TYPES },
     'GET /tables/t1/messages': { body: { messages: [], nextCursor: null } },
-    'GET /tables/t1/assets': { body: { assets: [CAVE] } },
+    'GET /tables/t1/assets': { body: { assets } },
     'POST /tables/t1/assets?name=map.png': { status: 201, body: { asset: MAP } },
     'POST /tables/t1/assets?name=town.gif': { status: 201, body: { asset: TOWN } },
     'DELETE /assets/11111111-1111-4111-8111-111111111111': {
@@ -107,7 +110,10 @@ function openTable({ role = 'gm' }: { role?: 'gm' | 'player' } = {}) {
         error: {
           code: 'asset_in_use',
           message: 'The image is still used, so it was not deleted.',
-          details: { uses: [{ kind: 'actor', id: 'a1', name: 'Goblin King' }] },
+          // Players are not told what uses their image (ADR-085).
+          details: {
+            uses: role === 'gm' ? [{ kind: 'actor', id: 'a1', name: 'Goblin King' }] : [],
+          },
         },
       },
     },
@@ -192,12 +198,41 @@ describe('the Images panel (T-1302)', () => {
     expect(screen.getByRole('listitem', { name: 'cave.png' })).toBeVisible();
   });
 
-  it('shows players the images without upload or delete', async () => {
-    openTable({ role: 'player' });
+  it('lets players upload, and delete their own images (ADR-085)', async () => {
+    const api = openTable({ role: 'player' });
     await openPanel('Images');
+    // The server lists a player only their own images.
     expect(await screen.findByRole('listitem', { name: 'cave.png' })).toBeVisible();
+    await userEvent.upload(screen.getByLabelText('Image files'), png('map.png'));
+    expect(await screen.findByText('Images uploaded: 1.')).toBeVisible();
+    expect(api.calls).toContainEqual(
+      expect.objectContaining({ method: 'POST', path: '/tables/t1/assets?name=map.png' }),
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete cave.png' }));
+    await userEvent.click(
+      within(screen.getByRole('dialog', { name: 'Delete this image?' })).getByRole('button', {
+        name: 'Delete',
+      }),
+    );
+    expect(
+      await screen.findByText('cave.png is still used at the table, so it was not deleted.'),
+    ).toBeVisible();
+  });
+
+  it('tells a player with no uploads where theirs will show', async () => {
+    openTable({ role: 'player', assets: [] });
+    await openPanel('Images');
+    expect(
+      await screen.findByText('No images yet. The images you upload show here.'),
+    ).toBeVisible();
+  });
+
+  it('shows spectators no upload', async () => {
+    openTable({ role: 'spectator', assets: [] });
+    await openPanel('Images');
+    expect(await screen.findByText('No images yet.')).toBeVisible();
     expect(screen.queryByRole('button', { name: 'Upload images' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Delete cave.png' })).toBeNull();
   });
 });
 

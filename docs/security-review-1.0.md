@@ -76,7 +76,7 @@ Checked, no finding:
 
 - **Types:** the server reads the type from the leading bytes alone (PNG, JPEG, GIF, WebP) and refuses anything else, SVG included. The request's content type and the file name are never trusted.
 - **Limits:** the size limit and the instance quota are checked, and the quota again in the transaction that writes the row, so two uploads cannot both slip under it. The file is written under a temporary name and renamed.
-- **Who:** only the table's GMs and assistants upload, and only to a table that is not archived.
+- **Who:** only the table's GMs and assistants upload, and only to a table that is not archived. (Since ADR-085, after this review, players upload too and list only their own images.)
 - **Reading:** only the table's members can read an asset. Anyone else gets 404, as if it did not exist.
 - **Serving:**
   - with its sniffed type, `nosniff`, and the data policy (`default-src 'none'`), so an image opened on its own runs nothing;
@@ -90,7 +90,7 @@ Checked, no finding:
 - **Metadata:** uploads are stored as sent, so a photo's EXIF data, which may include where it was taken, reaches every member of the table. Stripping it would mean decoding and re-encoding images on the server.
 - **Size:** an image under the size limit may still decode to a very large picture and slow down the browsers that draw it.
 
-Only GMs and assistants upload, and the GM picks who joins the table.
+Only GMs and assistants uploaded at the time of this review; since ADR-085 players do too. The GM picks who joins the table.
 
 ## Scenes, tokens and fog of war
 

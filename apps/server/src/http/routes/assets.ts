@@ -3,7 +3,7 @@ import { createReadStream, existsSync } from 'node:fs';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 
-import { isGmLike } from '@vtt/shared';
+import { canManageAsset, canUploadAssets, isGmLike } from '@vtt/shared';
 import { MAX_UPLOAD_BYTES, uploadAssetQuery } from '@vtt/shared/api';
 
 import {
@@ -16,7 +16,7 @@ import {
 } from '../../domain/assets.js';
 import { requireUnarchived } from '../../domain/entities.js';
 import { findMembership } from '../../domain/tables.js';
-import { badRequest, notFound } from '../../errors.js';
+import { badRequest, forbidden, notFound } from '../../errors.js';
 import type { AppContext } from '../app.js';
 import { requireSession } from '../auth.js';
 import { requireMember } from '../membership.js';
@@ -28,8 +28,9 @@ const idParams = z.object({ id: z.uuid() });
 const IMMUTABLE = 'private, max-age=31536000, immutable';
 
 /**
- * Table assets (FR-ASSET-01, ADR-064): GMs and assistants upload images, which every member
- * of the table may read at `/api/v1/assets/:id`.
+ * Table assets (FR-ASSET-01, ADR-064, ADR-085): GMs, assistants and players upload images,
+ * which every member of the table may read at `/api/v1/assets/:id`. Players list and delete
+ * only their own; GMs and assistants every image of the table.
  */
 export function assetRoutes({ app: root, db, config, now, instance, collab }: AppContext): void {
   // A scope of its own, so the image body parsers apply to these routes alone.
@@ -53,8 +54,12 @@ export function assetRoutes({ app: root, db, config, now, instance, collab }: Ap
 
     app.get('/api/v1/tables/:id/assets', (request) => {
       const { id } = parseInput(idParams, request.params);
-      requireMember(db, request, id);
-      return { assets: listAssets(db, id).map(toAssetView) };
+      const { membership } = requireMember(db, request, id);
+      return {
+        assets: listAssets(db, id)
+          .filter((asset) => canManageAsset(membership, asset))
+          .map(toAssetView),
+      };
     });
 
     app.post(
@@ -62,7 +67,7 @@ export function assetRoutes({ app: root, db, config, now, instance, collab }: Ap
       { bodyLimit: MAX_UPLOAD_BYTES },
       async (request, reply) => {
         const { id } = parseInput(idParams, request.params);
-        const { table, membership } = requireMember(db, request, id, isGmLike);
+        const { table, membership } = requireMember(db, request, id, canUploadAssets);
         requireUnarchived(table);
         const { name } = parseInput(uploadAssetQuery, request.query);
         if (!Buffer.isBuffer(request.body) || request.body.length === 0) {
@@ -78,13 +83,16 @@ export function assetRoutes({ app: root, db, config, now, instance, collab }: Ap
       },
     );
 
-    /** Deletes an image no actor, item or journal entry uses (ADR-065). */
+    /** Deletes an image no actor, item or journal entry uses (ADR-065), for whoever lists it. */
     app.delete('/api/v1/assets/:id', (request, reply) => {
       const { id } = parseInput(idParams, request.params);
       const asset = requireAsset(db, id);
-      const { table } = requireMember(db, request, asset.tableId, isGmLike);
+      const { table, membership } = requireMember(db, request, asset.tableId);
+      if (!canManageAsset(membership, asset)) throw forbidden();
       requireUnarchived(table);
-      deleteAsset(db, config.dataDir, asset, collab.hocuspocus.documents);
+      deleteAsset(db, config.dataDir, asset, collab.hocuspocus.documents, {
+        listUses: isGmLike(membership.role),
+      });
       return reply.code(204).send();
     });
 
