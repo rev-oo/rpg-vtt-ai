@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-18
+
+Players can upload their own images, and a GM's images stay out of their lists. An actor's items move to its sheet. The plugin API stays at `1.0.0`, so plugins need no changes.
+
 ### Changed
 
 - Players upload images, in the Images panel or the image picker, and see there only the images they uploaded; they delete those too, while unused. GMs and assistants still see and delete every image of the table, so their uploads no longer show to players until they use them somewhere players see. Spectators upload nothing (ADR-085).
@@ -225,7 +229,8 @@ The first release: a self-hosted virtual tabletop where game systems come from p
 - The `vtt-plugin` CLI and the plugin SDK are not published to npm; build them from this repository.
 - The image is built for `linux/amd64` only.
 
-[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/rev-oo/rpg-vtt-ai/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.4.0...v1.0.0
 [0.4.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/rev-oo/rpg-vtt-ai/compare/v0.2.0...v0.3.0
