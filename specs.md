@@ -1,6 +1,6 @@
 # PRD: VTT (Virtual Tabletop) Platform
 
-> **Status:** 1.0.0 released (2026-11-14) · **Created:** 2026-10-19 · **Last updated:** 2026-11-14
+> **Status:** 1.1.0 released (2026-11-18) · **Created:** 2026-10-19 · **Last updated:** 2026-11-18
 > **Audience:** Human developers and agentic AI coding assistants. This file is the source of truth for scope, decisions, and progress. Task notes and change logs of past releases are in [`docs/history/`](docs/history/): [`mvp.md`](docs/history/mvp.md) (0.1.0), [`0.2.0.md`](docs/history/0.2.0.md), [`0.3.0.md`](docs/history/0.3.0.md) and [`0.4.0.md`](docs/history/0.4.0.md).
 
 ---
@@ -25,7 +25,7 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 ### 0.2 Current focus
 
-- **Active milestone:** M18 (1.0.0 released)
+- **Active milestone:** M18 (1.1.0 released)
 - **Next task:** `T-1801` (types and schemas builder)
 - **Open blockers:** none
 - **Decisions pending:** none
@@ -34,10 +34,11 @@ Update this section every time a task changes state. Keep the checkboxes and the
 
 Changes up to the 0.1.0 release are in [`docs/history/mvp.md`](docs/history/mvp.md), up to 0.2.0 in [`docs/history/0.2.0.md`](docs/history/0.2.0.md), up to 0.3.0 in [`docs/history/0.3.0.md`](docs/history/0.3.0.md), up to 0.4.0 in [`docs/history/0.4.0.md`](docs/history/0.4.0.md), and up to 1.0.0 in [`docs/history/1.0.0.md`](docs/history/1.0.0.md); user-visible changes go in `CHANGELOG.md`.
 
-| Date       | Change                                                                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 2026-11-14 | Release 1.0.0 (M14–M17), with plugin API `1.0.0` (ADR-084). M14–M17's task lists and change log moved to `docs/history/1.0.0.md`; M18 is active. |
-| 2026-11-17 | Players upload images, and the Images panel and image picker list them only their own; GMs and assistants still see every image (ADR-085).       |
+| Date       | Change                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-11-14 | Release 1.0.0 (M14–M17), with plugin API `1.0.0` (ADR-084). M14–M17's task lists and change log moved to `docs/history/1.0.0.md`; M18 is active.           |
+| 2026-11-17 | Players upload images, and the Images panel and image picker list them only their own; GMs and assistants still see every image (ADR-085).                 |
+| 2026-11-18 | Release 1.1.0: player uploads (ADR-085), an actor's items on its sheet, chat icon buttons, and Images out of the default layout. Plugin API stays `1.0.0`. |
 
 ---
 
